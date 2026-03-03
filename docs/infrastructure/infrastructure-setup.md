@@ -21,8 +21,6 @@ Enable the following rules:
 - Require a pull request before merging
   - Require conversation resolution before merging
   - Allowed merge methods: **Squash, Rebase**
-- Require status checks to pass
-<!-- Add status checks sub steps -->
 - Block force pushes
 
 #### 1.1.2 Tag Ruleset

@@ -2,8 +2,10 @@ import { registerSW } from 'virtual:pwa-register';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
-import { router } from './routes.tsx';
-import './index.css';
+import { Toaster } from '@/components/Toast';
+import { AuthProvider } from '@/lib/AuthContext.tsx';
+import { router } from '@/routes.tsx';
+import '@/index.css';
 
 const updateSW = registerSW({
 	onNeedRefresh() {
@@ -23,6 +25,9 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
 	<StrictMode>
-		<RouterProvider router={router} />
+		<AuthProvider>
+			<RouterProvider router={router} />
+			<Toaster />
+		</AuthProvider>
 	</StrictMode>,
 );

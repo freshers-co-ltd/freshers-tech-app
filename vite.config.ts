@@ -11,6 +11,11 @@ export default defineConfig({
 		VitePWA({
 			registerType: 'autoUpdate',
 			injectRegister: 'auto',
+			includeAssets: [
+				'icons/favicon.ico',
+				'icons/apple-touch-icon-180x180.png',
+				'icons/icon-source.svg',
+			],
 			workbox: {
 				globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
 				cleanupOutdatedCaches: true,
@@ -31,23 +36,23 @@ export default defineConfig({
 				theme_color: '#ffffff',
 				icons: [
 					{
-						src: 'pwa-64x64.png',
+						src: 'icons/pwa-64x64.png',
 						sizes: '64x64',
 						type: 'image/png',
 					},
 					{
-						src: 'pwa-192x192.png',
+						src: 'icons/pwa-192x192.png',
 						sizes: '192x192',
 						type: 'image/png',
 					},
 					{
-						src: 'pwa-512x512.png',
+						src: 'icons/pwa-512x512.png',
 						sizes: '512x512',
 						type: 'image/png',
 						purpose: 'any',
 					},
 					{
-						src: 'maskable-icon-512x512.png',
+						src: 'icons/maskable-icon-512x512.png',
 						sizes: '512x512',
 						type: 'image/png',
 						purpose: 'maskable',
@@ -56,19 +61,18 @@ export default defineConfig({
 			},
 		}),
 	],
+	server: {
+		host: 'localhost',
+		port: 5173,
+	},
 	resolve: {
 		alias: {
 			'@': path.resolve(__dirname, './src'),
+			'~': path.resolve(__dirname, './tests'),
 		},
 	},
 	build: {
 		target: 'esnext',
 		sourcemap: true,
-	},
-	test: {
-		globals: true,
-		exclude: ['e2e/**', 'node_modules/**'],
-		environment: 'jsdom',
-		setupFiles: './vitest.setup.ts',
 	},
 });
