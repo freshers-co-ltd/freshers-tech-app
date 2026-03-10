@@ -1,6 +1,6 @@
-import { ResetPasswordForm } from '@/components/auth/ResetPasswordForm';
 import { BubbleBackground } from '@/components/Background';
-import { FormCard } from '@/components/FormCard';
+import { FormCard } from '@/components/ui/form-card';
+import { ResetPasswordForm } from '@/features/auth/components/ResetPasswordForm';
 
 export function ResetPasswordPage() {
 	return (

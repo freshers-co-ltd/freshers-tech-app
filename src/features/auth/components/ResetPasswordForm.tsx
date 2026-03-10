@@ -8,9 +8,9 @@ import { toast } from 'sonner';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { DICT } from '@/dictionary';
-import { authService } from '@/lib/authService';
+import { authService } from '@/features/auth/authService';
 import { cn } from '@/lib/utils';
 
 const resetPasswordSchema = z
@@ -69,47 +69,48 @@ export function ResetPasswordForm({ className, ...props }: React.ComponentProps<
 				<div className="flex flex-col items-center gap-2 text-center">
 					<h1 className="text-2xl font-bold">{DICT.AUTH.RESET_PASSWORD.TITLE}</h1>
 				</div>
-
 				<Controller
 					name="password"
 					control={form.control}
 					render={({ field, fieldState }) => (
-						<Field data-invalid={fieldState.invalid}>
+						<Field>
+							{' '}
 							<FieldLabel htmlFor="password">
-								{DICT.AUTH.RESET_PASSWORD.NEW_PASSWORD_LABEL}
-							</FieldLabel>
-							<Input
+								{' '}
+								{DICT.AUTH.RESET_PASSWORD.NEW_PASSWORD_LABEL}{' '}
+							</FieldLabel>{' '}
+							<PasswordInput
 								{...field}
 								id="password"
-								type="password"
 								placeholder={DICT.AUTH.PLACEHOLDERS.PASSWORD}
-								aria-invalid={fieldState.invalid}
-							/>
-							{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+								aria-invalid={!!fieldState.error}
+								className={fieldState.error ? 'border-destructive' : ''}
+							/>{' '}
+							{fieldState.error && <FieldError errors={[fieldState.error]} />}{' '}
 						</Field>
 					)}
-				/>
-
+				/>{' '}
 				<Controller
 					name="confirmPassword"
 					control={form.control}
 					render={({ field, fieldState }) => (
-						<Field data-invalid={fieldState.invalid}>
+						<Field>
+							{' '}
 							<FieldLabel htmlFor="confirmPassword">
-								{DICT.AUTH.RESET_PASSWORD.CONFIRM_PASSWORD_LABEL}
-							</FieldLabel>
-							<Input
+								{' '}
+								{DICT.AUTH.RESET_PASSWORD.CONFIRM_PASSWORD_LABEL}{' '}
+							</FieldLabel>{' '}
+							<PasswordInput
 								{...field}
 								id="confirmPassword"
-								type="password"
 								placeholder={DICT.AUTH.PLACEHOLDERS.PASSWORD}
-								aria-invalid={fieldState.invalid}
-							/>
-							{fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+								aria-invalid={!!fieldState.error}
+								className={fieldState.error ? 'border-destructive' : ''}
+							/>{' '}
+							{fieldState.error && <FieldError errors={[fieldState.error]} />}{' '}
 						</Field>
 					)}
 				/>
-
 				<Button type="submit" disabled={form.formState.isSubmitting}>
 					{form.formState.isSubmitting
 						? DICT.AUTH.RESET_PASSWORD.SUBMITTING_LABEL

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { BubbleBackground } from '@/components/Background';
-import { authService } from '@/lib/authService';
+import { authService } from '@/features/auth/authService';
 
 export function CleanerDashboardPage() {
 	const navigate = useNavigate();

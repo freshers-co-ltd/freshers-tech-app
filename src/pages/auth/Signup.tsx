@@ -2,11 +2,11 @@
 
 import { ArrowRight, BrushCleaning, Building2, ChevronLeft } from 'lucide-react';
 import { useState } from 'react';
-import { SignupForm } from '@/components/auth/SignupForm';
 import { BubbleBackground } from '@/components/Background';
-import { FormCard } from '@/components/FormCard';
 import { Button } from '@/components/ui/button';
+import { FormCard } from '@/components/ui/form-card';
 import { DICT } from '@/dictionary';
+import { SignupForm } from '@/features/auth/components/SignupForm';
 import { cn } from '@/lib/utils';
 
 export function SignupPage() {

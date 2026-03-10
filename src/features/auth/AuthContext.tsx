@@ -1,6 +1,6 @@
 import type { PostgrestSingleResponse, Session, User } from '@supabase/supabase-js';
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react';
-import type { UserRole } from '@/lib/authService';
+import type { UserRole } from '@/features/auth/authService';
 import { supabase } from '@/lib/supabaseClient';
 
 interface Profile {
@@ -26,39 +26,58 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const [profile, setProfile] = useState<Profile | null>(null);
 	const [loading, setLoading] = useState(true);
 
-	const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
-		const timeout = new Promise<null>((_, reject) =>
-			setTimeout(() => reject(new Error('DB_TIMEOUT')), 3000),
-		);
+	const fetchProfile = useCallback(
+		async (userId: string, signal?: AbortSignal): Promise<Profile | null> => {
+			const timeout = new Promise<null>((_, reject) =>
+				setTimeout(() => reject(new Error('DB_TIMEOUT')), 15000),
+			);
 
-		try {
-			const fetchPromise = supabase.from('profiles').select('*').eq('id', userId).single();
-			const { data, error } = await (Promise.race([fetchPromise, timeout]) as Promise<
-				PostgrestSingleResponse<Profile>
-			>);
+			try {
+				const fetchPromise = supabase
+					.from('profiles')
+					.select('*', { head: false, count: undefined })
+					.eq('id', userId)
+					.single();
 
-			if (error) {
-				throw error;
+				const { data, error } = await (Promise.race([fetchPromise, timeout]) as Promise<
+					PostgrestSingleResponse<Profile>
+				>);
+
+				if (error) {
+					throw error;
+				}
+
+				if (signal?.aborted) {
+					return null;
+				}
+
+				return data as Profile;
+			} catch (err) {
+				if (err instanceof Error && err.name === 'AbortError') {
+					return null;
+				}
+
+				console.warn('[AuthContext] Profile fetch failed. Falling back to metadata.', err);
+
+				const {
+					data: { user },
+				} = await supabase.auth.getUser();
+				if (user) {
+					return {
+						id: user.id,
+						full_name: user.user_metadata?.full_name || 'User',
+						role: user.user_metadata?.role || 'host',
+					};
+				}
+				return null;
 			}
-			return data as Profile;
-		} catch (err) {
-			console.warn('[AuthContext] Profile fetch failed. Falling back to metadata.', err);
-			const {
-				data: { user },
-			} = await supabase.auth.getUser();
-			if (user) {
-				return {
-					id: user.id,
-					full_name: user.user_metadata?.full_name || 'User',
-					role: user.user_metadata?.role || 'host',
-				};
-			}
-			return null;
-		}
-	}, []);
+		},
+		[],
+	);
 
 	useEffect(() => {
 		let isMounted = true;
+		const controller = new AbortController();
 
 		const handleAuthStateChange = async (currentSession: Session | null) => {
 			if (!isMounted) {
@@ -70,44 +89,50 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			setUser(currentUser);
 
 			if (currentUser) {
-				const profileData = await fetchProfile(currentUser.id);
-				if (isMounted) {
-					setProfile(profileData);
+				const metadata = currentUser.user_metadata;
+
+				if (metadata?.role && metadata?.full_name) {
+					setProfile({
+						id: currentUser.id,
+						full_name: metadata.full_name,
+						role: metadata.role as UserRole,
+					});
 					setLoading(false);
+				}
+
+				const profileData = await fetchProfile(currentUser.id, controller.signal);
+
+				if (isMounted) {
+					if (profileData) {
+						setProfile(profileData);
+						setLoading(false);
+					} else if (!metadata?.role) {
+						setLoading(false);
+						setProfile(null);
+					}
 				}
 			} else {
 				if (isMounted) {
 					setProfile(null);
+					setSession(null);
 					setLoading(false);
 				}
 			}
 		};
 
 		supabase.auth.getSession().then(({ data: { session } }) => {
-			if (isMounted) {
-				handleAuthStateChange(session);
-			}
+			handleAuthStateChange(session);
 		});
 
 		const {
 			data: { subscription },
-		} = supabase.auth.onAuthStateChange((event, currentSession) => {
-			if (['SIGNED_IN', 'TOKEN_REFRESHED', 'USER_UPDATED'].includes(event)) {
-				handleAuthStateChange(currentSession);
-			} else if (event === 'PASSWORD_RECOVERY') {
-				setSession(currentSession);
-				setUser(currentSession?.user ?? null);
-				setLoading(false);
-			} else if (event === 'SIGNED_OUT') {
-				setUser(null);
-				setSession(null);
-				setProfile(null);
-				setLoading(false);
-			}
+		} = supabase.auth.onAuthStateChange((_event, currentSession) => {
+			handleAuthStateChange(currentSession);
 		});
 
 		return () => {
 			isMounted = false;
+			controller.abort();
 			subscription.unsubscribe();
 		};
 	}, [fetchProfile]);

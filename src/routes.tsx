@@ -1,17 +1,36 @@
+import { type ComponentType, lazy, type ReactElement, Suspense } from 'react';
 import { createBrowserRouter, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Loading } from '@/components/Loading';
+import { useAuth } from '@/features/auth/AuthContext';
 import { AuthLayout } from '@/layouts/AuthLayout';
-import { useAuth } from '@/lib/AuthContext';
-import { AdminDashboardPage } from '@/pages/admin/Dashboard';
-import { AuthCallback } from '@/pages/auth/Callback';
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPassword';
+
 import { LoginPage } from '@/pages/auth/Login';
-import { ResetPasswordPage } from '@/pages/auth/ResetPassword';
 import { SignupPage } from '@/pages/auth/Signup';
-import { CleanerDashboardPage } from '@/pages/cleaner/Dashboard';
 import { ErrorPage } from '@/pages/Error';
-import { HostDashboardPage } from '@/pages/host/Dashboard';
-import type { UserRole } from './lib/authService';
+import type { UserRole } from './features/auth/authService';
+
+const lazyLoad = <T extends Record<string, unknown>>(
+	importFn: () => Promise<Record<string, ComponentType<T>>>,
+	name: string,
+): ReactElement => {
+	const LazyComponent = lazy(async () => {
+		const module = await importFn();
+		const Component = module[name];
+		if (!Component) {
+			throw new Error(`Component "${name}" not found in module.`);
+		}
+		return { default: Component };
+	});
+
+	const ComponentToRender = LazyComponent as unknown as ComponentType<Record<string, unknown>>;
+
+	return (
+		<Suspense fallback={<Loading />}>
+			<ComponentToRender />
+		</Suspense>
+	);
+};
 
 interface ProtectedRouteProps {
 	children: React.ReactNode;
@@ -70,12 +89,12 @@ export const DashboardRedirect = () => {
 		return <Navigate to="/login" replace />;
 	}
 
-	if (user && !profile) {
-		return <Loading />;
-	}
-
-	// Fallback if profile fetch is still propagating but user metadata exists
 	const role = profile?.role || (user.user_metadata?.role as UserRole);
+
+	if (!role) {
+		console.error('User role is missing. User ID:', user.id);
+		return <Navigate to="/unauthorised" replace />;
+	}
 
 	switch (role) {
 		case 'host':
@@ -115,14 +134,22 @@ export const router = createBrowserRouter([
 					},
 				],
 			},
-			{ path: 'auth/callback', element: <AuthCallback /> },
+			{
+				path: 'auth/callback',
+				element: lazyLoad(() => import('@/pages/auth/Callback'), 'AuthCallback'),
+			},
 			{
 				element: (
 					<ProtectedRoute>
 						<AuthLayout />
 					</ProtectedRoute>
 				),
-				children: [{ path: 'update-password', element: <ResetPasswordPage /> }],
+				children: [
+					{
+						path: 'update-password',
+						element: lazyLoad(() => import('@/pages/auth/ResetPassword'), 'ResetPasswordPage'),
+					},
+				],
 			},
 			{
 				path: '/host',
@@ -131,7 +158,12 @@ export const router = createBrowserRouter([
 						<Outlet />
 					</ProtectedRoute>
 				),
-				children: [{ path: 'dashboard', element: <HostDashboardPage /> }],
+				children: [
+					{
+						path: 'dashboard',
+						element: lazyLoad(() => import('@/pages/host/Dashboard'), 'HostDashboardPage'),
+					},
+				],
 			},
 			{
 				path: '/cleaner',
@@ -140,7 +172,12 @@ export const router = createBrowserRouter([
 						<Outlet />
 					</ProtectedRoute>
 				),
-				children: [{ path: 'dashboard', element: <CleanerDashboardPage /> }],
+				children: [
+					{
+						path: 'dashboard',
+						element: lazyLoad(() => import('@/pages/cleaner/Dashboard'), 'CleanerDashboardPage'),
+					},
+				],
 			},
 			{
 				path: '/admin',
@@ -149,13 +186,21 @@ export const router = createBrowserRouter([
 						<Outlet />
 					</ProtectedRoute>
 				),
-				children: [{ path: 'dashboard', element: <AdminDashboardPage /> }],
+				children: [
+					{
+						path: 'dashboard',
+						element: lazyLoad(() => import('@/pages/admin/Dashboard'), 'AdminDashboardPage'),
+					},
+				],
 			},
 			{
 				path: '/dashboard',
 				element: <DashboardRedirect />,
 			},
-			{ path: 'unauthorised', element: <div>You do not have permission to view this page.</div> },
+			{
+				path: 'unauthorised',
+				element: <div>You do not have permission to view this page.</div>,
+			},
 		],
 	},
 ]);

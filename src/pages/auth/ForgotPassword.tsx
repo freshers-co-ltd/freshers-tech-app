@@ -1,8 +1,8 @@
 'use client';
 
-import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
 import { BubbleBackground } from '@/components/Background';
-import { FormCard } from '@/components/FormCard';
+import { FormCard } from '@/components/ui/form-card';
+import { ForgotPasswordForm } from '@/features/auth/components/ForgotPasswordForm';
 
 export function ForgotPasswordPage() {
 	return (

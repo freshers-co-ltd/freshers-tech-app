@@ -4,7 +4,7 @@ import { HttpResponse, http } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { toast } from 'sonner';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { AuthProvider } from '@/lib/AuthContext';
+import { AuthProvider } from '@/features/auth/AuthContext';
 import { SignupPage } from '@/pages/auth/Signup';
 import { server } from '~/server';
 

@@ -15,10 +15,10 @@ import {
 	FieldSeparator,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { DICT } from '@/dictionary';
-import { authService } from '@/lib/authService';
+import { authService } from '@/features/auth/authService';
 import { cn } from '@/lib/utils';
-import { PasswordInput } from '../ui/password-input';
 
 const loginSchema = z.object({
 	email: z.email(DICT.VALIDATION.EMAIL_INVALID).trim(),
@@ -74,6 +74,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
 								id="email"
 								type="email"
 								placeholder={DICT.AUTH.PLACEHOLDERS.EMAIL}
+								aria-invalid={!!fieldState.error}
 								className={fieldState.error ? 'border-destructive' : ''}
 							/>
 							{fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
@@ -98,6 +99,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
 								{...field}
 								id="password"
 								placeholder={DICT.AUTH.PLACEHOLDERS.PASSWORD}
+								aria-invalid={!!fieldState.error}
 								className={fieldState.error ? 'border-destructive' : ''}
 							/>
 							{fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}

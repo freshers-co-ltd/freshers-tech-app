@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { LoginForm } from '@/components/auth/LoginForm';
+import cleanersImg from '@/assets/images/cleaners.jpg';
+import logoImg from '@/assets/images/logo.png';
 import { type Bubble, type BubbleConfig, generateBubbles } from '@/components/Bubbles';
+import { LoginForm } from '@/features/auth/components/LoginForm';
 
 export function LoginPage() {
 	const [screenTier, setScreenTier] = useState<'sm' | 'md' | 'lg' | 'xl'>('md');
@@ -54,7 +56,7 @@ export function LoginPage() {
 
 			<div className="relative z-1 flex flex-col items-center justify-center p-4 md:p-8">
 				<img
-					src="images/logo.png"
+					src={logoImg}
 					alt="Logo"
 					className="w-full max-w-104 relative right-2.5 object-contain mb-5 shrink-0"
 				/>
@@ -66,7 +68,7 @@ export function LoginPage() {
 
 			<div className="relative z-1 hidden h-full bg-muted lg:block">
 				<img
-					src="images/cleaners.jpg"
+					src={cleanersImg}
 					alt="Cleaners ready to work"
 					className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
 				/>

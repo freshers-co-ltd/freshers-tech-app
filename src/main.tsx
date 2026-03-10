@@ -3,7 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { Toaster } from '@/components/Toast';
-import { AuthProvider } from '@/lib/AuthContext.tsx';
+import { AuthProvider } from '@/features/auth/AuthContext';
 import { router } from '@/routes.tsx';
 import '@/index.css';
 

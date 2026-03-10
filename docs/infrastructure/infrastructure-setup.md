@@ -34,7 +34,6 @@ Enable the following rules:
 - Restrict updates
 - Restrict deletions
 
----
 
 ### 1.2 Actions
 
@@ -45,8 +44,6 @@ Enable the following rules:
 - Require approval for all external contributors
 - Read repository contents and packages permissions
 - Allow GitHub Actions to create and approve pull requests
-
----
 
 ### 1.3 Environments
 
@@ -78,8 +75,6 @@ The following variables and secrets must be added to both environments.
 - Add the `main` branch to the **Deployment branches**.
 - Add all the secrets and variables outlined previously
 
----
-
 ### 1.4 Advanced Security
 
 Go to **Advanced Security**.
@@ -91,8 +86,6 @@ Enable the following settings:
 - Grouped security updates
 - Secret protection
 - Push protection
-
----
 
 ### 1.5 Secrets and Variables
 
@@ -113,6 +106,13 @@ All the following settings will be found in the Supabase project's **Dashboard**
 
 Go to **Database > Settings** and enable **Enforce SSL on incoming connections**.
 
+### 2.2 Authentication
+
+Go to **Authentication > URL Configuration** and add the following:
+
+- Vercel production URL to **Site URL**.
+- Vercel preview URL with wildcards to **Redirect URLs**.
+
 ## 3. Vercel Setup
 
 All the following settings will be found in the Vercel project's **Settings** page.
@@ -122,15 +122,18 @@ All the following settings will be found in the Vercel project's **Settings** pa
 - Ensure **Framework Preset** is set to **Vite**.
 - Change **Ignored Build Step** behaviour to **Don't build anything**.
 
----
-
 ### 3.2 Environments
 
 - Go to **Environments** and select the **Preview** environment.
 - Set **Branch Tracking** to **Disabled**.
 
----
+### 3.3 Environment Variables
 
-### 3.3 Git
+Go to **Environment Variables** and add the following to both **Preview** and **Production** environments:
+
+- `VITE_SUPABASE_ANON_KEY`: Found in the Supabase project settings under **API Keys > Publishable Key**.
+- `VITE_SUPABASE_URL`: Found in the Supabase project settings under **Data API > API URL**.
+
+### 3.4 Git
 
 - Enable **deployment_status Events**.

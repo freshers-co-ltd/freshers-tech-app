@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { DICT } from '@/dictionary';
-import { authService } from '@/lib/authService';
+import { authService } from '@/features/auth/authService';
 import { cn } from '@/lib/utils';
 
 const forgotPasswordSchema = z.object({
@@ -81,6 +81,7 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
 								id="email"
 								type="email"
 								placeholder={DICT.AUTH.PLACEHOLDERS.EMAIL}
+								aria-invalid={!!fieldState.error}
 								className={fieldState.error ? 'border-destructive' : ''}
 							/>
 							{fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}

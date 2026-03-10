@@ -108,6 +108,38 @@ export const authService = {
 		}
 	},
 
+	async verifyOtp(email: string, token: string): Promise<AuthActionResult> {
+		const { data, error } = await supabase.auth.verifyOtp({
+			email,
+			token,
+			type: 'signup',
+		});
+
+		if (error) {
+			return { error: mapAuthError(error) };
+		}
+
+		return {
+			error: null,
+			user: data.user,
+		};
+	},
+
+	async resendSignupConfirmation(email: string): Promise<{ error: string | null }> {
+		const { error } = await supabase.auth.resend({
+			type: 'signup',
+			email: email,
+			options: {
+				emailRedirectTo: `${window.location.origin}/auth/callback`,
+			},
+		});
+
+		if (error) {
+			return { error: mapAuthError(error) };
+		}
+		return { error: null };
+	},
+
 	async resetPassword(email: string): Promise<{ error: string | null }> {
 		if (import.meta.env.DEV) {
 			console.log('[AuthService] Requesting password reset for:', email);

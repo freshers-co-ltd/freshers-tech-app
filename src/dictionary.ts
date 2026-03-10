@@ -89,12 +89,13 @@ export const DICT = {
 			USER_EXISTS: 'An account with this email already exists.',
 			INVALID_CREDENTIALS: 'Invalid email or password.',
 			EMAIL_NOT_CONFIRMED: 'Please verify your email address before logging in.',
+			LINK_EXPIRED: 'Authentication link expired.',
 		},
 		// biome-ignore format: Messages are more readable on one line
 		HTTP: {
 			DEFAULT_TITLE: 'Oops! An unexpected error has occurred.',
 			DEFAULT_MESSAGE: 'Something went wrong while loading the page. Please try again later.',
-			BACK_TO_SAFETY: 'Back to Safety',
+			RETURN: 'Return to Home',
 			400: { title: '400 - Bad Request', msg: 'The request was invalid. Please check your input.' },
 			401: { title: '401 - Unauthorised', msg: 'Your session has expired. Please log in again.' },
 			403: { title: '403 - Forbidden', msg: 'You do not have permission to view this page.' },

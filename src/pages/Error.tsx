@@ -31,13 +31,13 @@ export function ErrorPage() {
 	const [imgError, setImgError] = useState(false);
 
 	return (
-		<main className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-6 text-center font-sans antialiased bg-error-pattern">
-			<div className="flex w-full max-w-lg flex-col items-center gap-8">
+		<main className="flex h-screen flex-col items-center justify-center bg-slate-50 p-6 text-center font-sans antialiased bg-error-pattern">
+			<div className="flex h-full w-full max-w-lg max-h-[90vh] flex-col items-center justify-center">
 				{errorCode && !imgError && (
 					<img
-						src={`/${errorCode} error.svg`}
+						src={new URL(`../assets/errors/${errorCode} error.svg`, import.meta.url).href}
 						alt={`${errorCode} error illustration`}
-						className="h-64 w-auto drop-shadow-sm transition-opacity duration-300"
+						className="h-auto max-h-[60vh] w-full drop-shadow-sm transition-opacity duration-300"
 						onError={() => {
 							setImgError(true);
 						}}
@@ -53,8 +53,8 @@ export function ErrorPage() {
 
 				<Link
 					to="/dashboard"
-					className="mt-4 inline-flex h-12 items-center justify-center rounded-xl bg-blue-600 px-8 text-base font-bold text-white shadow-lg shadow-blue-200 transition-all hover:bg-blue-700 hover:shadow-blue-300 active:scale-95">
-					{DICT.ERRORS.HTTP.BACK_TO_SAFETY}
+					className="mt-12 inline-flex h-12 items-center justify-center rounded-xl bg-blue-600 px-8 text-base font-bold text-white shadow-lg shadow-blue-200 transition-all hover:bg-blue-700 hover:shadow-blue-300 active:scale-95">
+					{DICT.ERRORS.HTTP.RETURN}
 				</Link>
 			</div>
 		</main>

@@ -11,11 +11,7 @@ export default defineConfig({
 		VitePWA({
 			registerType: 'autoUpdate',
 			injectRegister: 'auto',
-			includeAssets: [
-				'icons/favicon.ico',
-				'icons/apple-touch-icon-180x180.png',
-				'icons/icon-source.svg',
-			],
+			includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png', 'icon-source.svg'],
 			workbox: {
 				globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
 				cleanupOutdatedCaches: true,
@@ -36,23 +32,23 @@ export default defineConfig({
 				theme_color: '#ffffff',
 				icons: [
 					{
-						src: 'icons/pwa-64x64.png',
+						src: 'pwa-64x64.png',
 						sizes: '64x64',
 						type: 'image/png',
 					},
 					{
-						src: 'icons/pwa-192x192.png',
+						src: 'pwa-192x192.png',
 						sizes: '192x192',
 						type: 'image/png',
 					},
 					{
-						src: 'icons/pwa-512x512.png',
+						src: 'pwa-512x512.png',
 						sizes: '512x512',
 						type: 'image/png',
 						purpose: 'any',
 					},
 					{
-						src: 'icons/maskable-icon-512x512.png',
+						src: 'maskable-icon-512x512.png',
 						sizes: '512x512',
 						type: 'image/png',
 						purpose: 'maskable',
@@ -74,5 +70,15 @@ export default defineConfig({
 	build: {
 		target: 'esnext',
 		sourcemap: true,
+		chunkSizeWarningLimit: 1000,
+		rollupOptions: {
+			output: {
+				manualChunks(id) {
+					if (id.includes('node_modules')) {
+						return 'vendor';
+					}
+				},
+			},
+		},
 	},
 });
