@@ -1,7 +1,46 @@
 import { configure } from '@testing-library/dom';
 import '@testing-library/jest-dom/vitest';
-import { afterAll, afterEach, beforeAll } from 'vitest';
+import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 import { server } from '../server';
+
+vi.mock('@/lib/supabaseClient', () => ({
+	supabase: {
+		auth: {
+			signInWithPassword: vi.fn().mockImplementation(async ({ email, password }) => {
+				const res = await fetch('*/auth/v1/token', {
+					method: 'POST',
+					body: JSON.stringify({ email, password }),
+				});
+				const responseData = await res.json();
+				if (!res.ok) {
+					return {
+						data: { user: null, session: null },
+						error: { message: responseData.error_description || 'Invalid credentials' },
+					};
+				}
+				return { data: responseData, error: null };
+			}),
+			signUp: vi.fn().mockImplementation(async () => {
+				const res = await fetch('*/auth/v1/signup', { method: 'POST' });
+				const responseData = await res.json();
+				return { data: responseData, error: res.ok ? null : responseData };
+			}),
+			getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+			onAuthStateChange: vi.fn(() => ({
+				data: { subscription: { unsubscribe: vi.fn() } },
+			})),
+		},
+	},
+}));
+
+vi.mock('sonner', () => ({
+	toast: {
+		error: vi.fn(),
+		success: vi.fn(),
+		loading: vi.fn(),
+		dismiss: vi.fn(),
+	},
+}));
 
 configure({
 	getElementError: (message) => {
@@ -11,12 +50,11 @@ configure({
 	},
 });
 
-// Establish API mocking before all tests.
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 
-// Reset any request handlers that we may add during the tests,
-// so they don't affect other tests.
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+	server.resetHandlers();
+	vi.clearAllMocks();
+});
 
-// Clean up after the tests are finished.
 afterAll(() => server.close());

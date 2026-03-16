@@ -14,7 +14,7 @@ export const Toaster = () => {
 				unstyled: true,
 				classNames: {
 					toast:
-						'group relative flex items-center w-[380px] p-2 rounded-xl border shadow-sm transition-all overflow-hidden',
+						'group relative flex items-center w-[420px] p-2 pr-12 rounded-xl border shadow-sm transition-all overflow-hidden',
 					content: 'flex flex-col gap-1 ml-3',
 					title: 'text-[15px] font-bold leading-none',
 					description: 'text-[13px] font-medium leading-snug text-black/80',
@@ -25,9 +25,9 @@ export const Toaster = () => {
 					warning: 'bg-yellow-50 border-yellow-400 text-yellow-500',
 					loading: 'bg-muted border-muted-foreground text-muted-foreground',
 
-					icon: 'flex items-center justify-center h-7 w-7 flex-shrink-0',
+					icon: 'flex-center size-7 flex-shrink-0',
 					loader:
-						'flex items-center !transform-none justify-center h-7 w-7 !static [&_svg]:h-full [&_svg]:w-full',
+						'flex items-center !transform-none justify-center size-7 !static [&_svg]:h-full [&_svg]:w-full',
 					closeButton:
 						'!absolute !right-0 !top-1/2 !-translate-y-1/2 !left-auto !flex !items-center !justify-center ' +
 						'!w-12 !h-12 !bg-transparent !text-current !border-none !opacity-100 ' +
@@ -35,10 +35,10 @@ export const Toaster = () => {
 				},
 			}}
 			icons={{
-				success: <CheckCircle2 className="h-7 w-7" />,
-				error: <AlertCircle className="h-7 w-7 text-red-600" />,
-				info: <Info className="h-7 w-7 text-blue-600" />,
-				warning: <AlertTriangle className="h-7 w-7 text-yellow-500" />,
+				success: <CheckCircle2 className="size-7" />,
+				error: <AlertCircle className="size-7 text-red-600" />,
+				info: <Info className="size-7 text-blue-600" />,
+				warning: <AlertTriangle className="size-7 text-yellow-500" />,
 				loading: <Loader2 className="animate-spin" />,
 			}}
 		/>

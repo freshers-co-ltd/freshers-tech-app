@@ -52,7 +52,10 @@
 	"assist": {
 		"enabled": true,
 		"actions": {
-			"recommended": true
+			"recommended": true,
+			"source": {
+				"organizeImports": "on"
+			}
 		}
 	},
 	"javascript": {

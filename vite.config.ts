@@ -21,6 +21,7 @@ export default defineConfig({
 			devOptions: {
 				enabled: true,
 				type: 'module',
+				suppressWarnings: true,
 			},
 			manifest: {
 				name: 'Cleaner Hire PWA',

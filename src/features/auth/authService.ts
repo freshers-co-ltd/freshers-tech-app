@@ -4,6 +4,15 @@ import { supabase } from '@/lib/supabaseClient';
 
 export type UserRole = 'host' | 'cleaner' | 'admin';
 
+export interface Profile {
+	id: string;
+	email: string;
+	role: UserRole;
+	full_name: string | null;
+	avatar_url: string | null;
+	is_verified: boolean;
+}
+
 export interface AuthActionResult {
 	error: string | null;
 	user?: User | null;
@@ -20,7 +29,7 @@ const mapAuthError = (error: AuthError): string => {
 			return DICT.ERRORS.AUTH.EMAIL_NOT_CONFIRMED;
 		default:
 			if (error.message?.includes('Failed to fetch')) {
-				return DICT.COMMON.ERROR_NETWORK;
+				return DICT.ERRORS.COMMON.NETWORK;
 			}
 			return error.message;
 	}
@@ -99,11 +108,11 @@ export const authService = {
 			clearTimeout(timeoutId);
 			if (err instanceof Error && err.name === 'AbortError') {
 				return {
-					error: DICT.COMMON.ERROR_TIMEOUT,
+					error: DICT.ERRORS.COMMON.TIMEOUT,
 				};
 			}
 			return {
-				error: err instanceof Error ? err.message : DICT.COMMON.ERROR_GENERIC,
+				error: err instanceof Error ? err.message : DICT.ERRORS.COMMON.GENERIC,
 			};
 		}
 	},
@@ -190,5 +199,72 @@ export const authService = {
 			console.log('[AuthService] Get current user response:', response);
 		}
 		return response;
+	},
+
+	async getProfile(userId: string): Promise<{ data: Profile | null; error: string | null }> {
+		const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+
+		if (error) {
+			return { data: null, error: error.message };
+		}
+		return { data: data as Profile, error: null };
+	},
+
+	async updateProfile(
+		userId: string,
+		updates: Partial<Profile>,
+	): Promise<{ error: string | null }> {
+		const { error } = await supabase.from('profiles').update(updates).eq('id', userId);
+
+		if (error) {
+			return { error: error.message };
+		}
+		return { error: null };
+	},
+
+	async updateEmail(email: string): Promise<{ error: string | null }> {
+		const { error } = await supabase.auth.updateUser({ email });
+		if (error) {
+			return { error: mapAuthError(error) };
+		}
+		return { error: null };
+	},
+
+	async uploadAvatar(
+		userId: string,
+		file: File,
+	): Promise<{ url: string | null; error: string | null }> {
+		const fileExt = file.name.split('.').pop();
+		const filePath = `${userId}/avatar.${fileExt}`;
+
+		const { error: uploadError } = await supabase.storage
+			.from('avatars')
+			.upload(filePath, file, { upsert: true });
+
+		if (uploadError) {
+			return { url: null, error: uploadError.message };
+		}
+
+		const {
+			data: { publicUrl },
+		} = supabase.storage.from('avatars').getPublicUrl(filePath);
+
+		return { url: publicUrl, error: null };
+	},
+
+	async reauthenticate(password: string): Promise<{ error: string | null }> {
+		const {
+			data: { user },
+		} = await supabase.auth.getUser();
+		if (!user?.email) {
+			return { error: 'User not found' };
+		}
+
+		const { error } = await supabase.auth.signInWithPassword({
+			email: user.email,
+			password,
+		});
+
+		return { error: error ? mapAuthError(error) : null };
 	},
 };

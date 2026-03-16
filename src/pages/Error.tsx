@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { isRouteErrorResponse, Link, useRouteError } from 'react-router-dom';
+import { isRouteErrorResponse, useNavigate, useRouteError } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { DICT } from '@/dictionary';
 
 export function ErrorPage() {
+	const navigate = useNavigate();
 	const error = useRouteError();
 	console.error(error);
 
@@ -31,31 +33,33 @@ export function ErrorPage() {
 	const [imgError, setImgError] = useState(false);
 
 	return (
-		<main className="flex h-screen flex-col items-center justify-center bg-slate-50 p-6 text-center font-sans antialiased bg-error-pattern">
-			<div className="flex h-full w-full max-w-lg max-h-[90vh] flex-col items-center justify-center">
+		<main className="h-screen p-6 flex-col-center bg-slate-50 ">
+			<div className="flex h-full w-full max-h-[90dvh] flex-col-center">
 				{errorCode && !imgError && (
 					<img
 						src={new URL(`../assets/errors/${errorCode} error.svg`, import.meta.url).href}
 						alt={`${errorCode} error illustration`}
-						className="h-auto max-h-[60vh] w-full drop-shadow-sm transition-opacity duration-300"
+						className="h-auto max-h-[60vh] w-full drop-shadow-md"
 						onError={() => {
 							setImgError(true);
 						}}
 					/>
 				)}
 
-				<div className="space-y-3">
-					<h1 className="text-3xl font-extrabold uppercase tracking-tight text-slate-900 md:text-4xl">
+				<div className="space-y-3 text-center">
+					<h1 className="text-3xl font-extrabold tracking-tight uppercase text-foreground md:text-4xl">
 						{title}
 					</h1>
-					<p className="mx-auto max-w-md text-lg text-slate-500 md:text-xl">{message}</p>
+					<p className="max-w-md mx-auto text-lg text-muted-foreground md:text-xl">{message}</p>
 				</div>
 
-				<Link
-					to="/dashboard"
-					className="mt-12 inline-flex h-12 items-center justify-center rounded-xl bg-blue-600 px-8 text-base font-bold text-white shadow-lg shadow-blue-200 transition-all hover:bg-blue-700 hover:shadow-blue-300 active:scale-95">
+				<Button
+					variant="default"
+					size="xl"
+					className="mt-12"
+					onClick={() => navigate('/dashboard')}>
 					{DICT.ERRORS.HTTP.RETURN}
-				</Link>
+				</Button>
 			</div>
 		</main>
 	);

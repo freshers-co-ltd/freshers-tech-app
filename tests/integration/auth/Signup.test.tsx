@@ -8,13 +8,6 @@ import { AuthProvider } from '@/features/auth/AuthContext';
 import { SignupPage } from '@/pages/auth/Signup';
 import { server } from '~/server';
 
-vi.mock('sonner', () => ({
-	toast: {
-		error: vi.fn(),
-		success: vi.fn(),
-	},
-}));
-
 describe('Signup Feature', () => {
 	beforeAll(() => server.listen());
 	afterEach(() => {

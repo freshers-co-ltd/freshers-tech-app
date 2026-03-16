@@ -8,13 +8,6 @@ import { AuthProvider } from '@/features/auth/AuthContext';
 import { LoginPage } from '@/pages/auth/Login';
 import { server } from '~/server';
 
-vi.mock('sonner', () => ({
-	toast: {
-		error: vi.fn(),
-		success: vi.fn(),
-	},
-}));
-
 describe('Login Feature', () => {
 	beforeAll(() => server.listen());
 	afterEach(() => {
@@ -93,7 +86,7 @@ describe('Login Feature', () => {
 
 		await user.type(screen.getByLabelText(/^email$/i), 'user@example.com');
 		await user.type(screen.getByLabelText(/^password$/i), 'password123');
-		await user.click(screen.getByRole('button', { name: /login/i }));
+		await user.click(screen.getByRole('button', { name: /log in/i }));
 
 		expect(await screen.findByTestId('dashboard')).toBeInTheDocument();
 		expect(toast.success).toHaveBeenCalled();
@@ -117,7 +110,7 @@ describe('Login Feature', () => {
 
 		await user.type(screen.getByLabelText(/^email$/i), 'wrong@example.com');
 		await user.type(screen.getByLabelText(/^password$/i), 'wrongpass');
-		await user.click(screen.getByRole('button', { name: /login/i }));
+		await user.click(screen.getByRole('button', { name: /log in/i }));
 
 		await waitFor(() => {
 			expect(toast.error).toHaveBeenCalled();
@@ -128,7 +121,7 @@ describe('Login Feature', () => {
 		const user = userEvent.setup();
 		renderLogin();
 
-		await user.click(screen.getByRole('button', { name: /login/i }));
+		await user.click(screen.getByRole('button', { name: /log in/i }));
 
 		expect(await screen.findByText(/invalid email address/i)).toBeInTheDocument();
 		expect(screen.getByText(/password is required/i)).toBeInTheDocument();
