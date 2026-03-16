@@ -33,8 +33,7 @@ erDiagram
 
     PROFILES {
         uuid id PK "References auth.users"
-        text first_name
-        text last_name
+        text full_name
         user_role role
         verification_status status
         text phone_number
