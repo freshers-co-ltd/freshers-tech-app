@@ -11,6 +11,7 @@ export default defineConfig({
 		VitePWA({
 			registerType: 'autoUpdate',
 			injectRegister: 'auto',
+			includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png', 'icon-source.svg'],
 			workbox: {
 				globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
 				cleanupOutdatedCaches: true,
@@ -56,19 +57,28 @@ export default defineConfig({
 			},
 		}),
 	],
+	server: {
+		host: 'localhost',
+		port: 5173,
+	},
 	resolve: {
 		alias: {
 			'@': path.resolve(__dirname, './src'),
+			'~': path.resolve(__dirname, './tests'),
 		},
 	},
 	build: {
 		target: 'esnext',
 		sourcemap: true,
-	},
-	test: {
-		globals: true,
-		exclude: ['e2e/**', 'node_modules/**'],
-		environment: 'jsdom',
-		setupFiles: './vitest.setup.ts',
+		chunkSizeWarningLimit: 1000,
+		rollupOptions: {
+			output: {
+				manualChunks(id) {
+					if (id.includes('node_modules')) {
+						return 'vendor';
+					}
+				},
+			},
+		},
 	},
 });
