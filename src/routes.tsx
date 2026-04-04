@@ -1,10 +1,16 @@
 import { type ComponentType, lazy, type ReactElement, Suspense } from 'react';
-import { createBrowserRouter, Navigate, Outlet, useLocation } from 'react-router-dom';
+import {
+	createBrowserRouter,
+	Navigate,
+	Outlet,
+	type RouteObject,
+	useLocation,
+} from 'react-router-dom';
 import { Loading } from '@/components/Loading';
 import { useAuth } from '@/features/auth/AuthContext';
 import { AuthLayout } from '@/layouts/AuthLayout';
+import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPassword';
-
 import { LoginPage } from '@/pages/auth/Login';
 import { SignupPage } from '@/pages/auth/Signup';
 import { ErrorPage } from '@/pages/Error';
@@ -32,48 +38,61 @@ const lazyLoad = <T extends Record<string, unknown>>(
 	);
 };
 
+export interface NavigationState {
+	reason?: string;
+	from?: string;
+	[key: string]: unknown;
+}
+
+const useForwardState = (extraData: NavigationState = {}): NavigationState => {
+	const location = useLocation();
+	const currentState = (location.state as NavigationState) || {};
+	return { ...currentState, ...extraData };
+};
+
 interface ProtectedRouteProps {
-	children: React.ReactNode;
-	allowedRoles?: ('host' | 'cleaner' | 'admin')[];
+	children?: React.ReactNode;
+	allowedRoles?: UserRole[];
 }
 
 export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
 	const { user, profile, loading } = useAuth();
 	const location = useLocation();
+	const state = useForwardState({ from: location.pathname });
 
-	if (loading) {
-		return (
-			<div className="flex h-screen items-center justify-center">
-				<p className="text-muted-foreground">Verifying session...</p>
-			</div>
-		);
+	if (loading || (user && !profile && navigator.onLine)) {
+		return <Loading />;
 	}
 
 	if (!user) {
-		return <Navigate to="/login" state={{ from: location }} replace />;
+		return <Navigate to="/login" state={state} replace />;
 	}
 
-	if (allowedRoles) {
-		if (!profile) {
-			return <Navigate to="/login" replace />;
-		}
-		if (!allowedRoles.includes(profile.role)) {
-			return <Navigate to="/unauthorised" replace />;
-		}
+	if (allowedRoles && (!profile || !allowedRoles.includes(profile.role as UserRole))) {
+		return <Navigate to="/error/403" replace />;
 	}
 
-	return <>{children}</>;
+	return children ? children : <Outlet />;
 };
 
 export const PublicRoute = () => {
 	const { user, loading } = useAuth();
+	const location = useLocation();
 
 	if (loading) {
 		return <Loading />;
 	}
 
-	if (user) {
-		return <Navigate to="/dashboard" replace />;
+	console.log('[PublicRoute] Auth State:', { loading, user: !!user, path: location.pathname });
+
+	const searchParams = new URLSearchParams(location.search);
+	const isLoggingOut = searchParams.get('reason') === 'inactivity';
+
+	if (user && !isLoggingOut) {
+		const state = location.state as NavigationState;
+		const fallbackPath = state?.from && typeof state.from === 'string' ? state.from : '/dashboard';
+
+		return <Navigate to={fallbackPath} replace />;
 	}
 
 	return <Outlet />;
@@ -81,41 +100,45 @@ export const PublicRoute = () => {
 
 export const DashboardRedirect = () => {
 	const { profile, loading, user } = useAuth();
+	const state = useForwardState();
 
 	if (loading) {
 		return <Loading />;
 	}
 	if (!user) {
-		return <Navigate to="/login" replace />;
+		return <Navigate to="/login" state={state} replace />;
 	}
 
-	const role = profile?.role || (user.user_metadata?.role as UserRole);
-
-	if (!role) {
-		console.error('User role is missing. User ID:', user.id);
-		return <Navigate to="/unauthorised" replace />;
-	}
+	const role = (profile?.role || user.user_metadata?.role) as UserRole;
+	let destination = '/error/403';
 
 	switch (role) {
 		case 'host':
-			return <Navigate to="/host/dashboard" replace />;
+			destination = '/host/dashboard';
+			break;
 		case 'cleaner':
-			return <Navigate to="/cleaner/dashboard" replace />;
+			destination = '/cleaner/dashboard';
+			break;
 		case 'admin':
-			return <Navigate to="/admin/dashboard" replace />;
-		default:
-			return <Navigate to="/unauthorised" replace />;
+			destination = '/admin/dashboard';
+			break;
 	}
+
+	return <Navigate to={destination} replace />;
 };
 
-export const router = createBrowserRouter([
+const routesConfig: RouteObject[] = [
 	{
 		errorElement: <ErrorPage />,
 		children: [
 			{
-				path: '/test-error/:code',
+				path: '/error/:code',
 				loader: ({ params }) => {
-					throw new Response('', { status: Number(params.code) || 500 });
+					const statusCode = Number(params.code);
+					if (Number.isNaN(statusCode)) {
+						throw new Response('Not Found', { status: 404 });
+					}
+					throw new Response('', { status: statusCode });
 				},
 				errorElement: <ErrorPage />,
 			},
@@ -155,7 +178,7 @@ export const router = createBrowserRouter([
 				path: '/host',
 				element: (
 					<ProtectedRoute allowedRoles={['host']}>
-						<Outlet />
+						<DashboardLayout />
 					</ProtectedRoute>
 				),
 				children: [
@@ -163,13 +186,25 @@ export const router = createBrowserRouter([
 						path: 'dashboard',
 						element: lazyLoad(() => import('@/pages/host/Dashboard'), 'HostDashboardPage'),
 					},
+					{
+						path: 'cleanings',
+						element: lazyLoad(() => import('@/pages/host/Cleanings'), 'HostCleaningsPage'),
+					},
+					{
+						path: 'properties',
+						element: lazyLoad(() => import('@/pages/host/Properties'), 'HostPropertiesPage'),
+					},
+					{
+						path: 'account',
+						element: lazyLoad(() => import('@/pages/Account'), 'AccountPage'),
+					},
 				],
 			},
 			{
 				path: '/cleaner',
 				element: (
 					<ProtectedRoute allowedRoles={['cleaner']}>
-						<Outlet />
+						<DashboardLayout />
 					</ProtectedRoute>
 				),
 				children: [
@@ -183,7 +218,7 @@ export const router = createBrowserRouter([
 				path: '/admin',
 				element: (
 					<ProtectedRoute allowedRoles={['admin']}>
-						<Outlet />
+						<DashboardLayout />
 					</ProtectedRoute>
 				),
 				children: [
@@ -197,10 +232,8 @@ export const router = createBrowserRouter([
 				path: '/dashboard',
 				element: <DashboardRedirect />,
 			},
-			{
-				path: 'unauthorised',
-				element: <div>You do not have permission to view this page.</div>,
-			},
 		],
 	},
-]);
+];
+
+export const router = createBrowserRouter(routesConfig);

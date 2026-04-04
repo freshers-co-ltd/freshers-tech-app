@@ -3,6 +3,7 @@ import type { Database } from '@/lib/database.types';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const STORAGE_KEY = 'sb-auth-token';
 
 if (!supabaseUrl || !supabaseAnonKey) {
 	if (import.meta.env.DEV) {
@@ -14,14 +15,52 @@ if (!supabaseUrl || !supabaseAnonKey) {
 	}
 }
 
-export const supabase = createClient<Database>(
-	supabaseUrl || 'https://placeholder-url.supabase.co',
-	supabaseAnonKey || 'placeholder-key',
-	{
-		auth: {
-			persistSession: true,
-			autoRefreshToken: true,
-			detectSessionInUrl: true,
+const channel = new BroadcastChannel('auth_sync_channel');
+
+channel.onmessage = (event: MessageEvent) => {
+	if (event.data.type === 'REQUEST_SESSION') {
+		const session = window.sessionStorage.getItem(STORAGE_KEY);
+		if (session) {
+			channel.postMessage({ type: 'SEND_SESSION', session });
+		}
+	}
+	if (event.data.type === 'LOGOUT') {
+		window.sessionStorage.removeItem(STORAGE_KEY);
+		if (window.location.pathname !== '/login') {
+			window.location.href = '/login';
+		}
+	}
+};
+
+const getAuthStorage = () => {
+	const isTrusted = () => window.localStorage.getItem('trust_device') === 'true';
+
+	return {
+		getItem: (key: string) => {
+			return window.localStorage.getItem(key) || window.sessionStorage.getItem(key);
 		},
+		setItem: (key: string, value: string) => {
+			if (isTrusted()) {
+				window.localStorage.setItem(key, value);
+			} else {
+				window.sessionStorage.setItem(key, value);
+				channel.postMessage({ type: 'SEND_SESSION', session: value });
+			}
+		},
+		removeItem: (key: string) => {
+			window.localStorage.removeItem(key);
+			window.sessionStorage.removeItem(key);
+			channel.postMessage({ type: 'LOGOUT' });
+		},
+	};
+};
+
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+	auth: {
+		persistSession: true,
+		storage: getAuthStorage(),
+		autoRefreshToken: true,
+		detectSessionInUrl: true,
+		storageKey: STORAGE_KEY,
 	},
-);
+});

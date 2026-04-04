@@ -1,0 +1,208 @@
+'use client';
+
+import {
+	Bath,
+	Bed,
+	ChevronLeft,
+	ChevronRight,
+	MapPin,
+	Maximize2,
+	Pencil,
+	Trash2,
+	X,
+} from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { DICT } from '@/dictionary';
+import { useAuth } from '@/features/auth/AuthContext';
+import type { Property } from '@/features/properties/propertyService';
+import { useCarousel } from '@/hooks/useCarousel';
+import { mediaService } from '@/lib/mediaService';
+
+interface PropertyDetailViewProps {
+	property: Property;
+	onEdit: (id: string) => void;
+	onDelete: (id: string) => void;
+}
+
+export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetailViewProps) {
+	const { user } = useAuth();
+	const [isFullScreen, setIsFullScreen] = useState(false);
+
+	const images = useMemo(() => {
+		const rawPaths = [property.main_image_url, ...(property.extra_images_urls || [])].filter(
+			Boolean,
+		) as string[];
+
+		return rawPaths.map((path) => mediaService.getMediaUrl(path || null, 'property-media'));
+	}, [property]);
+
+	const { activeImage, setActiveImage, currentIndex, nextImage, prevImage, allImages } =
+		useCarousel({
+			images,
+			initialImage: property.main_image_url
+				? mediaService.getMediaUrl(property.main_image_url || null, 'property-media')
+				: '',
+			isKeyboardEnabled: isFullScreen,
+		});
+
+	const isHost = user?.user_metadata?.role === 'host';
+
+	return (
+		<DialogContent className="max-w-5xl! w-screen sm:w-full h-[95svh] flex flex-col p-0 overflow-hidden">
+			<div className="relative flex-1 min-h-0">
+				<ScrollArea className="h-full w-full">
+					<div className="p-4 sm:p-6 space-y-6 max-w-screen">
+						<DialogHeader>
+							<DialogTitle className="wrap-break-word text-xl font-bold leading-tight">
+								{property.address_line_1}
+								{property.address_line_2 && (
+									<span className="text-muted-foreground">, {property.address_line_2}</span>
+								)}
+							</DialogTitle>
+							<DialogDescription className="sr-only">Property details</DialogDescription>
+							<div className="flex items-center gap-1 text-muted-foreground text-sm">
+								<MapPin className="size-4 shrink-0" />
+								<span className="truncate">
+									{property.town_city}, {property.postcode.toUpperCase()}
+								</span>
+							</div>
+						</DialogHeader>
+
+						<div className="flex flex-col lg:flex-row gap-4 overflow-hidden">
+							<div className="relative aspect-video lg:flex-1 bg-muted rounded-lg overflow-hidden shrink-0 lg:shrink">
+								<img src={activeImage} className="size-full object-contain" alt="Property" />
+								<Button
+									size="icon"
+									variant="secondary"
+									className="absolute bottom-2 right-2"
+									onClick={() => setIsFullScreen(true)}>
+									<Maximize2 className="size-4" />
+								</Button>
+							</div>
+
+							<div className="w-full lg:w-24 max-w-full overflow-hidden shrink-0">
+								<ScrollArea className="w-full">
+									<div className="flex lg:flex-col gap-2 p-1">
+										{allImages.map((url) => (
+											<Button
+												key={url}
+												variant="outline"
+												onClick={() => setActiveImage(url)}
+												className={`p-0 size-16 lg:w-full shrink-0 overflow-hidden transition-all ${
+													activeImage === url ? 'ring-2 ring-primary border-primary' : 'opacity-70'
+												}`}>
+												<img src={url} className="size-full object-cover" alt="Thumbnail" />
+											</Button>
+										))}
+									</div>
+									<ScrollBar orientation="horizontal" className="lg:hidden" />
+								</ScrollArea>
+							</div>
+						</div>
+
+						<div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+							<div className="lg:col-span-2 space-y-4 border rounded-lg p-4">
+								<p className="font-bold capitalize">{property.type}</p>
+								<div className="flex gap-4">
+									<div className="flex items-center gap-2">
+										<Bed className="size-4" /> <span>{property.bedrooms}</span>
+									</div>
+									<div className="flex items-center gap-2">
+										<Bath className="size-4" /> <span>{property.bathrooms}</span>
+									</div>
+								</div>
+							</div>
+
+							{isHost && (
+								<div className="flex flex-col gap-2">
+									<Button onClick={() => onEdit(property.id)} className="w-full">
+										<Pencil className="mr-2 size-4" /> {DICT.PROPERTIES.EDIT}
+									</Button>
+									<Button
+										variant="destructive"
+										onClick={() => onDelete(property.id)}
+										className="w-full">
+										<Trash2 className="mr-2 size-4" /> {DICT.PROPERTIES.DELETE}
+									</Button>
+								</div>
+							)}
+						</div>
+					</div>
+				</ScrollArea>
+			</div>
+
+			<Dialog open={isFullScreen} onOpenChange={setIsFullScreen}>
+				<DialogContent className="max-w-7xl! w-[95vw] h-[90vh] p-0 bg-card border-none flex flex-col items-center justify-start overflow-hidden rounded-lg shadow-xl [&>button]:hidden">
+					<DialogHeader>
+						<DialogTitle className="sr-only">{DICT.PROPERTIES.LABELS.FULLSCREEN_VIEW}</DialogTitle>
+						<DialogDescription className="sr-only">
+							Viewing image {currentIndex + 1}.
+						</DialogDescription>
+					</DialogHeader>
+
+					<div className="absolute top-0 right-0 z-50 p-6">
+						<Button
+							variant="ghost"
+							size="icon"
+							className="rounded-full shadow-sm size-10 bg-background/80 backdrop-blur-md"
+							onClick={() => setIsFullScreen(false)}>
+							<X className="size-5" />
+						</Button>
+					</div>
+
+					{allImages.length > 1 && (
+						<div className="absolute left-0 right-0 z-50 px-6 flex-center bottom-5">
+							<div className="flex items-center gap-4 p-1 border rounded-xl shadow-lg bg-background/80 backdrop-blur-md">
+								<Button
+									variant="ghost"
+									size="icon"
+									className="size-10"
+									onClick={(e) => {
+										e.stopPropagation();
+										prevImage();
+									}}>
+									<ChevronLeft className="size-6" />
+								</Button>
+
+								<div className="px-2 text-sm font-semibold text-muted-foreground">
+									{currentIndex + 1} / {allImages.length}
+								</div>
+
+								<Button
+									variant="ghost"
+									size="icon"
+									className="size-10"
+									onClick={(e) => {
+										e.stopPropagation();
+										nextImage();
+									}}>
+									<ChevronRight className="size-6" />
+								</Button>
+							</div>
+						</div>
+					)}
+
+					<div className="relative flex-col-center size-full">
+						<img
+							src={activeImage}
+							className="relative z-10 object-contain w-full max-h-[85dvh] select-none"
+							alt={DICT.PROPERTIES.LABELS.FULLSCREEN_VIEW}
+							onError={(e) => {
+								(e.target as HTMLImageElement).src = '/placeholder-property.jpg';
+							}}
+						/>
+					</div>
+				</DialogContent>
+			</Dialog>
+		</DialogContent>
+	);
+}

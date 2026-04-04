@@ -17,17 +17,17 @@ import { cn } from '@/lib/utils';
 
 const signupSchema = z
 	.object({
-		name: z.string().trim().min(2, DICT.VALIDATION.NAME_MIN),
-		email: z.email(DICT.VALIDATION.EMAIL_INVALID).trim(),
+		name: z.string().trim().min(2, DICT.FORMS.VALIDATION.NAME_MIN),
+		email: z.email(DICT.FORMS.VALIDATION.EMAIL_INVALID).trim(),
 		password: z
 			.string()
-			.min(8, DICT.VALIDATION.PASSWORD_MIN)
-			.regex(/[0-9]/, { message: DICT.VALIDATION.PASSWORD_NUMBER })
-			.regex(/[^a-zA-Z0-9]/, { message: DICT.VALIDATION.PASSWORD_SPECIAL }),
+			.min(8, DICT.FORMS.VALIDATION.PASSWORD_MIN)
+			.regex(/[0-9]/, { message: DICT.FORMS.VALIDATION.PASSWORD_NUMBER })
+			.regex(/[^a-zA-Z0-9]/, { message: DICT.FORMS.VALIDATION.PASSWORD_SPECIAL }),
 		confirmPassword: z.string(),
 	})
 	.refine((data) => data.password === data.confirmPassword, {
-		message: DICT.VALIDATION.PASSWORDS_MATCH,
+		message: DICT.FORMS.VALIDATION.PASSWORDS_MATCH,
 		path: ['confirmPassword'],
 	});
 
@@ -88,7 +88,7 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 			}
 		} catch (err) {
 			console.error('Error:', err);
-			toast.error(DICT.COMMON.ERROR_GENERIC);
+			toast.error(DICT.ERRORS.COMMON.GENERIC);
 			return;
 		} finally {
 			form.reset(undefined, { keepValues: true });
@@ -138,7 +138,7 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 						control={otpForm.control}
 						name="token"
 						render={({ field, fieldState }) => (
-							<Field className="flex flex-col items-center justify-center gap-2">
+							<Field className="flex-col-center gap-2">
 								<InputOTP
 									maxLength={6}
 									pattern={'^[0-9]+$'}
@@ -147,27 +147,27 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 									containerClassName="flex justify-center items-center w-full">
 									<InputOTPGroup>
 										<InputOTPSlot
-											className="w-10 h-10 text-lg sm:text-2xl sm:h-14 sm:w-14"
+											className="size-10 text-lg sm:text-2xl sm:h-14 sm:w-14"
 											index={0}
 										/>
 										<InputOTPSlot
-											className="w-10 h-10 text-lg sm:text-2xl sm:h-14 sm:w-14"
+											className="size-10 text-lg sm:text-2xl sm:h-14 sm:w-14"
 											index={1}
 										/>
 										<InputOTPSlot
-											className="w-10 h-10 text-lg sm:text-2xl sm:h-14 sm:w-14"
+											className="size-10 text-lg sm:text-2xl sm:h-14 sm:w-14"
 											index={2}
 										/>
 										<InputOTPSlot
-											className="w-10 h-10 text-lg sm:text-2xl sm:h-14 sm:w-14"
+											className="size-10 text-lg sm:text-2xl sm:h-14 sm:w-14"
 											index={3}
 										/>
 										<InputOTPSlot
-											className="w-10 h-10 text-lg sm:text-2xl sm:h-14 sm:w-14"
+											className="size-10 text-lg sm:text-2xl sm:h-14 sm:w-14"
 											index={4}
 										/>
 										<InputOTPSlot
-											className="w-10 h-10 text-lg sm:text-2xl sm:h-14 sm:w-14"
+											className="size-10 text-lg sm:text-2xl sm:h-14 sm:w-14"
 											index={5}
 										/>
 									</InputOTPGroup>
@@ -204,7 +204,7 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 
 	return (
 		<form
-			className={cn('flex flex-col gap-6', className)}
+			className={cn('flex flex-col gap-4', className)}
 			onSubmit={form.handleSubmit(onSignupSubmit)}
 			{...props}>
 			<FieldGroup>
@@ -213,12 +213,12 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 					name="name"
 					render={({ field, fieldState }) => (
 						<Field>
-							<FieldLabel htmlFor="name">{DICT.AUTH.LABELS.FULL_NAME}</FieldLabel>
+							<FieldLabel htmlFor="name">{DICT.FORMS.LABELS.FULL_NAME}</FieldLabel>
 							<Input
 								{...field}
 								id="name"
 								type="text"
-								placeholder={DICT.AUTH.PLACEHOLDERS.NAME}
+								placeholder={DICT.FORMS.PLACEHOLDERS.NAME}
 								aria-invalid={!!fieldState.error}
 								className={fieldState.error ? 'border-destructive' : ''}
 							/>
@@ -232,12 +232,13 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 					name="email"
 					render={({ field, fieldState }) => (
 						<Field>
-							<FieldLabel htmlFor="email">{DICT.AUTH.LABELS.EMAIL}</FieldLabel>
+							<FieldLabel htmlFor="email">{DICT.FORMS.LABELS.EMAIL}</FieldLabel>
 							<Input
 								{...field}
 								id="email"
 								type="email"
-								placeholder={DICT.AUTH.PLACEHOLDERS.EMAIL}
+								autoComplete="email"
+								placeholder={DICT.FORMS.PLACEHOLDERS.EMAIL}
 								aria-invalid={!!fieldState.error}
 								className={fieldState.error ? 'border-destructive' : ''}
 							/>
@@ -251,16 +252,16 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 					name="password"
 					render={({ field, fieldState }) => (
 						<Field>
-							<FieldLabel htmlFor="password">{DICT.AUTH.LABELS.PASSWORD}</FieldLabel>
+							<FieldLabel htmlFor="password">{DICT.FORMS.LABELS.PASSWORD}</FieldLabel>
 							<PasswordInput
 								{...field}
 								id="password"
-								placeholder={DICT.AUTH.PLACEHOLDERS.PASSWORD}
-								aria-invalid={!!fieldState.error}
-								className={fieldState.error ? 'border-destructive' : ''}
+								autoComplete="new-password"
+								placeholder={DICT.FORMS.PLACEHOLDERS.PASSWORD}
+								error={!!fieldState.error}
 							/>
 							{!fieldState.error && (
-								<FieldDescription>{DICT.VALIDATION.PASSWORD_HINT}</FieldDescription>
+								<FieldDescription>{DICT.FORMS.VALIDATION.PASSWORD_HINT}</FieldDescription>
 							)}
 							{fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
 						</Field>
@@ -273,14 +274,13 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 					render={({ field, fieldState }) => (
 						<Field>
 							<FieldLabel htmlFor="confirm-password">
-								{DICT.AUTH.LABELS.CONFIRM_PASSWORD}
+								{DICT.FORMS.LABELS.CONFIRM_PASSWORD}
 							</FieldLabel>
 							<PasswordInput
 								{...field}
 								id="confirm-password"
-								placeholder={DICT.AUTH.PLACEHOLDERS.PASSWORD}
-								aria-invalid={!!fieldState.error}
-								className={fieldState.error ? 'border-destructive' : ''}
+								placeholder={DICT.FORMS.PLACEHOLDERS.PASSWORD}
+								error={!!fieldState.error}
 							/>
 							{fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
 						</Field>
@@ -290,15 +290,15 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 				<div className="flex flex-col gap-4 mt-2">
 					<Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
 						{form.formState.isSubmitting
-							? DICT.AUTH.SIGNUP.SUBMITTING_LABEL
-							: DICT.AUTH.SIGNUP.SUBMIT_LABEL}
+							? DICT.AUTH.SIGNUP.SUBMITTING_BUTTON
+							: DICT.AUTH.SIGNUP.SUBMIT_BUTTON}
 					</Button>
 					<FieldDescription className="text-center">
-						{DICT.AUTH.SIGNUP.ALREADY_HAVE_ACCOUNT}{' '}
+						{DICT.AUTH.SIGNUP.HAVE_ACCOUNT_LABEL}{' '}
 						<Link
 							to="/"
 							className="underline transition-colors underline-offset-4 decoration-muted-foreground hover:text-primary">
-							{DICT.AUTH.SIGNUP.SIGNIN_LINK}
+							{DICT.AUTH.SIGNUP.LOGIN_LINK}
 						</Link>
 					</FieldDescription>
 				</div>

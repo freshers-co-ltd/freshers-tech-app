@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -17,19 +17,20 @@ const resetPasswordSchema = z
 	.object({
 		password: z
 			.string()
-			.min(8, DICT.VALIDATION.PASSWORD_MIN)
-			.regex(/[0-9]/, { message: DICT.VALIDATION.PASSWORD_NUMBER })
-			.regex(/[^a-zA-Z0-9]/, { message: DICT.VALIDATION.PASSWORD_SPECIAL }),
+			.min(8, DICT.FORMS.VALIDATION.PASSWORD_MIN)
+			.regex(/[0-9]/, { message: DICT.FORMS.VALIDATION.PASSWORD_NUMBER })
+			.regex(/[^a-zA-Z0-9]/, { message: DICT.FORMS.VALIDATION.PASSWORD_SPECIAL }),
 		confirmPassword: z.string(),
 	})
 	.refine((data) => data.password === data.confirmPassword, {
-		message: DICT.VALIDATION.PASSWORDS_MATCH,
+		message: DICT.FORMS.VALIDATION.PASSWORDS_MATCH,
 		path: ['confirmPassword'],
 	});
 
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 export function ResetPasswordForm({ className, ...props }: React.ComponentProps<'form'>) {
+	const navigate = useNavigate();
 	const [isSuccess, setIsSuccess] = useState(false);
 	const form = useForm<ResetPasswordFormValues>({
 		resolver: zodResolver(resetPasswordSchema),
@@ -50,11 +51,11 @@ export function ResetPasswordForm({ className, ...props }: React.ComponentProps<
 
 	if (isSuccess) {
 		return (
-			<div className="flex flex-col items-center gap-4 text-center py-6">
-				<h1 className="text-2xl font-bold">{DICT.AUTH.RESET_PASSWORD.SUCCESS_TITLE}</h1>
-				<p className="text-muted-foreground">{DICT.AUTH.RESET_PASSWORD.SUCCESS_DESCRIPTION}</p>
-				<Button asChild className="w-full">
-					<Link to="/dashboard">{DICT.AUTH.RESET_PASSWORD.DASHBOARD_LINK}</Link>
+			<div className="text-center space-y-4">
+				<h1 className="text-xl font-bold">{DICT.AUTH.RESET_PASSWORD.SUCCESS_TITLE}</h1>
+				<p className="text-muted-foreground mb-8">{DICT.AUTH.RESET_PASSWORD.SUCCESS_MESSAGE}</p>
+				<Button variant="default" onClick={() => navigate('/dashboard')}>
+					{DICT.AUTH.RESET_PASSWORD.DASHBOARD_BUTTON}
 				</Button>
 			</div>
 		);
@@ -66,25 +67,22 @@ export function ResetPasswordForm({ className, ...props }: React.ComponentProps<
 			onSubmit={form.handleSubmit(onSubmit)}
 			{...props}>
 			<FieldGroup>
-				<div className="flex flex-col items-center gap-2 text-center">
-					<h1 className="text-2xl font-bold">{DICT.AUTH.RESET_PASSWORD.TITLE}</h1>
-				</div>
+				<p className="text-muted-foreground text-balance text-center">
+					{DICT.AUTH.RESET_PASSWORD.MESSAGE}
+				</p>
 				<Controller
 					name="password"
 					control={form.control}
 					render={({ field, fieldState }) => (
 						<Field>
 							{' '}
-							<FieldLabel htmlFor="password">
-								{' '}
-								{DICT.AUTH.RESET_PASSWORD.NEW_PASSWORD_LABEL}{' '}
-							</FieldLabel>{' '}
+							<FieldLabel htmlFor="password"> {DICT.FORMS.LABELS.NEW_PASSWORD} </FieldLabel>{' '}
 							<PasswordInput
 								{...field}
 								id="password"
-								placeholder={DICT.AUTH.PLACEHOLDERS.PASSWORD}
-								aria-invalid={!!fieldState.error}
-								className={fieldState.error ? 'border-destructive' : ''}
+								autoComplete="new-password"
+								placeholder={DICT.FORMS.PLACEHOLDERS.PASSWORD}
+								error={!!fieldState.error}
 							/>{' '}
 							{fieldState.error && <FieldError errors={[fieldState.error]} />}{' '}
 						</Field>
@@ -98,14 +96,13 @@ export function ResetPasswordForm({ className, ...props }: React.ComponentProps<
 							{' '}
 							<FieldLabel htmlFor="confirmPassword">
 								{' '}
-								{DICT.AUTH.RESET_PASSWORD.CONFIRM_PASSWORD_LABEL}{' '}
+								{DICT.FORMS.LABELS.CONFIRM_PASSWORD}{' '}
 							</FieldLabel>{' '}
 							<PasswordInput
 								{...field}
 								id="confirmPassword"
-								placeholder={DICT.AUTH.PLACEHOLDERS.PASSWORD}
-								aria-invalid={!!fieldState.error}
-								className={fieldState.error ? 'border-destructive' : ''}
+								placeholder={DICT.FORMS.PLACEHOLDERS.PASSWORD}
+								error={!!fieldState.error}
 							/>{' '}
 							{fieldState.error && <FieldError errors={[fieldState.error]} />}{' '}
 						</Field>
@@ -113,10 +110,12 @@ export function ResetPasswordForm({ className, ...props }: React.ComponentProps<
 				/>
 				<Button type="submit" disabled={form.formState.isSubmitting}>
 					{form.formState.isSubmitting
-						? DICT.AUTH.RESET_PASSWORD.SUBMITTING_LABEL
-						: DICT.AUTH.RESET_PASSWORD.SUBMIT_LABEL}
+						? DICT.AUTH.RESET_PASSWORD.SUBMITTING_BUTTON
+						: DICT.AUTH.RESET_PASSWORD.SUBMIT_BUTTON}
 				</Button>
 			</FieldGroup>
 		</form>
 	);
 }
+
+ResetPasswordForm.title = DICT.AUTH.RESET_PASSWORD.TITLE;

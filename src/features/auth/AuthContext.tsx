@@ -28,45 +28,55 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 	const fetchProfile = useCallback(
 		async (userId: string, signal?: AbortSignal): Promise<Profile | null> => {
-			const timeout = new Promise<null>((_, reject) =>
-				setTimeout(() => reject(new Error('DB_TIMEOUT')), 15000),
-			);
+			console.log('[fetchProfile] Starting fetch for userId:', userId);
+
+			const timeout = new Promise<null>((_, reject) => {
+				setTimeout(() => {
+					console.log('[fetchProfile] TIMEOUT - took longer than 15s for userId:', userId);
+					reject(new Error('DB_TIMEOUT'));
+				}, 15000);
+			});
 
 			try {
-				const fetchPromise = supabase
-					.from('profiles')
-					.select('*', { head: false, count: undefined })
-					.eq('id', userId)
-					.single();
+				const fetchPromise = supabase.from('profiles').select('*').eq('id', userId).single();
+				console.log('[fetchProfile] Query sent for userId:', userId);
 
 				const { data, error } = await (Promise.race([fetchPromise, timeout]) as Promise<
 					PostgrestSingleResponse<Profile>
 				>);
 
+				console.log(
+					'[fetchProfile] Response received - userId:',
+					userId,
+					'data:',
+					data,
+					'error:',
+					error,
+				);
+
 				if (error) {
 					throw error;
 				}
-
 				if (signal?.aborted) {
+					console.log('[fetchProfile] Signal aborted for userId:', userId);
 					return null;
 				}
-
+				console.log('[fetchProfile] Successfully returning profile for userId:', userId);
 				return data as Profile;
-			} catch (err) {
+			} catch (err: unknown) {
+				console.error('[fetchProfile] Error caught for userId:', userId, 'error:', err);
 				if (err instanceof Error && err.name === 'AbortError') {
 					return null;
 				}
-
-				console.warn('[AuthContext] Profile fetch failed. Falling back to metadata.', err);
-
 				const {
-					data: { user },
+					data: { user: currentUser },
 				} = await supabase.auth.getUser();
-				if (user) {
+				if (currentUser) {
 					return {
-						id: user.id,
-						full_name: user.user_metadata?.full_name || 'User',
-						role: user.user_metadata?.role || 'host',
+						id: currentUser.id,
+						full_name: currentUser.user_metadata?.full_name || 'User',
+						role: (currentUser.user_metadata?.role as UserRole) || 'cleaner',
+						avatar_url: currentUser.user_metadata?.avatar_url,
 					};
 				}
 				return null;
@@ -80,38 +90,62 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		const controller = new AbortController();
 
 		const handleAuthStateChange = async (currentSession: Session | null) => {
+			console.log('[handleAuthStateChange] Session change detected:', {
+				hasSession: !!currentSession,
+				userId: currentSession?.user?.id,
+				timestamp: new Date().toISOString(),
+			});
+
 			if (!isMounted) {
+				console.log('[handleAuthStateChange] Component not mounted, returning');
 				return;
 			}
+
 			const currentUser = currentSession?.user ?? null;
+			console.log(
+				'[handleAuthStateChange] Current user:',
+				currentUser?.id,
+				'email:',
+				currentUser?.email,
+			);
 
 			setSession(currentSession);
 			setUser(currentUser);
 
 			if (currentUser) {
 				const metadata = currentUser.user_metadata;
+				console.log('[handleAuthStateChange] User metadata:', metadata);
 
 				if (metadata?.role && metadata?.full_name) {
+					console.log(
+						'[handleAuthStateChange] Setting profile from metadata for userId:',
+						currentUser.id,
+					);
 					setProfile({
 						id: currentUser.id,
 						full_name: metadata.full_name,
 						role: metadata.role as UserRole,
 					});
-					setLoading(false);
 				}
 
+				console.log('[handleAuthStateChange] Fetching profile from DB for userId:', currentUser.id);
 				const profileData = await fetchProfile(currentUser.id, controller.signal);
+				console.log(
+					'[handleAuthStateChange] Profile fetch result for userId:',
+					currentUser.id,
+					'data:',
+					profileData,
+				);
 
 				if (isMounted) {
 					if (profileData) {
+						console.log('[handleAuthStateChange] Setting profile data for userId:', currentUser.id);
 						setProfile(profileData);
-						setLoading(false);
-					} else if (!metadata?.role) {
-						setLoading(false);
-						setProfile(null);
 					}
+					setLoading(false);
 				}
 			} else {
+				console.log('[handleAuthStateChange] No current user, clearing auth state');
 				if (isMounted) {
 					setProfile(null);
 					setSession(null);
@@ -120,14 +154,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			}
 		};
 
-		supabase.auth.getSession().then(({ data: { session } }) => {
-			handleAuthStateChange(session);
-		});
+		const initializeAuth = async () => {
+			const {
+				data: { session: initialSession },
+			} = await supabase.auth.getSession();
+
+			if (!initialSession && !window.localStorage.getItem('trust_device')) {
+				const syncedSession = window.sessionStorage.getItem('sb-auth-token');
+				if (syncedSession) {
+					await supabase.auth.setSession(JSON.parse(syncedSession));
+					const {
+						data: { session: retrySession },
+					} = await supabase.auth.getSession();
+					if (isMounted) {
+						await handleAuthStateChange(retrySession);
+					}
+					return;
+				}
+			}
+
+			if (isMounted) {
+				await handleAuthStateChange(initialSession);
+			}
+		};
+
+		initializeAuth();
 
 		const {
 			data: { subscription },
-		} = supabase.auth.onAuthStateChange((_event, currentSession) => {
-			handleAuthStateChange(currentSession);
+		} = supabase.auth.onAuthStateChange((event, currentSession) => {
+			console.log('[onAuthStateChange] Auth event:', event, 'userId:', currentSession?.user?.id);
+
+			if (event === 'SIGNED_OUT') {
+				console.log('[onAuthStateChange] SIGNED_OUT event - clearing everything');
+				setSession(null);
+				setUser(null);
+				setProfile(null);
+				setLoading(false);
+			} else if (
+				event === 'INITIAL_SESSION' ||
+				event === 'SIGNED_IN' ||
+				event === 'TOKEN_REFRESHED'
+			) {
+				console.log(
+					'[onAuthStateChange] Session event:',
+					event,
+					'userId:',
+					currentSession?.user?.id,
+				);
+				handleAuthStateChange(currentSession);
+			}
 		});
 
 		return () => {
@@ -144,6 +220,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			setProfile(null);
 			setUser(null);
 			setSession(null);
+
+			localStorage.clear();
+			sessionStorage.clear();
 		}
 	}, []);
 

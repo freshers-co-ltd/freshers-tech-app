@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -21,12 +21,13 @@ import { authService } from '@/features/auth/authService';
 import { cn } from '@/lib/utils';
 
 const forgotPasswordSchema = z.object({
-	email: z.email(DICT.VALIDATION.EMAIL_INVALID).trim(),
+	email: z.email(DICT.FORMS.VALIDATION.EMAIL_INVALID).trim(),
 });
 
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 export function ForgotPasswordForm({ className, ...props }: React.ComponentProps<'form'>) {
+	const navigate = useNavigate();
 	const [isSent, setIsSent] = useState(false);
 	const form = useForm<ForgotPasswordFormValues>({
 		resolver: zodResolver(forgotPasswordSchema),
@@ -48,39 +49,37 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
 	if (isSent) {
 		return (
 			<div className="text-center space-y-4">
-				<h1 className="text-2xl font-bold">{DICT.AUTH.FORGOT_PASSWORD.SENT_TITLE}</h1>
-				<p className="text-muted-foreground">{DICT.AUTH.FORGOT_PASSWORD.SENT_DESCRIPTION}</p>
-				<Link to="/login" className="block text-sm underline">
-					{DICT.AUTH.FORGOT_PASSWORD.RETURN_LOGIN}
-				</Link>
+				<h1 className="text-xl font-bold capitalize">{DICT.AUTH.FORGOT_PASSWORD.SENT_TITLE}</h1>
+				<p className="text-muted-foreground mb-8">{DICT.AUTH.FORGOT_PASSWORD.SENT_MESSAGE}</p>
+				<Button variant="default" onClick={() => navigate('/login')}>
+					{DICT.AUTH.FORGOT_PASSWORD.BACK_BUTTON}
+				</Button>
 			</div>
 		);
 	}
 
 	return (
 		<form
-			className={cn('flex flex-col gap-6', className)}
+			className={cn('flex flex-col flex-1', className)}
 			onSubmit={form.handleSubmit(onSubmit)}
 			{...props}>
-			<FieldGroup>
-				<div className="flex flex-col items-center gap-2 text-center">
-					<h1 className="text-2xl font-bold">{DICT.AUTH.FORGOT_PASSWORD.TITLE}</h1>
-					<p className="text-sm text-muted-foreground text-balance">
-						{DICT.AUTH.FORGOT_PASSWORD.DESCRIPTION}
-					</p>
-				</div>
+			<FieldGroup className="flex-1 flex flex-col justify-around">
+				<p className="text-muted-foreground text-balance text-center">
+					{DICT.AUTH.FORGOT_PASSWORD.MESSAGE}
+				</p>
 
 				<Controller
 					control={form.control}
 					name="email"
 					render={({ field, fieldState }) => (
 						<Field>
-							<FieldLabel htmlFor="email">{DICT.AUTH.LABELS.EMAIL}</FieldLabel>
+							<FieldLabel htmlFor="email">{DICT.FORMS.LABELS.EMAIL}</FieldLabel>
 							<Input
 								{...field}
 								id="email"
 								type="email"
-								placeholder={DICT.AUTH.PLACEHOLDERS.EMAIL}
+								autoComplete="email"
+								placeholder={DICT.FORMS.PLACEHOLDERS.EMAIL}
 								aria-invalid={!!fieldState.error}
 								className={fieldState.error ? 'border-destructive' : ''}
 							/>
@@ -92,8 +91,8 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
 				<Field>
 					<Button type="submit" disabled={form.formState.isSubmitting}>
 						{form.formState.isSubmitting
-							? DICT.AUTH.FORGOT_PASSWORD.SUBMITTING_LABEL
-							: DICT.AUTH.FORGOT_PASSWORD.SUBMIT_LABEL}
+							? DICT.AUTH.FORGOT_PASSWORD.SUBMITTING
+							: DICT.AUTH.FORGOT_PASSWORD.SUBMIT}
 					</Button>
 				</Field>
 
@@ -101,9 +100,9 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
 
 				<Field>
 					<FieldDescription className="text-center">
-						{DICT.AUTH.FORGOT_PASSWORD.REMEMBER_PASSWORD}{' '}
+						{DICT.AUTH.FORGOT_PASSWORD.REMEMBER_LINK}{' '}
 						<Link to="/login" className="underline underline-offset-4">
-							{DICT.AUTH.LOGIN.SUBMIT_LABEL}
+							{DICT.AUTH.LOGIN.SUBMIT_BUTTON}
 						</Link>
 					</FieldDescription>
 				</Field>
@@ -111,3 +110,5 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
 		</form>
 	);
 }
+
+ForgotPasswordForm.title = DICT.AUTH.FORGOT_PASSWORD.TITLE;
