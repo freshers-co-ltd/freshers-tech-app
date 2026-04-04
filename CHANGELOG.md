@@ -1,3 +1,9 @@
+## [0.2.0](https://github.com/SirioBambino/cleaner-hire-pwa/compare/v0.1.1...v0.2.0) (2026-04-04)
+
+### Features
+
+* Host workflow ([10c96a7](https://github.com/SirioBambino/cleaner-hire-pwa/commit/10c96a7e8afeb40f8e7a785342f3a9dc92f4b01c))
+
 ## [0.1.1](https://github.com/SirioBambino/cleaner-hire-pwa/compare/v0.0.0...v0.1.1) (2026-03-17)
 
 ### Features
