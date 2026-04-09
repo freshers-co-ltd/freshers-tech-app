@@ -1,5 +1,6 @@
 'use client';
 
+import { memo, useMemo } from 'react';
 import { Bath, Bed, Home, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +15,15 @@ interface PropertyCardProps {
 	onView: (id: string) => void;
 }
 
-export function PropertyCard({ property, onDelete, onEdit, onView }: PropertyCardProps) {
+export const PropertyCard = memo(({ property, onDelete, onEdit, onView }: PropertyCardProps) => {
+	const imageUrl = useMemo(() => {
+		return mediaService.getMediaUrl(property.main_image_url || null, 'property-media');
+	}, [property.main_image_url]);
+
+	const formattedPostcode = useMemo(() => {
+		return property.postcode.toUpperCase();
+	}, [property.postcode]);
+
 	return (
 		<Card
 			className="overflow-hidden gap-4 p-0 pb-6 transition-all cursor-pointer hover:scale-103 group"
@@ -22,7 +31,7 @@ export function PropertyCard({ property, onDelete, onEdit, onView }: PropertyCar
 			<div className="relative w-full h-60 overflow-hidden bg-muted">
 				{property.main_image_url ? (
 					<img
-						src={mediaService.getMediaUrl(property.main_image_url || null, 'property-media')}
+						src={imageUrl}
 						alt={property.address_line_1}
 						className="object-cover size-full"
 					/>
@@ -63,7 +72,7 @@ export function PropertyCard({ property, onDelete, onEdit, onView }: PropertyCar
 					)}
 				</CardTitle>
 				<p className="text-sm text-muted-foreground">
-					{property.town_city}, {property.postcode.toUpperCase()}
+					{property.town_city}, {formattedPostcode}
 				</p>
 			</CardHeader>
 			<CardContent className="pt-4">
@@ -87,4 +96,4 @@ export function PropertyCard({ property, onDelete, onEdit, onView }: PropertyCar
 			</CardFooter>
 		</Card>
 	);
-}
+});

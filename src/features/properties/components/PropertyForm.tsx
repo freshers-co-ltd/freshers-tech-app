@@ -45,7 +45,7 @@ const propertySchema = z.object({
 	}),
 });
 
-type PropertyFormValues = z.infer<typeof propertySchema>;
+export type PropertyFormValues = z.infer<typeof propertySchema>;
 
 type PropertyFormInput = {
 	address_line_1: string;

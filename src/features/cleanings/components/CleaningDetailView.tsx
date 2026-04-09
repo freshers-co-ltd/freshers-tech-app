@@ -33,7 +33,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { DICT } from '@/dictionary';
 import { useAuth } from '@/features/auth/AuthContext';
-import { type CleaningRequest, STATUS } from '@/features/cleanings/cleaningService';
+import { type CleaningRequest, STATUS_GROUPS } from '@/features/cleanings/cleaningService';
 import { CleaningStatusBadge } from '@/features/cleanings/components/CleaningStatusBadge';
 import { useCarousel } from '@/hooks/useCarousel';
 import { mediaService } from '@/lib/mediaService';
@@ -56,8 +56,8 @@ export function CleaningDetailView({ cleaning, onEdit, onDelete }: CleaningDetai
 	const hasBrokenItems = !!cleaning.report?.broken_items_report;
 	const isSuppliesLow = !!cleaning.report?.low_supplies_report;
 
-	const canEdit = STATUS.CAN_EDIT.includes(cleaning.status);
-	const canCancel = STATUS.CAN_CANCEL.includes(cleaning.status);
+	const canEdit = STATUS_GROUPS.CAN_EDIT.includes(cleaning.status);
+	const canCancel = STATUS_GROUPS.CAN_CANCEL.includes(cleaning.status);
 
 	const evidenceUrls = useMemo(
 		() =>

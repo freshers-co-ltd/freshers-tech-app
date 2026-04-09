@@ -6,7 +6,6 @@ import { Toaster } from '@/components/Toast';
 import { AuthProvider } from '@/features/auth/AuthContext';
 import { CleaningProvider } from '@/features/cleanings/CleaningContext';
 import { PropertyProvider } from '@/features/properties/PropertyContext';
-import { initAuthSync } from '@/lib/authSync';
 import { router } from '@/routes.tsx';
 import '@/index.css';
 
@@ -21,26 +20,20 @@ const updateSW = registerSW({
 	},
 });
 
-const renderApp = () => {
-	const rootElement = document.getElementById('root');
-	if (!rootElement) {
-		throw new Error('Failed to find the root element');
-	}
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+	throw new Error('Failed to find the root element');
+}
 
-	createRoot(rootElement).render(
-		<StrictMode>
-			<AuthProvider>
-				<PropertyProvider>
-					<CleaningProvider>
-						<RouterProvider router={router} />
-						<Toaster />
-					</CleaningProvider>
-				</PropertyProvider>
-			</AuthProvider>
-		</StrictMode>,
-	);
-};
-
-initAuthSync().then(() => {
-	renderApp();
-});
+createRoot(rootElement).render(
+	<StrictMode>
+		<AuthProvider>
+			<PropertyProvider>
+				<CleaningProvider>
+					<RouterProvider router={router} />
+					<Toaster />
+				</CleaningProvider>
+			</PropertyProvider>
+		</AuthProvider>
+	</StrictMode>,
+);

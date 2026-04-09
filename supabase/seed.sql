@@ -32,7 +32,7 @@ VALUES
     false, now(), now(), '', '', '', '', '', '', '', false, false
 ),
 (
-    '00000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000',
+    '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000003',
     'authenticated', 'authenticated', 'cleaner@test.com',
     extensions.crypt('password1!', extensions.gen_salt('bf', 10)),
     now(), now(),

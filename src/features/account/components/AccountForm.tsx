@@ -1,24 +1,21 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Camera, Loader2 } from 'lucide-react';
-import { type ChangeEvent, useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { DICT } from '@/dictionary';
-import { authService, type Profile } from '@/features/auth/authService';
-import { supabase } from '@/lib/supabaseClient';
-import { cn } from '@/lib/utils';
+import { authService } from '@/features/auth/authService';
+import { useAuth } from '@/features/auth/AuthContext';
 
 const personalSchema = z.object({
 	full_name: z.string().trim().min(2, DICT.FORMS.VALIDATION.NAME_MIN),
-	email: z.string().email(DICT.FORMS.VALIDATION.EMAIL_INVALID).trim(),
+	email: z.email(DICT.FORMS.VALIDATION.EMAIL_INVALID).trim(),
 });
 
 const securitySchema = z
@@ -41,17 +38,16 @@ type SecurityFormValues = z.infer<typeof securitySchema>;
 
 interface AccountFormProps {
 	type: 'personal' | 'security';
-	initialData?: Profile | null;
-	userId?: string;
-	onSuccess?: () => void;
 }
 
-export function AccountForm({ type, initialData, userId, onSuccess }: AccountFormProps) {
+export function AccountForm({ type }: AccountFormProps) {
+	const { user, profile } = useAuth();
+
 	const personalForm = useForm<PersonalFormValues>({
 		resolver: zodResolver(personalSchema),
 		defaultValues: {
-			full_name: initialData?.full_name || '',
-			email: initialData?.email || '',
+			full_name: profile?.full_name || '',
+			email: user?.email || '',
 		},
 	});
 
@@ -65,10 +61,10 @@ export function AccountForm({ type, initialData, userId, onSuccess }: AccountFor
 	});
 
 	const onPersonalSubmit = async (values: PersonalFormValues) => {
-		if (!userId) {
+		if (!user?.id) {
 			return;
 		}
-		if (values.email !== initialData?.email) {
+		if (values.email !== user.email) {
 			const { error: emailErr } = await authService.updateEmail(values.email);
 			if (emailErr) {
 				toast.error(emailErr);
@@ -76,16 +72,13 @@ export function AccountForm({ type, initialData, userId, onSuccess }: AccountFor
 			}
 			toast.info(DICT.ACCOUNT.NOTIFICATIONS.EMAIL_PENDING);
 		}
-		const { error } = await authService.updateProfile(userId, {
+		const { error } = await authService.updateProfile(user.id, {
 			full_name: values.full_name,
 		});
 		if (error) {
 			toast.error(error);
 		} else {
 			toast.success(DICT.ACCOUNT.NOTIFICATIONS.UPDATE_SUCCESS);
-			if (onSuccess) {
-				onSuccess();
-			}
 		}
 	};
 
@@ -193,78 +186,5 @@ export function AccountForm({ type, initialData, userId, onSuccess }: AccountFor
 				{DICT.ACCOUNT.LABELS.UPDATE_PASSWORD}
 			</Button>
 		</form>
-	);
-}
-
-export function AccountAvatar({
-	profile,
-	userId,
-	onUploadSuccess,
-}: {
-	profile: Profile | null;
-	userId?: string;
-	onUploadSuccess: (url: string) => void;
-}) {
-	const [isUploading, setIsUploading] = useState(false);
-
-	const handleUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files?.[0];
-		if (!file || !userId) {
-			return;
-		}
-		setIsUploading(true);
-		const { url, error } = await authService.uploadAvatar(userId, file);
-		if (error) {
-			toast.error(error);
-		} else if (url) {
-			const { error: updateError } = await authService.updateProfile(userId, { avatar_url: url });
-			if (updateError) {
-				toast.error(updateError);
-			} else {
-				await supabase.auth.updateUser({
-					data: { avatar_url: url },
-				});
-				onUploadSuccess(url);
-				toast.success('Avatar updated');
-			}
-		}
-		setIsUploading(false);
-	};
-
-	return (
-		<div className="flex flex-col items-center text-center">
-			<div className="relative">
-				<Avatar className="size-24 md:size-32 border border-border">
-					<AvatarImage src={profile?.avatar_url || ''} className="object-cover" />
-					<AvatarFallback className="text-2xl font-medium bg-muted">
-						{profile?.full_name?.charAt(0) || '?'}
-					</AvatarFallback>
-				</Avatar>
-				<label
-					className={cn(
-						'absolute bottom-0 right-0 p-2 bg-background border border-border rounded-full shadow-sm cursor-pointer hover:bg-accent transition-colors',
-						isUploading && 'pointer-events-none',
-					)}>
-					{isUploading ? (
-						<Loader2 className="size-4 animate-spin text-muted-foreground" />
-					) : (
-						<Camera className="size-4 text-muted-foreground" />
-					)}
-					<input
-						type="file"
-						className="hidden"
-						accept="image/*"
-						onChange={handleUpload}
-						disabled={isUploading}
-					/>
-				</label>
-			</div>
-			<div className="mt-4">
-				<h3 className="text-lg font-semibold">{profile?.full_name}</h3>
-				<p className="text-xs font-medium text-muted-foreground uppercase tracking-widest mt-0.5">
-					{profile?.role}
-				</p>
-			</div>
-		</div>
 	);
 }

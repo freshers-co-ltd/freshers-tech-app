@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Loading } from '@/components/Loading';
 import { DICT } from '@/dictionary';
@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabaseClient';
 
 export const AuthCallback = () => {
 	const navigate = useNavigate();
+	const location = useLocation();
+	const [searchParams] = useSearchParams();
 	const processed = useRef(false);
 
 	useEffect(() => {
@@ -16,13 +18,15 @@ export const AuthCallback = () => {
 		processed.current = true;
 
 		const handleCodeExchange = async () => {
-			const params = new URLSearchParams(window.location.search);
-			const code = params.get('code');
-			const error_description = params.get('error_description');
+			const hashParams = new URLSearchParams(location.hash.substring(1));
 
-			if (error_description) {
-				toast.error(error_description);
-				navigate('/login');
+			const code = searchParams.get('code') || hashParams.get('code');
+			const errorDescription =
+				searchParams.get('error_description') || hashParams.get('error_description');
+
+			if (errorDescription) {
+				toast.error(errorDescription);
+				navigate('/login', { replace: true });
 				return;
 			}
 
@@ -30,17 +34,19 @@ export const AuthCallback = () => {
 				const { error } = await supabase.auth.exchangeCodeForSession(code);
 				if (error) {
 					toast.error(DICT.ERRORS.AUTH.LINK_EXPIRED);
-					navigate('/login');
+					navigate('/login', { replace: true });
 				} else {
-					navigate('/dashboard');
+					navigate('/dashboard', { replace: true });
 				}
-			} else {
-				const { data } = await supabase.auth.getSession();
-				navigate(data.session ? '/dashboard' : '/login');
+				return;
 			}
+
+			const { data } = await supabase.auth.getSession();
+			navigate(data.session ? '/dashboard' : '/login', { replace: true });
 		};
+
 		handleCodeExchange();
-	}, [navigate]);
+	}, [navigate, searchParams, location.hash]);
 
 	return <Loading />;
 };

@@ -6,12 +6,22 @@ import { supabase } from '@/lib/supabaseClient';
 export type CleaningDetails = Database['public']['Tables']['cleanings']['Row'];
 export type CleaningInsert = Database['public']['Tables']['cleanings']['Insert'];
 export type CleaningUpdate = Database['public']['Tables']['cleanings']['Update'];
+export type CleaningStatus = Database['public']['Enums']['cleaning_status'];
 
-export const STATUS = {
-	ALL: ['draft', 'requested', 'confirmed', 'in_progress', 'completed', 'cancelled'],
-	CAN_CANCEL: ['draft', 'requested'],
-	CAN_EDIT: ['draft', 'requested', 'confirmed'],
-	CAN_EDIT_RESTRICTED: ['confirmed'],
+export const CLEANING_STATUS: Record<string, CleaningStatus> = {
+	DRAFT: 'draft',
+	REQUESTED: 'requested',
+	CONFIRMED: 'confirmed',
+	IN_PROGRESS: 'in_progress',
+	COMPLETED: 'completed',
+	CANCELLED: 'cancelled',
+};
+
+export const STATUS_GROUPS = {
+	ALL: Object.values(CLEANING_STATUS),
+	CAN_CANCEL: [CLEANING_STATUS.DRAFT, CLEANING_STATUS.REQUESTED],
+	CAN_EDIT: [CLEANING_STATUS.DRAFT, CLEANING_STATUS.REQUESTED, CLEANING_STATUS.CONFIRMED],
+	CAN_EDIT_RESTRICTED: [CLEANING_STATUS.CONFIRMED],
 };
 
 export interface CleaningRequest extends CleaningDetails {
@@ -40,14 +50,15 @@ export interface CleaningRequest extends CleaningDetails {
 export interface CreateCleaningRequestPayload {
 	property_id: string;
 	service_cost: number;
-	scheduled_start: string;
 	custom_tasks: string[];
+	instructions: string;
+	scheduled_start: string;
 }
 
 export interface UpdateCleaningRequestPayload {
-	scheduled_start: string;
-	instructions: string;
 	custom_tasks: string[];
+    instructions: string;
+	scheduled_start: string;
 }
 
 interface RawCleaningRequestQueryResult extends CleaningDetails {
@@ -151,28 +162,64 @@ export const cleaningService = {
 		return { data: typedData, error: null };
 	},
 
+	async getCleaningRequestById(id: string): Promise<ActionResult<CleaningRequest>> {
+		const { data, error } = await supabase
+			.from('cleanings')
+			.select(`
+                *,
+                properties (*),
+                cleaner:profiles_public!cleanings_cleaner_id_fkey (full_name, avatar_url),
+                evidence:evidence_media (id, media_url, type),
+                cleaning_tasks (description, is_completed, is_custom),
+                cleaning_reports (broken_items_report, low_supplies_report, created_at)
+            `)
+			.eq('id', id)
+			.single();
+
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+
+		const item = data as unknown as RawCleaningRequestQueryResult;
+		const propertyData = Array.isArray(item.properties) ? item.properties[0] : item.properties;
+
+		const transformed: CleaningRequest = {
+			...item,
+			properties: propertyData || null,
+			tasks: item.cleaning_tasks || [],
+			cleaner: (Array.isArray(item.cleaner) ? item.cleaner[0] : item.cleaner) || null,
+			evidence: item.evidence || [],
+			report:
+				(Array.isArray(item.cleaning_reports) ? item.cleaning_reports[0] : item.cleaning_reports) ||
+				null,
+		};
+
+		return { data: transformed, error: null };
+	},
+
 	async createCleaningRequest(
 		payload: CreateCleaningRequestPayload,
-	): Promise<ActionResult<string>> {
-		const { data, error } = await supabase.rpc('create_cleaning_request', {
+	): Promise<ActionResult<CleaningRequest>> {
+		const { data: id, error } = await supabase.rpc('create_cleaning_request', {
 			p_property_id: payload.property_id,
 			p_service_cost: payload.service_cost,
-			p_scheduled_start: payload.scheduled_start,
 			p_custom_tasks: payload.custom_tasks,
+			p_instructions: payload.instructions,
+			p_scheduled_start: payload.scheduled_start,
 		});
 
 		if (error) {
 			return { data: null, error: mapDatabaseError(error) };
 		}
 
-		return { data: data as string, error: null };
+		return this.getCleaningRequestById(id as string);
 	},
 
 	async updateCleaningRequest(
 		id: string,
 		payload: UpdateCleaningRequestPayload,
-	): Promise<ActionResult<string>> {
-		const { data, error } = await supabase.rpc('update_cleaning_request', {
+	): Promise<ActionResult<CleaningRequest>> {
+		const { error } = await supabase.rpc('update_cleaning_request', {
 			p_cleaning_id: id,
 			p_custom_tasks: payload.custom_tasks,
 			p_instructions: payload.instructions,
@@ -183,11 +230,7 @@ export const cleaningService = {
 			return { data: null, error: mapDatabaseError(error) };
 		}
 
-		if (data === null) {
-			return { data: null, error: 'Update failed: No data returned' };
-		}
-
-		return { data: data as string, error: null };
+		return this.getCleaningRequestById(id);
 	},
 
 	async deleteCleaningRequest(id: string): Promise<{ error: string | null }> {

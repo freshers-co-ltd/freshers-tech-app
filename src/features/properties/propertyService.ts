@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabaseClient';
 export type Property = Database['public']['Tables']['properties']['Row'];
 export type PropertyInsert = Database['public']['Tables']['properties']['Insert'];
 export type PropertyUpdate = Database['public']['Tables']['properties']['Update'];
+export type PropertyType = Database['public']['Enums']['property_type'];
 
 export const propertyService = {
 	async getProperties(): Promise<ActionResult<Property[]>> {

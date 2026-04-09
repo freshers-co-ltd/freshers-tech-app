@@ -1,11 +1,11 @@
 'use client';
 
+import { memo, useMemo } from 'react';
 import { format } from 'date-fns';
 import { Banknote, Calendar, ClipboardCheck, MapPin, Pencil, Trash2 } from 'lucide-react';
-import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { type CleaningRequest, STATUS } from '@/features/cleanings/cleaningService';
+import { type CleaningRequest, STATUS_GROUPS } from '@/features/cleanings/cleaningService';
 import { CleaningStatusBadge } from '@/features/cleanings/components/CleaningStatusBadge';
 import { mediaService } from '@/lib/mediaService';
 
@@ -16,14 +16,22 @@ interface CleaningCardProps {
 	onView: (id: string) => void;
 }
 
-export function CleaningCard({ cleaning, onDelete, onEdit, onView }: CleaningCardProps) {
-	const imageUrl = useMemo(
-		() => mediaService.getMediaUrl(cleaning.properties?.main_image_url || null, 'property-media'),
-		[cleaning.properties?.main_image_url],
-	);
+export const CleaningCard = memo(({ cleaning, onDelete, onEdit, onView }: CleaningCardProps) => {
+	const imageUrl = useMemo(() => {
+		return mediaService.getMediaUrl(cleaning.properties?.main_image_url || null, 'property-media');
+	}, [cleaning.properties?.main_image_url]);
 
-	const canEdit = STATUS.CAN_EDIT.includes(cleaning.status);
-	const canCancel = STATUS.CAN_CANCEL.includes(cleaning.status);
+	const canEdit = useMemo(() => {
+		return STATUS_GROUPS.CAN_EDIT.includes(cleaning.status);
+	}, [cleaning.status]);
+
+	const canCancel = useMemo(() => {
+		return STATUS_GROUPS.CAN_CANCEL.includes(cleaning.status);
+	}, [cleaning.status]);
+
+	const formattedPostcode = useMemo(() => {
+		return cleaning.properties?.postcode?.toUpperCase();
+	}, [cleaning.properties?.postcode]);
 
 	return (
 		<Card
@@ -82,7 +90,7 @@ export function CleaningCard({ cleaning, onDelete, onEdit, onView }: CleaningCar
 					{cleaning.properties?.address_line_2 && `, ${cleaning.properties?.address_line_2}`}
 				</CardTitle>
 				<p className="text-sm text-muted-foreground">
-					{cleaning.properties?.town_city}, {cleaning.properties?.postcode?.toUpperCase()}
+					{cleaning.properties?.town_city}, {formattedPostcode}
 				</p>
 			</CardHeader>
 
@@ -115,4 +123,4 @@ export function CleaningCard({ cleaning, onDelete, onEdit, onView }: CleaningCar
 			</CardFooter>
 		</Card>
 	);
-}
+});

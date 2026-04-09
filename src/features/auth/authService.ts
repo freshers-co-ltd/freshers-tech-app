@@ -1,8 +1,9 @@
 import type { AuthError, User } from '@supabase/supabase-js';
 import { DICT } from '@/dictionary';
 import { supabase } from '@/lib/supabaseClient';
+import type { Database } from '@/lib/database.types';
 
-export type UserRole = 'host' | 'cleaner' | 'admin';
+export type UserRole = Database['public']['Enums']['user_role'];
 
 export interface Profile {
 	id: string;
@@ -228,28 +229,6 @@ export const authService = {
 			return { error: mapAuthError(error) };
 		}
 		return { error: null };
-	},
-
-	async uploadAvatar(
-		userId: string,
-		file: File,
-	): Promise<{ url: string | null; error: string | null }> {
-		const fileExt = file.name.split('.').pop();
-		const filePath = `${userId}/avatar.${fileExt}`;
-
-		const { error: uploadError } = await supabase.storage
-			.from('avatars')
-			.upload(filePath, file, { upsert: true });
-
-		if (uploadError) {
-			return { url: null, error: uploadError.message };
-		}
-
-		const {
-			data: { publicUrl },
-		} = supabase.storage.from('avatars').getPublicUrl(filePath);
-
-		return { url: publicUrl, error: null };
 	},
 
 	async reauthenticate(password: string): Promise<{ error: string | null }> {

@@ -9,16 +9,22 @@ import {
 import { Loading } from '@/components/Loading';
 import { useAuth } from '@/features/auth/AuthContext';
 import { AuthLayout } from '@/layouts/AuthLayout';
-import { DashboardLayout } from '@/layouts/DashboardLayout';
+import { AppLayout } from '@/layouts/AppLayout';
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPassword';
 import { LoginPage } from '@/pages/auth/Login';
 import { SignupPage } from '@/pages/auth/Signup';
 import { ErrorPage } from '@/pages/Error';
 import type { UserRole } from './features/auth/authService';
 
-const lazyLoad = <T extends Record<string, unknown>>(
-	importFn: () => Promise<Record<string, ComponentType<T>>>,
-	name: string,
+const ROLE_DASHBOARDS: Record<UserRole, string> = {
+	host: '/host/dashboard',
+	cleaner: '/cleaner/dashboard',
+	admin: '/admin/dashboard',
+};
+
+export const lazyLoad = <T extends Record<string, unknown>, U extends string>(
+	importFn: () => Promise<{ [K in U]: ComponentType<T> }>,
+	name: U,
 ): ReactElement => {
 	const LazyComponent = lazy(async () => {
 		const module = await importFn();
@@ -26,14 +32,12 @@ const lazyLoad = <T extends Record<string, unknown>>(
 		if (!Component) {
 			throw new Error(`Component "${name}" not found in module.`);
 		}
-		return { default: Component };
+		return { default: Component as ComponentType<T> };
 	});
-
-	const ComponentToRender = LazyComponent as unknown as ComponentType<Record<string, unknown>>;
 
 	return (
 		<Suspense fallback={<Loading />}>
-			<ComponentToRender />
+			<LazyComponent {...({} as T)} />
 		</Suspense>
 	);
 };
@@ -44,12 +48,6 @@ export interface NavigationState {
 	[key: string]: unknown;
 }
 
-const useForwardState = (extraData: NavigationState = {}): NavigationState => {
-	const location = useLocation();
-	const currentState = (location.state as NavigationState) || {};
-	return { ...currentState, ...extraData };
-};
-
 interface ProtectedRouteProps {
 	children?: React.ReactNode;
 	allowedRoles?: UserRole[];
@@ -58,39 +56,47 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
 	const { user, profile, loading } = useAuth();
 	const location = useLocation();
-	const state = useForwardState({ from: location.pathname });
-
-	if (loading || (user && !profile && navigator.onLine)) {
-		return <Loading />;
-	}
-
-	if (!user) {
-		return <Navigate to="/login" state={state} replace />;
-	}
-
-	if (allowedRoles && (!profile || !allowedRoles.includes(profile.role as UserRole))) {
-		return <Navigate to="/error/403" replace />;
-	}
-
-	return children ? children : <Outlet />;
-};
-
-export const PublicRoute = () => {
-	const { user, loading } = useAuth();
-	const location = useLocation();
 
 	if (loading) {
 		return <Loading />;
 	}
 
-	console.log('[PublicRoute] Auth State:', { loading, user: !!user, path: location.pathname });
+	if (!user) {
+		return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+	}
+
+	if (!profile) {
+		return <Loading />;
+	}
+
+	if (allowedRoles && !allowedRoles.includes(profile.role as UserRole)) {
+		return <Navigate to="/error/403" replace />;
+	}
+
+	return children ? (children as ReactElement) : <Outlet />;
+};
+
+export const PublicRoute = () => {
+	const { user, profile, loading } = useAuth();
+	const location = useLocation();
+	const state = location.state as NavigationState;
+
+	if (loading) {
+		return <Loading />;
+	}
 
 	const searchParams = new URLSearchParams(location.search);
 	const isLoggingOut = searchParams.get('reason') === 'inactivity';
 
-	if (user && !isLoggingOut) {
-		const state = location.state as NavigationState;
+	if (user && profile && !isLoggingOut) {
 		const fallbackPath = state?.from && typeof state.from === 'string' ? state.from : '/dashboard';
+
+		if (
+			fallbackPath === location.pathname ||
+			(location.pathname === '/' && fallbackPath === '/login')
+		) {
+			return <Navigate to="/dashboard" replace />;
+		}
 
 		return <Navigate to={fallbackPath} replace />;
 	}
@@ -100,29 +106,22 @@ export const PublicRoute = () => {
 
 export const DashboardRedirect = () => {
 	const { profile, loading, user } = useAuth();
-	const state = useForwardState();
+	const location = useLocation();
+	const state = location.state as NavigationState;
 
 	if (loading) {
 		return <Loading />;
 	}
+
 	if (!user) {
-		return <Navigate to="/login" state={state} replace />;
+		return <Navigate to="/login" state={{ from: state?.from }} replace />;
 	}
 
-	const role = (profile?.role || user.user_metadata?.role) as UserRole;
-	let destination = '/error/403';
-
-	switch (role) {
-		case 'host':
-			destination = '/host/dashboard';
-			break;
-		case 'cleaner':
-			destination = '/cleaner/dashboard';
-			break;
-		case 'admin':
-			destination = '/admin/dashboard';
-			break;
+	if (!profile) {
+		return <Loading />;
 	}
+
+	const destination = ROLE_DASHBOARDS[profile.role as UserRole] || '/error/403';
 
 	return <Navigate to={destination} replace />;
 };
@@ -178,7 +177,7 @@ const routesConfig: RouteObject[] = [
 				path: '/host',
 				element: (
 					<ProtectedRoute allowedRoles={['host']}>
-						<DashboardLayout />
+						<AppLayout />
 					</ProtectedRoute>
 				),
 				children: [
@@ -204,7 +203,7 @@ const routesConfig: RouteObject[] = [
 				path: '/cleaner',
 				element: (
 					<ProtectedRoute allowedRoles={['cleaner']}>
-						<DashboardLayout />
+						<AppLayout />
 					</ProtectedRoute>
 				),
 				children: [
@@ -212,13 +211,17 @@ const routesConfig: RouteObject[] = [
 						path: 'dashboard',
 						element: lazyLoad(() => import('@/pages/cleaner/Dashboard'), 'CleanerDashboardPage'),
 					},
+					{
+						path: 'account',
+						element: lazyLoad(() => import('@/pages/Account'), 'AccountPage'),
+					},
 				],
 			},
 			{
 				path: '/admin',
 				element: (
 					<ProtectedRoute allowedRoles={['admin']}>
-						<DashboardLayout />
+						<AppLayout />
 					</ProtectedRoute>
 				),
 				children: [

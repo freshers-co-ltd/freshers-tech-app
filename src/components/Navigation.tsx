@@ -2,6 +2,7 @@ import { ClipboardList, Home, LayoutDashboard, User } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/features/auth/AuthContext';
 import { cn } from '@/lib/utils';
+import type { UserRole } from '@/features/auth/authService';
 
 type NavItem = {
 	name: string;
@@ -9,9 +10,7 @@ type NavItem = {
 	icon: React.ComponentType<{ className?: string }>;
 };
 
-type Role = 'host' | 'cleaner' | 'admin';
-
-type RoleNavConfig = Record<Role, NavItem[]>;
+type RoleNavConfig = Record<UserRole, NavItem[]>;
 
 const NAV_CONFIG: RoleNavConfig = {
 	host: [
@@ -34,7 +33,7 @@ export function Navigation() {
 	const { profile } = useAuth();
 	const location = useLocation();
 
-	const role = (profile?.role as Role) || 'host';
+	const role = (profile?.role as UserRole) || 'host';
 	const navItems = NAV_CONFIG[role];
 	return (
 		<>

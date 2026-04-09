@@ -17,6 +17,9 @@
 	--color-primary-light: oklch(57.499% 0.19011 263.112);
 	--color-primary-dark: oklch(0.35 0.18 264);
 
+	--color-accent: oklch(0.96 0.015 264);
+	--color-accent-foreground: var(--color-primary);
+
 	--color-muted: oklch(0.961 0.006 250);
 	--color-muted-foreground: oklch(0.554 0.046 257.417);
 

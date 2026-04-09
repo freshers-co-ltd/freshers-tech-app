@@ -1,6 +1,8 @@
 import { supabase } from '@/lib/supabaseClient';
+import type { Database } from '@/lib/database.types';
 
-export type StorageBucket = 'property-media' | 'cleaning-media';
+export type MediaType = Database['public']['Enums']['media_type'];
+export type StorageBucket = Database['storage']['Tables']['buckets']['Row']['id'];
 
 export const mediaService = {
 	getMediaUrl(path: string | null, bucket: StorageBucket): string {
@@ -18,13 +20,14 @@ export const mediaService = {
 	},
 
 	async uploadMedia(
-		userId: string,
+		folderId: string,
 		file: File,
 		bucket: StorageBucket,
 	): Promise<{ path: string | null; error: string | null }> {
-		const fileExt = file.name.split('.').pop();
-		const fileName = `${crypto.randomUUID()}.${fileExt}`;
-		const filePath = `${userId}/${fileName}`;
+		const lastDotIndex = file.name.lastIndexOf('.');
+		const fileExt = lastDotIndex !== -1 ? file.name.slice(lastDotIndex + 1) : '';
+		const fileName = `${crypto.randomUUID()}${fileExt ? `.${fileExt}` : ''}`;
+		const filePath = `${folderId}/${fileName}`;
 
 		const { error: uploadError } = await supabase.storage.from(bucket).upload(filePath, file);
 

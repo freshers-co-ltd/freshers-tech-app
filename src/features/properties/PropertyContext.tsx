@@ -3,11 +3,16 @@
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/features/auth/AuthContext';
-import { type Property, type PropertyInsert, propertyService } from './propertyService';
+import {
+	type Property,
+	type PropertyInsert,
+	propertyService,
+} from '@/features/properties/propertyService';
 
 interface PropertyContextType {
 	properties: Property[];
 	isLoading: boolean;
+	fetchProperties: () => Promise<void>;
 	upsertProperty: (property: PropertyInsert) => Promise<{ success: boolean; data?: Property }>;
 	deleteProperty: (id: string) => Promise<{ success: boolean }>;
 }
@@ -17,7 +22,7 @@ const PropertyContext = createContext<PropertyContextType | undefined>(undefined
 export function PropertyProvider({ children }: { children: ReactNode }) {
 	const [properties, setProperties] = useState<Property[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
-	const { user } = useAuth();
+	const { user, profile } = useAuth();
 
 	const fetchProperties = useCallback(async () => {
 		if (!user) {
@@ -26,10 +31,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 			return;
 		}
 
-		if (properties.length === 0) {
-			setIsLoading(true);
-		}
-
+		setIsLoading(true);
 		const { data, error } = await propertyService.getProperties();
 
 		if (error) {
@@ -39,11 +41,15 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 		}
 
 		setIsLoading(false);
-	}, [user, properties.length]);
+	}, [user]);
 
 	useEffect(() => {
-		fetchProperties();
-	}, [fetchProperties]);
+		if (user && profile?.role === 'host') {
+			fetchProperties();
+		} else if (user && profile) {
+			setIsLoading(false);
+		}
+	}, [user, profile, fetchProperties]);
 
 	const upsertProperty = async (property: PropertyInsert) => {
 		const { data, error } = await propertyService.upsertProperty(property);
@@ -71,7 +77,14 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 	};
 
 	return (
-		<PropertyContext.Provider value={{ properties, isLoading, upsertProperty, deleteProperty }}>
+		<PropertyContext.Provider
+			value={{
+				properties,
+				isLoading,
+				fetchProperties,
+				upsertProperty,
+				deleteProperty,
+			}}>
 			{children}
 		</PropertyContext.Provider>
 	);

@@ -203,8 +203,9 @@ USING (uploader_id = (SELECT auth.uid()));
 CREATE OR REPLACE FUNCTION public.create_cleaning_request(
     p_property_id UUID,
     p_service_cost NUMERIC,
-    p_scheduled_start TIMESTAMPTZ,
-    p_custom_tasks TEXT[]
+    p_custom_tasks TEXT[],
+    p_instructions TEXT,
+    p_scheduled_start TIMESTAMPTZ
 ) 
 RETURNS UUID
 SECURITY DEFINER
@@ -216,8 +217,8 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM public.properties WHERE id = p_property_id AND host_id = (SELECT auth.uid())) THEN
         RAISE EXCEPTION 'Unauthorised' USING ERRCODE = 'P0001';
     END IF;
-    INSERT INTO public.cleanings (property_id, host_id, service_cost, scheduled_start, status) 
-    VALUES (p_property_id, (SELECT auth.uid()), p_service_cost, p_scheduled_start, 'requested')
+    INSERT INTO public.cleanings (property_id, host_id, service_cost, scheduled_start, status, instructions) 
+    VALUES (p_property_id, (SELECT auth.uid()), p_service_cost, p_scheduled_start, 'requested', p_instructions)
     RETURNING id INTO v_cleaning_id;
     INSERT INTO public.cleaning_tasks (cleaning_id, description, is_custom, is_completed)
     SELECT v_cleaning_id, description, false, false FROM standard_tasks WHERE is_active = true;

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState, type KeyboardEvent } from 'react';
 
 interface UseCarouselProps {
 	images: string[];
@@ -7,56 +7,58 @@ interface UseCarouselProps {
 }
 
 export function useCarousel({ images, initialImage, isKeyboardEnabled }: UseCarouselProps) {
-	const [activeImage, setActiveImage] = useState<string | undefined>(initialImage || images[0]);
-
-	useEffect(() => {
+	const [currentIndex, setCurrentIndex] = useState(() => {
 		if (initialImage) {
-			setActiveImage(initialImage);
-		} else if (images.length > 0) {
-			setActiveImage(images[0]);
+			const index = images.indexOf(initialImage);
+			return index !== -1 ? index : 0;
 		}
-	}, [initialImage, images]);
-
-	const currentIndex = activeImage ? images.indexOf(activeImage) : -1;
+		return 0;
+	});
 
 	const nextImage = useCallback(() => {
 		if (images.length === 0) {
 			return;
 		}
-		const nextIdx = (currentIndex + 1) % images.length;
-		setActiveImage(images[nextIdx]);
-	}, [currentIndex, images]);
+		setCurrentIndex((prev) => (prev + 1) % images.length);
+	}, [images.length]);
 
 	const prevImage = useCallback(() => {
 		if (images.length === 0) {
 			return;
 		}
-		const prevIdx = (currentIndex - 1 + images.length) % images.length;
-		setActiveImage(images[prevIdx]);
-	}, [currentIndex, images]);
+		setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+	}, [images.length]);
 
-	useEffect(() => {
+	const handleKeyDown = useCallback((e: KeyboardEvent<HTMLElement>) => {
 		if (!isKeyboardEnabled) {
 			return;
 		}
-		const handleKeyDown = (e: KeyboardEvent) => {
-			if (e.key === 'ArrowRight') {
-				nextImage();
-			}
-			if (e.key === 'ArrowLeft') {
-				prevImage();
-			}
-		};
-		window.addEventListener('keydown', handleKeyDown);
-		return () => window.removeEventListener('keydown', handleKeyDown);
+		if (e.key === 'ArrowRight') {
+			nextImage();
+		}
+		if (e.key === 'ArrowLeft') {
+			prevImage();
+		}
 	}, [isKeyboardEnabled, nextImage, prevImage]);
 
+	const setActiveImage = useCallback((image: string) => {
+		const index = images.indexOf(image);
+		if (index !== -1) {
+			setCurrentIndex(index);
+		}
+	}, [images]);
+
 	return {
-		activeImage,
+		activeImage: images[currentIndex],
 		setActiveImage,
 		currentIndex,
 		nextImage,
 		prevImage,
 		allImages: images,
+		handleKeyDown,
+		containerProps: {
+			tabIndex: 0,
+			onKeyDown: handleKeyDown,
+		},
 	};
 }

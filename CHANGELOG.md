@@ -17,4 +17,3 @@
 ### Maintenance
 
 *  Connect supabase to project ([64bf494](https://github.com/SirioBambino/cleaner-hire-pwa/commit/64bf4942f166567836887064168c4d678a8f9b82))
-* **release:** 0.1.0 [skip actions] ([8c3e432](https://github.com/SirioBambino/cleaner-hire-pwa/commit/8c3e432fad7505535aba86e460c2763f8cc7c66e))

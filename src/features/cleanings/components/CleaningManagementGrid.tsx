@@ -11,7 +11,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
-import { STATUS } from '@/features/cleanings/cleaningService';
+import { STATUS_GROUPS } from '@/features/cleanings/cleaningService';
 import { CleaningCard } from '@/features/cleanings/components/CleaningCard';
 
 interface CleaningManagementGridProps {
@@ -94,7 +94,7 @@ export function CleaningManagementGrid({ onView, onEdit, onDelete }: CleaningMan
 					</SelectTrigger>
 					<SelectContent>
 						<SelectItem value="all">All Statuses</SelectItem>
-						{STATUS.ALL.map((status) => (
+						{STATUS_GROUPS.ALL.map((status) => (
 							<SelectItem key={status} value={status}>
 								{status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
 							</SelectItem>

@@ -6,18 +6,18 @@ import { useAuth } from '@/features/auth/AuthContext';
 import {
 	type CleaningRequest,
 	type CreateCleaningRequestPayload,
-	cleaningService,
 	type UpdateCleaningRequestPayload,
-} from './cleaningService';
+	cleaningService,
+} from '@/features/cleanings/cleaningService';
 
 interface CleaningContextType {
 	cleanings: CleaningRequest[];
 	isLoading: boolean;
-	error: string | null;
-	refresh: () => Promise<void>;
-	createCleaning: (payload: CreateCleaningRequestPayload) => Promise<boolean>;
-	updateCleaning: (id: string, update: UpdateCleaningRequestPayload) => Promise<boolean>;
-	deleteCleaning: (id: string) => Promise<boolean>;
+	fetchCleanings: () => Promise<void>;
+	upsertCleaning: (
+		payload: CreateCleaningRequestPayload | (UpdateCleaningRequestPayload & { id: string }),
+	) => Promise<{ success: boolean; data?: CleaningRequest }>;
+	deleteCleaning: (id: string) => Promise<{ success: boolean }>;
 }
 
 const CleaningContext = createContext<CleaningContextType | undefined>(undefined);
@@ -25,8 +25,7 @@ const CleaningContext = createContext<CleaningContextType | undefined>(undefined
 export function CleaningProvider({ children }: { children: ReactNode }) {
 	const [cleanings, setCleanings] = useState<CleaningRequest[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
-	const [error, setError] = useState<string | null>(null);
-	const { user } = useAuth();
+	const { user, profile } = useAuth();
 
 	const fetchCleanings = useCallback(async () => {
 		if (!user) {
@@ -35,69 +34,64 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 			return;
 		}
 
-		if (cleanings.length === 0) {
-			setIsLoading(true);
-		}
+		setIsLoading(true);
+		const { data, error } = await cleaningService.getCleaningRequests();
 
-		setError(null);
-		const { data, error: fetchError } = await cleaningService.getCleaningRequests();
-
-		if (fetchError) {
-			setError(fetchError);
-			toast.error(fetchError);
-		} else {
-			setCleanings(data || []);
+		if (error) {
+			toast.error(error);
+		} else if (data) {
+			setCleanings(data);
 		}
 
 		setIsLoading(false);
-	}, [user, cleanings.length]);
+	}, [user]);
 
 	useEffect(() => {
-		fetchCleanings();
-	}, [fetchCleanings]);
+		if (user && profile?.role === 'host') {
+			fetchCleanings();
+		} else if (user && profile) {
+			setIsLoading(false);
+		}
+	}, [user, profile, fetchCleanings]);
 
-	const createCleaning = async (payload: CreateCleaningRequestPayload): Promise<boolean> => {
-		const { error: createError } = await cleaningService.createCleaningRequest(payload);
+	const upsertCleaning = async (
+		payload: CreateCleaningRequestPayload | (UpdateCleaningRequestPayload & { id: string }),
+	) => {
+		const isUpdate = 'id' in payload;
 
-		if (createError) {
-			toast.error(createError);
-			return false;
+		const { data, error } = isUpdate
+			? await cleaningService.updateCleaningRequest(
+					payload.id,
+					payload as UpdateCleaningRequestPayload,
+				)
+			: await cleaningService.createCleaningRequest(payload as CreateCleaningRequestPayload);
+
+		if (error) {
+			toast.error(error);
+			return { success: false };
 		}
 
-		await fetchCleanings();
-		return true;
-	};
-
-	const updateCleaning = async (
-		id: string,
-		update: UpdateCleaningRequestPayload,
-	): Promise<boolean> => {
-		const { error: updateError } = await cleaningService.updateCleaningRequest(id, update);
-
-		if (updateError) {
-			toast.error(updateError);
-			return false;
-		}
-
-		await fetchCleanings();
-		return true;
-	};
-
-	const deleteCleaning = async (id: string): Promise<boolean> => {
-		const { error: deleteError } = await cleaningService.deleteCleaningRequest(id);
-
-		if (deleteError) {
-			toast.error(deleteError);
-			return false;
-		}
-
-		setCleanings((prev) => {
-			return prev.filter((c) => {
-				return c.id !== id;
+		if (data) {
+			setCleanings((prev) => {
+				const exists = prev.find((c) => c.id === data.id);
+				return exists ? prev.map((c) => (c.id === data.id ? data : c)) : [data, ...prev];
 			});
-		});
+			return { success: true, data };
+		}
 
-		return true;
+		return { success: false };
+	};
+
+	const deleteCleaning = async (id: string) => {
+		const { error } = await cleaningService.deleteCleaningRequest(id);
+
+		if (error) {
+			toast.error(error);
+			return { success: false };
+		}
+
+		setCleanings((prev) => prev.filter((c) => c.id !== id));
+		return { success: true };
 	};
 
 	return (
@@ -105,10 +99,8 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 			value={{
 				cleanings,
 				isLoading,
-				error,
-				refresh: fetchCleanings,
-				createCleaning,
-				updateCleaning,
+				fetchCleanings,
+				upsertCleaning,
 				deleteCleaning,
 			}}>
 			{children}

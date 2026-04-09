@@ -2,6 +2,7 @@ import type { PostgrestSingleResponse, Session, User } from '@supabase/supabase-
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import type { UserRole } from '@/features/auth/authService';
 import { supabase } from '@/lib/supabaseClient';
+import { initAuthSync } from '@/lib/authSync';
 
 interface Profile {
 	id: string;
@@ -15,58 +16,51 @@ export interface AuthContextType {
 	profile: Profile | null;
 	session: Session | null;
 	loading: boolean;
+	initialised: boolean;
+	refreshProfile: () => Promise<void>;
 	signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-	const [user, setUser] = useState<User | null>(null);
 	const [session, setSession] = useState<Session | null>(null);
+	const [user, setUser] = useState<User | null>(null);
 	const [profile, setProfile] = useState<Profile | null>(null);
 	const [loading, setLoading] = useState(true);
+	const [initialised, setInitialised] = useState(false);
 
 	const fetchProfile = useCallback(
-		async (userId: string, signal?: AbortSignal): Promise<Profile | null> => {
-			console.log('[fetchProfile] Starting fetch for userId:', userId);
-
+		async (
+			userId: string,
+			signal?: AbortSignal,
+			retryCount: number = 0,
+		): Promise<Profile | null> => {
 			const timeout = new Promise<null>((_, reject) => {
 				setTimeout(() => {
-					console.log('[fetchProfile] TIMEOUT - took longer than 15s for userId:', userId);
 					reject(new Error('DB_TIMEOUT'));
-				}, 15000);
+				}, 10000);
 			});
 
 			try {
 				const fetchPromise = supabase.from('profiles').select('*').eq('id', userId).single();
-				console.log('[fetchProfile] Query sent for userId:', userId);
-
 				const { data, error } = await (Promise.race([fetchPromise, timeout]) as Promise<
 					PostgrestSingleResponse<Profile>
 				>);
 
-				console.log(
-					'[fetchProfile] Response received - userId:',
-					userId,
-					'data:',
-					data,
-					'error:',
-					error,
-				);
-
 				if (error) {
 					throw error;
 				}
+
 				if (signal?.aborted) {
-					console.log('[fetchProfile] Signal aborted for userId:', userId);
 					return null;
 				}
-				console.log('[fetchProfile] Successfully returning profile for userId:', userId);
+
 				return data as Profile;
 			} catch (err: unknown) {
-				console.error('[fetchProfile] Error caught for userId:', userId, 'error:', err);
-				if (err instanceof Error && err.name === 'AbortError') {
-					return null;
+				if (retryCount < 2 && !(err instanceof Error && err.name === 'AbortError')) {
+					await new Promise((resolve) => setTimeout(resolve, 2000));
+					return fetchProfile(userId, signal, retryCount + 1);
 				}
 				const {
 					data: { user: currentUser },
@@ -85,42 +79,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		[],
 	);
 
-	useEffect(() => {
-		let isMounted = true;
-		const controller = new AbortController();
-
-		const handleAuthStateChange = async (currentSession: Session | null) => {
-			console.log('[handleAuthStateChange] Session change detected:', {
-				hasSession: !!currentSession,
-				userId: currentSession?.user?.id,
-				timestamp: new Date().toISOString(),
-			});
-
-			if (!isMounted) {
-				console.log('[handleAuthStateChange] Component not mounted, returning');
-				return;
-			}
-
+	const handleAuthStateChange = useCallback(
+		async (currentSession: Session | null, signal?: AbortSignal) => {
+			setLoading(true);
 			const currentUser = currentSession?.user ?? null;
-			console.log(
-				'[handleAuthStateChange] Current user:',
-				currentUser?.id,
-				'email:',
-				currentUser?.email,
-			);
 
 			setSession(currentSession);
 			setUser(currentUser);
 
 			if (currentUser) {
 				const metadata = currentUser.user_metadata;
-				console.log('[handleAuthStateChange] User metadata:', metadata);
-
 				if (metadata?.role && metadata?.full_name) {
-					console.log(
-						'[handleAuthStateChange] Setting profile from metadata for userId:',
-						currentUser.id,
-					);
 					setProfile({
 						id: currentUser.id,
 						full_name: metadata.full_name,
@@ -128,33 +97,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 					});
 				}
 
-				console.log('[handleAuthStateChange] Fetching profile from DB for userId:', currentUser.id);
-				const profileData = await fetchProfile(currentUser.id, controller.signal);
-				console.log(
-					'[handleAuthStateChange] Profile fetch result for userId:',
-					currentUser.id,
-					'data:',
-					profileData,
-				);
+				const profileData = await fetchProfile(currentUser.id, signal);
 
-				if (isMounted) {
-					if (profileData) {
-						console.log('[handleAuthStateChange] Setting profile data for userId:', currentUser.id);
-						setProfile(profileData);
-					}
-					setLoading(false);
+				if (profileData) {
+					setProfile(profileData);
 				}
 			} else {
-				console.log('[handleAuthStateChange] No current user, clearing auth state');
-				if (isMounted) {
-					setProfile(null);
-					setSession(null);
-					setLoading(false);
-				}
+				setProfile(null);
+				setSession(null);
 			}
-		};
+			setLoading(false);
+		},
+		[fetchProfile],
+	);
+
+	useEffect(() => {
+		let isMounted = true;
+		const controller = new AbortController();
 
 		const initializeAuth = async () => {
+			await initAuthSync();
 			const {
 				data: { session: initialSession },
 			} = await supabase.auth.getSession();
@@ -162,19 +124,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			if (!initialSession && !window.localStorage.getItem('trust_device')) {
 				const syncedSession = window.sessionStorage.getItem('sb-auth-token');
 				if (syncedSession) {
-					await supabase.auth.setSession(JSON.parse(syncedSession));
+					const parsed = JSON.parse(syncedSession);
+					await supabase.auth.setSession(parsed);
 					const {
 						data: { session: retrySession },
 					} = await supabase.auth.getSession();
 					if (isMounted) {
-						await handleAuthStateChange(retrySession);
+						await handleAuthStateChange(retrySession, controller.signal);
+						setInitialised(true);
 					}
 					return;
 				}
 			}
 
 			if (isMounted) {
-				await handleAuthStateChange(initialSession);
+				await handleAuthStateChange(initialSession, controller.signal);
+				setInitialised(true);
 			}
 		};
 
@@ -183,10 +148,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		const {
 			data: { subscription },
 		} = supabase.auth.onAuthStateChange((event, currentSession) => {
-			console.log('[onAuthStateChange] Auth event:', event, 'userId:', currentSession?.user?.id);
-
 			if (event === 'SIGNED_OUT') {
-				console.log('[onAuthStateChange] SIGNED_OUT event - clearing everything');
 				setSession(null);
 				setUser(null);
 				setProfile(null);
@@ -196,13 +158,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 				event === 'SIGNED_IN' ||
 				event === 'TOKEN_REFRESHED'
 			) {
-				console.log(
-					'[onAuthStateChange] Session event:',
-					event,
-					'userId:',
-					currentSession?.user?.id,
-				);
-				handleAuthStateChange(currentSession);
+				handleAuthStateChange(currentSession, controller.signal);
 			}
 		});
 
@@ -211,7 +167,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			controller.abort();
 			subscription.unsubscribe();
 		};
-	}, [fetchProfile]);
+	}, [handleAuthStateChange]);
+
+	const refreshProfile = useCallback(async () => {
+		if (user) {
+			const data = await fetchProfile(user.id);
+			if (data) {
+				setProfile(data);
+			}
+		}
+	}, [user, fetchProfile]);
 
 	const signOut = useCallback(async () => {
 		try {
@@ -220,15 +185,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			setProfile(null);
 			setUser(null);
 			setSession(null);
-
 			localStorage.clear();
 			sessionStorage.clear();
 		}
 	}, []);
 
 	return (
-		<AuthContext.Provider value={{ user, profile, session, loading, signOut }}>
-			{children}
+		<AuthContext.Provider
+			value={{
+				user,
+				profile,
+				session,
+				loading,
+				initialised: initialised,
+				refreshProfile,
+				signOut,
+			}}>
+			{!initialised ? null : children}
 		</AuthContext.Provider>
 	);
 };

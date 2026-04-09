@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { DICT } from '@/dictionary';
-import { type CleaningRequest, STATUS } from '@/features/cleanings/cleaningService';
+import { type CleaningRequest, STATUS_GROUPS } from '@/features/cleanings/cleaningService';
 import { PropertyForm } from '@/features/properties/components/PropertyForm';
 import { useProperties } from '@/features/properties/PropertyContext';
 import type { Property, PropertyInsert } from '@/features/properties/propertyService';
@@ -53,7 +53,7 @@ interface CleaningFormProps {
 
 export function CleaningForm({ initialData, onSubmit, onCancel }: CleaningFormProps) {
 	const isRestricted = initialData
-		? STATUS.CAN_EDIT_RESTRICTED.includes(initialData.status)
+		? STATUS_GROUPS.CAN_EDIT_RESTRICTED.includes(initialData.status)
 		: false;
 	const [step, setStep] = useState<1 | 2 | 3>(isRestricted ? 3 : initialData ? 2 : 1);
 	const [entryMode, setEntryMode] = useState<'select' | 'create'>('select');

@@ -1,37 +1,17 @@
 'use client';
 
 import { Bell, Globe, LogOut, Mail, Send, Settings, Shield, User } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { DICT } from '@/dictionary';
 import { useAuth } from '@/features/auth/AuthContext';
-import { authService, type Profile } from '@/features/auth/authService';
-import { AccountAvatar, AccountForm } from './AccountForm';
+import { AccountForm } from '@/features/account/components/AccountForm';
+import { AccountAvatar } from '@/features/account/components/AccountAvatar';
+import { Loading } from '@/components/Loading';
 
 export function AccountPage() {
-	const { user, signOut } = useAuth();
-	const [profile, setProfile] = useState<Profile | null>(null);
-	const [isLoading, setIsLoading] = useState(true);
-
-	const loadData = useCallback(async () => {
-		if (!user) {
-			return;
-		}
-		const { data } = await authService.getProfile(user.id);
-		if (data) {
-			setProfile(data);
-		}
-		setIsLoading(false);
-	}, [user]);
-
-	useEffect(() => {
-		loadData();
-	}, [loadData]);
-
-	const handleAvatarUpdate = (url: string) =>
-		setProfile((prev) => (prev ? { ...prev, avatar_url: url } : null));
+	const { loading, signOut } = useAuth();
 
 	const scrollToSection = (id: string) => {
 		const element = document.getElementById(id);
@@ -40,8 +20,8 @@ export function AccountPage() {
 		}
 	};
 
-	if (isLoading) {
-		return null;
+	if (loading) {
+		return <Loading />;
 	}
 
 	return (
@@ -53,12 +33,8 @@ export function AccountPage() {
 				</header>
 
 				<div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6 items-start">
-					<aside className="lg:sticky lg:top-8 flex flex-col gap-8">
-						<AccountAvatar
-							profile={profile}
-							userId={user?.id}
-							onUploadSuccess={handleAvatarUpdate}
-						/>
+					<aside className="lg:sticky md:top-25 flex flex-col gap-8">
+						<AccountAvatar />
 						<nav className="flex flex-col gap-1">
 							<Button
 								variant="ghost"
@@ -92,7 +68,7 @@ export function AccountPage() {
 					</aside>
 
 					<main className="space-y-20">
-						<section id="personal-info" className="space-y-4 mb-8 scroll-mt-22">
+						<section id="personal-info" className="space-y-4 mb-8 md:scroll-mt-22">
 							<div>
 								<h2 className="text-xl font-semibold">{DICT.ACCOUNT.SECTIONS.PERSONAL.TITLE}</h2>
 								<p className="text-sm text-muted-foreground">
@@ -101,16 +77,11 @@ export function AccountPage() {
 							</div>
 							<Separator />
 							<div className="max-w-2xl">
-								<AccountForm
-									type="personal"
-									initialData={profile}
-									userId={user?.id}
-									onSuccess={loadData}
-								/>
+								<AccountForm type="personal" />
 							</div>
 						</section>
 
-						<section id="security" className="space-y-4 mb-8 scroll-mt-22">
+						<section id="security" className="space-y-4 mb-8 md:scroll-mt-22">
 							<div>
 								<h2 className="text-xl font-semibold">{DICT.ACCOUNT.SECTIONS.SECURITY.TITLE}</h2>
 								<p className="text-sm text-muted-foreground">
@@ -119,11 +90,11 @@ export function AccountPage() {
 							</div>
 							<Separator />
 							<div className="max-w-2xl">
-								<AccountForm type="security" userId={user?.id} />
+								<AccountForm type="security" />
 							</div>
 						</section>
 
-						<section id="settings" className="space-y-4 mb-8 scroll-mt-22">
+						<section id="settings" className="space-y-4 mb-8 md:scroll-mt-22">
 							<div>
 								<h2 className="text-xl font-semibold">Preferences</h2>
 								<p className="text-sm text-muted-foreground">
@@ -131,7 +102,7 @@ export function AccountPage() {
 								</p>
 							</div>
 							<Separator />
-							<div className="max-w-2xl space-y-4 mb-8 scroll-mt-22">
+							<div className="max-w-2xl space-y-4 mb-8 md:scroll-mt-22">
 								<div className="flex items-center justify-between rounded-lg border p-4">
 									<div className="flex gap-4">
 										<Bell className="size-5 text-muted-foreground mt-0.5" />
@@ -159,7 +130,7 @@ export function AccountPage() {
 							</div>
 						</section>
 
-						<section id="support" className="space-y-4 mb-8 scroll-mt-22">
+						<section id="support" className="space-y-4 mb-8 md:scroll-mt-22">
 							<div>
 								<h2 className="text-xl font-semibold">Contact</h2>
 								<p className="text-sm text-muted-foreground">
