@@ -211,6 +211,10 @@ const routesConfig: RouteObject[] = [
 						path: 'dashboard',
 						element: lazyLoad(() => import('@/pages/cleaner/Dashboard'), 'CleanerDashboardPage'),
 					},
+                    {
+						path: 'cleanings',
+						element: lazyLoad(() => import('@/pages/cleaner/Cleanings'), 'CleanerCleaningsPage'),
+					},
 					{
 						path: 'account',
 						element: lazyLoad(() => import('@/pages/Account'), 'AccountPage'),

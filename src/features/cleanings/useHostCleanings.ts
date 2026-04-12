@@ -4,7 +4,7 @@ import { useMemo, useCallback } from 'react';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
 import { useProperties } from '@/features/properties/PropertyContext';
 import { useResourceModals } from '@/hooks/useResourceModals';
-import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
+import type { HostCleaningFormValues } from '@/features/cleanings/components/HostCleaningForm';
 
 export function useHostCleanings() {
 	const { properties } = useProperties();
@@ -27,7 +27,7 @@ export function useHostCleanings() {
 		return 50 + property.bedrooms * 20 + property.bathrooms * 10;
 	}, [properties]);
 
-	const handleUpsert = useCallback(async (data: CleaningFormValues) => {
+	const handleUpsert = useCallback(async (data: HostCleaningFormValues) => {
 		const service_cost = calculateServiceCost(data.property_id);
 		
 		const payload = {

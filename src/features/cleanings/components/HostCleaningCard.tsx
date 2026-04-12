@@ -9,17 +9,17 @@ import { type CleaningRequest, STATUS_GROUPS } from '@/features/cleanings/cleani
 import { CleaningStatusBadge } from '@/features/cleanings/components/CleaningStatusBadge';
 import { mediaService } from '@/lib/mediaService';
 
-interface CleaningCardProps {
+interface HostCleaningCardProps {
 	cleaning: CleaningRequest;
 	onDelete: (id: string) => void;
 	onEdit: (id: string) => void;
 	onView: (id: string) => void;
 }
 
-export const CleaningCard = memo(({ cleaning, onDelete, onEdit, onView }: CleaningCardProps) => {
+export const HostCleaningCard = memo(({ cleaning, onDelete, onEdit, onView }: HostCleaningCardProps) => {
 	const imageUrl = useMemo(() => {
-		return mediaService.getMediaUrl(cleaning.properties?.main_image_url || null, 'property-media');
-	}, [cleaning.properties?.main_image_url]);
+		return mediaService.getMediaUrl(cleaning.property?.main_image_url || null, 'property-media');
+	}, [cleaning.property?.main_image_url]);
 
 	const canEdit = useMemo(() => {
 		return STATUS_GROUPS.CAN_EDIT.includes(cleaning.status);
@@ -30,8 +30,8 @@ export const CleaningCard = memo(({ cleaning, onDelete, onEdit, onView }: Cleani
 	}, [cleaning.status]);
 
 	const formattedPostcode = useMemo(() => {
-		return cleaning.properties?.postcode?.toUpperCase();
-	}, [cleaning.properties?.postcode]);
+		return cleaning.property?.postcode?.toUpperCase();
+	}, [cleaning.property?.postcode]);
 
 	return (
 		<Card
@@ -44,7 +44,7 @@ export const CleaningCard = memo(({ cleaning, onDelete, onEdit, onView }: Cleani
 				{imageUrl ? (
 					<img
 						src={imageUrl}
-						alt={cleaning.properties?.address_line_1}
+						alt={cleaning.property?.address_line_1}
 						className="object-cover size-full"
 					/>
 				) : (
@@ -86,11 +86,11 @@ export const CleaningCard = memo(({ cleaning, onDelete, onEdit, onView }: Cleani
 					<CleaningStatusBadge status={cleaning.status} />
 				</div>
 				<CardTitle className="text-lg font-bold truncate">
-					{cleaning.properties?.address_line_1}
-					{cleaning.properties?.address_line_2 && `, ${cleaning.properties?.address_line_2}`}
+					{cleaning.property?.address_line_1}
+					{cleaning.property?.address_line_2 && `, ${cleaning.property?.address_line_2}`}
 				</CardTitle>
 				<p className="text-sm text-muted-foreground">
-					{cleaning.properties?.town_city}, {formattedPostcode}
+					{cleaning.property?.town_city}, {formattedPostcode}
 				</p>
 			</CardHeader>
 

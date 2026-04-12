@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/features/auth/AuthContext';
 import {
 	type CleaningRequest,
+	type CleaningUpdate,
 	type CreateCleaningRequestPayload,
 	type UpdateCleaningRequestPayload,
 	cleaningService,
@@ -16,6 +17,10 @@ interface CleaningContextType {
 	fetchCleanings: () => Promise<void>;
 	upsertCleaning: (
 		payload: CreateCleaningRequestPayload | (UpdateCleaningRequestPayload & { id: string }),
+	) => Promise<{ success: boolean; data?: CleaningRequest }>;
+	updateCleaning: (
+		id: string,
+		payload: CleaningUpdate,
 	) => Promise<{ success: boolean; data?: CleaningRequest }>;
 	deleteCleaning: (id: string) => Promise<{ success: boolean }>;
 }
@@ -47,10 +52,8 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 	}, [user]);
 
 	useEffect(() => {
-		if (user && profile?.role === 'host') {
+		if (user && profile) {
 			fetchCleanings();
-		} else if (user && profile) {
-			setIsLoading(false);
 		}
 	}, [user, profile, fetchCleanings]);
 
@@ -60,7 +63,7 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 		const isUpdate = 'id' in payload;
 
 		const { data, error } = isUpdate
-			? await cleaningService.updateCleaningRequest(
+			? await cleaningService.updateCleaningRequestRPC(
 					payload.id,
 					payload as UpdateCleaningRequestPayload,
 				)
@@ -76,6 +79,22 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 				const exists = prev.find((c) => c.id === data.id);
 				return exists ? prev.map((c) => (c.id === data.id ? data : c)) : [data, ...prev];
 			});
+			return { success: true, data };
+		}
+
+		return { success: false };
+	};
+
+	const updateCleaning = async (id: string, payload: CleaningUpdate) => {
+		const { data, error } = await cleaningService.updateCleaningRequest(id, payload);
+
+		if (error) {
+			toast.error(error);
+			return { success: false };
+		}
+
+		if (data) {
+			setCleanings((prev) => prev.map((c) => (c.id === data.id ? data : c)));
 			return { success: true, data };
 		}
 
@@ -101,6 +120,7 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 				isLoading,
 				fetchCleanings,
 				upsertCleaning,
+				updateCleaning,
 				deleteCleaning,
 			}}>
 			{children}

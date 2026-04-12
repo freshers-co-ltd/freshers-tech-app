@@ -10,21 +10,19 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
-import { useCleanings } from '@/features/cleanings/CleaningContext';
+import { useCleanerCleanings } from '@/features/cleanings/useCleanerCleanings';
 import { STATUS_GROUPS } from '@/features/cleanings/cleaningService';
-import { CleaningCard } from '@/features/cleanings/components/CleaningCard';
+import { CleanerCleaningCard } from '@/features/cleanings/components/CleanerCleaningCard';
 
-interface CleaningManagementGridProps {
+interface CleanerCleaningGridProps {
 	onView: (id: string) => void;
-	onEdit: (id: string) => void;
-	onDelete: (id: string) => void;
 }
 
-export function CleaningManagementGrid({ onView, onEdit, onDelete }: CleaningManagementGridProps) {
-	const { cleanings, isLoading } = useCleanings();
+export function CleanerCleaningGrid({ onView }: CleanerCleaningGridProps) {
+	const { cleanings, isLoading } = useCleanerCleanings();
 	const [searchQuery, setSearchQuery] = useState('');
 	const [statusFilter, setStatusFilter] = useState('all');
-	const [sortBy, setSortBy] = useState('date_desc');
+	const [sortBy, setSortBy] = useState('date_asc');
 
 	const filteredCleanings = useMemo(() => {
 		let result = [...cleanings];
@@ -33,8 +31,8 @@ export function CleaningManagementGrid({ onView, onEdit, onDelete }: CleaningMan
 			const query = searchQuery.toLowerCase();
 			result = result.filter(
 				(c) =>
-					c.properties?.address_line_1.toLowerCase().includes(query) ||
-					c.properties?.postcode.toLowerCase().includes(query),
+					c.property?.address_line_1.toLowerCase().includes(query) ||
+					c.property?.postcode.toLowerCase().includes(query),
 			);
 		}
 
@@ -48,9 +46,6 @@ export function CleaningManagementGrid({ onView, onEdit, onDelete }: CleaningMan
 			}
 			if (sortBy === 'date_desc') {
 				return new Date(b.scheduled_start).getTime() - new Date(a.scheduled_start).getTime();
-			}
-			if (sortBy === 'requested_desc') {
-				return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
 			}
 			return 0;
 		});
@@ -81,7 +76,7 @@ export function CleaningManagementGrid({ onView, onEdit, onDelete }: CleaningMan
 				<div className="relative flex-1 md:max-w-72">
 					<Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
 					<Input
-						placeholder="Search by address..."
+						placeholder="Search address..."
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
 						className="pl-9"
@@ -107,26 +102,23 @@ export function CleaningManagementGrid({ onView, onEdit, onDelete }: CleaningMan
 						<SelectValue placeholder="Sort by" />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="date_desc">Date: Newest first</SelectItem>
-						<SelectItem value="date_asc">Date: Oldest first</SelectItem>
-						<SelectItem value="requested_desc">Recently Requested</SelectItem>
+						<SelectItem value="date_asc">Date: Soonest first</SelectItem>
+						<SelectItem value="date_desc">Date: Latest first</SelectItem>
 					</SelectContent>
 				</Select>
 			</div>
 
 			{filteredCleanings.length === 0 ? (
 				<div className="flex h-64 items-center justify-center rounded-xl border border-dashed text-muted-foreground">
-					No cleaning requests found.
+					No assigned jobs found.
 				</div>
 			) : (
 				<div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
 					{filteredCleanings.map((cleaning) => (
-						<CleaningCard
+						<CleanerCleaningCard
 							key={cleaning.id}
 							cleaning={cleaning}
 							onView={onView}
-							onEdit={onEdit}
-							onDelete={onDelete}
 						/>
 					))}
 				</div>

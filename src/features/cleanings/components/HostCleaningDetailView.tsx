@@ -38,13 +38,13 @@ import { CleaningStatusBadge } from '@/features/cleanings/components/CleaningSta
 import { useCarousel } from '@/hooks/useCarousel';
 import { mediaService } from '@/lib/mediaService';
 
-interface CleaningDetailViewProps {
+interface HostCleaningDetailViewProps {
 	cleaning: CleaningRequest;
 	onEdit: (id: string) => void;
 	onDelete: (id: string) => void;
 }
 
-export function CleaningDetailView({ cleaning, onEdit, onDelete }: CleaningDetailViewProps) {
+export function HostCleaningDetailView({ cleaning, onEdit, onDelete }: HostCleaningDetailViewProps) {
 	const { user } = useAuth();
 	const [isReportOpen, setIsReportOpen] = useState(false);
 	const [isFullScreen, setIsFullScreen] = useState(false);
@@ -96,12 +96,12 @@ export function CleaningDetailView({ cleaning, onEdit, onDelete }: CleaningDetai
 				<div className="flex justify-between items-start gap-4">
 					<div className="space-y-1 min-w-0">
 						<DialogTitle className="wrap-break-word text-xl font-bold leading-tight">
-							{cleaning.properties?.address_line_1}
+							{cleaning.property?.address_line_1}
 						</DialogTitle>
 						<div className="flex items-center gap-1 text-muted-foreground text-sm">
 							<MapPin className="size-3 shrink-0" />
 							<span className="truncate">
-								{cleaning.properties?.town_city}, {cleaning.properties?.postcode}
+								{cleaning.property?.town_city}, {cleaning.property?.postcode}
 							</span>
 						</div>
 					</div>
@@ -147,14 +147,14 @@ export function CleaningDetailView({ cleaning, onEdit, onDelete }: CleaningDetai
 							<div className="flex gap-4 p-2 rounded-md border bg-muted/10">
 								<div className="flex items-center gap-2">
 									<Bed className="size-4 text-muted-foreground" />
-									<span>{cleaning.properties?.bedrooms}</span>
+									<span>{cleaning.property?.bedrooms}</span>
 								</div>
 								<div className="flex items-center gap-2">
 									<Bath className="size-4 text-muted-foreground" />
-									<span>{cleaning.properties?.bathrooms}</span>
+									<span>{cleaning.property?.bathrooms}</span>
 								</div>
 								<span className=" font-medium capitalize text-primary/80 ml-auto">
-									{cleaning.properties?.type}
+									{cleaning.property?.type}
 								</span>
 							</div>
 						</div>

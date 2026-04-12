@@ -1,3 +1,5 @@
+'use client';
+
 import type { Property } from '@/features/properties/propertyService';
 import type { Database } from '@/lib/database.types';
 import { type ActionResult, mapDatabaseError } from '@/lib/serviceUtils';
@@ -30,7 +32,7 @@ export interface CleaningRequest extends CleaningDetails {
 		is_completed: boolean;
 		is_custom: boolean;
 	}[];
-	properties: Property | null;
+	property: Property | null;
 	cleaner?: {
 		full_name: string;
 		avatar_url: string | null;
@@ -38,7 +40,7 @@ export interface CleaningRequest extends CleaningDetails {
 	evidence?: {
 		id: string;
 		media_url: string;
-		type: 'image' | 'video';
+		type: Database['public']['Enums']['media_type'];
 	}[];
 	report?: {
 		broken_items_report: string | null;
@@ -57,7 +59,7 @@ export interface CreateCleaningRequestPayload {
 
 export interface UpdateCleaningRequestPayload {
 	custom_tasks: string[];
-    instructions: string;
+	instructions: string;
 	scheduled_start: string;
 }
 
@@ -67,7 +69,7 @@ interface RawCleaningRequestQueryResult extends CleaningDetails {
 		is_completed: boolean;
 		is_custom: boolean;
 	}[];
-	properties: Property | Property[] | null;
+	property: Property | Property[] | null;
 	cleaner:
 		| { full_name: string; avatar_url: string | null }
 		| { full_name: string; avatar_url: string | null }[]
@@ -111,25 +113,24 @@ export const cleaningService = {
 		const { data, error } = await supabase
 			.from('cleanings')
 			.select(`
-                *,
-                properties (*),
-                cleaner:profiles_public!cleanings_cleaner_id_fkey (
-                    full_name, 
-                    avatar_url
-                ),
-                evidence:evidence_media (id, media_url, type),
-                cleaning_tasks (
-                    description,
-                    is_completed,
-                    is_custom
-                ),
-                cleaning_reports (
-                    broken_items_report,
-                    low_supplies_report,
-                    created_at
-                )
-            `)
-			.eq('host_id', user.id)
+				*,
+				property:properties (*),
+				cleaner:profiles_public!cleanings_cleaner_id_fkey (
+					full_name, 
+					avatar_url
+				),
+				evidence:evidence_media (id, media_url, type),
+				cleaning_tasks (
+					description,
+					is_completed,
+					is_custom
+				),
+				cleaning_reports (
+					broken_items_report,
+					low_supplies_report,
+					created_at
+				)
+			`)
 			.order('created_at', { ascending: false });
 
 		if (error) {
@@ -143,7 +144,7 @@ export const cleaningService = {
 		const typedData: CleaningRequest[] = (data as unknown[])
 			.filter(isRawCleaningQueryResult)
 			.map((item) => {
-				const propertyData = Array.isArray(item.properties) ? item.properties[0] : item.properties;
+				const propertyData = Array.isArray(item.property) ? item.property[0] : item.property;
 				const cleanerData = Array.isArray(item.cleaner) ? item.cleaner[0] : item.cleaner;
 				const reportData = Array.isArray(item.cleaning_reports)
 					? item.cleaning_reports[0]
@@ -151,7 +152,7 @@ export const cleaningService = {
 
 				return {
 					...item,
-					properties: propertyData || null,
+					property: propertyData || null,
 					tasks: item.cleaning_tasks || [],
 					cleaner: cleanerData || null,
 					evidence: item.evidence || [],
@@ -166,13 +167,13 @@ export const cleaningService = {
 		const { data, error } = await supabase
 			.from('cleanings')
 			.select(`
-                *,
-                properties (*),
-                cleaner:profiles_public!cleanings_cleaner_id_fkey (full_name, avatar_url),
-                evidence:evidence_media (id, media_url, type),
-                cleaning_tasks (description, is_completed, is_custom),
-                cleaning_reports (broken_items_report, low_supplies_report, created_at)
-            `)
+				*,
+				property:properties (*),
+				cleaner:profiles_public!cleanings_cleaner_id_fkey (full_name, avatar_url),
+				evidence:evidence_media (id, media_url, type),
+				cleaning_tasks (description, is_completed, is_custom),
+				cleaning_reports (broken_items_report, low_supplies_report, created_at)
+			`)
 			.eq('id', id)
 			.single();
 
@@ -181,11 +182,11 @@ export const cleaningService = {
 		}
 
 		const item = data as unknown as RawCleaningRequestQueryResult;
-		const propertyData = Array.isArray(item.properties) ? item.properties[0] : item.properties;
+		const propertyData = Array.isArray(item.property) ? item.property[0] : item.property;
 
 		const transformed: CleaningRequest = {
 			...item,
-			properties: propertyData || null,
+			property: propertyData || null,
 			tasks: item.cleaning_tasks || [],
 			cleaner: (Array.isArray(item.cleaner) ? item.cleaner[0] : item.cleaner) || null,
 			evidence: item.evidence || [],
@@ -217,6 +218,19 @@ export const cleaningService = {
 
 	async updateCleaningRequest(
 		id: string,
+		payload: CleaningUpdate,
+	): Promise<ActionResult<CleaningRequest>> {
+		const { error } = await supabase.from('cleanings').update(payload).eq('id', id);
+
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+
+		return this.getCleaningRequestById(id);
+	},
+
+	async updateCleaningRequestRPC(
+		id: string,
 		payload: UpdateCleaningRequestPayload,
 	): Promise<ActionResult<CleaningRequest>> {
 		const { error } = await supabase.rpc('update_cleaning_request', {
@@ -231,6 +245,19 @@ export const cleaningService = {
 		}
 
 		return this.getCleaningRequestById(id);
+	},
+
+	async updateTaskStatus(taskId: string, isCompleted: boolean): Promise<{ error: string | null }> {
+		const { error } = await supabase
+			.from('cleaning_tasks')
+			.update({ is_completed: isCompleted })
+			.eq('id', taskId);
+
+		if (error) {
+			return { error: mapDatabaseError(error) };
+		}
+
+		return { error: null };
 	},
 
 	async deleteCleaningRequest(id: string): Promise<{ error: string | null }> {

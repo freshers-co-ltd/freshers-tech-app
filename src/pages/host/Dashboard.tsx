@@ -13,9 +13,9 @@ import { DICT } from '@/dictionary';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
 import {
-	CleaningForm,
-	type CleaningFormValues,
-} from '@/features/cleanings/components/CleaningForm';
+	HostCleaningForm,
+	type HostCleaningFormValues,
+} from '@/features/cleanings/components/HostCleaningForm';
 import { useProperties } from '@/features/properties/PropertyContext';
 import type { Property } from '@/features/properties/propertyService';
 
@@ -125,8 +125,8 @@ export function HostDashboardPage() {
 			<Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
 				<DialogContent className="p-0 overflow-hidden sm:max-w-lg border-none">
 					<FormContainer variant="dialog">
-						<CleaningForm
-							onSubmit={async (data: CleaningFormValues) => {
+						<HostCleaningForm
+							onSubmit={async (data: HostCleaningFormValues) => {
 								const property = properties.find((p: Property) => p.id === data.property_id);
 								const cost = property ? 50 + property.bedrooms * 20 + property.bathrooms * 10 : 0;
 

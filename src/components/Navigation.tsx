@@ -21,6 +21,7 @@ const NAV_CONFIG: RoleNavConfig = {
 	],
 	cleaner: [
 		{ name: 'Dashboard', path: '/cleaner/dashboard', icon: LayoutDashboard },
+        { name: 'Cleanings', path: '/cleaner/cleanings', icon: ClipboardList },
 		{ name: 'Account', path: '/cleaner/account', icon: User },
 	],
 	admin: [

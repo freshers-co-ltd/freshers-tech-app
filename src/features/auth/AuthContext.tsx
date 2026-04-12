@@ -1,5 +1,7 @@
+'use client';
+
 import type { PostgrestSingleResponse, Session, User } from '@supabase/supabase-js';
-import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useState, useRef } from 'react';
 import type { UserRole } from '@/features/auth/authService';
 import { supabase } from '@/lib/supabaseClient';
 import { initAuthSync } from '@/lib/authSync';
@@ -29,6 +31,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const [profile, setProfile] = useState<Profile | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [initialised, setInitialised] = useState(false);
+	
+	const lastUserId = useRef<string | null>(null);
 
 	const fetchProfile = useCallback(
 		async (
@@ -81,26 +85,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 	const handleAuthStateChange = useCallback(
 		async (currentSession: Session | null, signal?: AbortSignal) => {
-			setLoading(true);
 			const currentUser = currentSession?.user ?? null;
+			
+			if (currentUser?.id === lastUserId.current && initialised) {
+				return;
+			}
 
+			setLoading(true);
 			setSession(currentSession);
 			setUser(currentUser);
+			lastUserId.current = currentUser?.id ?? null;
 
 			if (currentUser) {
 				const metadata = currentUser.user_metadata;
 				if (metadata?.role && metadata?.full_name) {
-					setProfile({
-						id: currentUser.id,
-						full_name: metadata.full_name,
-						role: metadata.role as UserRole,
+					setProfile((prev) => {
+						if (prev?.id === currentUser.id) {
+							return prev;
+						}
+						return {
+							id: currentUser.id,
+							full_name: metadata.full_name,
+							role: metadata.role as UserRole,
+						};
 					});
 				}
 
 				const profileData = await fetchProfile(currentUser.id, signal);
 
 				if (profileData) {
-					setProfile(profileData);
+					setProfile((prev) => {
+						if (JSON.stringify(prev) === JSON.stringify(profileData)) {
+							return prev;
+						}
+						return profileData;
+					});
 				}
 			} else {
 				setProfile(null);
@@ -108,7 +127,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			}
 			setLoading(false);
 		},
-		[fetchProfile],
+		[fetchProfile, initialised],
 	);
 
 	useEffect(() => {
@@ -149,6 +168,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			data: { subscription },
 		} = supabase.auth.onAuthStateChange((event, currentSession) => {
 			if (event === 'SIGNED_OUT') {
+				lastUserId.current = null;
 				setSession(null);
 				setUser(null);
 				setProfile(null);
@@ -156,7 +176,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			} else if (
 				event === 'INITIAL_SESSION' ||
 				event === 'SIGNED_IN' ||
-				event === 'TOKEN_REFRESHED'
+				(event === 'TOKEN_REFRESHED' && currentSession?.user?.id !== lastUserId.current)
 			) {
 				handleAuthStateChange(currentSession, controller.signal);
 			}
@@ -182,6 +202,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		try {
 			await supabase.auth.signOut();
 		} finally {
+			lastUserId.current = null;
 			setProfile(null);
 			setUser(null);
 			setSession(null);

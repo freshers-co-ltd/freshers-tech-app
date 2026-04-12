@@ -4,9 +4,9 @@ import { CalendarX, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DialogContent } from '@/components/ui/dialog';
 import { DICT } from '@/dictionary';
-import { CleaningDetailView } from '@/features/cleanings/components/CleaningDetailView';
-import { CleaningForm } from '@/features/cleanings/components/CleaningForm';
-import { CleaningManagementGrid } from '@/features/cleanings/components/CleaningManagementGrid';
+import { HostCleaningDetailView } from '@/features/cleanings/components/HostCleaningDetailView';
+import { HostCleaningForm } from '@/features/cleanings/components/HostCleaningForm';
+import { HostCleaningGrid } from '@/features/cleanings/components/HostCleaningGrid';
 import { ManagementLayout } from '@/layouts/ManagementLayout';
 import { useHostCleanings } from '@/features/cleanings/useHostCleanings';
 
@@ -46,7 +46,7 @@ export function HostCleaningsPage() {
 				</div>
 			}
 			grid={
-				<CleaningManagementGrid
+				<HostCleaningGrid
 					onView={modal.openView}
 					onEdit={modal.openEdit}
 					onDelete={modal.setDeletingId}
@@ -57,7 +57,7 @@ export function HostCleaningsPage() {
 			onClose={modal.handleClose}
 			viewContent={
 				viewingCleaning ? (
-					<CleaningDetailView
+					<HostCleaningDetailView
 						cleaning={viewingCleaning}
 						onEdit={modal.openEdit}
 						onDelete={modal.setDeletingId}
@@ -75,7 +75,7 @@ export function HostCleaningsPage() {
 				editingCleaning ? DICT.CLEANINGS.EDIT_DIALOG.MESSAGE : DICT.CLEANINGS.CREATE_DIALOG.MESSAGE
 			}
 			formContent={
-				<CleaningForm
+				<HostCleaningForm
 					initialData={editingCleaning}
 					onSubmit={handleUpsert}
 					onCancel={modal.handleClose}

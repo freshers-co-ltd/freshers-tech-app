@@ -25,7 +25,7 @@ import { useProperties } from '@/features/properties/PropertyContext';
 import type { Property, PropertyInsert } from '@/features/properties/propertyService';
 import { supabase } from '@/lib/supabaseClient';
 
-const cleaningSchema = z.object({
+const hostCleaningSchema = z.object({
 	property_id: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, {
 		message: 'Please select a valid property',
 	}),
@@ -36,22 +36,22 @@ const cleaningSchema = z.object({
 	),
 });
 
-export type CleaningFormValues = z.infer<typeof cleaningSchema>;
+export type HostCleaningFormValues = z.infer<typeof hostCleaningSchema>;
 
-type CleaningFormInput = {
+type HostCleaningFormInput = {
 	property_id: string;
 	scheduled_start: Date;
 	instructions?: string;
 	custom_tasks: { description: string }[];
 };
 
-interface CleaningFormProps {
+interface HostCleaningFormProps {
 	initialData?: CleaningRequest;
-	onSubmit: (values: CleaningFormValues) => Promise<void>;
+	onSubmit: (values: HostCleaningFormValues) => Promise<void>;
 	onCancel: () => void;
 }
 
-export function CleaningForm({ initialData, onSubmit, onCancel }: CleaningFormProps) {
+export function HostCleaningForm({ initialData, onSubmit, onCancel }: HostCleaningFormProps) {
 	const isRestricted = initialData
 		? STATUS_GROUPS.CAN_EDIT_RESTRICTED.includes(initialData.status)
 		: false;
@@ -63,8 +63,8 @@ export function CleaningForm({ initialData, onSubmit, onCancel }: CleaningFormPr
 
 	const d = DICT.CLEANINGS.FORM;
 
-	const form = useForm<CleaningFormInput, object, CleaningFormValues>({
-		resolver: zodResolver(cleaningSchema),
+	const form = useForm<HostCleaningFormInput, object, HostCleaningFormValues>({
+		resolver: zodResolver(hostCleaningSchema),
 		mode: 'onChange',
 		shouldUnregister: false,
 		defaultValues: {
@@ -150,7 +150,7 @@ export function CleaningForm({ initialData, onSubmit, onCancel }: CleaningFormPr
 		}
 	};
 
-	const handleFinalSubmit: SubmitHandler<CleaningFormValues> = async (values) => {
+	const handleFinalSubmit: SubmitHandler<HostCleaningFormValues> = async (values) => {
 		try {
 			if (import.meta.env.DEV) {
 				console.log('[DEBUG] CleaningForm Raw Values:', values);
@@ -346,5 +346,5 @@ export function CleaningForm({ initialData, onSubmit, onCancel }: CleaningFormPr
 	);
 }
 
-CleaningForm.title = DICT.CLEANINGS.CREATE_DIALOG.TITLE;
-CleaningForm.description = DICT.CLEANINGS.CREATE_DIALOG.MESSAGE;
+HostCleaningForm.title = DICT.CLEANINGS.CREATE_DIALOG.TITLE;
+HostCleaningForm.description = DICT.CLEANINGS.CREATE_DIALOG.MESSAGE;
