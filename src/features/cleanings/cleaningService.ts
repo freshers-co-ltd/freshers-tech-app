@@ -9,6 +9,10 @@ export type CleaningDetails = Database['public']['Tables']['cleanings']['Row'];
 export type CleaningInsert = Database['public']['Tables']['cleanings']['Insert'];
 export type CleaningUpdate = Database['public']['Tables']['cleanings']['Update'];
 export type CleaningStatus = Database['public']['Enums']['cleaning_status'];
+export type TaskInsert = Database['public']['Tables']['cleaning_tasks']['Insert'];
+export type TaskUpdate = Database['public']['Tables']['cleaning_tasks']['Update'];
+export type EvidenceInsert = Database['public']['Tables']['evidence_media']['Insert'];
+export type ReportInsert = Database['public']['Tables']['cleaning_reports']['Insert'];
 
 export const CLEANING_STATUS: Record<string, CleaningStatus> = {
 	DRAFT: 'draft',
@@ -24,10 +28,17 @@ export const STATUS_GROUPS = {
 	CAN_CANCEL: [CLEANING_STATUS.DRAFT, CLEANING_STATUS.REQUESTED],
 	CAN_EDIT: [CLEANING_STATUS.DRAFT, CLEANING_STATUS.REQUESTED, CLEANING_STATUS.CONFIRMED],
 	CAN_EDIT_RESTRICTED: [CLEANING_STATUS.CONFIRMED],
+	CLEANER_VIEW: [
+		CLEANING_STATUS.CONFIRMED,
+		CLEANING_STATUS.IN_PROGRESS,
+		CLEANING_STATUS.COMPLETED,
+		CLEANING_STATUS.CANCELLED,
+	],
 };
 
 export interface CleaningRequest extends CleaningDetails {
 	tasks: {
+		id: string;
 		description: string;
 		is_completed: boolean;
 		is_custom: boolean;
@@ -65,6 +76,7 @@ export interface UpdateCleaningRequestPayload {
 
 interface RawCleaningRequestQueryResult extends CleaningDetails {
 	cleaning_tasks: {
+		id: string;
 		description: string;
 		is_completed: boolean;
 		is_custom: boolean;
@@ -113,24 +125,25 @@ export const cleaningService = {
 		const { data, error } = await supabase
 			.from('cleanings')
 			.select(`
-				*,
-				property:properties (*),
-				cleaner:profiles_public!cleanings_cleaner_id_fkey (
-					full_name, 
-					avatar_url
-				),
-				evidence:evidence_media (id, media_url, type),
-				cleaning_tasks (
-					description,
-					is_completed,
-					is_custom
-				),
-				cleaning_reports (
-					broken_items_report,
-					low_supplies_report,
-					created_at
-				)
-			`)
+                *,
+                property:properties (*),
+                cleaner:profiles_public!cleanings_cleaner_id_fkey (
+                    full_name, 
+                    avatar_url
+                ),
+                evidence:evidence_media (id, media_url, type),
+                cleaning_tasks (
+                    id,
+                    description,
+                    is_completed,
+                    is_custom
+                ),
+                cleaning_reports (
+                    broken_items_report,
+                    low_supplies_report,
+                    created_at
+                )
+            `)
 			.order('created_at', { ascending: false });
 
 		if (error) {
@@ -167,13 +180,13 @@ export const cleaningService = {
 		const { data, error } = await supabase
 			.from('cleanings')
 			.select(`
-				*,
-				property:properties (*),
-				cleaner:profiles_public!cleanings_cleaner_id_fkey (full_name, avatar_url),
-				evidence:evidence_media (id, media_url, type),
-				cleaning_tasks (description, is_completed, is_custom),
-				cleaning_reports (broken_items_report, low_supplies_report, created_at)
-			`)
+                *,
+                property:properties (*),
+                cleaner:profiles_public!cleanings_cleaner_id_fkey (full_name, avatar_url),
+                evidence:evidence_media (id, media_url, type),
+                cleaning_tasks (id, description, is_completed, is_custom),
+                cleaning_reports (broken_items_report, low_supplies_report, created_at)
+            `)
 			.eq('id', id)
 			.single();
 
@@ -181,18 +194,24 @@ export const cleaningService = {
 			return { data: null, error: mapDatabaseError(error) };
 		}
 
-		const item = data as unknown as RawCleaningRequestQueryResult;
+		if (!isRawCleaningQueryResult(data)) {
+			throw new Error('Invalid response from database for cleaning request.');
+		}
+
+		const item = data as RawCleaningRequestQueryResult;
 		const propertyData = Array.isArray(item.property) ? item.property[0] : item.property;
+		const cleanerData = Array.isArray(item.cleaner) ? item.cleaner[0] : item.cleaner;
+		const reportData = Array.isArray(item.cleaning_reports)
+			? item.cleaning_reports[0]
+			: item.cleaning_reports;
 
 		const transformed: CleaningRequest = {
 			...item,
 			property: propertyData || null,
 			tasks: item.cleaning_tasks || [],
-			cleaner: (Array.isArray(item.cleaner) ? item.cleaner[0] : item.cleaner) || null,
+			cleaner: cleanerData || null,
 			evidence: item.evidence || [],
-			report:
-				(Array.isArray(item.cleaning_reports) ? item.cleaning_reports[0] : item.cleaning_reports) ||
-				null,
+			report: reportData || null,
 		};
 
 		return { data: transformed, error: null };
@@ -247,11 +266,10 @@ export const cleaningService = {
 		return this.getCleaningRequestById(id);
 	},
 
-	async updateTaskStatus(taskId: string, isCompleted: boolean): Promise<{ error: string | null }> {
-		const { error } = await supabase
-			.from('cleaning_tasks')
-			.update({ is_completed: isCompleted })
-			.eq('id', taskId);
+	async softDeleteCleaningRequest(id: string): Promise<{ error: string | null }> {
+		const { error } = await supabase.rpc('soft_delete_cleaning', {
+			p_cleaning_id: id,
+		});
 
 		if (error) {
 			return { error: mapDatabaseError(error) };
@@ -260,7 +278,7 @@ export const cleaningService = {
 		return { error: null };
 	},
 
-	async deleteCleaningRequest(id: string): Promise<{ error: string | null }> {
+	async hardDeleteCleaningRequest(id: string): Promise<{ error: string | null }> {
 		const { error } = await supabase.from('cleanings').delete().eq('id', id);
 
 		if (error) {
@@ -268,5 +286,92 @@ export const cleaningService = {
 		}
 
 		return { error: null };
+	},
+
+	async insertTask(payload: TaskInsert): Promise<ActionResult<void>> {
+		const { error } = await supabase.from('cleaning_tasks').insert(payload);
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+		return { data: undefined, error: null };
+	},
+
+	async updateTask(payload: TaskUpdate): Promise<ActionResult<void>> {
+		if (!payload.id) {
+			return { data: null, error: 'Task ID is required for updates' };
+		}
+
+		const { error } = await supabase.from('cleaning_tasks').update(payload).eq('id', payload.id);
+
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+
+		return { data: undefined, error: null };
+	},
+
+	async softDeleteTask(id: string): Promise<ActionResult<void>> {
+		const { error } = await supabase.rpc('soft_delete_cleaning_task', {
+			p_task_id: id,
+		});
+
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+		return { data: undefined, error: null };
+	},
+
+	async hardDeleteTask(id: string): Promise<ActionResult<void>> {
+		const { error } = await supabase.from('cleaning_tasks').delete().eq('id', id);
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+		return { data: undefined, error: null };
+	},
+
+	async insertEvidence(payload: EvidenceInsert): Promise<ActionResult<void>> {
+		const { error } = await supabase.from('evidence_media').insert(payload);
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+		return { data: undefined, error: null };
+	},
+
+	async softDeleteEvidence(id: string): Promise<ActionResult<void>> {
+		const { error } = await supabase.rpc('soft_delete_evidence_media', {
+			p_evidence_id: id,
+		});
+
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+		return { data: undefined, error: null };
+	},
+
+	async hardDeleteEvidence(id: string): Promise<ActionResult<void>> {
+		const { error } = await supabase.from('evidence_media').delete().eq('id', id);
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+		return { data: undefined, error: null };
+	},
+
+	async upsertReport(payload: ReportInsert): Promise<ActionResult<void>> {
+		const { error } = await supabase.from('cleaning_reports').upsert(payload);
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+		return { data: undefined, error: null };
+	},
+
+	async softDeleteReport(id: string): Promise<ActionResult<void>> {
+		const { error } = await supabase.rpc('soft_delete_cleaning_report', {
+			p_report_id: id,
+		});
+
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+		return { data: undefined, error: null };
 	},
 };

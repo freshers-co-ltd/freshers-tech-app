@@ -9,12 +9,46 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action_type: string
+          actor_id: string | null
+          created_at: string | null
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          target_id: string
+          target_table: string
+        }
+        Insert: {
+          action_type: string
+          actor_id?: string | null
+          created_at?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          target_id: string
+          target_table: string
+        }
+        Update: {
+          action_type?: string
+          actor_id?: string | null
+          created_at?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          target_id?: string
+          target_table?: string
+        }
+        Relationships: []
+      }
       cleaning_reports: {
         Row: {
           broken_items_report: string | null
           cleaner_id: string
           cleaning_id: string
           created_at: string
+          deleted_at: string | null
           id: string
           low_supplies_report: string | null
         }
@@ -23,6 +57,7 @@ export type Database = {
           cleaner_id: string
           cleaning_id: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           low_supplies_report?: string | null
         }
@@ -31,6 +66,7 @@ export type Database = {
           cleaner_id?: string
           cleaning_id?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           low_supplies_report?: string | null
         }
@@ -62,6 +98,7 @@ export type Database = {
         Row: {
           cleaning_id: string
           created_at: string
+          deleted_at: string | null
           description: string
           id: string
           is_completed: boolean
@@ -70,6 +107,7 @@ export type Database = {
         Insert: {
           cleaning_id: string
           created_at?: string
+          deleted_at?: string | null
           description: string
           id?: string
           is_completed?: boolean
@@ -78,6 +116,7 @@ export type Database = {
         Update: {
           cleaning_id?: string
           created_at?: string
+          deleted_at?: string | null
           description?: string
           id?: string
           is_completed?: boolean
@@ -99,6 +138,7 @@ export type Database = {
           clock_in_time: string | null
           clock_out_time: string | null
           created_at: string
+          deleted_at: string | null
           host_id: string
           id: string
           instructions: string | null
@@ -106,6 +146,7 @@ export type Database = {
           scheduled_start: string
           service_cost: number
           status: Database["public"]["Enums"]["cleaning_status"]
+          stocks_included: boolean
           updated_at: string
         }
         Insert: {
@@ -113,6 +154,7 @@ export type Database = {
           clock_in_time?: string | null
           clock_out_time?: string | null
           created_at?: string
+          deleted_at?: string | null
           host_id: string
           id?: string
           instructions?: string | null
@@ -120,6 +162,7 @@ export type Database = {
           scheduled_start: string
           service_cost: number
           status?: Database["public"]["Enums"]["cleaning_status"]
+          stocks_included?: boolean
           updated_at?: string
         }
         Update: {
@@ -127,6 +170,7 @@ export type Database = {
           clock_in_time?: string | null
           clock_out_time?: string | null
           created_at?: string
+          deleted_at?: string | null
           host_id?: string
           id?: string
           instructions?: string | null
@@ -134,6 +178,7 @@ export type Database = {
           scheduled_start?: string
           service_cost?: number
           status?: Database["public"]["Enums"]["cleaning_status"]
+          stocks_included?: boolean
           updated_at?: string
         }
         Relationships: [
@@ -178,6 +223,7 @@ export type Database = {
         Row: {
           cleaning_id: string
           created_at: string
+          deleted_at: string | null
           id: string
           media_url: string
           type: Database["public"]["Enums"]["media_type"]
@@ -186,6 +232,7 @@ export type Database = {
         Insert: {
           cleaning_id: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           media_url: string
           type?: Database["public"]["Enums"]["media_type"]
@@ -194,6 +241,7 @@ export type Database = {
         Update: {
           cleaning_id?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
           media_url?: string
           type?: Database["public"]["Enums"]["media_type"]
@@ -226,6 +274,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          deleted_at: string | null
           email: string | null
           full_name: string | null
           id: string
@@ -235,6 +284,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          deleted_at?: string | null
           email?: string | null
           full_name?: string | null
           id: string
@@ -244,6 +294,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          deleted_at?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
@@ -260,6 +311,7 @@ export type Database = {
           bathrooms: number
           bedrooms: number
           created_at: string
+          deleted_at: string | null
           extra_images_urls: string[] | null
           host_id: string
           id: string
@@ -275,6 +327,7 @@ export type Database = {
           bathrooms?: number
           bedrooms?: number
           created_at?: string
+          deleted_at?: string | null
           extra_images_urls?: string[] | null
           host_id: string
           id?: string
@@ -290,6 +343,7 @@ export type Database = {
           bathrooms?: number
           bedrooms?: number
           created_at?: string
+          deleted_at?: string | null
           extra_images_urls?: string[] | null
           host_id?: string
           id?: string
@@ -369,8 +423,29 @@ export type Database = {
           p_property_id: string
           p_scheduled_start: string
           p_service_cost: number
+          p_stocks_included?: boolean
         }
         Returns: string
+      }
+      soft_delete_cleaning: {
+        Args: { p_cleaning_id: string }
+        Returns: undefined
+      }
+      soft_delete_cleaning_report: {
+        Args: { p_report_id: string }
+        Returns: undefined
+      }
+      soft_delete_cleaning_task: {
+        Args: { p_task_id: string }
+        Returns: undefined
+      }
+      soft_delete_evidence_media: {
+        Args: { p_evidence_id: string }
+        Returns: undefined
+      }
+      soft_delete_property: {
+        Args: { p_property_id: string }
+        Returns: undefined
       }
       update_cleaning_request: {
         Args: {
@@ -378,6 +453,7 @@ export type Database = {
           p_custom_tasks: string[]
           p_instructions: string
           p_scheduled_start: string
+          p_stocks_included?: boolean
         }
         Returns: string
       }

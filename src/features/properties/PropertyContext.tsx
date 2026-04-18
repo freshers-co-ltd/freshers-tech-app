@@ -14,7 +14,7 @@ interface PropertyContextType {
 	isLoading: boolean;
 	fetchProperties: () => Promise<void>;
 	upsertProperty: (property: PropertyInsert) => Promise<{ success: boolean; data?: Property }>;
-	deleteProperty: (id: string) => Promise<{ success: boolean }>;
+	deleteProperty: (id: string, hard?: boolean) => Promise<{ success: boolean }>;
 }
 
 const PropertyContext = createContext<PropertyContextType | undefined>(undefined);
@@ -54,6 +54,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 	const upsertProperty = async (property: PropertyInsert) => {
 		const { data, error } = await propertyService.upsertProperty(property);
 		if (error) {
+			toast.error(error);
 			return { success: false };
 		}
 
@@ -67,9 +68,13 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 		return { success: false };
 	};
 
-	const deleteProperty = async (id: string) => {
-		const { error } = await propertyService.deleteProperty(id);
+	const deleteProperty = async (id: string, hard: boolean = false) => {
+		const { error } = hard
+			? await propertyService.hardDeleteProperty(id)
+			: await propertyService.softDeleteProperty(id);
+
 		if (error) {
+			toast.error(error);
 			return { success: false };
 		}
 		setProperties((prev) => prev.filter((p) => p.id !== id));

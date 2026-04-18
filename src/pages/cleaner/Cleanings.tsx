@@ -9,12 +9,7 @@ import { ManagementLayout } from '@/layouts/ManagementLayout';
 import { useCleanerCleanings } from '@/features/cleanings/useCleanerCleanings';
 
 export function CleanerCleaningsPage() {
-	const {
-		cleanings,
-		isLoading,
-		viewingCleaning,
-		modal,
-	} = useCleanerCleanings();
+	const { cleanings, isLoading, viewingCleaning, modal } = useCleanerCleanings();
 
 	return (
 		<ManagementLayout
@@ -35,11 +30,7 @@ export function CleanerCleaningsPage() {
 					</p>
 				</div>
 			}
-			grid={
-				<CleanerCleaningGrid
-					onView={modal.openView}
-				/>
-			}
+			grid={<CleanerCleaningGrid onView={modal.openView} />}
 			isViewOpen={modal.isViewOpen}
 			isEditOrCreateOpen={false}
 			onClose={modal.handleClose}
@@ -47,6 +38,8 @@ export function CleanerCleaningsPage() {
 				viewingCleaning ? (
 					<CleanerCleaningDetailView
 						cleaning={viewingCleaning}
+						open={modal.isViewOpen}
+						onOpenChange={modal.handleClose}
 					/>
 				) : (
 					<DialogContent>

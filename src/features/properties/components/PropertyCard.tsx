@@ -30,17 +30,13 @@ export const PropertyCard = memo(({ property, onDelete, onEdit, onView }: Proper
 			onClick={() => onView(property.id)}>
 			<div className="relative w-full h-60 overflow-hidden bg-muted">
 				{property.main_image_url ? (
-					<img
-						src={imageUrl}
-						alt={property.address_line_1}
-						className="object-cover size-full"
-					/>
+					<img src={imageUrl} alt={property.address_line_1} className="object-cover size-full" />
 				) : (
 					<div className="flex-center h-full">
 						<Home className="size-12 text-muted-foreground/20" />
 					</div>
 				)}
-				<div className="absolute flex gap-1 top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+				<div className="absolute flex gap-1 top-2 right-2 invisible group-hover:visible">
 					<Button
 						variant="secondary"
 						size="icon"

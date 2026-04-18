@@ -35,7 +35,15 @@ const propertySchema = z.object({
 	address_line_1: z.string().min(1, DICT.FORMS.VALIDATION.ADDRESS_REQUIRED),
 	address_line_2: z.string().optional(),
 	town_city: z.string().min(1, DICT.FORMS.VALIDATION.TOWN_REQUIRED),
-	postcode: z.string().regex(POSTCODE_REGEX, DICT.FORMS.VALIDATION.POSTCODE_INVALID),
+	postcode: z
+		.string()
+		.regex(POSTCODE_REGEX, DICT.FORMS.VALIDATION.POSTCODE_INVALID)
+		.transform((val) => {
+			const cleaned = val.replace(/\s+/g, '').toUpperCase();
+			const incode = cleaned.slice(-3);
+			const outcode = cleaned.slice(0, -3);
+			return `${outcode} ${incode}`;
+		}),
 	type: z.enum(['house', 'apartment', 'other']),
 	bedrooms: z.coerce.number().min(0, DICT.FORMS.VALIDATION.NUMBER_INVALID),
 	bathrooms: z.coerce.number().min(0, DICT.FORMS.VALIDATION.NUMBER_INVALID),
@@ -145,11 +153,7 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 	}, [mainImage, initialData, form]);
 
 	const removeExistingImage = (pathToRemove: string) => {
-		setExtraImagesPaths((prev) => {
-			return prev.filter((path) => {
-				return path !== pathToRemove;
-			});
-		});
+		setExtraImagesPaths((prev) => prev.filter((path) => path !== pathToRemove));
 	};
 
 	const remainingSlots = Math.max(0, 10 - extraImagesPaths.length);
@@ -162,13 +166,12 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 		setIsUploading(true);
 		try {
 			let mainImagePath = initialData?.main_image_url || '';
-			const finalExtraImagesPaths = [...extraImagesPaths];
 			const { has_main_image, ...databaseValues } = values;
 
 			if (mainImage?.[0]) {
 				const { path: uploadedPath, error } = await mediaService.uploadMedia(
 					user.id,
-					mainImage[0] || null,
+					mainImage[0],
 					'property-media',
 				);
 				if (error) {
@@ -179,6 +182,8 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 				}
 			}
 
+			let finalExtraImagesPaths = [...extraImagesPaths];
+
 			if (extraImages && extraImages.length > 0) {
 				const totalImages = extraImagesPaths.length + extraImages.length;
 				if (totalImages > 10) {
@@ -187,16 +192,19 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 					return;
 				}
 
-				for (const file of extraImages) {
-					const { path: uploadedPath, error } = await mediaService.uploadMedia(
-						user.id,
-						file || null,
-						'property-media',
-					);
-					if (!error && uploadedPath) {
-						finalExtraImagesPaths.push(uploadedPath);
-					}
-				}
+				const uploadPromises = extraImages.map((file) =>
+					mediaService.uploadMedia(user.id, file, 'property-media'),
+				);
+				const results = await Promise.allSettled(uploadPromises);
+
+				const newPaths = results
+					.map((res) => (res.status === 'fulfilled' && res.value.path ? res.value.path : null))
+					.filter((path): path is string => !!path);
+
+				finalExtraImagesPaths = [...finalExtraImagesPaths, ...newPaths];
+
+				setExtraImagesPaths(finalExtraImagesPaths);
+				setExtraImages([]);
 			}
 
 			const payload: PropertyInsert = {
@@ -425,7 +433,7 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 			</FieldGroup>
 
 			<div className="flex justify-end gap-3 pt-4 overflow-visible border-t border-border">
-				<Button type="button" variant="outline" onClick={onCancel}>
+				<Button variant="outline" onClick={onCancel}>
 					{DICT.PROPERTIES.ACTIONS.CANCEL}
 				</Button>
 				<Button type="submit" disabled={isUploading || form.formState.isSubmitting}>

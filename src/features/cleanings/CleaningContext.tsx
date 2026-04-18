@@ -8,7 +8,11 @@ import {
 	type CleaningUpdate,
 	type CreateCleaningRequestPayload,
 	type UpdateCleaningRequestPayload,
+	type TaskInsert,
+	type EvidenceInsert,
+	type ReportInsert,
 	cleaningService,
+	type TaskUpdate,
 } from '@/features/cleanings/cleaningService';
 
 interface CleaningContextType {
@@ -22,7 +26,14 @@ interface CleaningContextType {
 		id: string,
 		payload: CleaningUpdate,
 	) => Promise<{ success: boolean; data?: CleaningRequest }>;
-	deleteCleaning: (id: string) => Promise<{ success: boolean }>;
+	deleteCleaning: (id: string, hard?: boolean) => Promise<{ success: boolean }>;
+	insertTask: (payload: TaskInsert) => Promise<{ success: boolean }>;
+	updateTask: (payload: TaskUpdate) => Promise<{ success: boolean }>;
+	updateTasksBatch: (cleaningId: string, updates: TaskUpdate[]) => Promise<{ success: boolean }>;
+	deleteTask: (id: string, hard?: boolean) => Promise<{ success: boolean }>;
+	addEvidence: (payload: EvidenceInsert) => Promise<{ success: boolean }>;
+	deleteEvidence: (id: string, hard?: boolean) => Promise<{ success: boolean }>;
+	upsertReport: (payload: ReportInsert) => Promise<{ success: boolean }>;
 }
 
 const CleaningContext = createContext<CleaningContextType | undefined>(undefined);
@@ -101,8 +112,10 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 		return { success: false };
 	};
 
-	const deleteCleaning = async (id: string) => {
-		const { error } = await cleaningService.deleteCleaningRequest(id);
+	const deleteCleaning = async (id: string, hard: boolean = false) => {
+		const { error } = hard
+			? await cleaningService.hardDeleteCleaningRequest(id)
+			: await cleaningService.softDeleteCleaningRequest(id);
 
 		if (error) {
 			toast.error(error);
@@ -110,6 +123,151 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 		}
 
 		setCleanings((prev) => prev.filter((c) => c.id !== id));
+		return { success: true };
+	};
+
+	const insertTask = async (payload: TaskInsert) => {
+		const { data, error } = await cleaningService.insertTask(payload);
+		if (error) {
+			toast.error(error);
+			return { success: false };
+		}
+		if (data) {
+			setCleanings((prev) =>
+				prev.map((c) => {
+					if (c.id === payload.cleaning_id) {
+						return { ...c, tasks: [...(c.tasks || []), data] };
+					}
+					return c;
+				}),
+			);
+		}
+		return { success: true };
+	};
+
+	const updateTask = async (payload: TaskUpdate) => {
+		const { data, error } = await cleaningService.updateTask(payload);
+		if (error) {
+			toast.error(error);
+			return { success: false };
+		}
+		if (data) {
+			setCleanings((prev) =>
+				prev.map((c) => {
+					if (c.id === payload.cleaning_id) {
+						return {
+							...c,
+							tasks: c.tasks?.map((t) => (t.id === payload.id ? data : t)),
+						};
+					}
+					return c;
+				}),
+			);
+		}
+		return { success: true };
+	};
+
+	const updateTasksBatch = async (cleaningId: string, updates: TaskUpdate[]) => {
+		setCleanings((prev) =>
+			prev.map((c) => {
+				if (c.id === cleaningId) {
+					return {
+						...c,
+						tasks: c.tasks?.map((t) => {
+							const update = updates.find((u) => u.id === t.id);
+							if (update && typeof update.is_completed === 'boolean') {
+								return { ...t, is_completed: update.is_completed };
+							}
+							return t;
+						}),
+					};
+				}
+				return c;
+			}),
+		);
+
+		const results = await Promise.all(updates.map((u) => cleaningService.updateTask(u)));
+		const errors = results.filter((r) => r.error);
+
+		if (errors.length > 0) {
+			toast.error('Some tasks failed to save.');
+			return { success: false };
+		}
+
+		return { success: true };
+	};
+
+	const deleteTask = async (id: string, hard: boolean = false) => {
+		const { error } = hard
+			? await cleaningService.hardDeleteTask(id)
+			: await cleaningService.softDeleteTask(id);
+
+		if (error) {
+			toast.error(error);
+			return { success: false };
+		}
+		setCleanings((prev) =>
+			prev.map((c) => ({
+				...c,
+				tasks: c.tasks?.filter((t) => t.id !== id),
+			})),
+		);
+		return { success: true };
+	};
+
+	const addEvidence = async (payload: EvidenceInsert) => {
+		const { data, error } = await cleaningService.insertEvidence(payload);
+		if (error) {
+			toast.error(error);
+			return { success: false };
+		}
+		if (data) {
+			setCleanings((prev) =>
+				prev.map((c) => {
+					if (c.id === payload.cleaning_id) {
+						return { ...c, evidence: [...(c.evidence || []), data] };
+					}
+					return c;
+				}),
+			);
+		}
+		return { success: true };
+	};
+
+	const deleteEvidence = async (id: string, hard: boolean = false) => {
+		const { error } = hard
+			? await cleaningService.hardDeleteEvidence(id)
+			: await cleaningService.softDeleteEvidence(id);
+
+		if (error) {
+			toast.error(error);
+			return { success: false };
+		}
+		setCleanings((prev) =>
+			prev.map((c) => ({
+				...c,
+				evidence: c.evidence?.filter((e) => e.id !== id),
+			})),
+		);
+		return { success: true };
+	};
+
+	const upsertReport = async (payload: ReportInsert) => {
+		const { data, error } = await cleaningService.upsertReport(payload);
+		if (error) {
+			toast.error(error);
+			return { success: false };
+		}
+		if (data) {
+			setCleanings((prev) =>
+				prev.map((c) => {
+					if (c.id === payload.cleaning_id) {
+						return { ...c, report: data };
+					}
+					return c;
+				}),
+			);
+		}
 		return { success: true };
 	};
 
@@ -122,6 +280,13 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 				upsertCleaning,
 				updateCleaning,
 				deleteCleaning,
+				insertTask,
+				updateTask,
+				updateTasksBatch,
+				deleteTask,
+				addEvidence,
+				deleteEvidence,
+				upsertReport,
 			}}>
 			{children}
 		</CleaningContext.Provider>

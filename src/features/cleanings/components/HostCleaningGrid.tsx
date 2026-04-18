@@ -84,7 +84,7 @@ export function HostCleaningGrid({ onView, onEdit, onDelete }: HostCleaningGridP
 						placeholder="Search by address..."
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
-						className="pl-9"
+						className="pl-9 h-8"
 					/>
 				</div>
 

@@ -10,25 +10,34 @@ CREATE TABLE public.standard_tasks (
 
 ALTER TABLE public.standard_tasks ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Standard tasks are viewable by all authenticated users"
+CREATE POLICY "Admins can do everything and hosts can view standard tasks"
 ON public.standard_tasks
-FOR SELECT
+FOR ALL
 TO authenticated
-USING (true);
+USING (
+  (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin') 
+  OR 
+  (auth.jwt() -> 'app_metadata' ->> 'role' = 'host')
+)
+WITH CHECK (
+  (auth.jwt() -> 'app_metadata' ->> 'role' = 'admin')
+);
 
 CREATE TABLE public.cleanings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    host_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-    property_id UUID NOT NULL REFERENCES public.properties(id) ON DELETE CASCADE,
+    host_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE RESTRICT,
+    property_id UUID NOT NULL REFERENCES public.properties(id) ON DELETE RESTRICT,
     cleaner_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
     status public.cleaning_status NOT NULL DEFAULT 'draft',
     scheduled_start TIMESTAMPTZ NOT NULL,
     service_cost NUMERIC(10, 2) NOT NULL CHECK (service_cost > 0),
     instructions TEXT,
+    stocks_included BOOLEAN DEFAULT false NOT NULL,
     clock_in_time TIMESTAMPTZ,
     clock_out_time TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
-    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
+    updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    deleted_at TIMESTAMPTZ
 );
 
 CREATE INDEX idx_cleanings_host_id ON public.cleanings(host_id);
@@ -37,175 +46,198 @@ CREATE INDEX idx_cleanings_cleaner_id ON public.cleanings(cleaner_id);
 
 ALTER TABLE public.cleanings ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view relevant cleanings"
+CREATE POLICY "Authorised users can view cleanings"
 ON public.cleanings
 FOR SELECT
 TO authenticated
 USING (
-    host_id = (SELECT auth.uid()) OR 
-    cleaner_id = (SELECT auth.uid()) OR 
-    (status = 'requested' AND cleaner_id IS NULL)
+    ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin' OR
+    (
+        (host_id = (SELECT auth.uid()) OR cleaner_id = (SELECT auth.uid())) AND 
+        deleted_at IS NULL
+    )
 );
 
-CREATE POLICY "Hosts can insert their own cleaning requests"
+CREATE POLICY "Authorised users can insert cleanings"
 ON public.cleanings
 FOR INSERT
 TO authenticated
-WITH CHECK (host_id = (SELECT auth.uid()));
+WITH CHECK (
+    ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin' OR
+    (
+        host_id = (SELECT auth.uid()) AND
+        (status = 'draft'::public.cleaning_status OR status = 'requested'::public.cleaning_status) AND
+        cleaner_id IS NULL AND
+        clock_in_time IS NULL AND
+        clock_out_time IS NULL
+    )
+);
 
-CREATE POLICY "Hosts can delete their own cleaning requests"
-ON public.cleanings
-FOR DELETE
-TO authenticated
-USING (host_id = (SELECT auth.uid()));
-
-CREATE POLICY "Users can update cleanings"
+CREATE POLICY "Authorised users can update cleanings"
 ON public.cleanings
 FOR UPDATE
 TO authenticated
 USING (
-    host_id = (SELECT auth.uid()) OR 
-    cleaner_id = (SELECT auth.uid())
+    ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin' OR
+    (
+        (host_id = (SELECT auth.uid()) AND status IN ('draft', 'requested', 'confirmed')) OR
+        (cleaner_id = (SELECT auth.uid()) AND status IN ('confirmed', 'in_progress'))
+    )
 )
 WITH CHECK (
-    (host_id = (SELECT auth.uid())) OR 
+    ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin' OR
     (
-        cleaner_id = (SELECT auth.uid()) AND
-        host_id = host_id AND
-        property_id = property_id AND
-        service_cost = service_cost AND
-        scheduled_start = scheduled_start AND
-        status = status
+        CASE 
+            WHEN host_id = (SELECT auth.uid()) THEN
+                clock_in_time IS NULL AND clock_out_time IS NULL
+            WHEN cleaner_id = (SELECT auth.uid()) THEN
+                true
+            ELSE false
+        END
     )
 );
 
+CREATE TRIGGER set_cleanings_updated_at
+BEFORE UPDATE ON public.cleanings
+FOR EACH ROW
+EXECUTE FUNCTION public.update_modified_column();
+
 CREATE TABLE public.cleaning_tasks (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    cleaning_id UUID NOT NULL REFERENCES public.cleanings(id) ON DELETE CASCADE,
+    cleaning_id UUID NOT NULL REFERENCES public.cleanings(id) ON DELETE RESTRICT,
     description TEXT NOT NULL,
     is_custom BOOLEAN DEFAULT false NOT NULL,
     is_completed BOOLEAN DEFAULT false NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT now() NOT NULL
+    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    deleted_at TIMESTAMPTZ
 );
 
 CREATE INDEX idx_cleaning_tasks_cleaning_id ON public.cleaning_tasks(cleaning_id);
 
 ALTER TABLE public.cleaning_tasks ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view tasks for accessible cleanings"
+CREATE POLICY "Authorised users can view tasks for cleanings"
 ON public.cleaning_tasks
 FOR SELECT
 TO authenticated
 USING (
-    EXISTS (
-        SELECT 1 FROM public.cleanings 
-        WHERE cleanings.id = cleaning_tasks.cleaning_id 
-        AND (
-            cleanings.host_id = (SELECT auth.uid()) OR 
-            cleanings.cleaner_id = (SELECT auth.uid()) OR 
-            (cleanings.status = 'requested' AND cleanings.cleaner_id IS NULL)
+    ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin' OR
+    (
+        deleted_at IS NULL AND
+        EXISTS (
+            SELECT 1 FROM public.cleanings 
+            WHERE cleanings.id = cleaning_tasks.cleaning_id 
+            AND cleanings.deleted_at IS NULL
+            AND (cleanings.host_id = (SELECT auth.uid()) OR cleanings.cleaner_id = (SELECT auth.uid()))
         )
     )
 );
 
-CREATE POLICY "Hosts can insert tasks for their cleanings"
+CREATE POLICY "Authorised users can insert cleaning tasks"
 ON public.cleaning_tasks
 FOR INSERT
 TO authenticated
 WITH CHECK (
-    EXISTS (
-        SELECT 1 FROM public.cleanings 
-        WHERE cleanings.id = cleaning_tasks.cleaning_id 
-        AND cleanings.host_id = (SELECT auth.uid())
+    ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin' OR
+    (
+        EXISTS (
+            SELECT 1 FROM public.cleanings 
+            WHERE cleanings.id = cleaning_id 
+            AND cleanings.host_id = (SELECT auth.uid())
+            AND cleanings.status IN ('draft', 'requested', 'confirmed')
+            AND cleanings.deleted_at IS NULL
+        ) AND
+        is_completed = false
     )
 );
 
-CREATE POLICY "Hosts can delete tasks for their cleanings"
+CREATE POLICY "Admins can delete cleaning tasks"
 ON public.cleaning_tasks
 FOR DELETE
 TO authenticated
 USING (
-    EXISTS (
-        SELECT 1 FROM public.cleanings 
-        WHERE cleanings.id = cleaning_tasks.cleaning_id 
-        AND cleanings.host_id = (SELECT auth.uid())
-    )
-);
-
-CREATE POLICY "Users can update cleaning tasks"
-ON public.cleaning_tasks
-FOR UPDATE
-TO authenticated
-USING (
-    EXISTS (
-        SELECT 1 FROM public.cleanings 
-        WHERE cleanings.id = cleaning_tasks.cleaning_id 
-        AND (
-            cleanings.host_id = (SELECT auth.uid()) OR 
-            (cleanings.cleaner_id = (SELECT auth.uid()) AND cleanings.status = 'in_progress')
-        )
-    )
-)
-WITH CHECK (
-    EXISTS (
-        SELECT 1 FROM public.cleanings 
-        WHERE cleanings.id = cleaning_tasks.cleaning_id 
-        AND (
-            cleanings.host_id = (SELECT auth.uid()) OR 
-            (cleanings.cleaner_id = (SELECT auth.uid()) AND cleanings.status = 'in_progress')
-        )
-    )
+    ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin'
 );
 
 CREATE TABLE public.evidence_media (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    cleaning_id UUID NOT NULL REFERENCES public.cleanings(id) ON DELETE CASCADE,
+    cleaning_id UUID NOT NULL REFERENCES public.cleanings(id) ON DELETE RESTRICT,
     uploader_id UUID NOT NULL REFERENCES public.profiles(id),
     media_url TEXT NOT NULL,
     type public.media_type NOT NULL DEFAULT 'image',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMPTZ
 );
 
 ALTER TABLE public.evidence_media ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view relevant cleaning evidence"
+CREATE POLICY "Authorised users can view cleaning evidence"
 ON public.evidence_media
 FOR SELECT
 TO authenticated
 USING (
-    uploader_id = (SELECT auth.uid()) OR
-    EXISTS (
-        SELECT 1 FROM public.cleanings
-        WHERE cleanings.id = evidence_media.cleaning_id
-        AND cleanings.host_id = (SELECT auth.uid())
+    ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin' OR
+    (
+        deleted_at IS NULL AND
+        (
+            uploader_id = (SELECT auth.uid()) OR
+            EXISTS (
+                SELECT 1 FROM public.cleanings
+                WHERE cleanings.id = evidence_media.cleaning_id
+                AND cleanings.host_id = (SELECT auth.uid())
+                AND cleanings.deleted_at IS NULL
+            )
+        )
     )
 );
 
-CREATE POLICY "Cleaners can insert their own cleaning evidence"
+CREATE POLICY "Authorised users can insert cleaning evidence"
 ON public.evidence_media
 FOR INSERT
 TO authenticated
-WITH CHECK (uploader_id = (SELECT auth.uid()));
+WITH CHECK (
+    ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin' OR
+    (
+        uploader_id = (SELECT auth.uid())
+    )
+);
 
-CREATE POLICY "Cleaners can update their own cleaning evidence"
+CREATE POLICY "Authorised users can update cleaning evidence"
 ON public.evidence_media
 FOR UPDATE
 TO authenticated
-USING (uploader_id = (SELECT auth.uid()))
-WITH CHECK (uploader_id = (SELECT auth.uid()));
+USING (
+    ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin' OR
+    ( 
+        uploader_id = (SELECT auth.uid()) AND
+        EXISTS (
+            SELECT 1 FROM public.cleanings
+            WHERE cleanings.id = evidence_media.cleaning_id
+            AND cleanings.status = 'in_progress'
+            AND cleanings.deleted_at IS NULL
+        )
+    )
+)
+WITH CHECK (
+    ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin' OR 
+    (uploader_id = (SELECT auth.uid()))
+);
 
-CREATE POLICY "Cleaners can delete their own cleaning evidence"
+CREATE POLICY "Authorised users can delete cleaning evidence"
 ON public.evidence_media
 FOR DELETE
 TO authenticated
-USING (uploader_id = (SELECT auth.uid()));
+USING (
+    ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin'
+);
 
 CREATE OR REPLACE FUNCTION public.create_cleaning_request(
     p_property_id UUID,
     p_service_cost NUMERIC,
     p_custom_tasks TEXT[],
     p_instructions TEXT,
-    p_scheduled_start TIMESTAMPTZ
+    p_scheduled_start TIMESTAMPTZ,
+    p_stocks_included BOOLEAN DEFAULT false
 ) 
 RETURNS UUID
 SECURITY DEFINER
@@ -214,11 +246,11 @@ AS $$
 DECLARE
     v_cleaning_id UUID;
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM public.properties WHERE id = p_property_id AND host_id = (SELECT auth.uid())) THEN
+    IF NOT EXISTS (SELECT 1 FROM public.properties WHERE id = p_property_id AND host_id = (SELECT auth.uid()) AND deleted_at IS NULL) THEN
         RAISE EXCEPTION 'Unauthorised' USING ERRCODE = 'P0001';
     END IF;
-    INSERT INTO public.cleanings (property_id, host_id, service_cost, scheduled_start, status, instructions) 
-    VALUES (p_property_id, (SELECT auth.uid()), p_service_cost, p_scheduled_start, 'requested', p_instructions)
+    INSERT INTO public.cleanings (property_id, host_id, service_cost, scheduled_start, status, instructions, stocks_included) 
+    VALUES (p_property_id, (SELECT auth.uid()), p_service_cost, p_scheduled_start, 'requested', p_instructions, p_stocks_included)
     RETURNING id INTO v_cleaning_id;
     INSERT INTO public.cleaning_tasks (cleaning_id, description, is_custom, is_completed)
     SELECT v_cleaning_id, description, false, false FROM standard_tasks WHERE is_active = true;
@@ -236,20 +268,21 @@ CREATE OR REPLACE FUNCTION public.update_cleaning_request(
     p_cleaning_id UUID,
     p_custom_tasks TEXT[],
     p_instructions TEXT,
-    p_scheduled_start TIMESTAMPTZ
+    p_scheduled_start TIMESTAMPTZ,
+    p_stocks_included BOOLEAN DEFAULT false
 )
 RETURNS UUID
 SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM public.cleanings WHERE id = p_cleaning_id AND host_id = (SELECT auth.uid())) THEN
+    IF NOT EXISTS (SELECT 1 FROM public.cleanings WHERE id = p_cleaning_id AND host_id = (SELECT auth.uid()) AND deleted_at IS NULL) THEN
         RAISE EXCEPTION 'Unauthorised' USING ERRCODE = 'P0001';
     END IF;
     UPDATE public.cleanings
-    SET scheduled_start = p_scheduled_start, instructions = p_instructions
-    WHERE id = p_cleaning_id;
-    DELETE FROM public.cleaning_tasks WHERE cleaning_id = p_cleaning_id AND is_custom = true;
+    SET scheduled_start = p_scheduled_start, instructions = p_instructions, stocks_included = p_stocks_included
+    WHERE id = p_cleaning_id AND deleted_at IS NULL;
+    UPDATE public.cleaning_tasks SET deleted_at = now() WHERE cleaning_id = p_cleaning_id AND is_custom = true;
     IF p_custom_tasks IS NOT NULL THEN
         INSERT INTO public.cleaning_tasks (cleaning_id, description, is_custom, is_completed)
         SELECT p_cleaning_id, task_desc, true, false FROM unnest(p_custom_tasks) AS task_desc WHERE task_desc <> '';
@@ -290,16 +323,18 @@ WITH CHECK (
         SELECT 1 FROM public.cleanings
         WHERE cleanings.id::text = (storage.foldername(name))[1]
         AND cleanings.cleaner_id = (SELECT auth.uid())
+        AND cleanings.deleted_at IS NULL
     )
 );
 
 CREATE TABLE public.cleaning_reports (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    cleaning_id UUID NOT NULL REFERENCES public.cleanings(id) ON DELETE CASCADE UNIQUE,
-    cleaner_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    cleaning_id UUID NOT NULL REFERENCES public.cleanings(id) ON DELETE RESTRICT UNIQUE,
+    cleaner_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE RESTRICT,
     broken_items_report TEXT,
     low_supplies_report TEXT,
-    created_at TIMESTAMPTZ DEFAULT now() NOT NULL
+    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    deleted_at TIMESTAMPTZ
 );
 
 CREATE INDEX idx_cleaning_reports_cleaning_id ON public.cleaning_reports(cleaning_id);
@@ -307,36 +342,345 @@ CREATE INDEX idx_cleaning_reports_cleaner_id ON public.cleaning_reports(cleaner_
 
 ALTER TABLE public.cleaning_reports ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view relevant cleaning reports"
+CREATE POLICY "Authorised users can view cleaning reports"
 ON public.cleaning_reports
 FOR SELECT
 TO authenticated
 USING (
-    cleaner_id = (SELECT auth.uid()) OR
-    EXISTS (
-        SELECT 1 FROM public.cleanings
-        WHERE cleanings.id = cleaning_reports.cleaning_id
-        AND cleanings.host_id = (SELECT auth.uid())
+    ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin' OR
+    (
+        deleted_at IS NULL AND
+        (
+            cleaner_id = (SELECT auth.uid()) OR
+            EXISTS (
+                SELECT 1 FROM public.cleanings
+                WHERE cleanings.id = cleaning_id
+                AND cleanings.host_id = (SELECT auth.uid())
+                AND cleanings.deleted_at IS NULL
+            )
+        )
     )
 );
 
-CREATE POLICY "Cleaners can insert their own cleaning reports"
+CREATE POLICY "Authorised users can insert cleaning reports"
 ON public.cleaning_reports
 FOR INSERT
 TO authenticated
 WITH CHECK (
-    cleaner_id = (SELECT auth.uid()) AND
-    EXISTS (
-        SELECT 1 FROM public.cleanings
-        WHERE cleanings.id = cleaning_reports.cleaning_id
-        AND cleanings.cleaner_id = (SELECT auth.uid())
-        AND cleanings.status = 'in_progress'
+    ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin' OR
+    (
+        cleaner_id = (SELECT auth.uid()) AND
+        EXISTS (
+            SELECT 1 FROM public.cleanings
+            WHERE cleanings.id = cleaning_id
+            AND cleanings.cleaner_id = (SELECT auth.uid())
+            AND cleanings.status = 'in_progress'
+            AND cleanings.deleted_at IS NULL
+        )
     )
 );
 
-CREATE POLICY "Cleaners can update their own cleaning reports"
+CREATE POLICY "Authorised users can update cleaning reports"
 ON public.cleaning_reports
 FOR UPDATE
 TO authenticated
-USING (cleaner_id = (SELECT auth.uid()))
-WITH CHECK (cleaner_id = (SELECT auth.uid()));
+USING (
+    ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin' OR 
+    (cleaner_id = (SELECT auth.uid()))
+)
+WITH CHECK (
+    ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin' OR 
+    (cleaner_id = (SELECT auth.uid()))
+);
+
+CREATE POLICY "Authorised users can view properties"
+ON public.properties
+FOR SELECT
+TO authenticated
+USING (
+    ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin' OR
+    (
+        deleted_at IS NULL AND
+        (
+            host_id = (SELECT auth.uid()) OR
+            EXISTS (
+                SELECT 1 FROM public.cleanings
+                WHERE cleanings.property_id = properties.id
+                AND cleanings.cleaner_id = (SELECT auth.uid())
+                AND cleanings.deleted_at IS NULL
+            )
+        )
+    )
+);
+
+CREATE POLICY "Authorised users can view property media"
+ON storage.objects
+FOR SELECT
+TO authenticated
+USING (
+    bucket_id = 'property-media' AND
+    (
+        ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin' OR
+        EXISTS (
+            SELECT 1 FROM public.properties p
+            LEFT JOIN public.cleanings c ON c.property_id = p.id
+            WHERE p.host_id::text = (storage.foldername(storage.objects.name))[1]
+            AND p.deleted_at IS NULL
+            AND (
+                p.host_id = (SELECT auth.uid()) OR 
+                (c.cleaner_id = (SELECT auth.uid()) AND c.deleted_at IS NULL)
+            )
+        )
+    )
+);
+
+CREATE OR REPLACE FUNCTION public.handle_soft_cascade_delete()
+RETURNS TRIGGER 
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NEW.deleted_at IS NOT NULL AND OLD.deleted_at IS NULL THEN
+    UPDATE public.cleanings 
+    SET deleted_at = NEW.deleted_at 
+    WHERE property_id = NEW.id AND deleted_at IS NULL;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_cascade_property_delete
+  AFTER UPDATE OF deleted_at ON public.properties
+  FOR EACH ROW EXECUTE FUNCTION public.handle_soft_cascade_delete();
+
+CREATE OR REPLACE FUNCTION public.enforce_cleaning_immutability()
+RETURNS TRIGGER
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') = 'admin') THEN
+        RETURN NEW;
+    END IF;
+
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IN ('host', 'cleaner')) THEN
+        IF (OLD.deleted_at IS NOT NULL AND NEW.deleted_at IS NOT DISTINCT FROM OLD.deleted_at) THEN
+            RAISE EXCEPTION 'Cannot modify a soft-deleted record' USING ERRCODE = '42501';
+        END IF;
+
+        IF (
+            NEW.id IS DISTINCT FROM OLD.id OR
+            NEW.host_id IS DISTINCT FROM OLD.host_id OR
+            NEW.property_id IS DISTINCT FROM OLD.property_id OR
+            NEW.cleaner_id IS DISTINCT FROM OLD.cleaner_id OR
+            NEW.service_cost IS DISTINCT FROM OLD.service_cost OR
+            NEW.created_at IS DISTINCT FROM OLD.created_at
+        ) THEN
+            RAISE EXCEPTION 'Immutable column violation' USING ERRCODE = '42501';
+        END IF;
+
+        IF ((SELECT auth.uid()) = OLD.cleaner_id AND NEW.deleted_at IS DISTINCT FROM OLD.deleted_at) THEN
+            RAISE EXCEPTION 'Cleaner immutable column violation' USING ERRCODE = '42501';
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_cleaning_immutability
+    BEFORE UPDATE ON public.cleanings
+    FOR EACH ROW
+    EXECUTE FUNCTION public.enforce_cleaning_immutability();
+
+CREATE OR REPLACE FUNCTION public.enforce_cleaning_tasks_immutability()
+RETURNS TRIGGER
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') = 'admin') THEN
+        RETURN NEW;
+    END IF;
+
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IN ('host', 'cleaner')) THEN
+        IF (OLD.deleted_at IS NOT NULL AND NEW.deleted_at IS NOT DISTINCT FROM OLD.deleted_at) THEN
+            RAISE EXCEPTION 'Modification of soft-deleted record prohibited' USING ERRCODE = '42501';
+        END IF;
+
+        IF (
+            NEW.id IS DISTINCT FROM OLD.id OR
+            NEW.cleaning_id IS DISTINCT FROM OLD.cleaning_id OR
+            NEW.is_custom IS DISTINCT FROM OLD.is_custom OR
+            NEW.created_at IS DISTINCT FROM OLD.created_at
+        ) THEN
+            RAISE EXCEPTION 'Immutable column violation' USING ERRCODE = '42501';
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_cleaning_tasks_immutability
+    BEFORE UPDATE ON public.cleaning_tasks
+    FOR EACH ROW
+    EXECUTE FUNCTION public.enforce_cleaning_tasks_immutability();
+
+CREATE OR REPLACE FUNCTION public.enforce_evidence_media_immutability()
+RETURNS TRIGGER
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') = 'admin') THEN
+        RETURN NEW;
+    END IF;
+
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IN ('host', 'cleaner')) THEN
+        IF (OLD.deleted_at IS NOT NULL AND NEW.deleted_at IS NOT DISTINCT FROM OLD.deleted_at) THEN
+            RAISE EXCEPTION 'Modification of soft-deleted record prohibited' USING ERRCODE = '42501';
+        END IF;
+
+        IF (
+            NEW.id IS DISTINCT FROM OLD.id OR
+            NEW.cleaning_id IS DISTINCT FROM OLD.cleaning_id OR
+            NEW.uploader_id IS DISTINCT FROM OLD.uploader_id OR
+            NEW.created_at IS DISTINCT FROM OLD.created_at OR
+            NEW.media_url IS DISTINCT FROM OLD.media_url OR
+            NEW.type IS DISTINCT FROM OLD.type
+        ) THEN
+            RAISE EXCEPTION 'Immutable column violation' USING ERRCODE = '42501';
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_evidence_media_immutability
+    BEFORE UPDATE ON public.evidence_media
+    FOR EACH ROW
+    EXECUTE FUNCTION public.enforce_evidence_media_immutability();
+
+CREATE OR REPLACE FUNCTION public.enforce_cleaning_reports_immutability()
+RETURNS TRIGGER
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') = 'admin') THEN
+        RETURN NEW;
+    END IF;
+
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IN ('host', 'cleaner')) THEN
+        IF (OLD.deleted_at IS NOT NULL AND NEW.deleted_at IS NOT DISTINCT FROM OLD.deleted_at) THEN
+            RAISE EXCEPTION 'Modification of soft-deleted record prohibited' USING ERRCODE = '42501';
+        END IF;
+
+        IF (
+            NEW.id IS DISTINCT FROM OLD.id OR
+            NEW.cleaning_id IS DISTINCT FROM OLD.cleaning_id OR
+            NEW.cleaner_id IS DISTINCT FROM OLD.cleaner_id OR
+            NEW.created_at IS DISTINCT FROM OLD.created_at
+        ) THEN
+            RAISE EXCEPTION 'Immutable column violation' USING ERRCODE = '42501';
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_cleaning_reports_immutability
+    BEFORE UPDATE ON public.cleaning_reports
+    FOR EACH ROW
+    EXECUTE FUNCTION public.enforce_cleaning_reports_immutability();
+
+CREATE OR REPLACE FUNCTION public.soft_delete_cleaning(p_cleaning_id UUID)
+RETURNS VOID
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM public.cleanings 
+        WHERE id = p_cleaning_id 
+        AND host_id = (SELECT auth.uid()) 
+        AND deleted_at IS NULL
+    ) AND (SELECT auth.jwt() -> 'app_metadata' ->> 'role') <> 'admin' THEN
+        RAISE EXCEPTION 'Unauthorised or record already deleted' USING ERRCODE = 'P0001';
+    END IF;
+
+    UPDATE public.cleanings SET deleted_at = now() WHERE id = p_cleaning_id;
+    UPDATE public.cleaning_tasks SET deleted_at = now() WHERE cleaning_id = p_cleaning_id AND deleted_at IS NULL;
+    UPDATE public.evidence_media SET deleted_at = now() WHERE cleaning_id = p_cleaning_id AND deleted_at IS NULL;
+    UPDATE public.cleaning_reports SET deleted_at = now() WHERE cleaning_id = p_cleaning_id AND deleted_at IS NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+GRANT EXECUTE ON FUNCTION public.soft_delete_cleaning TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.soft_delete_cleaning_task(p_task_id UUID)
+RETURNS VOID
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM public.cleaning_tasks t
+        JOIN public.cleanings c ON t.cleaning_id = c.id
+        WHERE t.id = p_task_id 
+        AND c.host_id = (SELECT auth.uid()) 
+        AND t.deleted_at IS NULL
+    ) AND (SELECT auth.jwt() -> 'app_metadata' ->> 'role') <> 'admin' THEN
+        RAISE EXCEPTION 'Unauthorised or record already deleted' USING ERRCODE = 'P0001';
+    END IF;
+
+    UPDATE public.cleaning_tasks SET deleted_at = now() WHERE id = p_task_id;
+END;
+$$ LANGUAGE plpgsql;
+
+GRANT EXECUTE ON FUNCTION public.soft_delete_cleaning_task TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.soft_delete_evidence_media(p_evidence_id UUID)
+RETURNS VOID
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM public.evidence_media 
+        WHERE id = p_evidence_id 
+        AND uploader_id = (SELECT auth.uid()) 
+        AND deleted_at IS NULL
+    ) AND (SELECT auth.jwt() -> 'app_metadata' ->> 'role') <> 'admin' THEN
+        RAISE EXCEPTION 'Unauthorised or record already deleted' USING ERRCODE = 'P0001';
+    END IF;
+
+    UPDATE public.evidence_media SET deleted_at = now() WHERE id = p_evidence_id;
+END;
+$$ LANGUAGE plpgsql;
+
+GRANT EXECUTE ON FUNCTION public.soft_delete_evidence_media TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.soft_delete_cleaning_report(p_report_id UUID)
+RETURNS VOID
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM public.cleaning_reports 
+        WHERE id = p_report_id 
+        AND cleaner_id = (SELECT auth.uid()) 
+        AND deleted_at IS NULL
+    ) AND (SELECT auth.jwt() -> 'app_metadata' ->> 'role') <> 'admin' THEN
+        RAISE EXCEPTION 'Unauthorised or record already deleted' USING ERRCODE = 'P0001';
+    END IF;
+
+    UPDATE public.cleaning_reports SET deleted_at = now() WHERE id = p_report_id;
+END;
+$$ LANGUAGE plpgsql;
+
+GRANT EXECUTE ON FUNCTION public.soft_delete_cleaning_report TO authenticated;

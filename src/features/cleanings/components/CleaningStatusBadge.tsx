@@ -1,10 +1,11 @@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { type CleaningStatus } from '@/features/cleanings/cleaningService';
+import { type CleaningStatus, CLEANING_STATUS } from '@/features/cleanings/cleaningService';
 
 interface CleaningStatusBadgeProps {
 	status: CleaningStatus;
 	className?: string;
+	isCleanerView?: boolean;
 }
 
 const statusColors: Record<CleaningStatus, string> = {
@@ -16,12 +17,17 @@ const statusColors: Record<CleaningStatus, string> = {
 	cancelled: 'bg-gray-100 text-gray-800 border-gray-200',
 };
 
-export function CleaningStatusBadge({ status, className }: CleaningStatusBadgeProps) {
-	const displayStatus = status.replace('_', ' ');
+export function CleaningStatusBadge({
+	status,
+	className,
+	isCleanerView,
+}: CleaningStatusBadgeProps) {
+	const displayLabel = isCleanerView && status === CLEANING_STATUS.CONFIRMED ? 'assigned' : status;
+	const formattedStatus = displayLabel.replace('_', ' ');
 
 	return (
 		<Badge variant="outline" className={cn(statusColors[status], className)}>
-			{displayStatus.toUpperCase()}
+			{formattedStatus.toUpperCase()}
 		</Badge>
 	);
 }

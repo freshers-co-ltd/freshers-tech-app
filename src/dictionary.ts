@@ -157,7 +157,7 @@ export const DICT = {
 		},
 		EDIT_DIALOG: {
 			TITLE: 'Edit property',
-			MESSAGE: 'Enter details about your property to save them',
+			MESSAGE: 'Edit details about your property to save them',
 		},
 		DELETE_DIALOG: {
 			TITLE: 'Delete property?',

@@ -44,7 +44,11 @@ interface HostCleaningDetailViewProps {
 	onDelete: (id: string) => void;
 }
 
-export function HostCleaningDetailView({ cleaning, onEdit, onDelete }: HostCleaningDetailViewProps) {
+export function HostCleaningDetailView({
+	cleaning,
+	onEdit,
+	onDelete,
+}: HostCleaningDetailViewProps) {
 	const { user } = useAuth();
 	const [isReportOpen, setIsReportOpen] = useState(false);
 	const [isFullScreen, setIsFullScreen] = useState(false);
@@ -165,7 +169,7 @@ export function HostCleaningDetailView({ cleaning, onEdit, onDelete }: HostClean
 								Assigned Cleaner
 							</h4>
 							<div className="p-2 rounded-md border bg-muted/10">
-								{cleaning.cleaner ? (
+								{cleaning.cleaner?.full_name ? (
 									<div className="flex items-center gap-2">
 										<span className="text-sm font-semibold">{cleaning.cleaner.full_name}</span>
 									</div>

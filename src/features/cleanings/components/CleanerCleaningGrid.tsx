@@ -1,6 +1,6 @@
 'use client';
 
-import { Search } from 'lucide-react';
+import { ArrowDownUp, ListFilter, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import {
@@ -11,7 +11,11 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { useCleanerCleanings } from '@/features/cleanings/useCleanerCleanings';
-import { STATUS_GROUPS } from '@/features/cleanings/cleaningService';
+import {
+	CLEANING_STATUS,
+	STATUS_GROUPS,
+	type CleaningStatus,
+} from '@/features/cleanings/cleaningService';
 import { CleanerCleaningCard } from '@/features/cleanings/components/CleanerCleaningCard';
 
 interface CleanerCleaningGridProps {
@@ -72,40 +76,52 @@ export function CleanerCleaningGrid({ onView }: CleanerCleaningGridProps) {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex flex-col gap-4 md:flex-row md:items-center">
-				<div className="relative flex-1 md:max-w-72">
-					<Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+			<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+				<div className="relative flex-1 sm:max-w-xs">
+					<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 					<Input
 						placeholder="Search address..."
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
-						className="pl-9"
+						className="h-8 pl-9 focus-visible:ring-1"
 					/>
 				</div>
 
-				<Select value={statusFilter} onValueChange={setStatusFilter}>
-					<SelectTrigger className="w-full md:w-40">
-						<SelectValue placeholder="Status" />
-					</SelectTrigger>
-					<SelectContent>
-						<SelectItem value="all">All Statuses</SelectItem>
-						{STATUS_GROUPS.ALL.map((status) => (
-							<SelectItem key={status} value={status}>
-								{status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
+				<div className="flex flex-row items-center gap-3">
+					<Select value={statusFilter} onValueChange={setStatusFilter}>
+						<SelectTrigger className="h-10 w-full sm:w-40">
+							<div className="flex items-center gap-2">
+								<ListFilter className="h-4 w-4 text-muted-foreground" />
+								<SelectValue placeholder="Status" />
+							</div>
+						</SelectTrigger>
+						<SelectContent align="end">
+							<SelectItem value="all">All Statuses</SelectItem>
+							{(STATUS_GROUPS.CLEANER_VIEW as CleaningStatus[]).map((status) => {
+								const displayLabel = status === CLEANING_STATUS.CONFIRMED ? 'assigned' : status;
 
-				<Select value={sortBy} onValueChange={setSortBy}>
-					<SelectTrigger className="w-full md:w-48">
-						<SelectValue placeholder="Sort by" />
-					</SelectTrigger>
-					<SelectContent>
-						<SelectItem value="date_asc">Date: Soonest first</SelectItem>
-						<SelectItem value="date_desc">Date: Latest first</SelectItem>
-					</SelectContent>
-				</Select>
+								return (
+									<SelectItem key={status} value={status}>
+										{displayLabel.charAt(0).toUpperCase() + displayLabel.slice(1).replace('_', ' ')}
+									</SelectItem>
+								);
+							})}
+						</SelectContent>
+					</Select>
+
+					<Select value={sortBy} onValueChange={setSortBy}>
+						<SelectTrigger className="h-10 w-full sm:w-48">
+							<div className="flex items-center gap-2">
+								<ArrowDownUp className="h-4 w-4 text-muted-foreground" />
+								<SelectValue placeholder="Sort by" />
+							</div>
+						</SelectTrigger>
+						<SelectContent align="end">
+							<SelectItem value="date_asc">Date: Newest first</SelectItem>
+							<SelectItem value="date_desc">Date: Oldest first</SelectItem>
+						</SelectContent>
+					</Select>
+				</div>
 			</div>
 
 			{filteredCleanings.length === 0 ? (
@@ -115,11 +131,7 @@ export function CleanerCleaningGrid({ onView }: CleanerCleaningGridProps) {
 			) : (
 				<div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
 					{filteredCleanings.map((cleaning) => (
-						<CleanerCleaningCard
-							key={cleaning.id}
-							cleaning={cleaning}
-							onView={onView}
-						/>
+						<CleanerCleaningCard key={cleaning.id} cleaning={cleaning} onView={onView} />
 					))}
 				</div>
 			)}

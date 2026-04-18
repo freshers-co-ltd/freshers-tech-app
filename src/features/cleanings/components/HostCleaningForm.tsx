@@ -113,16 +113,22 @@ export function HostCleaningForm({ initialData, onSubmit, onCancel }: HostCleani
 	const selectedPropertyId = watch('property_id');
 
 	useEffect(() => {
+		let isMounted = true;
 		async function fetchStandardTasks() {
 			const { data } = await supabase
 				.from('standard_tasks')
 				.select('id, description')
 				.eq('is_active', true);
-			if (data) {
+
+			if (data && isMounted) {
 				setStandardTasks(data);
 			}
 		}
 		fetchStandardTasks();
+
+		return () => {
+			isMounted = false;
+		};
 	}, []);
 
 	const selectedProperty = useMemo(
@@ -282,7 +288,14 @@ export function HostCleaningForm({ initialData, onSubmit, onCancel }: HostCleani
 										{DICT.COMMON.BACK}
 									</Button>
 								)}
-								<Button className="flex-1" onClick={() => setStep(3)}>
+								<Button
+									className="flex-1"
+									onClick={async () => {
+										const isValid = await trigger('custom_tasks');
+										if (isValid) {
+											setStep(3);
+										}
+									}}>
 									{d.BUTTONS.NEXT_DETAILS}
 								</Button>
 							</div>
@@ -345,6 +358,3 @@ export function HostCleaningForm({ initialData, onSubmit, onCancel }: HostCleani
 		</div>
 	);
 }
-
-HostCleaningForm.title = DICT.CLEANINGS.CREATE_DIALOG.TITLE;
-HostCleaningForm.description = DICT.CLEANINGS.CREATE_DIALOG.MESSAGE;
