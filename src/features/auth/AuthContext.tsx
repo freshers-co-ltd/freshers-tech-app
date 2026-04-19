@@ -1,17 +1,18 @@
 'use client';
 
 import type { PostgrestSingleResponse, Session, User } from '@supabase/supabase-js';
-import { createContext, type ReactNode, useCallback, useContext, useEffect, useState, useRef } from 'react';
-import type { UserRole } from '@/features/auth/authService';
-import { supabase } from '@/lib/supabaseClient';
+import {
+	createContext,
+	type ReactNode,
+	useCallback,
+	useContext,
+	useEffect,
+	useRef,
+	useState,
+} from 'react';
+import type { Profile, UserRole } from '@/features/auth/authService';
 import { initAuthSync } from '@/lib/authSync';
-
-interface Profile {
-	id: string;
-	full_name: string;
-	role: UserRole;
-	avatar_url?: string;
-}
+import { supabase } from '@/lib/supabaseClient';
 
 export interface AuthContextType {
 	user: User | null;
@@ -31,8 +32,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const [profile, setProfile] = useState<Profile | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [initialised, setInitialised] = useState(false);
-	
+
 	const lastUserId = useRef<string | null>(null);
+	const abortControllerRef = useRef<AbortController | null>(null);
 
 	const fetchProfile = useCallback(
 		async (
@@ -74,7 +76,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 						id: currentUser.id,
 						full_name: currentUser.user_metadata?.full_name || 'User',
 						role: (currentUser.user_metadata?.role as UserRole) || 'cleaner',
-						avatar_url: currentUser.user_metadata?.avatar_url,
+						avatar_url: currentUser.user_metadata?.avatar_url || null,
+						email: currentUser.email || '',
+						is_verified: false,
 					};
 				}
 				return null;
@@ -86,8 +90,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const handleAuthStateChange = useCallback(
 		async (currentSession: Session | null, signal?: AbortSignal) => {
 			const currentUser = currentSession?.user ?? null;
-			
-			if (currentUser?.id === lastUserId.current && initialised) {
+
+			if (currentUser?.id === lastUserId.current && profile !== null) {
 				return;
 			}
 
@@ -97,29 +101,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			lastUserId.current = currentUser?.id ?? null;
 
 			if (currentUser) {
-				const metadata = currentUser.user_metadata;
-				if (metadata?.role && metadata?.full_name) {
-					setProfile((prev) => {
-						if (prev?.id === currentUser.id) {
-							return prev;
-						}
-						return {
-							id: currentUser.id,
-							full_name: metadata.full_name,
-							role: metadata.role as UserRole,
-						};
-					});
+				if (!profile || profile.id !== currentUser.id) {
+					const metadata = currentUser.user_metadata;
+					const initialProfile: Profile = {
+						id: currentUser.id,
+						full_name: metadata?.full_name || 'User',
+						role: (metadata?.role as UserRole) || 'cleaner',
+						avatar_url: metadata?.avatar_url || null,
+						email: currentUser.email || '',
+						is_verified: false,
+					};
+					setProfile(initialProfile);
 				}
 
 				const profileData = await fetchProfile(currentUser.id, signal);
-
-				if (profileData) {
-					setProfile((prev) => {
-						if (JSON.stringify(prev) === JSON.stringify(profileData)) {
-							return prev;
-						}
-						return profileData;
-					});
+				if (profileData && !signal?.aborted) {
+					setProfile(profileData);
 				}
 			} else {
 				setProfile(null);
@@ -127,12 +124,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			}
 			setLoading(false);
 		},
-		[fetchProfile, initialised],
+		[fetchProfile, profile],
 	);
 
 	useEffect(() => {
 		let isMounted = true;
 		const controller = new AbortController();
+		abortControllerRef.current = controller;
 
 		const initializeAuth = async () => {
 			await initAuthSync();
@@ -178,7 +176,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 				event === 'SIGNED_IN' ||
 				(event === 'TOKEN_REFRESHED' && currentSession?.user?.id !== lastUserId.current)
 			) {
-				handleAuthStateChange(currentSession, controller.signal);
+				abortControllerRef.current?.abort();
+				abortControllerRef.current = new AbortController();
+				handleAuthStateChange(currentSession, abortControllerRef.current.signal);
 			}
 		});
 
@@ -218,11 +218,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 				profile,
 				session,
 				loading,
-				initialised: initialised,
+				initialised,
 				refreshProfile,
 				signOut,
 			}}>
-			{!initialised ? null : children}
+			{children}
 		</AuthContext.Provider>
 	);
 };

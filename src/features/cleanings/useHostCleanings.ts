@@ -1,10 +1,11 @@
 'use client';
 
-import { useMemo, useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
+import { calculateServiceCost } from '@/features/cleanings/cleaningService';
+import type { HostCleaningFormValues } from '@/features/cleanings/components/HostCleaningForm';
 import { useProperties } from '@/features/properties/PropertyContext';
 import { useResourceModals } from '@/hooks/useResourceModals';
-import type { HostCleaningFormValues } from '@/features/cleanings/components/HostCleaningForm';
 
 export function useHostCleanings() {
 	const { properties } = useProperties();
@@ -19,31 +20,29 @@ export function useHostCleanings() {
 		return cleanings.find((c) => c.id === modal.editId);
 	}, [cleanings, modal.editId]);
 
-	const calculateServiceCost = useCallback((propertyId: string) => {
-		const property = properties.find((p) => p.id === propertyId);
-		if (!property) {
-			return 0;
-		}
-		return 50 + property.bedrooms * 20 + property.bathrooms * 10;
-	}, [properties]);
+	const handleUpsert = useCallback(
+		async (data: HostCleaningFormValues) => {
+			const property = properties.find((p) => p.id === data.property_id);
+			const serviceCost = property
+				? calculateServiceCost(property.bedrooms, property.bathrooms)
+				: 0;
 
-	const handleUpsert = useCallback(async (data: HostCleaningFormValues) => {
-		const service_cost = calculateServiceCost(data.property_id);
-		
-		const payload = {
-			...(editingCleaning ? { id: editingCleaning.id } : {}),
-			property_id: data.property_id,
-			scheduled_start: new Date(data.scheduled_start).toISOString(),
-			instructions: data.instructions ?? '',
-			custom_tasks: data.custom_tasks.map((t) => t.description),
-			service_cost,
-		};
+			const payload = {
+				...(editingCleaning ? { id: editingCleaning.id } : {}),
+				property_id: data.property_id,
+				scheduled_start: new Date(data.scheduled_start).toISOString(),
+				instructions: data.instructions ?? '',
+				custom_tasks: data.custom_tasks.map((t) => t.description),
+				service_cost: serviceCost,
+			};
 
-		const result = await upsertCleaning(payload);
-		if (result.success) {
-			modal.handleClose();
-		}
-	}, [editingCleaning, upsertCleaning, modal, calculateServiceCost]);
+			const result = await upsertCleaning(payload);
+			if (result.success) {
+				modal.handleClose();
+			}
+		},
+		[editingCleaning, upsertCleaning, modal, properties],
+	);
 
 	const handleDelete = useCallback(async () => {
 		if (modal.deletingId) {

@@ -2,9 +2,8 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -14,6 +13,7 @@ import {
 	FileUploaderContent,
 	FileUploaderItem,
 } from '@/components/ui/file-upload';
+import { FileSvgDraw } from '@/components/ui/file-upload-components';
 import { Input } from '@/components/ui/input';
 import {
 	Select,
@@ -26,7 +26,6 @@ import { DICT } from '@/dictionary';
 import { useAuth } from '@/features/auth/AuthContext';
 import type { Property, PropertyInsert } from '@/features/properties/propertyService';
 import { mediaService } from '@/lib/mediaService';
-import { cn } from '@/lib/utils';
 
 const POSTCODE_REGEX = /^[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}$/i;
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
@@ -72,47 +71,11 @@ interface PropertyFormProps {
 	onCancel: () => void;
 }
 
-const FileSvgDraw = ({ accept }: { accept?: Record<string, string[]> }) => {
-	const allowedExtensions = accept
-		? Object.values(accept)
-				.flat()
-				.map((ext) => ext.replace('.', '').toUpperCase())
-				.join(', ')
-		: 'Files';
-
-	return (
-		<>
-			<svg
-				className="size-8 mb-3 text-primary"
-				aria-hidden="true"
-				xmlns="http://www.w3.org/2000/svg"
-				fill="none"
-				viewBox="0 0 20 16">
-				<path
-					stroke="currentColor"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					strokeWidth="2"
-					d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
-				/>
-			</svg>
-			<p className="mb-1 text-sm text-primary">
-				<span className="font-semibold">{DICT.FORMS.LABELS.UPLOAD_PROMPT}</span>{' '}
-				{DICT.FORMS.LABELS.UPLOAD_DRAG_DROP}
-			</p>
-			<p className="text-xs text-primary">{allowedExtensions}</p>
-		</>
-	);
-};
-
 export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormProps) {
 	const { user } = useAuth();
-	const navigate = useNavigate();
-
 	const [mainImage, setMainImage] = useState<File[] | null>(null);
 	const [extraImages, setExtraImages] = useState<File[] | null>([]);
 	const [isUploading, setIsUploading] = useState(false);
-
 	const [extraImagesPaths, setExtraImagesPaths] = useState<string[]>(
 		initialData?.extra_images_urls || [],
 	);
@@ -131,32 +94,14 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 		},
 	});
 
-	useEffect(() => {
-		if (initialData) {
-			form.reset({
-				address_line_1: initialData.address_line_1,
-				address_line_2: initialData.address_line_2 ?? '',
-				town_city: initialData.town_city,
-				postcode: initialData.postcode,
-				type: initialData.type as 'house' | 'apartment' | 'other',
-				bedrooms: initialData.bedrooms,
-				bathrooms: initialData.bathrooms,
-				has_main_image: !!initialData.main_image_url,
-			});
-			setExtraImagesPaths(initialData.extra_images_urls || []);
-		}
-	}, [initialData, form]);
-
-	useEffect(() => {
-		const hasImage = (mainImage && mainImage.length > 0) || !!initialData?.main_image_url;
-		form.setValue('has_main_image', hasImage, { shouldValidate: form.formState.isSubmitted });
-	}, [mainImage, initialData, form]);
+	const remainingSlots = useMemo(
+		() => Math.max(0, 10 - extraImagesPaths.length),
+		[extraImagesPaths.length],
+	);
 
 	const removeExistingImage = (pathToRemove: string) => {
 		setExtraImagesPaths((prev) => prev.filter((path) => path !== pathToRemove));
 	};
-
-	const remainingSlots = Math.max(0, 10 - extraImagesPaths.length);
 
 	const handleFormSubmit = async (values: PropertyFormValues) => {
 		if (!user) {
@@ -202,7 +147,6 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 					.filter((path): path is string => !!path);
 
 				finalExtraImagesPaths = [...finalExtraImagesPaths, ...newPaths];
-
 				setExtraImagesPaths(finalExtraImagesPaths);
 				setExtraImages([]);
 			}
@@ -219,11 +163,6 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 			}
 
 			await onSubmit(payload);
-		} catch (err) {
-			if (import.meta.env.DEV) {
-				console.error('Submission error:', err);
-			}
-			navigate('/error/500');
 		} finally {
 			setIsUploading(false);
 		}
@@ -328,51 +267,17 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 
 				<Field>
 					<FieldLabel>{DICT.FORMS.LABELS.MAIN_IMAGE}</FieldLabel>
-					<FileUploader
+					<input
+						type="hidden"
+						{...form.register('has_main_image', {
+							setValueAs: () => true,
+						})}
+					/>
+					<MainImageUpload
 						value={mainImage}
-						onValueChange={setMainImage}
-						dropzoneOptions={{
-							maxFiles: 1,
-							maxSize: MAX_FILE_SIZE,
-							accept: { 'image/*': ['.jpg', '.jpeg', '.png'] },
-						}}
-						className="file-dropzone">
-						<FileInput className="flex-col-center w-full pt-3 pb-4">
-							<FileSvgDraw accept={{ 'image/*': ['.jpg', '.jpeg', '.png'] }} />
-						</FileInput>
-						<FileUploaderContent className="flex flex-row items-center gap-2 mt-2">
-							{mainImage?.map((file, i) => (
-								<FileUploaderItem
-									key={`${file.name}-${file.lastModified}-${i}`}
-									index={i}
-									className="p-0 overflow-hidden border rounded-md size-20">
-									<img
-										src={URL.createObjectURL(file)}
-										alt="Preview"
-										className="object-cover size-20"
-									/>
-								</FileUploaderItem>
-							))}
-							{!mainImage?.length && initialData?.main_image_url && (
-								<div className="relative p-0 overflow-hidden border rounded-md size-20">
-									<img
-										src={mediaService.getMediaUrl(
-											initialData.main_image_url || null,
-											'property-media',
-										)}
-										alt="Current"
-										className="object-cover size-20"
-									/>
-									<div className="absolute top-0 right-0 p-1 bg-primary text-[8px] text-white">
-										{DICT.FORMS.LABELS.CURRENT_IMAGE}
-									</div>
-								</div>
-							)}
-						</FileUploaderContent>
-					</FileUploader>
-					{form.formState.errors.has_main_image && (
-						<FieldError>{form.formState.errors.has_main_image.message}</FieldError>
-					)}
+						onChange={setMainImage}
+						initialImage={initialData?.main_image_url}
+					/>
 				</Field>
 
 				<Field>
@@ -380,55 +285,13 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 						{DICT.FORMS.LABELS.ADDITIONAL_IMAGES} (
 						{extraImagesPaths.length + (extraImages?.length || 0)}/10)
 					</FieldLabel>
-					<FileUploader
+					<ExtraImagesUpload
 						value={extraImages}
-						onValueChange={(files) => setExtraImages(files?.slice(0, remainingSlots) || [])}
-						dropzoneOptions={{
-							maxFiles: remainingSlots,
-							maxSize: MAX_FILE_SIZE,
-							accept: { 'image/*': ['.jpg', '.jpeg', '.png'] },
-						}}
-						className={cn('file-dropzone', remainingSlots <= 0 && 'cursor-not-allowed')}>
-						<FileInput className="flex-col-center w-full pt-3 pb-4 **:opacity-100!">
-							<FileSvgDraw accept={{ 'image/*': ['.jpg', '.jpeg', '.png'] }} />
-							{remainingSlots <= 0 && (
-								<p className="mt-2 text-xs font-medium text-center text-destructive">
-									{DICT.FORMS.LABELS.LIMIT_REACHED}
-								</p>
-							)}
-						</FileInput>
-						<FileUploaderContent className="flex flex-row flex-wrap items-center gap-2 mt-2">
-							{extraImagesPaths.map((path) => (
-								<div
-									key={path}
-									className="relative p-0 overflow-hidden border rounded-md group size-20">
-									<img
-										src={mediaService.getMediaUrl(path || null, 'property-media')}
-										alt="Extra"
-										className="object-cover size-20 opacity-80"
-									/>
-									<button
-										type="button"
-										onClick={() => removeExistingImage(path)}
-										className="absolute p-1 text-white transition-opacity rounded-sm sm:opacity-0 top-1 right-1 bg-destructive group-hover:opacity-100">
-										<Trash2 className="size-3" />
-									</button>
-								</div>
-							))}
-							{extraImages?.map((file, i) => (
-								<FileUploaderItem
-									key={`${file.name}-${file.lastModified}-${i}`}
-									index={i}
-									className="p-0 overflow-hidden border rounded-md size-20">
-									<img
-										src={URL.createObjectURL(file)}
-										alt={file.name}
-										className="object-cover size-20"
-									/>
-								</FileUploaderItem>
-							))}
-						</FileUploaderContent>
-					</FileUploader>
+						onChange={(files) => setExtraImages(files?.slice(0, remainingSlots) || [])}
+						existingImages={extraImagesPaths}
+						onRemoveImage={removeExistingImage}
+						showLimitReached={remainingSlots <= 0}
+					/>
 				</Field>
 			</FieldGroup>
 
@@ -445,5 +308,117 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 				</Button>
 			</div>
 		</form>
+	);
+}
+
+interface MainImageUploadProps {
+	value: File[] | null;
+	onChange: (files: File[] | null) => void;
+	initialImage?: string;
+}
+
+function MainImageUpload({ value, onChange, initialImage }: MainImageUploadProps) {
+	return (
+		<FileUploader
+			value={value}
+			onValueChange={onChange}
+			dropzoneOptions={{
+				maxFiles: 1,
+				maxSize: MAX_FILE_SIZE,
+				accept: { 'image/*': ['.jpg', '.jpeg', '.png'] },
+			}}
+			className="file-dropzone">
+			<FileInput className="flex-col-center w-full pt-3 pb-4">
+				<FileSvgDraw accept={{ 'image/*': ['.jpg', '.jpeg', '.png'] }} />
+			</FileInput>
+			<FileUploaderContent className="flex flex-row items-center gap-2 mt-2">
+				{value?.map((file, i) => (
+					<FileUploaderItem
+						key={`${file.name}-${file.lastModified}-${i}`}
+						index={i}
+						className="p-0 overflow-hidden border rounded-md size-20">
+						<img src={URL.createObjectURL(file)} alt="Preview" className="object-cover size-20" />
+					</FileUploaderItem>
+				))}
+				{!value?.length && initialImage && (
+					<div className="relative p-0 overflow-hidden border rounded-md size-20">
+						<img
+							src={mediaService.getMediaUrl(initialImage, 'property-media')}
+							alt="Current"
+							className="object-cover size-20"
+						/>
+						<div className="absolute top-0 right-0 p-1 bg-primary text-[8px] text-white">
+							{DICT.FORMS.LABELS.CURRENT_IMAGE}
+						</div>
+					</div>
+				)}
+			</FileUploaderContent>
+		</FileUploader>
+	);
+}
+
+interface ExtraImagesUploadProps {
+	value: File[] | null;
+	onChange: (files: File[] | null) => void;
+	existingImages?: string[];
+	onRemoveImage?: (path: string) => void;
+	showLimitReached?: boolean;
+}
+
+function ExtraImagesUpload({
+	value,
+	onChange,
+	existingImages,
+	onRemoveImage,
+	showLimitReached,
+}: ExtraImagesUploadProps) {
+	return (
+		<FileUploader
+			value={value}
+			onValueChange={onChange}
+			dropzoneOptions={{
+				maxFiles: 10,
+				maxSize: MAX_FILE_SIZE,
+				accept: { 'image/*': ['.jpg', '.jpeg', '.png'] },
+			}}
+			className="file-dropzone">
+			<FileInput className="flex-col-center w-full pt-3 pb-4">
+				<FileSvgDraw accept={{ 'image/*': ['.jpg', '.jpeg', '.png'] }} />
+				{showLimitReached && (
+					<p className="mt-2 text-xs font-medium text-center text-destructive">
+						{DICT.FORMS.LABELS.LIMIT_REACHED}
+					</p>
+				)}
+			</FileInput>
+			<FileUploaderContent className="flex flex-row items-center gap-2 mt-2">
+				{existingImages?.map((path) => (
+					<div
+						key={path}
+						className="relative p-0 overflow-hidden border rounded-md size-20 group">
+						<img
+							src={mediaService.getMediaUrl(path, 'property-media')}
+							alt="Extra"
+							className="object-cover size-20"
+						/>
+						{onRemoveImage && (
+							<button
+								type="button"
+								onClick={() => onRemoveImage(path)}
+								className="absolute p-1 text-white transition-opacity rounded-sm opacity-0 group-hover:opacity-100 top-1 right-1 bg-destructive">
+								<Trash2 className="size-3" />
+							</button>
+						)}
+					</div>
+				))}
+				{value?.map((file, i) => (
+					<FileUploaderItem
+						key={`${file.name}-${file.lastModified}-${i}`}
+						index={i}
+						className="p-0 overflow-hidden border rounded-md size-20">
+						<img src={URL.createObjectURL(file)} alt="Preview" className="object-cover size-20" />
+					</FileUploaderItem>
+				))}
+			</FileUploaderContent>
+		</FileUploader>
 	);
 }

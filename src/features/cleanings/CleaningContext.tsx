@@ -1,18 +1,26 @@
 'use client';
 
-import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react';
+import {
+	createContext,
+	type ReactNode,
+	useCallback,
+	useContext,
+	useEffect,
+	useRef,
+	useState,
+} from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/features/auth/AuthContext';
 import {
 	type CleaningRequest,
 	type CleaningUpdate,
 	type CreateCleaningRequestPayload,
-	type UpdateCleaningRequestPayload,
-	type TaskInsert,
+	cleaningService,
 	type EvidenceInsert,
 	type ReportInsert,
-	cleaningService,
+	type TaskInsert,
 	type TaskUpdate,
+	type UpdateCleaningRequestPayload,
 } from '@/features/cleanings/cleaningService';
 
 interface CleaningContextType {
@@ -34,6 +42,9 @@ interface CleaningContextType {
 	addEvidence: (payload: EvidenceInsert) => Promise<{ success: boolean }>;
 	deleteEvidence: (id: string, hard?: boolean) => Promise<{ success: boolean }>;
 	upsertReport: (payload: ReportInsert) => Promise<{ success: boolean }>;
+	createCleaning: (
+		payload: CreateCleaningRequestPayload,
+	) => Promise<{ success: boolean; data?: CleaningRequest }>;
 }
 
 const CleaningContext = createContext<CleaningContextType | undefined>(undefined);
@@ -42,30 +53,44 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 	const [cleanings, setCleanings] = useState<CleaningRequest[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const { user, profile } = useAuth();
+	const abortControllerRef = useRef<AbortController | null>(null);
 
-	const fetchCleanings = useCallback(async () => {
-		if (!user) {
-			setCleanings([]);
+	const fetchCleanings = useCallback(
+		async (signal?: AbortSignal) => {
+			if (!user) {
+				setCleanings([]);
+				setIsLoading(false);
+				return;
+			}
+
+			setIsLoading(true);
+			const { data, error } = await cleaningService.getCleaningRequests();
+
+			if (signal?.aborted) {
+				return;
+			}
+
+			if (error) {
+				toast.error(error);
+			} else if (data) {
+				setCleanings(data);
+			}
+
 			setIsLoading(false);
-			return;
-		}
-
-		setIsLoading(true);
-		const { data, error } = await cleaningService.getCleaningRequests();
-
-		if (error) {
-			toast.error(error);
-		} else if (data) {
-			setCleanings(data);
-		}
-
-		setIsLoading(false);
-	}, [user]);
+		},
+		[user],
+	);
 
 	useEffect(() => {
 		if (user && profile) {
-			fetchCleanings();
+			abortControllerRef.current?.abort();
+			abortControllerRef.current = new AbortController();
+			fetchCleanings(abortControllerRef.current.signal);
 		}
+
+		return () => {
+			abortControllerRef.current?.abort();
+		};
 	}, [user, profile, fetchCleanings]);
 
 	const upsertCleaning = async (
@@ -287,6 +312,7 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 				addEvidence,
 				deleteEvidence,
 				upsertReport,
+				createCleaning: upsertCleaning,
 			}}>
 			{children}
 		</CleaningContext.Provider>

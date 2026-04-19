@@ -19,10 +19,14 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { DICT } from '@/dictionary';
-import { type CleaningRequest, STATUS_GROUPS } from '@/features/cleanings/cleaningService';
+import {
+	type CleaningRequest,
+	calculateServiceCost,
+	STATUS_GROUPS,
+} from '@/features/cleanings/cleaningService';
 import { PropertyForm } from '@/features/properties/components/PropertyForm';
 import { useProperties } from '@/features/properties/PropertyContext';
-import type { Property, PropertyInsert } from '@/features/properties/propertyService';
+import type { PropertyInsert } from '@/features/properties/propertyService';
 import { supabase } from '@/lib/supabaseClient';
 
 const hostCleaningSchema = z.object({
@@ -140,13 +144,13 @@ export function HostCleaningForm({ initialData, onSubmit, onCancel }: HostCleani
 		if (!selectedProperty) {
 			return 0;
 		}
-		return 50 + selectedProperty.bedrooms * 20 + selectedProperty.bathrooms * 10;
+		return calculateServiceCost(selectedProperty.bedrooms, selectedProperty.bathrooms);
 	}, [selectedProperty]);
 
 	const handlePropertySubmit = async (propertyData: PropertyInsert): Promise<void> => {
 		const result = await upsertProperty(propertyData);
 		if (result.data) {
-			const property = result.data as Property;
+			const property = result.data;
 			setValue('property_id', property.id, {
 				shouldValidate: true,
 				shouldDirty: true,
@@ -158,15 +162,8 @@ export function HostCleaningForm({ initialData, onSubmit, onCancel }: HostCleani
 
 	const handleFinalSubmit: SubmitHandler<HostCleaningFormValues> = async (values) => {
 		try {
-			if (import.meta.env.DEV) {
-				console.log('[DEBUG] CleaningForm Raw Values:', values);
-			}
-
 			await onSubmit(values);
-		} catch (error) {
-			if (import.meta.env.DEV) {
-				console.error('[DEBUG] Submit Error:', error);
-			}
+		} catch {
 			navigate('/error/500');
 		}
 	};
@@ -259,7 +256,7 @@ export function HostCleaningForm({ initialData, onSubmit, onCancel }: HostCleani
 													/>
 													{errors.custom_tasks?.[index]?.description && (
 														<FieldError>
-															{errors.custom_tasks[index].description.message}
+															{errors.custom_tasks[index]?.description?.message}
 														</FieldError>
 													)}
 												</Field>

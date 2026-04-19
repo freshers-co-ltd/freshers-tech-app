@@ -1,13 +1,19 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
+/**
+ * State returned by useGeolocation hook.
+ */
 interface GeolocationState {
 	coords: { latitude: number; longitude: number } | null;
 	error: string | null;
 	isLoading: boolean;
 }
 
+/**
+ * Response from postcodes.io API for postcode lookup.
+ */
 interface PostcodeResult {
 	status: number;
 	result: {
@@ -17,6 +23,7 @@ interface PostcodeResult {
 	error?: string;
 }
 
+/** @internal */
 const getErrorMessage = (err: unknown): string => {
 	if (err instanceof GeolocationPositionError) {
 		if (err.code === 1) {
@@ -35,6 +42,10 @@ const getErrorMessage = (err: unknown): string => {
 	return 'Unable to determine your location.';
 };
 
+/**
+ * Hook for accessing device geolocation and verifying proximity to a postcode.
+ * Uses the browser's Geolocation API and postcodes.io for reverse geocoding.
+ */
 export function useGeolocation() {
 	const [state, setState] = useState<GeolocationState>({
 		coords: null,

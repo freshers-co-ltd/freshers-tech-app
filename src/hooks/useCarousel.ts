@@ -1,4 +1,4 @@
-import { useCallback, useState, type KeyboardEvent } from 'react';
+import { type KeyboardEvent, useCallback, useState } from 'react';
 
 interface UseCarouselProps {
 	images: string[];
@@ -29,24 +29,30 @@ export function useCarousel({ images, initialImage, isKeyboardEnabled }: UseCaro
 		setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
 	}, [images.length]);
 
-	const handleKeyDown = useCallback((e: KeyboardEvent<HTMLElement>) => {
-		if (!isKeyboardEnabled) {
-			return;
-		}
-		if (e.key === 'ArrowRight') {
-			nextImage();
-		}
-		if (e.key === 'ArrowLeft') {
-			prevImage();
-		}
-	}, [isKeyboardEnabled, nextImage, prevImage]);
+	const handleKeyDown = useCallback(
+		(e: KeyboardEvent<HTMLElement>) => {
+			if (!isKeyboardEnabled) {
+				return;
+			}
+			if (e.key === 'ArrowRight') {
+				nextImage();
+			}
+			if (e.key === 'ArrowLeft') {
+				prevImage();
+			}
+		},
+		[isKeyboardEnabled, nextImage, prevImage],
+	);
 
-	const setActiveImage = useCallback((image: string) => {
-		const index = images.indexOf(image);
-		if (index !== -1) {
-			setCurrentIndex(index);
-		}
-	}, [images]);
+	const setActiveImage = useCallback(
+		(image: string) => {
+			const index = images.indexOf(image);
+			if (index !== -1) {
+				setCurrentIndex(index);
+			}
+		},
+		[images],
+	);
 
 	return {
 		activeImage: images[currentIndex],

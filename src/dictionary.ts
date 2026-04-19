@@ -110,7 +110,7 @@ export const DICT = {
 		},
 		RESET_PASSWORD: {
 			TITLE: 'Reset password',
-			MESSAGE: 'Enter your new password below .',
+			MESSAGE: 'Enter your new password below.',
 			SUBMIT_BUTTON: 'Reset password',
 			SUBMITTING_BUTTON: 'Updating...',
 			SUCCESS_TOAST: 'Password reset successfully',
@@ -150,6 +150,10 @@ export const DICT = {
 		EDIT: 'Edit property',
 		DELETE: 'Delete property',
 		NOT_FOUND: 'Property not found.',
+		EMPTY: {
+			TITLE: 'No properties found',
+			MESSAGE: 'Get started by adding your first property.',
+		},
 		PLACEHOLDER_IMAGE: 'Placeholder',
 		CREATE_DIALOG: {
 			TITLE: 'Save new property',
@@ -191,6 +195,20 @@ export const DICT = {
 		EDIT: 'Edit cleaning request',
 		DELETE: 'Delete cleaning request',
 		NOT_FOUND: 'Cleaning request not found.',
+		EMPTY: {
+			TITLE: 'No cleanings scheduled',
+			MESSAGE: "You haven't booked any cleaning services yet.",
+		},
+		SEARCH: {
+			PLACEHOLDER: 'Search by address...',
+			ALL_STATUSES: 'All Statuses',
+			NO_RESULTS: 'No cleaning requests found.',
+		},
+		SORT: {
+			DATE_DESC: 'Date: Newest first',
+			DATE_ASC: 'Date: Oldest first',
+			REQUESTED_DESC: 'Recently Requested',
+		},
 		FORM: {
 			STEPS: {
 				PROPERTY: 'Select Property',

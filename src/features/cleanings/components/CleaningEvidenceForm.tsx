@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { Field, FieldGroup, FieldLabel, FieldError } from '@/components/ui/field';
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import {
 	FileInput,
 	FileUploader,
@@ -66,9 +66,7 @@ const FileSvgDraw = ({ accept }: { accept?: Record<string, string[]> }) => {
 	);
 };
 
-export function CleaningEvidenceForm({
-	onSubmit,
-}: CleaningEvidenceFormProps) {
+export function CleaningEvidenceForm({ onSubmit }: CleaningEvidenceFormProps) {
 	const [files, setFiles] = useState<File[] | null>([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 

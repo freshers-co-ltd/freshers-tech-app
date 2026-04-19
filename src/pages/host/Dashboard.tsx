@@ -135,6 +135,7 @@ export function HostDashboardPage() {
 									scheduled_start: data.scheduled_start.toISOString(),
 									custom_tasks: data.custom_tasks.map((t) => t.description),
 									service_cost: cost,
+									instructions: data.instructions ?? '',
 								});
 
 								if (success) {

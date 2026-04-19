@@ -39,8 +39,8 @@ export function HostPropertiesPage() {
 					<div className="bg-muted rounded-full p-4 mb-4">
 						<Building2 className="size-8 text-muted-foreground" />
 					</div>
-					<h3 className="text-lg font-semibold">No properties found</h3>
-					<p className="text-muted-foreground mb-6">Get started by adding your first property.</p>
+					<h3 className="text-lg font-semibold">{DICT.PROPERTIES.EMPTY.TITLE}</h3>
+					<p className="text-muted-foreground mb-6">{DICT.PROPERTIES.EMPTY.MESSAGE}</p>
 				</div>
 			}
 			grid={

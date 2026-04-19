@@ -3,10 +3,10 @@
 import { useMemo, useCallback } from 'react';
 import { useProperties } from '@/features/properties/PropertyContext';
 import { useAuth } from '@/features/auth/AuthContext';
+import { useCleanings } from '@/features/cleanings/CleaningContext';
 import { useResourceModals } from '@/hooks/useResourceModals';
 import type { PropertyFormValues } from '@/features/properties/components/PropertyForm';
 import type { PropertyInsert } from '@/features/properties/propertyService';
-import { useCleanings } from '@/features/cleanings/CleaningContext';
 
 export function useHostProperties() {
 	const { user } = useAuth();
@@ -51,23 +51,21 @@ export function useHostProperties() {
 			const result = await upsertProperty(payload);
 
 			if (result.success) {
-				await fetchCleanings();
 				modal.handleClose();
 			}
 		},
-		[user, editingProperty, upsertProperty, modal, fetchCleanings],
+		[user, editingProperty, upsertProperty, modal],
 	);
 
 	const handleDelete = useCallback(async () => {
 		if (modal.deletingId) {
 			const result = await deleteProperty(modal.deletingId);
 			if (result.success) {
-				await fetchCleanings();
-
 				if (modal.viewId === modal.deletingId) {
 					modal.handleClose();
 				}
 				modal.setDeletingId(null);
+				await fetchCleanings();
 			}
 		}
 	}, [deleteProperty, modal, fetchCleanings]);

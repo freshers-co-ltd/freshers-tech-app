@@ -112,6 +112,27 @@ const isRawCleaningQueryResult = (item: unknown): item is RawCleaningRequestQuer
 	);
 };
 
+/**
+ * Normalizes raw database response to CleaningRequest format.
+ * Handles array-to-single-item normalization for foreign key relations.
+ */
+const normalizeCleaningRequest = (item: RawCleaningRequestQueryResult): CleaningRequest => {
+	const propertyData = Array.isArray(item.property) ? item.property[0] : item.property;
+	const cleanerData = Array.isArray(item.cleaner) ? item.cleaner[0] : item.cleaner;
+	const reportData = Array.isArray(item.cleaning_reports)
+		? item.cleaning_reports[0]
+		: item.cleaning_reports;
+
+	return {
+		...item,
+		property: propertyData || null,
+		tasks: item.cleaning_tasks || [],
+		cleaner: cleanerData || null,
+		evidence: item.evidence || [],
+		report: reportData || null,
+	};
+};
+
 export const cleaningService = {
 	async getCleaningRequests(): Promise<ActionResult<CleaningRequest[]>> {
 		const {
@@ -156,22 +177,7 @@ export const cleaningService = {
 
 		const typedData: CleaningRequest[] = (data as unknown[])
 			.filter(isRawCleaningQueryResult)
-			.map((item) => {
-				const propertyData = Array.isArray(item.property) ? item.property[0] : item.property;
-				const cleanerData = Array.isArray(item.cleaner) ? item.cleaner[0] : item.cleaner;
-				const reportData = Array.isArray(item.cleaning_reports)
-					? item.cleaning_reports[0]
-					: item.cleaning_reports;
-
-				return {
-					...item,
-					property: propertyData || null,
-					tasks: item.cleaning_tasks || [],
-					cleaner: cleanerData || null,
-					evidence: item.evidence || [],
-					report: reportData || null,
-				};
-			});
+			.map(normalizeCleaningRequest);
 
 		return { data: typedData, error: null };
 	},
@@ -198,21 +204,7 @@ export const cleaningService = {
 			throw new Error('Invalid response from database for cleaning request.');
 		}
 
-		const item = data as RawCleaningRequestQueryResult;
-		const propertyData = Array.isArray(item.property) ? item.property[0] : item.property;
-		const cleanerData = Array.isArray(item.cleaner) ? item.cleaner[0] : item.cleaner;
-		const reportData = Array.isArray(item.cleaning_reports)
-			? item.cleaning_reports[0]
-			: item.cleaning_reports;
-
-		const transformed: CleaningRequest = {
-			...item,
-			property: propertyData || null,
-			tasks: item.cleaning_tasks || [],
-			cleaner: cleanerData || null,
-			evidence: item.evidence || [],
-			report: reportData || null,
-		};
+		const transformed = normalizeCleaningRequest(data as RawCleaningRequestQueryResult);
 
 		return { data: transformed, error: null };
 	},
@@ -374,4 +366,25 @@ export const cleaningService = {
 		}
 		return { data: undefined, error: null };
 	},
+
+	async getStandardTasks(): Promise<ActionResult<{ id: string; description: string }[]>> {
+		const { data, error } = await supabase
+			.from('standard_tasks')
+			.select('id, description')
+			.eq('is_active', true);
+
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+
+		return { data: data || [], error: null };
+	},
+};
+
+/**
+ * Calculates the service cost based on property dimensions.
+ * Base rate of £50 plus £20 per bedroom and £10 per bathroom.
+ */
+export const calculateServiceCost = (bedrooms: number, bathrooms: number): number => {
+	return 50 + bedrooms * 20 + bathrooms * 10;
 };

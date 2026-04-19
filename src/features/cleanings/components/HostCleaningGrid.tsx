@@ -10,9 +10,11 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
+import { DICT } from '@/dictionary';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
 import { STATUS_GROUPS } from '@/features/cleanings/cleaningService';
 import { HostCleaningCard } from '@/features/cleanings/components/HostCleaningCard';
+import { CleaningGridSkeleton } from '@/features/cleanings/components/CleaningGridSkeleton';
 
 interface HostCleaningGridProps {
 	onView: (id: string) => void;
@@ -25,6 +27,8 @@ export function HostCleaningGrid({ onView, onEdit, onDelete }: HostCleaningGridP
 	const [searchQuery, setSearchQuery] = useState('');
 	const [statusFilter, setStatusFilter] = useState('all');
 	const [sortBy, setSortBy] = useState('date_desc');
+
+	const d = DICT.CLEANINGS;
 
 	const filteredCleanings = useMemo(() => {
 		let result = [...cleanings];
@@ -59,20 +63,7 @@ export function HostCleaningGrid({ onView, onEdit, onDelete }: HostCleaningGridP
 	}, [cleanings, searchQuery, statusFilter, sortBy]);
 
 	if (isLoading) {
-		return (
-			<div className="space-y-6">
-				<div className="flex flex-col gap-4 md:flex-row md:items-center">
-					<div className="h-10 w-full md:w-72 bg-muted animate-pulse rounded-md" />
-					<div className="h-10 w-40 bg-muted animate-pulse rounded-md" />
-					<div className="h-10 w-40 bg-muted animate-pulse rounded-md" />
-				</div>
-				<div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-					{[1, 2, 3].map((i) => (
-						<div key={i} className="h-64 rounded-xl bg-muted animate-pulse" />
-					))}
-				</div>
-			</div>
-		);
+		return <CleaningGridSkeleton />;
 	}
 
 	return (
@@ -81,7 +72,7 @@ export function HostCleaningGrid({ onView, onEdit, onDelete }: HostCleaningGridP
 				<div className="relative flex-1 md:max-w-72">
 					<Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
 					<Input
-						placeholder="Search by address..."
+						placeholder={d.SEARCH.PLACEHOLDER}
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
 						className="pl-9 h-8"
@@ -93,7 +84,7 @@ export function HostCleaningGrid({ onView, onEdit, onDelete }: HostCleaningGridP
 						<SelectValue placeholder="Status" />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="all">All Statuses</SelectItem>
+						<SelectItem value="all">{d.SEARCH.ALL_STATUSES}</SelectItem>
 						{STATUS_GROUPS.ALL.map((status) => (
 							<SelectItem key={status} value={status}>
 								{status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
@@ -107,16 +98,16 @@ export function HostCleaningGrid({ onView, onEdit, onDelete }: HostCleaningGridP
 						<SelectValue placeholder="Sort by" />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="date_desc">Date: Newest first</SelectItem>
-						<SelectItem value="date_asc">Date: Oldest first</SelectItem>
-						<SelectItem value="requested_desc">Recently Requested</SelectItem>
+						<SelectItem value="date_desc">{d.SORT.DATE_DESC}</SelectItem>
+						<SelectItem value="date_asc">{d.SORT.DATE_ASC}</SelectItem>
+						<SelectItem value="requested_desc">{d.SORT.REQUESTED_DESC}</SelectItem>
 					</SelectContent>
 				</Select>
 			</div>
 
 			{filteredCleanings.length === 0 ? (
 				<div className="flex h-64 items-center justify-center rounded-xl border border-dashed text-muted-foreground">
-					No cleaning requests found.
+					{d.SEARCH.NO_RESULTS}
 				</div>
 			) : (
 				<div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">

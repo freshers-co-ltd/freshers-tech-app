@@ -7,10 +7,6 @@ export interface ActionResult<T> {
 }
 
 export const mapDatabaseError = (error: PostgrestError): string => {
-	if (import.meta.env.DEV) {
-		console.error(`[Error]:`, error);
-	}
-
 	const errorMap: Record<string, string> = {
 		PGRST116: 'Record not found or access denied.',
 		'42501': 'You do not have permission to perform this action.',

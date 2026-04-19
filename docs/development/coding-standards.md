@@ -6,7 +6,7 @@ This document establishes the coding standards for the [Cleaner Hire PWA](/READM
 
 ### 1.1 Naming
 
-Name identifiers  based on their responsibility. Names should capture what the code does, not how it is used.\
+Name identifiers based on their responsibility. Names should capture what the code does, not how it is used.\
 Function names should capture the action performed. Avoid generic names like `handleClick()`, prefer descriptive action names like `activateRipple()`.\
 Prefix boolean variables with a verb such as `is`, `has`, or `can` to clarify intent.
 

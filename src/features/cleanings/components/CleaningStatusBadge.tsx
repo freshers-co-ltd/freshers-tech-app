@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
+import { CLEANING_STATUS, type CleaningStatus } from '@/features/cleanings/cleaningService';
 import { cn } from '@/lib/utils';
-import { type CleaningStatus, CLEANING_STATUS } from '@/features/cleanings/cleaningService';
 
 interface CleaningStatusBadgeProps {
 	status: CleaningStatus;

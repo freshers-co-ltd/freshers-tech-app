@@ -1,6 +1,14 @@
 'use client';
 
-import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react';
+import {
+	createContext,
+	type ReactNode,
+	useCallback,
+	useContext,
+	useEffect,
+	useRef,
+	useState,
+} from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/features/auth/AuthContext';
 import {
@@ -23,32 +31,46 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 	const [properties, setProperties] = useState<Property[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const { user, profile } = useAuth();
+	const abortControllerRef = useRef<AbortController | null>(null);
 
-	const fetchProperties = useCallback(async () => {
-		if (!user) {
-			setProperties([]);
+	const fetchProperties = useCallback(
+		async (signal?: AbortSignal) => {
+			if (!user) {
+				setProperties([]);
+				setIsLoading(false);
+				return;
+			}
+
+			setIsLoading(true);
+			const { data, error } = await propertyService.getProperties();
+
+			if (signal?.aborted) {
+				return;
+			}
+
+			if (error) {
+				toast.error(error);
+			} else if (data) {
+				setProperties(data);
+			}
+
 			setIsLoading(false);
-			return;
-		}
-
-		setIsLoading(true);
-		const { data, error } = await propertyService.getProperties();
-
-		if (error) {
-			toast.error(error);
-		} else if (data) {
-			setProperties(data);
-		}
-
-		setIsLoading(false);
-	}, [user]);
+		},
+		[user],
+	);
 
 	useEffect(() => {
 		if (user && profile?.role === 'host') {
-			fetchProperties();
+			abortControllerRef.current?.abort();
+			abortControllerRef.current = new AbortController();
+			fetchProperties(abortControllerRef.current.signal);
 		} else if (user && profile) {
 			setIsLoading(false);
 		}
+
+		return () => {
+			abortControllerRef.current?.abort();
+		};
 	}, [user, profile, fetchProperties]);
 
 	const upsertProperty = async (property: PropertyInsert) => {

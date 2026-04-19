@@ -1,10 +1,10 @@
 'use client';
 
-import { memo, useMemo } from 'react';
 import { format } from 'date-fns';
-import { Calendar, MapPin, Play, CheckCircle2 } from 'lucide-react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { type CleaningRequest } from '@/features/cleanings/cleaningService';
+import { Calendar, CheckCircle2, MapPin, Play } from 'lucide-react';
+import { memo, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { CleaningRequest } from '@/features/cleanings/cleaningService';
 import { CleaningStatusBadge } from '@/features/cleanings/components/CleaningStatusBadge';
 import { mediaService } from '@/lib/mediaService';
 

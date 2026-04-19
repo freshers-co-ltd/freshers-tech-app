@@ -1,4 +1,4 @@
-import { BarChart3, CheckCircle2, Clock, Plus } from 'lucide-react';
+import { BarChart3, CheckCircle2, Clock } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { StatCard } from '@/components/StatCard';
 
