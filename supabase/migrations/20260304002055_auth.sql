@@ -1,76 +1,112 @@
-CREATE TYPE public.user_role AS ENUM ('cleaner', 'host', 'admin');
+CREATE
+OR REPLACE FUNCTION public.is_not_banned () RETURNS BOOLEAN SECURITY DEFINER
+SET
+    search_path = public AS $$
+BEGIN
+  RETURN NOT EXISTS (
+    SELECT 1 
+    FROM auth.users 
+    WHERE id = (auth.uid())::UUID
+    AND banned_until > now()
+  );
+END;
+$$ LANGUAGE plpgsql STABLE;
 
-CREATE TABLE public.profiles (
-    id uuid REFERENCES auth.users ON DELETE RESTRICT NOT NULL PRIMARY KEY,
-    email TEXT,
-    role public.user_role NOT NULL DEFAULT 'cleaner',
-    is_verified BOOLEAN DEFAULT FALSE,
-    full_name TEXT,
-    avatar_url TEXT,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    deleted_at TIMESTAMP WITH TIME ZONE
-);
+CREATE TYPE public.user_role AS ENUM('cleaner', 'host', 'admin');
 
-CREATE UNIQUE INDEX profiles_email_active_idx ON public.profiles (email) WHERE (deleted_at IS NULL);
+CREATE TABLE
+    public.profiles (
+        id UUID REFERENCES auth.users ON DELETE RESTRICT NOT NULL PRIMARY KEY,
+        email TEXT,
+        role public.user_role NOT NULL DEFAULT 'cleaner',
+        is_verified BOOLEAN DEFAULT FALSE,
+        full_name TEXT,
+        avatar_url TEXT,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        last_seen_at TIMESTAMP WITH TIME ZONE
+    );
+
+CREATE UNIQUE INDEX profiles_email_idx ON public.profiles (email);
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view their own profile and admins can view all" 
-ON public.profiles
-FOR SELECT 
-TO authenticated
-USING (
-    ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin'
-    OR 
-    ((SELECT auth.uid()) = id AND deleted_at IS NULL)
-);
+CREATE POLICY "Users can view their own profile and admins can view all" ON public.profiles FOR
+SELECT
+    TO authenticated USING (
+        public.is_not_banned ()
+        AND (
+            (
+                (
+                    SELECT
+                        auth.jwt ()
+                ) -> 'app_metadata' ->> 'role'
+            ) = 'admin'
+            OR (
+                SELECT
+                    auth.uid ()
+            ) = id
+        )
+    );
 
-CREATE POLICY "Users can update their own profile and admins can update all" 
-ON public.profiles
-FOR UPDATE 
-TO authenticated
-USING (
-    ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin'
-    OR 
-    ((SELECT auth.uid()) = id AND deleted_at IS NULL)
+CREATE POLICY "Users can update their own profile and admins can update all" ON public.profiles FOR
+UPDATE TO authenticated USING (
+    public.is_not_banned ()
+    AND (
+        (
+            (
+                SELECT
+                    auth.jwt ()
+            ) -> 'app_metadata' ->> 'role'
+        ) = 'admin'
+        OR (
+            (
+                SELECT
+                    auth.uid ()
+            ) = id
+        )
+    )
 )
-WITH CHECK (
-    ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin'
-    OR 
-    (SELECT auth.uid()) = id
-);
+WITH
+    CHECK (
+        public.is_not_banned ()
+        AND (
+            (
+                (
+                    SELECT
+                        auth.jwt ()
+                ) -> 'app_metadata' ->> 'role'
+            ) = 'admin'
+            OR (
+                SELECT
+                    auth.uid ()
+            ) = id
+        )
+    );
 
-CREATE OR REPLACE FUNCTION public.update_modified_column()
-RETURNS TRIGGER
-SECURITY DEFINER
-SET search_path = public
-AS $$
+CREATE
+OR REPLACE FUNCTION public.update_modified_column () RETURNS TRIGGER SECURITY DEFINER
+SET
+    search_path = public AS $$
 BEGIN
     NEW.updated_at = now();
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER set_profiles_updated_at
-    BEFORE UPDATE ON public.profiles
-    FOR EACH ROW 
-    EXECUTE FUNCTION public.update_modified_column();
+CREATE TRIGGER set_profiles_updated_at BEFORE
+UPDATE ON public.profiles FOR EACH ROW
+EXECUTE FUNCTION public.update_modified_column ();
 
-CREATE OR REPLACE FUNCTION public.enforce_profiles_immutability()
-RETURNS TRIGGER
-SECURITY DEFINER
-SET search_path = public
-AS $$
+CREATE
+OR REPLACE FUNCTION public.enforce_profiles_immutability () RETURNS TRIGGER SECURITY DEFINER
+SET
+    search_path = public AS $$
 BEGIN
     IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') = 'admin') THEN
         RETURN NEW;
     END IF;
 
     IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IN ('host', 'cleaner')) THEN
-        IF (OLD.deleted_at IS NOT NULL AND NEW.deleted_at IS NOT DISTINCT FROM OLD.deleted_at) THEN
-            RAISE EXCEPTION 'Cannot modify a soft-deleted record' USING ERRCODE = '42501';
-        END IF;
-
         IF (
             NEW.id IS DISTINCT FROM OLD.id OR
             NEW.email IS DISTINCT FROM OLD.email OR
@@ -85,24 +121,33 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trigger_profiles_immutability
-    BEFORE UPDATE ON public.profiles
-    FOR EACH ROW
-    EXECUTE FUNCTION public.enforce_profiles_immutability();
+CREATE TRIGGER trigger_profiles_immutability BEFORE
+UPDATE ON public.profiles FOR EACH ROW
+EXECUTE FUNCTION public.enforce_profiles_immutability ();
 
-CREATE OR REPLACE FUNCTION public.handle_new_user() 
-RETURNS trigger 
-SECURITY DEFINER
-SET search_path = public 
-AS $$ 
+CREATE POLICY "Users can update own last_seen_at" ON public.profiles FOR
+UPDATE TO authenticated USING (
+    public.is_not_banned ()
+    AND id = auth.uid ()
+)
+WITH
+    CHECK (
+        public.is_not_banned ()
+        AND id = auth.uid ()
+    );
+
+CREATE
+OR REPLACE FUNCTION public.handle_new_user () RETURNS TRIGGER SECURITY DEFINER
+SET
+    search_path = public AS $$ 
 DECLARE 
     v_role TEXT;
-    v_is_admin_action BOOLEAN;
+    v_is_service_role BOOLEAN;
 BEGIN
     v_role := NEW.raw_user_meta_data->>'role';
-    v_is_admin_action := (current_setting('role', true) = 'service_role');
+    v_is_service_role := current_setting('role', true) IN ('service_role', 'supabase_auth_admin', 'postgres');
 
-    IF v_role = 'admin' AND NOT v_is_admin_action THEN
+    IF v_role = 'admin' AND NOT v_is_service_role THEN
         RAISE EXCEPTION 'Signup failed: Only admins can create admin accounts.';
     ELSIF v_role IS NULL OR v_role NOT IN ('host', 'cleaner', 'admin') THEN
         RAISE EXCEPTION 'Signup failed: Invalid or missing role.';
@@ -127,54 +172,60 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER on_auth_user_created
-    AFTER INSERT ON auth.users
-    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+AFTER INSERT ON auth.users FOR EACH ROW
+EXECUTE FUNCTION public.handle_new_user ();
 
-CREATE VIEW public.profiles_public
-AS
-SELECT 
-    id, 
-    full_name, 
+CREATE VIEW
+    public.profiles_public AS
+SELECT
+    id,
+    full_name,
     avatar_url,
     role
-FROM public.profiles
-WHERE deleted_at IS NULL;
+FROM
+    public.profiles;
 
-GRANT SELECT ON public.profiles_public TO authenticated;
+GRANT
+SELECT
+    ON public.profiles_public TO authenticated;
 
-CREATE POLICY "Avatar images are publicly accessible"
-ON storage.objects FOR SELECT
-TO public
-USING (bucket_id = 'avatars');
+CREATE POLICY "Avatar images are publicly accessible" ON STORAGE.objects FOR
+SELECT
+    TO public USING (bucket_id = 'avatars');
 
-CREATE POLICY "Users can upload their own avatar"
-ON storage.objects FOR INSERT
-TO authenticated
-WITH CHECK (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);
+CREATE POLICY "Users can upload their own avatar" ON STORAGE.objects FOR INSERT TO authenticated
+WITH
+    CHECK (
+        public.is_not_banned ()
+        AND bucket_id = 'avatars'
+        AND (STORAGE.foldername (NAME)) [1] = auth.uid ()::TEXT
+    );
 
-CREATE POLICY "Users can update their own avatar"
-ON storage.objects FOR UPDATE
-TO authenticated
-USING (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);
+CREATE POLICY "Users can update their own avatar" ON STORAGE.objects FOR
+UPDATE TO authenticated USING (
+    public.is_not_banned ()
+    AND bucket_id = 'avatars'
+    AND (STORAGE.foldername (NAME)) [1] = auth.uid ()::TEXT
+)
+WITH
+    CHECK (public.is_not_banned ());
 
-CREATE OR REPLACE FUNCTION public.handle_user_update() 
-RETURNS trigger 
-SECURITY DEFINER
-SET search_path = public 
-AS $$
+CREATE
+OR REPLACE FUNCTION public.handle_user_update () RETURNS TRIGGER SECURITY DEFINER
+SET
+    search_path = public AS $$
 BEGIN
   UPDATE public.profiles
   SET 
     email = NEW.email,
     full_name = NEW.raw_user_meta_data->>'full_name',
     avatar_url = NEW.raw_user_meta_data->>'avatar_url'
-  WHERE id = NEW.id 
-  AND deleted_at IS NULL;
+  WHERE id = NEW.id;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER on_auth_user_updated
-  AFTER UPDATE ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION public.handle_user_update();
+AFTER
+UPDATE ON auth.users FOR EACH ROW
+EXECUTE FUNCTION public.handle_user_update ();

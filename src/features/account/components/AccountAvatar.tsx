@@ -1,12 +1,12 @@
-import { type ChangeEvent, useState } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { supabase } from '@/lib/supabaseClient';
-import { cn } from '@/lib/utils';
 import { Camera, Loader2 } from 'lucide-react';
+import { type ChangeEvent, useState } from 'react';
 import { toast } from 'sonner';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAuth } from '@/features/auth/AuthContext';
 import { authService } from '@/features/auth/authService';
 import { mediaService } from '@/lib/mediaService';
-import { useAuth } from '@/features/auth/AuthContext';
+import { supabase } from '@/lib/supabaseClient';
+import { cn } from '@/lib/utils';
 
 export function AccountAvatar() {
 	const { profile, user, refreshProfile } = useAuth();

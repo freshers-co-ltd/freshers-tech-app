@@ -8,8 +8,8 @@ import {
 } from 'react-router-dom';
 import { Loading } from '@/components/Loading';
 import { useAuth } from '@/features/auth/AuthContext';
-import { AuthLayout } from '@/layouts/AuthLayout';
 import { AppLayout } from '@/layouts/AppLayout';
+import { AuthLayout } from '@/layouts/AuthLayout';
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPassword';
 import { LoginPage } from '@/pages/auth/Login';
 import { SignupPage } from '@/pages/auth/Signup';
@@ -211,7 +211,7 @@ const routesConfig: RouteObject[] = [
 						path: 'dashboard',
 						element: lazyLoad(() => import('@/pages/cleaner/Dashboard'), 'CleanerDashboardPage'),
 					},
-                    {
+					{
 						path: 'cleanings',
 						element: lazyLoad(() => import('@/pages/cleaner/Cleanings'), 'CleanerCleaningsPage'),
 					},
@@ -232,6 +232,33 @@ const routesConfig: RouteObject[] = [
 					{
 						path: 'dashboard',
 						element: lazyLoad(() => import('@/pages/admin/Dashboard'), 'AdminDashboardPage'),
+					},
+					{
+						path: 'users',
+						element: lazyLoad(() => import('@/pages/admin/Users'), 'AdminUsersPage'),
+					},
+					{
+						path: 'users/hosts/:id',
+						element: lazyLoad(() => import('@/pages/admin/HostDetail'), 'AdminHostDetailPage'),
+					},
+					{
+						path: 'users/cleaners/:id',
+						element: lazyLoad(
+							() => import('@/pages/admin/CleanerDetail'),
+							'AdminCleanerDetailPage',
+						),
+					},
+					{
+						path: 'cleanings',
+						element: lazyLoad(() => import('@/pages/admin/Cleanings'), 'AdminCleaningsPage'),
+					},
+					{
+						path: 'analytics',
+						element: lazyLoad(() => import('@/pages/admin/Analytics'), 'AdminAnalyticsPage'),
+					},
+					{
+						path: 'account',
+						element: lazyLoad(() => import('@/pages/Account'), 'AccountPage'),
 					},
 				],
 			},

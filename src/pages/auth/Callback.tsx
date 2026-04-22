@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Loading } from '@/components/Loading';
 import { DICT } from '@/dictionary';

@@ -382,9 +382,43 @@ export const cleaningService = {
 };
 
 /**
- * Calculates the service cost based on property dimensions.
- * Base rate of £50 plus £20 per bedroom and £10 per bathroom.
+ * Calculates the service cost based on property specifications and stock requirements.
  */
-export const calculateServiceCost = (bedrooms: number, bathrooms: number): number => {
-	return 50 + bedrooms * 20 + bathrooms * 10;
+export const calculateServiceCost = (
+	bedrooms: number,
+	type: string,
+	includeStocks: boolean,
+): number => {
+	if (includeStocks) {
+		if (type.toLowerCase() === 'studio') {
+			return 60;
+		}
+		if (bedrooms <= 1) {
+			return 80;
+		}
+		if (bedrooms === 2) {
+			return 100;
+		}
+		if (bedrooms === 3) {
+			return 130;
+		}
+		if (bedrooms >= 4) {
+			return 150;
+		}
+	}
+
+	if (bedrooms <= 1) {
+		return 70;
+	}
+	if (bedrooms === 2) {
+		return 90;
+	}
+	if (bedrooms === 3) {
+		return 120;
+	}
+	if (bedrooms >= 4) {
+		return 140;
+	}
+
+	return 0;
 };

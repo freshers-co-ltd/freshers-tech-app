@@ -7,8 +7,8 @@ import { DICT } from '@/dictionary';
 import { HostCleaningDetailView } from '@/features/cleanings/components/HostCleaningDetailView';
 import { HostCleaningForm } from '@/features/cleanings/components/HostCleaningForm';
 import { HostCleaningGrid } from '@/features/cleanings/components/HostCleaningGrid';
-import { ManagementLayout } from '@/layouts/ManagementLayout';
 import { useHostCleanings } from '@/features/cleanings/useHostCleanings';
+import { ManagementLayout } from '@/layouts/ManagementLayout';
 
 export function HostCleaningsPage() {
 	const {
@@ -40,9 +40,7 @@ export function HostCleaningsPage() {
 						<CalendarX className="size-8 text-muted-foreground" />
 					</div>
 					<h3 className="text-lg font-semibold">{DICT.CLEANINGS.EMPTY.TITLE}</h3>
-					<p className="text-muted-foreground mb-6">
-						{DICT.CLEANINGS.EMPTY.MESSAGE}
-					</p>
+					<p className="text-muted-foreground mb-6">{DICT.CLEANINGS.EMPTY.MESSAGE}</p>
 				</div>
 			}
 			grid={

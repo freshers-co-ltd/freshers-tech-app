@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CheckCircle2, Info, Plus, Trash2 } from 'lucide-react';
+import { CheckCircle2, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Controller, type SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -17,6 +17,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { DICT } from '@/dictionary';
 import {
@@ -26,7 +27,7 @@ import {
 } from '@/features/cleanings/cleaningService';
 import { PropertyForm } from '@/features/properties/components/PropertyForm';
 import { useProperties } from '@/features/properties/PropertyContext';
-import type { PropertyInsert } from '@/features/properties/propertyService';
+import type { Property, PropertyInsert } from '@/features/properties/propertyService';
 import { supabase } from '@/lib/supabaseClient';
 
 const hostCleaningSchema = z.object({
@@ -35,6 +36,7 @@ const hostCleaningSchema = z.object({
 	}),
 	scheduled_start: z.date({ message: 'Please select a start date' }),
 	instructions: z.string().optional(),
+	stocks_included: z.boolean(),
 	custom_tasks: z.array(
 		z.object({ description: z.string().min(1, { message: 'Task description required' }) }),
 	),
@@ -46,6 +48,7 @@ type HostCleaningFormInput = {
 	property_id: string;
 	scheduled_start: Date;
 	instructions?: string;
+	stocks_included: boolean;
 	custom_tasks: { description: string }[];
 };
 
@@ -77,6 +80,7 @@ export function HostCleaningForm({ initialData, onSubmit, onCancel }: HostCleani
 				? new Date(initialData.scheduled_start)
 				: new Date(Date.now() + 86400000),
 			instructions: initialData?.instructions ?? '',
+			stocks_included: initialData?.stocks_included ?? false,
 			custom_tasks:
 				initialData?.tasks
 					?.filter((t) => t.is_custom)
@@ -101,6 +105,7 @@ export function HostCleaningForm({ initialData, onSubmit, onCancel }: HostCleani
 				property_id: initialData.property_id,
 				scheduled_start: new Date(initialData.scheduled_start),
 				instructions: initialData.instructions ?? '',
+				stocks_included: initialData.stocks_included ?? false,
 				custom_tasks:
 					initialData.tasks
 						?.filter((t) => t.is_custom)
@@ -115,6 +120,7 @@ export function HostCleaningForm({ initialData, onSubmit, onCancel }: HostCleani
 	});
 
 	const selectedPropertyId = watch('property_id');
+	const stocksIncluded = watch('stocks_included');
 
 	useEffect(() => {
 		let isMounted = true;
@@ -144,13 +150,13 @@ export function HostCleaningForm({ initialData, onSubmit, onCancel }: HostCleani
 		if (!selectedProperty) {
 			return 0;
 		}
-		return calculateServiceCost(selectedProperty.bedrooms, selectedProperty.bathrooms);
-	}, [selectedProperty]);
+		return calculateServiceCost(selectedProperty.bedrooms, selectedProperty.type, stocksIncluded);
+	}, [selectedProperty, stocksIncluded]);
 
 	const handlePropertySubmit = async (propertyData: PropertyInsert): Promise<void> => {
 		const result = await upsertProperty(propertyData);
 		if (result.data) {
-			const property = result.data;
+			const property = result.data as Property;
 			setValue('property_id', property.id, {
 				shouldValidate: true,
 				shouldDirty: true,
@@ -302,6 +308,22 @@ export function HostCleaningForm({ initialData, onSubmit, onCancel }: HostCleani
 					{step === 3 && (
 						<div className="space-y-6">
 							<FieldGroup>
+								<div className="flex items-center justify-between p-4 rounded-xl border bg-card">
+									<div className="space-y-0.5">
+										<FieldLabel className="text-base">Include Household Stocks</FieldLabel>
+										<p className="text-xs text-muted-foreground">
+											Toiletries, beverages, and cleaning supplies.
+										</p>
+									</div>
+									<Controller
+										control={control}
+										name="stocks_included"
+										render={({ field }) => (
+											<Switch checked={field.value} onCheckedChange={field.onChange} />
+										)}
+									/>
+								</div>
+
 								<Field>
 									<FieldLabel>{d.LABELS.INSTRUCTIONS}</FieldLabel>
 									<Textarea
@@ -331,11 +353,6 @@ export function HostCleaningForm({ initialData, onSubmit, onCancel }: HostCleani
 									</p>
 									<p className="text-2xl font-black text-primary">£{calculatedPrice.toFixed(2)}</p>
 								</div>
-
-								<div className="flex items-start gap-2 p-3 rounded-lg bg-blue-50 border border-blue-100 text-blue-800 text-xs">
-									<Info className="size-4 shrink-0 mt-0.5" />
-									<p>{d.INFO.PRICING_NOTICE}</p>
-								</div>
 							</FieldGroup>
 
 							<div className="flex gap-3 pt-4 border-t">
@@ -355,3 +372,6 @@ export function HostCleaningForm({ initialData, onSubmit, onCancel }: HostCleani
 		</div>
 	);
 }
+
+HostCleaningForm.title = DICT.CLEANINGS.CREATE_DIALOG.TITLE;
+HostCleaningForm.description = DICT.CLEANINGS.CREATE_DIALOG.MESSAGE;

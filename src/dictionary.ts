@@ -265,6 +265,12 @@ export const DICT = {
 				TITLE: 'Security',
 				DESCRIPTION: 'Change your password to keep your account secure.',
 			},
+			PREFERENCES: {
+				TITLE: 'Preferences',
+			},
+			SUPPORT: {
+				TITLE: 'Contact',
+			},
 		},
 		LABELS: {
 			FULL_NAME: 'Full Name',
@@ -275,10 +281,156 @@ export const DICT = {
 			SAVE_CHANGES: 'Save Changes',
 			UPDATE_PASSWORD: 'Update Password',
 		},
+		PREFERENCES: {
+			TITLE: 'Preferences',
+			DESCRIPTION: 'Control how the application behaves and notifies you.',
+			EMAIL_NOTIFICATIONS: 'Email Notifications',
+			EMAIL_NOTIFICATIONS_DESC: 'Receive updates about your account activity.',
+			SECURITY_ALERTS: 'Security Alerts',
+			SECURITY_ALERTS_DESC: 'Get notified of new login attempts.',
+		},
+		SUPPORT: {
+			TITLE: 'Contact',
+			DESCRIPTION: 'Access help documentation or contact our support team.',
+		},
 		NOTIFICATIONS: {
 			UPDATE_SUCCESS: 'Profile updated successfully.',
 			PASSWORD_SUCCESS: 'Password updated successfully.',
 			EMAIL_PENDING: 'Check your new email for a confirmation link.',
+		},
+	},
+
+	ADMIN: {
+		USERS: {
+			TITLE: 'User Management',
+			TABS: {
+				ALL: 'All Users',
+				HOSTS: 'Hosts',
+				CLEANERS: 'Cleaners',
+				ADMINS: 'Admins',
+			},
+			SEARCH_PLACEHOLDER: 'Search by name or email...',
+			FILTER: {
+				ACTIVE: 'Online',
+				BANNED: 'Banned',
+				ALL: 'All',
+			},
+			INVITE: 'Invite User',
+			TABLE: {
+				NAME: 'Name',
+				ROLE: 'Role',
+				STATUS: 'Status',
+				PROPERTIES: 'Properties',
+				CLEANINGS: 'Cleanings',
+				ACTIONS: 'Actions',
+			},
+			STATUS: {
+				ONLINE: 'Online',
+                OFFLINE: 'Offline',
+				BANNED: 'Banned',
+                RECENTLY_ONLINE: 'Recently Online',
+			},
+			DETAIL: {
+				PROPERTIES: 'Properties',
+				CLEANINGS: 'Cleaning Requests',
+				STATS: 'Statistics',
+				CREATE_CLEANING: 'Create Cleaning Request',
+				ASSIGN_CLEANER: 'Assign Cleaner',
+			},
+			ACTIONS: {
+				VIEW: 'View Details',
+				RESET_PASSWORD: 'Reset Password',
+				BAN: 'Ban',
+				UNBAN: 'Unban',
+			},
+			MODAL: {
+				INVITE_TITLE: 'Invite New User',
+				EMAIL: 'Email',
+				FULL_NAME: 'Full Name',
+				ROLE: 'Role',
+				SUBMIT: 'Send Invitation',
+				CANCEL: 'Cancel',
+			},
+			CONFIRM_BAN: 'Are you sure you want to ban this user?',
+			CONFIRM_UNBAN: 'Are you sure you want to unban this user?',
+		},
+		CLEANINGS: {
+			TITLE: 'Cleaning Operations',
+			TABS: {
+				ALL: 'All',
+				REQUESTED: 'Requested',
+				CONFIRMED: 'Confirmed',
+				IN_PROGRESS: 'In Progress',
+				COMPLETED: 'Completed',
+			},
+			TABLE: {
+				DATE: 'Date',
+				PROPERTY: 'Property',
+				HOST: 'Host',
+				CLEANER: 'Cleaner',
+				STATUS: 'Status',
+				COST: 'Cost',
+				ACTIONS: 'Actions',
+			},
+			ACTIONS: {
+				VIEW: 'View Details',
+				ASSIGN: 'Assign Cleaner',
+				UNASSIGN: 'Unassign',
+				REASSIGN: 'Reassign',
+				STATUS: 'Change Status',
+				CANCEL: 'Cancel',
+			},
+			STATUS_CHANGE: {
+				TITLE: 'Change Status',
+				SELECT: 'Select new status',
+				STATUS: 'Status',
+			},
+			ASSIGN_MODAL: {
+				TITLE: 'Assign Cleaner',
+				SELECT: 'Select a cleaner',
+				SUBMIT: 'Assign',
+				CANCEL: 'Cancel',
+			},
+			TASKS: {
+				TITLE: 'Standard Tasks',
+				ADD: 'Add Task',
+				EDIT: 'Edit',
+				SAVE: 'Save Changes',
+			},
+			CONFLICT: 'Data was updated by another user. Please refresh.',
+		},
+		ANALYTICS: {
+			TITLE: 'Analytics',
+			DATE_RANGE: {
+				LABEL: 'Date Range',
+				THIS_MONTH: 'This Month',
+				LAST_MONTH: 'Last Month',
+				THIS_YEAR: 'This Year',
+				CUSTOM: 'Custom',
+			},
+			VOLUME: {
+				TITLE: 'Volume Metrics',
+				PROPERTIES: 'Active Properties',
+				COMPLETED_MTD: 'Completed (MTD)',
+				COMPLETED_YTD: 'Completed (YTD)',
+				TOTAL_MTD: 'Total (MTD)',
+			},
+			HEALTH: {
+				TITLE: 'Operational Health',
+				AVG_TIME: 'Avg Completion Time',
+				BROKEN_ITEMS: 'Broken Items',
+				UTILIZATION: 'Cleaner Utilization',
+				HOURS: 'hours',
+			},
+			AUDIT: {
+				TITLE: 'Recent Activity',
+				VIEW_ALL: 'View All',
+			},
+		},
+		DASHBOARD: {
+			TITLE: 'Admin Dashboard',
+			WELCOME: 'Welcome, Admin',
+			MESSAGE: 'Manage your cleaning operations.',
 		},
 	},
 
@@ -295,6 +447,7 @@ export const DICT = {
 			LINK_EXPIRED: 'Authentication link expired.',
 			USER_NOT_FOUND: 'No account found with this email.',
 			UNAUTHORISED: 'You do not have permission to perform this action.',
+            USER_BANNED: 'Your account has been banned. Please contact support for more information.',
 		},
 		// biome-ignore format: Messages are more readable on one line
 		HTTP: {

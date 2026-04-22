@@ -13,8 +13,8 @@ import {
 import { DICT } from '@/dictionary';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
 import { STATUS_GROUPS } from '@/features/cleanings/cleaningService';
-import { HostCleaningCard } from '@/features/cleanings/components/HostCleaningCard';
 import { CleaningGridSkeleton } from '@/features/cleanings/components/CleaningGridSkeleton';
+import { HostCleaningCard } from '@/features/cleanings/components/HostCleaningCard';
 
 interface HostCleaningGridProps {
 	onView: (id: string) => void;

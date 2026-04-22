@@ -7,8 +7,8 @@ import { DICT } from '@/dictionary';
 import { PropertyDetailView } from '@/features/properties/components/PropertyDetailView';
 import { PropertyForm } from '@/features/properties/components/PropertyForm';
 import { PropertyManagementGrid } from '@/features/properties/components/PropertyManagementGrid';
-import { ManagementLayout } from '@/layouts/ManagementLayout';
 import { useHostProperties } from '@/features/properties/useHostProperties';
+import { ManagementLayout } from '@/layouts/ManagementLayout';
 
 export function HostPropertiesPage() {
 	const {

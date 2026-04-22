@@ -1,5 +1,5 @@
-import { supabase } from '@/lib/supabaseClient';
 import type { Database } from '@/lib/database.types';
+import { supabase } from '@/lib/supabaseClient';
 
 export type MediaType = Database['public']['Enums']['media_type'];
 export type StorageBucket = Database['storage']['Tables']['buckets']['Row']['id'];

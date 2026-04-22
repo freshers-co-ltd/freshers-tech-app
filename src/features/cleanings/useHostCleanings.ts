@@ -24,7 +24,7 @@ export function useHostCleanings() {
 		async (data: HostCleaningFormValues) => {
 			const property = properties.find((p) => p.id === data.property_id);
 			const serviceCost = property
-				? calculateServiceCost(property.bedrooms, property.bathrooms)
+				? calculateServiceCost(property.bedrooms, property.type, false)
 				: 0;
 
 			const payload = {

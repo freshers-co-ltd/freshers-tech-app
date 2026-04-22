@@ -24,7 +24,11 @@ import {
 } from '@/components/ui/select';
 import { DICT } from '@/dictionary';
 import { useAuth } from '@/features/auth/AuthContext';
-import type { Property, PropertyInsert } from '@/features/properties/propertyService';
+import {
+	type Property,
+	type PropertyInsert,
+	propertyTypeValues,
+} from '@/features/properties/propertyService';
 import { mediaService } from '@/lib/mediaService';
 
 const POSTCODE_REGEX = /^[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}$/i;
@@ -43,7 +47,7 @@ const propertySchema = z.object({
 			const outcode = cleaned.slice(0, -3);
 			return `${outcode} ${incode}`;
 		}),
-	type: z.enum(['house', 'apartment', 'other']),
+	type: z.enum(propertyTypeValues),
 	bedrooms: z.coerce.number().min(0, DICT.FORMS.VALIDATION.NUMBER_INVALID),
 	bathrooms: z.coerce.number().min(0, DICT.FORMS.VALIDATION.NUMBER_INVALID),
 	main_image_url: z.string().optional(),
@@ -59,7 +63,7 @@ type PropertyFormInput = {
 	address_line_2?: string;
 	town_city: string;
 	postcode: string;
-	type: 'house' | 'apartment' | 'other';
+	type: (typeof propertyTypeValues)[number];
 	bedrooms: unknown;
 	bathrooms: unknown;
 	has_main_image: boolean;
@@ -87,7 +91,7 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 			address_line_2: initialData?.address_line_2 ?? '',
 			town_city: initialData?.town_city ?? '',
 			postcode: initialData?.postcode ?? '',
-			type: (initialData?.type as 'house' | 'apartment' | 'other') ?? 'apartment',
+			type: (initialData?.type as (typeof propertyTypeValues)[number]) ?? propertyTypeValues[0],
 			bedrooms: initialData?.bedrooms ?? 1,
 			bathrooms: initialData?.bathrooms ?? 1,
 			has_main_image: !!initialData?.main_image_url,
@@ -392,9 +396,7 @@ function ExtraImagesUpload({
 			</FileInput>
 			<FileUploaderContent className="flex flex-row items-center gap-2 mt-2">
 				{existingImages?.map((path) => (
-					<div
-						key={path}
-						className="relative p-0 overflow-hidden border rounded-md size-20 group">
+					<div key={path} className="relative p-0 overflow-hidden border rounded-md size-20 group">
 						<img
 							src={mediaService.getMediaUrl(path, 'property-media')}
 							alt="Extra"

@@ -19,6 +19,7 @@ export type Database = {
           old_data: Json | null
           target_id: string
           target_table: string
+          updated_at: string | null
         }
         Insert: {
           action_type: string
@@ -29,6 +30,7 @@ export type Database = {
           old_data?: Json | null
           target_id: string
           target_table: string
+          updated_at?: string | null
         }
         Update: {
           action_type?: string
@@ -39,6 +41,7 @@ export type Database = {
           old_data?: Json | null
           target_id?: string
           target_table?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -274,31 +277,31 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
-          deleted_at: string | null
           email: string | null
           full_name: string | null
           id: string
           is_verified: boolean | null
+          last_seen_at: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string | null
         }
         Insert: {
           avatar_url?: string | null
-          deleted_at?: string | null
           email?: string | null
           full_name?: string | null
           id: string
           is_verified?: boolean | null
+          last_seen_at?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
         }
         Update: {
           avatar_url?: string | null
-          deleted_at?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
           is_verified?: boolean | null
+          last_seen_at?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
         }
@@ -393,6 +396,28 @@ export type Database = {
       }
     }
     Views: {
+      admin_operational_health: {
+        Row: {
+          avg_completion_hours: number | null
+          broken_items_mtd: number | null
+          calculated_at: string | null
+          cleaner_utilization_pct: number | null
+          low_supplies_mtd: number | null
+        }
+        Relationships: []
+      }
+      admin_volume_metrics: {
+        Row: {
+          active_cleaners: number | null
+          active_hosts: number | null
+          active_properties: number | null
+          calculated_at: string | null
+          completed_mtd: number | null
+          completed_ytd: number | null
+          total_mtd: number | null
+        }
+        Relationships: []
+      }
       profiles_public: {
         Row: {
           avatar_url: string | null
@@ -416,6 +441,177 @@ export type Database = {
       }
     }
     Functions: {
+      admin_assign_cleaner: {
+        Args: { p_cleaner_id: string; p_cleaning_id: string }
+        Returns: undefined
+      }
+      admin_ban_user: {
+        Args: { is_banned: boolean; target_user_id: string }
+        Returns: undefined
+      }
+      admin_create_cleaning_for_host: {
+        Args: {
+          p_custom_tasks?: string[]
+          p_host_id: string
+          p_instructions?: string
+          p_property_id: string
+          p_scheduled_start: string
+          p_service_cost: number
+          p_stocks_included?: boolean
+        }
+        Returns: string
+      }
+      admin_get_all_cleanings: {
+        Args: {
+          p_cleaner_id?: string
+          p_host_id?: string
+          p_limit?: number
+          p_page?: number
+          p_status?: string
+        }
+        Returns: {
+          cleaner_id: string
+          cleaner_name: string
+          clock_in_time: string
+          clock_out_time: string
+          created_at: string
+          deleted_at: string
+          host_id: string
+          host_name: string
+          id: string
+          instructions: string
+          property_address: string
+          property_id: string
+          property_postcode: string
+          scheduled_start: string
+          service_cost: number
+          status: string
+          stocks_included: boolean
+          updated_at: string
+        }[]
+      }
+      admin_get_audit_logs: {
+        Args: {
+          p_action_type?: string
+          p_limit?: number
+          p_page?: number
+          p_target_table?: string
+        }
+        Returns: {
+          action_type: string
+          actor_id: string
+          actor_name: string
+          created_at: string
+          id: string
+          new_data: Json
+          old_data: Json
+          target_id: string
+          target_table: string
+        }[]
+      }
+      admin_get_available_cleaners: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          avg_completion_hours: number
+          current_assignments: number
+          full_name: string
+          id: string
+        }[]
+      }
+      admin_get_cleaner_detail: {
+        Args: { p_cleaner_id: string }
+        Returns: {
+          assigned_cleanings: Json
+          avatar_url: string
+          banned_until: string
+          cleaner_stats: Json
+          email: string
+          full_name: string
+          id: string
+          is_verified: boolean
+          role: string
+          updated_at: string
+        }[]
+      }
+      admin_get_cleanings_count: {
+        Args: { p_cleaner_id?: string; p_host_id?: string; p_status?: string }
+        Returns: number
+      }
+      admin_get_host_detail: {
+        Args: { p_host_id: string }
+        Returns: {
+          avatar_url: string
+          banned_until: string
+          cleaning_stats: Json
+          cleanings: Json
+          email: string
+          full_name: string
+          id: string
+          is_verified: boolean
+          properties: Json
+          role: string
+          updated_at: string
+        }[]
+      }
+      admin_get_standard_tasks: {
+        Args: never
+        Returns: {
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+        }[]
+      }
+      admin_get_user_stats: {
+        Args: never
+        Returns: {
+          admins_count: number
+          banned_users: number
+          cleaners_count: number
+          hosts_count: number
+          new_users_last_month: number
+          new_users_this_month: number
+          online_now: number
+          recently_online: number
+          total_users: number
+        }[]
+      }
+      admin_get_users: {
+        Args: { p_limit?: number; p_page?: number; p_role?: string }
+        Returns: {
+          active_bookings: number
+          avatar_url: string
+          banned_until: string
+          completed_cleanings: number
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_online: boolean
+          is_verified: boolean
+          last_seen_at: string
+          last_sign_in_at: string
+          last_sign_in_text: string
+          role: string
+          total_cleanings: number
+          total_properties: number
+          total_user_count: number
+        }[]
+      }
+      admin_get_users_count: { Args: { p_role?: string }; Returns: number }
+      admin_unassign_cleaner: {
+        Args: { p_cleaning_id: string }
+        Returns: undefined
+      }
+      admin_update_cleaning_status: {
+        Args: { p_cleaning_id: string; p_status: string }
+        Returns: undefined
+      }
+      admin_update_standard_tasks: {
+        Args: { p_task_descriptions: string[] }
+        Returns: undefined
+      }
       create_cleaning_request: {
         Args: {
           p_custom_tasks: string[]
@@ -427,6 +623,7 @@ export type Database = {
         }
         Returns: string
       }
+      is_not_banned: { Args: never; Returns: boolean }
       soft_delete_cleaning: {
         Args: { p_cleaning_id: string }
         Returns: undefined
@@ -457,6 +654,7 @@ export type Database = {
         }
         Returns: string
       }
+      update_user_presence: { Args: never; Returns: undefined }
     }
     Enums: {
       cleaning_status:
@@ -467,7 +665,7 @@ export type Database = {
         | "completed"
         | "cancelled"
       media_type: "image" | "video"
-      property_type: "house" | "apartment" | "other"
+      property_type: "house" | "apartment" | "studio"
       user_role: "cleaner" | "host" | "admin"
     }
     CompositeTypes: {
@@ -1139,7 +1337,7 @@ export const Constants = {
         "cancelled",
       ],
       media_type: ["image", "video"],
-      property_type: ["house", "apartment", "other"],
+      property_type: ["house", "apartment", "studio"],
       user_role: ["cleaner", "host", "admin"],
     },
   },

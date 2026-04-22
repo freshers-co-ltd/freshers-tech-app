@@ -10,8 +10,8 @@ import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { DICT } from '@/dictionary';
-import { authService } from '@/features/auth/authService';
 import { useAuth } from '@/features/auth/AuthContext';
+import { authService } from '@/features/auth/authService';
 
 const personalSchema = z.object({
 	full_name: z.string().trim().min(2, DICT.FORMS.VALIDATION.NAME_MIN),

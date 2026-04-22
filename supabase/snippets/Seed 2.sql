@@ -26,7 +26,7 @@ INSERT INTO
         recovery_token,
         email_change_token_new,
         email_change,
-        phone_change,
+phone_change,
         phone_change_token,
         banned_until,
         reauthentication_token,

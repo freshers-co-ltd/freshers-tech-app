@@ -1,8 +1,8 @@
-import { ClipboardList, Home, LayoutDashboard, User } from 'lucide-react';
+import { BarChart3, ClipboardList, Home, LayoutDashboard, User, Users } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/features/auth/AuthContext';
-import { cn } from '@/lib/utils';
 import type { UserRole } from '@/features/auth/authService';
+import { cn } from '@/lib/utils';
 
 type NavItem = {
 	name: string;
@@ -21,11 +21,14 @@ const NAV_CONFIG: RoleNavConfig = {
 	],
 	cleaner: [
 		{ name: 'Dashboard', path: '/cleaner/dashboard', icon: LayoutDashboard },
-        { name: 'Cleanings', path: '/cleaner/cleanings', icon: ClipboardList },
+		{ name: 'Cleanings', path: '/cleaner/cleanings', icon: ClipboardList },
 		{ name: 'Account', path: '/cleaner/account', icon: User },
 	],
 	admin: [
 		{ name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
+		{ name: 'Users', path: '/admin/users', icon: Users },
+		{ name: 'Cleanings', path: '/admin/cleanings', icon: ClipboardList },
+		{ name: 'Analytics', path: '/admin/analytics', icon: BarChart3 },
 		{ name: 'Account', path: '/admin/account', icon: User },
 	],
 };

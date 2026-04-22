@@ -1,12 +1,12 @@
 'use client';
 
-import { useMemo, useCallback } from 'react';
-import { useProperties } from '@/features/properties/PropertyContext';
+import { useCallback, useMemo } from 'react';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
-import { useResourceModals } from '@/hooks/useResourceModals';
 import type { PropertyFormValues } from '@/features/properties/components/PropertyForm';
+import { useProperties } from '@/features/properties/PropertyContext';
 import type { PropertyInsert } from '@/features/properties/propertyService';
+import { useResourceModals } from '@/hooks/useResourceModals';
 
 export function useHostProperties() {
 	const { user } = useAuth();
@@ -40,7 +40,7 @@ export function useHostProperties() {
 				address_line_2: data.address_line_2 ?? null,
 				town_city: 'town_city' in data ? data.town_city : '',
 				postcode: 'postcode' in data ? data.postcode : '',
-				type: 'type' in data ? data.type : 'other',
+				type: 'type' in data ? data.type : 'house',
 				bedrooms: data.bedrooms ?? 0,
 				bathrooms: data.bathrooms ?? 0,
 				main_image_url: data.main_image_url ?? '',

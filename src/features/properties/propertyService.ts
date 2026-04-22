@@ -7,6 +7,12 @@ export type PropertyInsert = Database['public']['Tables']['properties']['Insert'
 export type PropertyUpdate = Database['public']['Tables']['properties']['Update'];
 export type PropertyType = Database['public']['Enums']['property_type'];
 
+export const propertyTypeValues = [
+	'house',
+	'apartment',
+	'studio',
+] as const satisfies readonly PropertyType[];
+
 export const propertyService = {
 	async getProperties(): Promise<ActionResult<Property[]>> {
 		const {

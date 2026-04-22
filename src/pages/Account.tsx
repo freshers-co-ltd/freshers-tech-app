@@ -1,14 +1,14 @@
 'use client';
 
 import { Bell, Globe, LogOut, Mail, Send, Settings, Shield, User } from 'lucide-react';
+import { Loading } from '@/components/Loading';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { DICT } from '@/dictionary';
-import { useAuth } from '@/features/auth/AuthContext';
-import { AccountForm } from '@/features/account/components/AccountForm';
 import { AccountAvatar } from '@/features/account/components/AccountAvatar';
-import { Loading } from '@/components/Loading';
+import { AccountForm } from '@/features/account/components/AccountForm';
+import { useAuth } from '@/features/auth/AuthContext';
 
 export function AccountPage() {
 	const { loading, signOut } = useAuth();
@@ -55,14 +55,14 @@ export function AccountPage() {
 								className="justify-start font-medium text-muted-foreground"
 								onClick={() => scrollToSection('settings')}>
 								<Settings className="mr-2 size-4" />
-								Preferences
+								{DICT.ACCOUNT.SECTIONS.PREFERENCES.TITLE}
 							</Button>
 							<Button
 								variant="ghost"
 								className="justify-start font-medium text-muted-foreground"
 								onClick={() => scrollToSection('support')}>
 								<Send className="mr-2 size-4" />
-								Contact
+								{DICT.ACCOUNT.SECTIONS.SUPPORT.TITLE}
 							</Button>
 						</nav>
 					</aside>
@@ -96,9 +96,9 @@ export function AccountPage() {
 
 						<section id="settings" className="space-y-4 mb-8 md:scroll-mt-22">
 							<div>
-								<h2 className="text-xl font-semibold">Preferences</h2>
+								<h2 className="text-xl font-semibold">{DICT.ACCOUNT.PREFERENCES.TITLE}</h2>
 								<p className="text-sm text-muted-foreground">
-									Control how the application behaves and notifies you.
+									{DICT.ACCOUNT.PREFERENCES.DESCRIPTION}
 								</p>
 							</div>
 							<Separator />
@@ -107,9 +107,11 @@ export function AccountPage() {
 									<div className="flex gap-4">
 										<Bell className="size-5 text-muted-foreground mt-0.5" />
 										<div className="space-y-0.5">
-											<p className="text-sm font-medium">Email Notifications</p>
+											<p className="text-sm font-medium">
+												{DICT.ACCOUNT.PREFERENCES.EMAIL_NOTIFICATIONS}
+											</p>
 											<p className="text-xs text-muted-foreground">
-												Receive updates about your account activity.
+												{DICT.ACCOUNT.PREFERENCES.EMAIL_NOTIFICATIONS_DESC}
 											</p>
 										</div>
 									</div>
@@ -119,9 +121,11 @@ export function AccountPage() {
 									<div className="flex gap-4">
 										<Shield className="size-5 text-muted-foreground mt-0.5" />
 										<div className="space-y-0.5">
-											<p className="text-sm font-medium">Security Alerts</p>
+											<p className="text-sm font-medium">
+												{DICT.ACCOUNT.PREFERENCES.SECURITY_ALERTS}
+											</p>
 											<p className="text-xs text-muted-foreground">
-												Get notified of new login attempts.
+												{DICT.ACCOUNT.PREFERENCES.SECURITY_ALERTS_DESC}
 											</p>
 										</div>
 									</div>
@@ -132,10 +136,8 @@ export function AccountPage() {
 
 						<section id="support" className="space-y-4 mb-8 md:scroll-mt-22">
 							<div>
-								<h2 className="text-xl font-semibold">Contact</h2>
-								<p className="text-sm text-muted-foreground">
-									Access help documentation or contact our support team.
-								</p>
+								<h2 className="text-xl font-semibold">{DICT.ACCOUNT.SUPPORT.TITLE}</h2>
+								<p className="text-sm text-muted-foreground">{DICT.ACCOUNT.SUPPORT.DESCRIPTION}</p>
 							</div>
 							<Separator />
 							<div className="max-w-2xl space-y-8">
