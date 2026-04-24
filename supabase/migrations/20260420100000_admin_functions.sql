@@ -1,7 +1,7 @@
 BEGIN;
 
 CREATE
-OR REPLACE FUNCTION public.admin_get_users (p_role TEXT DEFAULT NULL, p_search TEXT DEFAULT NULL, p_page INT DEFAULT 1, p_limit INT DEFAULT 20) RETURNS TABLE (
+OR REPLACE FUNCTION public.admin_get_users (p_role TEXT DEFAULT NULL, p_search TEXT DEFAULT NULL, p_page INT DEFAULT 1, p_limit INT DEFAULT 20, p_sort_field TEXT DEFAULT 'joined', p_sort_direction TEXT DEFAULT 'desc') RETURNS TABLE (
     id UUID,
     email TEXT,
     full_name TEXT,
@@ -57,7 +57,19 @@ BEGIN
         (p_role IS NULL OR p.role::TEXT = p_role)
         AND (p_search IS NULL OR p.full_name ILIKE '%' || p_search || '%' OR p.email ILIKE '%' || p_search || '%')
     GROUP BY p.id, p.email, p.full_name, p.role, p.is_verified, p.avatar_url, p.last_seen_at, au.banned_until
-    ORDER BY MAX(au.created_at) DESC NULLS LAST
+    ORDER BY
+        CASE WHEN p_sort_field = 'name' AND p_sort_direction = 'asc' THEN p.full_name END ASC NULLS FIRST,
+        CASE WHEN p_sort_field = 'name' AND p_sort_direction = 'desc' THEN p.full_name END DESC NULLS LAST,
+        CASE WHEN p_sort_field = 'email' AND p_sort_direction = 'asc' THEN p.email END ASC NULLS FIRST,
+        CASE WHEN p_sort_field = 'email' AND p_sort_direction = 'desc' THEN p.email END DESC NULLS LAST,
+        CASE WHEN p_sort_field = 'role' AND p_sort_direction = 'asc' THEN p.role::TEXT END ASC NULLS FIRST,
+        CASE WHEN p_sort_field = 'role' AND p_sort_direction = 'desc' THEN p.role::TEXT END DESC NULLS LAST,
+        CASE WHEN p_sort_field = 'status' AND p_sort_direction = 'asc' THEN au.banned_until END ASC NULLS FIRST,
+        CASE WHEN p_sort_field = 'status' AND p_sort_direction = 'desc' THEN au.banned_until END DESC NULLS LAST,
+        CASE WHEN p_sort_field = 'last_online' AND p_sort_direction = 'asc' THEN MAX(au.last_sign_in_at) END ASC NULLS FIRST,
+        CASE WHEN p_sort_field = 'last_online' AND p_sort_direction = 'desc' THEN MAX(au.last_sign_in_at) END DESC NULLS LAST,
+        CASE WHEN p_sort_field = 'joined' AND p_sort_direction = 'asc' THEN MAX(au.created_at) END ASC NULLS FIRST,
+        CASE WHEN p_sort_field = 'joined' AND p_sort_direction = 'desc' THEN MAX(au.created_at) END DESC NULLS LAST
     LIMIT p_limit
     OFFSET (p_page - 1) * p_limit;
 END;
@@ -516,7 +528,9 @@ OR REPLACE FUNCTION public.admin_get_audit_logs (
     p_target_table TEXT DEFAULT NULL,
     p_action_type TEXT DEFAULT NULL,
     p_page INT DEFAULT 1,
-    p_limit INT DEFAULT 50
+    p_limit INT DEFAULT 50,
+    p_date_from TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    p_date_to TIMESTAMP WITH TIME ZONE DEFAULT NULL
 ) RETURNS TABLE (
     id UUID,
     actor_id UUID,
@@ -531,7 +545,10 @@ OR REPLACE FUNCTION public.admin_get_audit_logs (
 BEGIN
     RETURN QUERY SELECT al.id, al.actor_id, al.target_id, al.target_table, al.action_type, al.old_data, al.new_data, al.created_at, COALESCE(p.full_name, 'System')
     FROM public.audit_logs al LEFT JOIN public.profiles p ON al.actor_id = p.id
-    WHERE (p_target_table IS NULL OR al.target_table = p_target_table) AND (p_action_type IS NULL OR al.action_type = p_action_type)
+    WHERE (p_target_table IS NULL OR al.target_table = p_target_table)
+      AND (p_action_type IS NULL OR al.action_type = p_action_type)
+      AND (p_date_from IS NULL OR al.created_at >= p_date_from)
+      AND (p_date_to IS NULL OR al.created_at <= p_date_to)
     ORDER BY al.created_at DESC LIMIT p_limit OFFSET (p_page - 1) * p_limit;
 END;
 $$ LANGUAGE plpgsql;

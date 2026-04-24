@@ -326,9 +326,9 @@ export const DICT = {
 			},
 			STATUS: {
 				ONLINE: 'Online',
-                OFFLINE: 'Offline',
+				OFFLINE: 'Offline',
 				BANNED: 'Banned',
-                RECENTLY_ONLINE: 'Recently Online',
+				RECENTLY_ONLINE: 'Recently Online',
 			},
 			DETAIL: {
 				PROPERTIES: 'Properties',
@@ -409,11 +409,12 @@ export const DICT = {
 				CUSTOM: 'Custom',
 			},
 			VOLUME: {
-				TITLE: 'Volume Metrics',
-				PROPERTIES: 'Active Properties',
-				COMPLETED_MTD: 'Completed (MTD)',
-				COMPLETED_YTD: 'Completed (YTD)',
-				TOTAL_MTD: 'Total (MTD)',
+				TITLE: 'Key Metrics',
+				COMPLETED_THIS_MONTH: 'Completed This Month',
+				CANCELLED_THIS_MONTH: 'Cancelled This Month',
+				AVG_COMPLETION_TIME: 'Avg Completion Time',
+				TOTAL_EARNINGS: 'Total Earnings',
+				COMPLETED_PREVIOUS: 'vs last month',
 			},
 			HEALTH: {
 				TITLE: 'Operational Health',
@@ -422,9 +423,25 @@ export const DICT = {
 				UTILIZATION: 'Cleaner Utilization',
 				HOURS: 'hours',
 			},
+			CHARTS: {
+				TITLE: 'Overview',
+				CLEANING_REQUESTS: 'Cleaning requests',
+				REVENUE: 'Revenue',
+				USER_GROWTH: 'User Growth',
+				STATUS_BREAKDOWN: 'Active Jobs',
+				HOSTS: 'Hosts',
+				CLEANERS: 'Cleaners',
+			},
 			AUDIT: {
 				TITLE: 'Recent Activity',
 				VIEW_ALL: 'View All',
+				FILTER_TABLE: 'Table',
+				FILTER_ACTION: 'Action',
+				FILTER_DATE: 'Date Range',
+				FIELDS_CHANGED: '{count} fields changed',
+				NO_CHANGES: 'No field changes recorded',
+				SHOW_DIFF: 'Show changes',
+				HIDE_DIFF: 'Hide changes',
 			},
 		},
 		DASHBOARD: {
@@ -447,7 +464,7 @@ export const DICT = {
 			LINK_EXPIRED: 'Authentication link expired.',
 			USER_NOT_FOUND: 'No account found with this email.',
 			UNAUTHORISED: 'You do not have permission to perform this action.',
-            USER_BANNED: 'Your account has been banned. Please contact support for more information.',
+			USER_BANNED: 'Your account has been banned. Please contact support for more information.',
 		},
 		// biome-ignore format: Messages are more readable on one line
 		HTTP: {

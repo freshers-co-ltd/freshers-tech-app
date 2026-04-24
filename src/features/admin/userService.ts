@@ -68,6 +68,9 @@ export interface AdminCleanerDetail extends AdminUser {
 	};
 }
 
+export type SortField = 'name' | 'email' | 'role' | 'status' | 'last_online' | 'joined';
+export type SortDirection = 'asc' | 'desc';
+
 export interface UserFilters {
 	role?: UserRole;
 	search?: string;
@@ -86,6 +89,8 @@ export const userService = {
 		filters: UserFilters = {},
 		page = 1,
 		limit = 20,
+		sortField: SortField = 'name',
+		sortDirection: SortDirection = 'asc',
 	): Promise<ActionResult<AdminUser[]>> {
 		const { role, search } = filters;
 
@@ -94,6 +99,8 @@ export const userService = {
 			p_search: search || undefined,
 			p_page: page,
 			p_limit: limit,
+			p_sort_field: sortField,
+			p_sort_direction: sortDirection,
 		});
 
 		if (error) {
@@ -203,13 +210,15 @@ export const userService = {
 	async inviteUser(email: string, role: UserRole, fullName: string): Promise<ActionResult<void>> {
 		const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 		const edgeFunctionUrl = `${supabaseUrl}/functions/v1/invite-user`;
-		const { data: { session } } = await supabase.auth.getSession();
+		const {
+			data: { session },
+		} = await supabase.auth.getSession();
 
 		const response = await fetch(edgeFunctionUrl, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${session?.access_token}`,
+				Authorization: `Bearer ${session?.access_token}`,
 			},
 			body: JSON.stringify({ email, role, full_name: fullName }),
 		});

@@ -1,0 +1,282 @@
+BEGIN;
+
+CREATE
+OR REPLACE FUNCTION public.admin_get_revenue_metrics (p_months INT DEFAULT 1) RETURNS TABLE (
+    completed_count INT,
+    cancelled_count INT,
+    pending_count INT,
+    in_progress_count INT,
+    revenue_current NUMERIC,
+    revenue_last_month NUMERIC,
+    avg_completion_hours NUMERIC,
+    revenue_change_pct NUMERIC,
+    completed_change_pct NUMERIC
+) SECURITY DEFINER
+SET
+    search_path = public AS $$
+BEGIN
+    RETURN QUERY
+    WITH current_month AS (
+        SELECT 
+            COUNT(*) FILTER (WHERE c.status = 'completed')::INT AS completed,
+            COUNT(*) FILTER (WHERE c.status = 'cancelled')::INT AS cancelled,
+            COUNT(*) FILTER (WHERE c.status = 'requested')::INT AS pending,
+            COUNT(*) FILTER (WHERE c.status = 'confirmed')::INT AS confirmed,
+            COUNT(*) FILTER (WHERE c.status = 'in_progress')::INT AS in_progress,
+            COALESCE(SUM(c.service_cost) FILTER (WHERE c.status = 'completed'), 0)::NUMERIC AS revenue,
+            AVG(EXTRACT(EPOCH FROM (c.clock_out_time - c.clock_in_time)) / 3600) FILTER (WHERE c.status = 'completed' AND c.clock_out_time IS NOT NULL AND c.clock_in_time IS NOT NULL)::NUMERIC AS avg_hours
+        FROM public.cleanings c
+        WHERE c.deleted_at IS NULL
+        AND DATE_TRUNC('month', c.scheduled_start) = DATE_TRUNC('month', NOW())
+     ),
+     last_month AS (
+        SELECT 
+            COALESCE(SUM(c.service_cost), 0)::NUMERIC AS revenue,
+            COUNT(*) FILTER (WHERE c.status = 'completed')::INT AS completed
+        FROM public.cleanings c
+        WHERE c.deleted_at IS NULL
+        AND DATE_TRUNC('month', c.scheduled_start) = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
+    )
+    SELECT 
+        COALESCE(current_month.completed, 0)::INT AS completed_count,
+        COALESCE(current_month.cancelled, 0)::INT AS cancelled_count,
+        COALESCE(current_month.pending, 0)::INT AS pending_count,
+        COALESCE(current_month.in_progress, 0)::INT AS in_progress_count,
+        COALESCE(current_month.revenue, 0)::NUMERIC AS revenue_current,
+        COALESCE(last_month.revenue, 0)::NUMERIC AS revenue_last_month,
+        COALESCE(current_month.avg_hours, 0)::NUMERIC AS avg_completion_hours,
+        CASE WHEN COALESCE(last_month.revenue, 0) = 0 THEN 0::NUMERIC
+            ELSE ((COALESCE(current_month.revenue, 0) - COALESCE(last_month.revenue, 0)) / NULLIF(COALESCE(last_month.revenue, 0), 0) * 100)::NUMERIC
+        END AS revenue_change_pct,
+        CASE WHEN COALESCE(last_month.completed, 0) = 0 THEN 0::NUMERIC
+            ELSE ((COALESCE(current_month.completed, 0) - COALESCE(last_month.completed, 0)) / NULLIF(COALESCE(last_month.completed, 0), 0) * 100)::NUMERIC
+        END AS completed_change_pct
+    FROM current_month, last_month;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE
+OR REPLACE FUNCTION public.admin_get_monthly_stats (p_months INT DEFAULT 6) RETURNS TABLE (month TEXT, cleanings INT, revenue NUMERIC) SECURITY DEFINER
+SET
+    search_path = public AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        TO_CHAR(DATE_TRUNC('month', c.scheduled_start), 'Mon YYYY') AS month,
+        COUNT(*)::INT AS cleanings,
+        COALESCE(SUM(COALESCE(c.service_cost)) FILTER (WHERE c.status = 'completed'), 0)::NUMERIC AS revenue
+    FROM public.cleanings c
+    WHERE c.deleted_at IS NULL
+    AND c.scheduled_start > NOW() - (p_months || ' months')::INTERVAL
+    GROUP BY DATE_TRUNC('month', c.scheduled_start)
+    ORDER BY DATE_TRUNC('month', c.scheduled_start);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE
+OR REPLACE FUNCTION public.admin_get_user_growth_by_month (p_months INT DEFAULT 6) RETURNS TABLE (month TEXT, hosts INT, cleaners INT) SECURITY DEFINER
+SET
+    search_path = public AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        TO_CHAR(DATE_TRUNC('month', au.created_at), 'Mon YYYY') AS month,
+        COUNT(*) FILTER (WHERE p.role::TEXT = 'host')::INT AS hosts,
+        COUNT(*) FILTER (WHERE p.role::TEXT = 'cleaner')::INT AS cleaners
+    FROM public.profiles p
+    JOIN auth.users au ON p.id = au.id
+    WHERE au.created_at > NOW() - (p_months || ' months')::INTERVAL
+    GROUP BY DATE_TRUNC('month', au.created_at)
+    ORDER BY DATE_TRUNC('month', au.created_at);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE
+OR REPLACE FUNCTION public.admin_get_active_cleanings () RETURNS TABLE (status TEXT, count INT) SECURITY DEFINER
+SET
+    search_path = public AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        c.status::TEXT AS status,
+        COUNT(*)::INT AS count
+    FROM public.cleanings c
+    WHERE c.deleted_at IS NULL
+    AND c.status IN ('requested', 'confirmed', 'in_progress')
+    GROUP BY c.status
+    ORDER BY count DESC;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE
+OR REPLACE FUNCTION public.admin_get_cleanings_over_time (
+    p_start_date TIMESTAMP WITH TIME ZONE DEFAULT NOW() - INTERVAL '180 days',
+    p_end_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+) RETURNS TABLE (date TEXT, cleanings INT) SECURITY DEFINER
+SET
+    search_path = public AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        TO_CHAR(DATE_TRUNC('month', c.created_at), 'Mon YYYY') AS date,
+        COUNT(*)::INT AS cleanings
+    FROM public.cleanings c
+    WHERE c.deleted_at IS NULL
+    AND c.created_at BETWEEN p_start_date AND p_end_date
+    GROUP BY DATE_TRUNC('month', c.created_at)
+    ORDER BY DATE_TRUNC('month', c.created_at);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE
+OR REPLACE FUNCTION public.admin_get_revenue_over_time (
+    p_start_date TIMESTAMP WITH TIME ZONE DEFAULT NOW() - INTERVAL '180 days',
+    p_end_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+) RETURNS TABLE (date TEXT, revenue NUMERIC) SECURITY DEFINER
+SET
+    search_path = public AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        TO_CHAR(DATE_TRUNC('month', c.scheduled_start), 'Mon YYYY') AS date,
+        COALESCE(SUM(c.service_cost), 0)::NUMERIC AS revenue
+    FROM public.cleanings c
+    WHERE c.deleted_at IS NULL
+    AND c.status = 'completed'
+    AND c.scheduled_start BETWEEN p_start_date AND p_end_date
+    GROUP BY DATE_TRUNC('month', c.scheduled_start)
+    ORDER BY DATE_TRUNC('month', c.scheduled_start);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE
+OR REPLACE FUNCTION public.admin_get_user_growth (
+    p_start_date TIMESTAMP WITH TIME ZONE DEFAULT NOW() - INTERVAL '180 days',
+    p_end_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+) RETURNS TABLE (date TEXT, hosts INT, cleaners INT) SECURITY DEFINER
+SET
+    search_path = public AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        TO_CHAR(DATE_TRUNC('month', p.created_at), 'Mon YYYY') AS date,
+        COUNT(*) FILTER (WHERE p.role::TEXT = 'host')::INT AS hosts,
+        COUNT(*) FILTER (WHERE p.role::TEXT = 'cleaner')::INT AS cleaners
+    FROM public.profiles p
+    WHERE p.created_at BETWEEN p_start_date AND p_end_date
+    GROUP BY DATE_TRUNC('month', p.created_at)
+    ORDER BY DATE_TRUNC('month', p.created_at);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE
+OR REPLACE FUNCTION public.admin_get_cleaning_status_breakdown (
+    p_start_date TIMESTAMP WITH TIME ZONE DEFAULT NOW() - INTERVAL '180 days',
+    p_end_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+) RETURNS TABLE (status TEXT, count INT) SECURITY DEFINER
+SET
+    search_path = public AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        c.status::TEXT AS status,
+        COUNT(*)::INT AS count
+    FROM public.cleanings c
+    WHERE c.deleted_at IS NULL
+    AND c.created_at BETWEEN p_start_date AND p_end_date
+    GROUP BY c.status
+    ORDER BY count DESC;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE
+OR REPLACE FUNCTION public.admin_get_volume_metrics_trend (p_period_days INT DEFAULT 30) RETURNS TABLE (
+    active_properties INT,
+    active_hosts INT,
+    active_cleaners INT,
+    completed_current INT,
+    completed_previous INT,
+    total_current INT,
+    total_previous INT,
+    properties_change NUMERIC,
+    completed_change NUMERIC,
+    total_change NUMERIC
+) SECURITY DEFINER
+SET
+    search_path = public AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        (SELECT COUNT(*)::INT FROM public.properties WHERE deleted_at IS NULL) AS active_properties,
+        (SELECT COUNT(*)::INT FROM public.profiles WHERE role::TEXT = 'host') AS active_hosts,
+        (SELECT COUNT(*)::INT FROM public.profiles WHERE role::TEXT = 'cleaner') AS active_cleaners,
+        
+        (SELECT COUNT(*)::INT FROM public.cleanings 
+         WHERE status = 'completed' 
+         AND deleted_at IS NULL
+         AND created_at > NOW() - (p_period_days || ' days')::INTERVAL) AS completed_current,
+         
+        (SELECT COUNT(*)::INT FROM public.cleanings 
+         WHERE status = 'completed' 
+         AND deleted_at IS NULL
+         AND created_at > NOW() - ((p_period_days * 2) || ' days')::INTERVAL
+         AND created_at <= NOW() - (p_period_days || ' days')::INTERVAL) AS completed_previous,
+         
+        (SELECT COUNT(*)::INT FROM public.cleanings 
+         WHERE deleted_at IS NULL
+         AND created_at > NOW() - (p_period_days || ' days')::INTERVAL) AS total_current,
+         
+        (SELECT COUNT(*)::INT FROM public.cleanings 
+         WHERE deleted_at IS NULL
+         AND created_at > NOW() - ((p_period_days * 2) || ' days')::INTERVAL
+         AND created_at <= NOW() - (p_period_days || ' days')::INTERVAL) AS total_previous,
+         
+        CASE 
+            WHEN (SELECT COUNT(*)::INT FROM public.properties WHERE deleted_at IS NULL AND created_at > NOW() - (p_period_days || ' days')::INTERVAL) = 0 THEN 0
+            ELSE ((SELECT COUNT(*)::NUMERIC FROM public.properties WHERE deleted_at IS NULL AND created_at > NOW() - (p_period_days || ' days')::INTERVAL) / 
+                 NULLIF((SELECT COUNT(*)::NUMERIC FROM public.properties WHERE deleted_at IS NULL), 0) * 100)
+        END AS properties_change,
+        
+        CASE 
+            WHEN (SELECT COUNT(*)::INT FROM public.cleanings 
+                 WHERE status = 'completed' 
+                 AND deleted_at IS NULL
+                 AND created_at > NOW() - ((p_period_days * 2) || ' days')::INTERVAL
+                 AND created_at <= NOW() - (p_period_days || ' days')::INTERVAL) = 0 THEN 0
+            ELSE (((SELECT COUNT(*)::NUMERIC FROM public.cleanings 
+                    WHERE status = 'completed' 
+                    AND deleted_at IS NULL
+                    AND created_at > NOW() - (p_period_days || ' days')::INTERVAL) -
+                   (SELECT COUNT(*)::NUMERIC FROM public.cleanings 
+                    WHERE status = 'completed' 
+                    AND deleted_at IS NULL
+                    AND created_at > NOW() - ((p_period_days * 2) || ' days')::INTERVAL
+                    AND created_at <= NOW() - (p_period_days || ' days')::INTERVAL)) /
+                  NULLIF((SELECT COUNT(*)::NUMERIC FROM public.cleanings 
+                        WHERE status = 'completed' 
+                        AND deleted_at IS NULL
+                        AND created_at > NOW() - ((p_period_days * 2) || ' days')::INTERVAL
+                        AND created_at <= NOW() - (p_period_days || ' days')::INTERVAL), 0) * 100)
+        END AS completed_change,
+        
+        CASE 
+            WHEN (SELECT COUNT(*)::INT FROM public.cleanings 
+                 WHERE deleted_at IS NULL
+                 AND created_at > NOW() - ((p_period_days * 2) || ' days')::INTERVAL
+                 AND created_at <= NOW() - (p_period_days || ' days')::INTERVAL) = 0 THEN 0
+            ELSE (((SELECT COUNT(*)::NUMERIC FROM public.cleanings 
+                    WHERE deleted_at IS NULL
+                    AND created_at > NOW() - (p_period_days || ' days')::INTERVAL) -
+                   (SELECT COUNT(*)::NUMERIC FROM public.cleanings 
+                    WHERE deleted_at IS NULL
+                    AND created_at > NOW() - ((p_period_days * 2) || ' days')::INTERVAL
+                    AND created_at <= NOW() - (p_period_days || ' days')::INTERVAL)) /
+                  NULLIF((SELECT COUNT(*)::NUMERIC FROM public.cleanings 
+                        WHERE deleted_at IS NULL
+                        AND created_at > NOW() - ((p_period_days * 2) || ' days')::INTERVAL
+                        AND created_at <= NOW() - (p_period_days || ' days')::INTERVAL), 0) * 100)
+        END AS total_change;
+END;
+$$ LANGUAGE plpgsql;
+
+COMMIT;

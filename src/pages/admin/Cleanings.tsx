@@ -1,7 +1,7 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Home, Loader2, Search, UserPlus, UserX } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/PageHeader';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DICT } from '@/dictionary';
 import {
 	type AdminCleaning,
@@ -48,11 +49,6 @@ export function AdminCleaningsPage() {
 	const [selectedCleaning, setSelectedCleaning] = useState<string>('');
 	const [selectedCleaner, setSelectedCleaner] = useState<string>('');
 	const [assigning, setAssigning] = useState(false);
-
-	const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
-	const [selectedStatusCleaning, setSelectedStatusCleaning] = useState<string>('');
-	const [newStatus, setNewStatus] = useState<string>('requested');
-	const [updatingStatus, setUpdatingStatus] = useState(false);
 
 	const fetchCleanings = useCallback(async () => {
 		setLoading(true);
@@ -125,23 +121,11 @@ export function AdminCleaningsPage() {
 		}
 	};
 
-	const handleUpdateStatus = async () => {
-		setUpdatingStatus(true);
-		const result = await cleaningService.updateStatus(
-			selectedStatusCleaning,
-			newStatus as CleaningStatus,
-		);
-		setUpdatingStatus(false);
-		if (result.error) {
-			toast.error(result.error);
-		} else {
-			toast.success('Status updated');
-			setIsStatusModalOpen(false);
-			fetchCleanings();
-		}
+	const openAssignModal = (cleaningId: string) => {
+		setSelectedCleaning(cleaningId);
+		setSelectedCleaner('');
+		setIsAssignModalOpen(true);
 	};
-
-	const filteredCleanings = cleanings;
 
 	const d = DICT.ADMIN.CLEANINGS;
 
@@ -167,14 +151,19 @@ export function AdminCleaningsPage() {
 		return colors[status] || 'bg-gray-100 text-gray-700';
 	};
 
+	const isDisabled = (cleaning: AdminCleaning) =>
+		cleaning.status === 'in_progress' || cleaning.status === 'completed';
+
 	return (
 		<main className="max-width-container">
 			<PageHeader title={d.TITLE} description="Manage cleaning requests" />
 
 			<Card className="mb-6 py-1">
-				<div className="p-4 flex flex-wrap gap-4">
-					<div className="flex-1 min-w-[200px]">
+				<div className="p-3 flex flex-wrap gap-4">
+					<div className="flex-1 relative min-w-[200px]">
+						<Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
 						<Input
+							className="h-8 pl-9"
 							placeholder="Search..."
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
@@ -223,6 +212,7 @@ export function AdminCleaningsPage() {
 						</SelectContent>
 					</Select>
 					<Button
+						className="h-8"
 						variant="outline"
 						onClick={() => {
 							setSearchQuery('');
@@ -240,94 +230,206 @@ export function AdminCleaningsPage() {
 					<div className="flex items-center justify-center p-12">
 						<Loader2 className="size-8 animate-spin text-muted-foreground" />
 					</div>
-				) : filteredCleanings.length === 0 ? (
+				) : cleanings.length === 0 ? (
 					<div className="p-12 text-center text-muted-foreground">No cleaning requests found</div>
 				) : (
-					<div className="overflow-x-auto">
-						<table className="w-full">
-							<thead className="bg-muted/50">
-								<tr>
-									<th className="text-left p-4 font-medium">Date</th>
-									<th className="text-left p-4 font-medium">Property</th>
-									<th className="text-left p-4 font-medium">Host</th>
-									<th className="text-left p-4 font-medium">Cleaner</th>
-									<th className="text-left p-4 font-medium">Status</th>
-									<th className="text-left p-4 font-medium">Cost</th>
-									<th className="text-right p-4 font-medium">Actions</th>
-								</tr>
-							</thead>
-							<tbody>
-								{filteredCleanings.map((cleaning) => (
-									<tr key={cleaning.id} className="border-t hover:bg-muted/30">
-										<td className="p-4">
-											<div className="font-medium">
-												{new Date(cleaning.scheduled_start).toLocaleDateString()}
-											</div>
-											<div className="text-sm text-muted-foreground">
-												{new Date(cleaning.scheduled_start).toLocaleTimeString([], {
+					<>
+						<div className="grid gap-4 md:hidden p-4">
+							{cleanings.map((cleaning) => (
+								<Card key={cleaning.id} className="p-4">
+									<div className="flex items-center gap-3 mb-3">
+										<div className="size-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+											<Home className="size-5 text-muted-foreground" />
+										</div>
+										<div className="min-w-0 flex-1">
+											<p className="font-medium truncate">{cleaning.property_address}</p>
+											<p className="text-sm text-muted-foreground truncate">
+												{cleaning.property_postcode}
+											</p>
+										</div>
+									</div>
+
+									<div className="flex flex-col">
+										{[
+											{
+												label: 'Date',
+												value: new Date(cleaning.scheduled_start).toLocaleDateString(),
+											},
+											{
+												label: 'Time',
+												value: new Date(cleaning.scheduled_start).toLocaleTimeString([], {
 													hour: '2-digit',
 													minute: '2-digit',
-												})}
+												}),
+											},
+											{ label: 'Host', value: cleaning.host_name || '-' },
+											{
+												label: 'Cleaner',
+												value: cleaning.cleaner_name || (
+													<span className="text-muted-foreground">Unassigned</span>
+												),
+											},
+											{
+												label: 'Status',
+												value: (
+													<Badge
+														className={`${getStatusBadge(cleaning.status)} capitalize text-xs`}>
+														{cleaning.status.replace('_', ' ')}
+													</Badge>
+												),
+											},
+											{ label: 'Cost', value: `£${cleaning.service_cost}` },
+										].map((item) => (
+											<div
+												key={item.label}
+												className="grid grid-cols-[1fr_1.5fr] border-b last:border-0 text-sm">
+												<div className="py-2 font-medium border-r">{item.label}</div>
+												<div className="px-3 py-2 flex items-center justify-center">
+													{item.value}
+												</div>
 											</div>
-										</td>
-										<td className="p-4">
-											<div className="font-medium">{cleaning.property_address}</div>
-											<div className="text-sm text-muted-foreground">
-												{cleaning.property_postcode}
-											</div>
-										</td>
-										<td className="p-4">{cleaning.host_name}</td>
-										<td className="p-4">
-											{cleaning.cleaner_name || (
-												<span className="text-muted-foreground">Unassigned</span>
-											)}
-										</td>
-										<td className="p-4">
-											<Badge className={`${getStatusBadge(cleaning.status)} capitalize`}>
-												{cleaning.status.replace('_', ' ')}
-											</Badge>
-										</td>
-										<td className="p-4 font-medium">£{cleaning.service_cost}</td>
-										<td className="p-4 text-right">
-											<Select
-												onValueChange={(value) => {
-													if (value === 'assign') {
-														setSelectedCleaning(cleaning.id);
-														setIsAssignModalOpen(true);
-													} else if (value === 'unassign') {
-														handleUnassignCleaner(cleaning.id);
-													} else if (value === 'status') {
-														setSelectedStatusCleaning(cleaning.id);
-														setNewStatus(cleaning.status);
-														setIsStatusModalOpen(true);
-													}
-												}}
-												disabled={
-													cleaning.status === 'in_progress' || cleaning.status === 'completed'
-												}>
-												<SelectTrigger className="w-[110px] ml-auto">
-													<SelectValue placeholder="Actions" />
-												</SelectTrigger>
-												<SelectContent>
-													<SelectItem value="assign">Assign</SelectItem>
-													{cleaning.cleaner_id && (
-														<SelectItem value="unassign">Unassign</SelectItem>
-													)}
-													<SelectItem value="status">Change Status</SelectItem>
-												</SelectContent>
-											</Select>
-										</td>
+										))}
+									</div>
+
+									<div className="flex gap-2 pt-3 border-t">
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<span>
+													<Button
+														variant="secondary"
+														size="sm"
+														className="h-8 w-8 p-0"
+														disabled={isDisabled(cleaning)}
+														onClick={() => openAssignModal(cleaning.id)}>
+														<UserPlus className="size-4" />
+													</Button>
+												</span>
+											</TooltipTrigger>
+											<TooltipContent>
+												<p>{cleaning.cleaner_id ? 'Reassign Cleaner' : 'Assign Cleaner'}</p>
+											</TooltipContent>
+										</Tooltip>
+										{cleaning.cleaner_id && (
+											<Tooltip>
+												<TooltipTrigger asChild>
+													<span>
+														<Button
+															variant="secondary"
+															size="sm"
+															className="h-8 w-8 p-0"
+															disabled={isDisabled(cleaning)}
+															onClick={() => handleUnassignCleaner(cleaning.id)}>
+															<UserX className="size-4" />
+														</Button>
+													</span>
+												</TooltipTrigger>
+												<TooltipContent>
+													<p>Unassign Cleaner</p>
+												</TooltipContent>
+											</Tooltip>
+										)}
+									</div>
+								</Card>
+							))}
+						</div>
+
+						<div className="hidden md:block overflow-x-auto">
+							<table className="w-full">
+								<thead className="bg-muted/50">
+									<tr>
+										<th className="text-left p-4 font-medium">Date</th>
+										<th className="text-left p-4 font-medium">Property Address</th>
+										<th className="text-left p-4 font-medium">Host</th>
+										<th className="text-left p-4 font-medium">Cleaner</th>
+										<th className="text-left p-4 font-medium">Status</th>
+										<th className="text-left p-4 font-medium">Cost</th>
+										<th className="text-right p-4 font-medium">Actions</th>
 									</tr>
-								))}
-							</tbody>
-						</table>
-					</div>
+								</thead>
+								<tbody>
+									{cleanings.map((cleaning) => (
+										<tr key={cleaning.id} className="border-t hover:bg-muted/30">
+											<td className="p-4">
+												<div className="font-medium">
+													{new Date(cleaning.scheduled_start).toLocaleDateString()}
+												</div>
+												<div className="text-sm text-muted-foreground">
+													{new Date(cleaning.scheduled_start).toLocaleTimeString([], {
+														hour: '2-digit',
+														minute: '2-digit',
+													})}
+												</div>
+											</td>
+											<td className="p-4">
+												<div className="font-medium">{cleaning.property_address}</div>
+												<div className="text-sm text-muted-foreground">
+													{cleaning.property_postcode}
+												</div>
+											</td>
+											<td className="p-4">{cleaning.host_name}</td>
+											<td className="p-4">
+												{cleaning.cleaner_name || (
+													<span className="text-muted-foreground">Unassigned</span>
+												)}
+											</td>
+											<td className="p-4">
+												<Badge className={`${getStatusBadge(cleaning.status)} capitalize`}>
+													{cleaning.status.replace('_', ' ')}
+												</Badge>
+											</td>
+											<td className="p-4 font-medium">£{cleaning.service_cost}</td>
+											<td className="p-4 text-right">
+												<div className="flex items-center justify-end gap-1">
+													<Tooltip>
+														<TooltipTrigger asChild>
+															<span>
+																<Button
+																	variant="secondary"
+																	size="sm"
+																	className="h-8 w-8 p-0"
+																	disabled={isDisabled(cleaning)}
+																	onClick={() => openAssignModal(cleaning.id)}>
+																	<UserPlus className="size-4" />
+																</Button>
+															</span>
+														</TooltipTrigger>
+														<TooltipContent>
+															<p>{cleaning.cleaner_id ? 'Reassign Cleaner' : 'Assign Cleaner'}</p>
+														</TooltipContent>
+													</Tooltip>
+													{cleaning.cleaner_id && (
+														<Tooltip>
+															<TooltipTrigger asChild>
+																<span>
+																	<Button
+																		variant="secondary"
+																		size="sm"
+																		className="h-8 w-8 p-0"
+																		disabled={isDisabled(cleaning)}
+																		onClick={() => handleUnassignCleaner(cleaning.id)}>
+																		<UserX className="size-4" />
+																	</Button>
+																</span>
+															</TooltipTrigger>
+															<TooltipContent>
+																<p>Unassign Cleaner</p>
+															</TooltipContent>
+														</Tooltip>
+													)}
+												</div>
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
+						</div>
+					</>
 				)}
 
 				{totalCount > limit && (
 					<div className="flex items-center justify-between p-4 border-t">
 						<p className="text-sm text-muted-foreground">
-							Showing {filteredCleanings.length} of {totalCount}
+							Showing {cleanings.length} of {totalCount}
 						</p>
 						<div className="flex gap-2">
 							<Button
@@ -352,7 +454,11 @@ export function AdminCleaningsPage() {
 			<Dialog open={isAssignModalOpen} onOpenChange={setIsAssignModalOpen}>
 				<DialogContent>
 					<DialogHeader>
-						<DialogTitle>Assign Cleaner</DialogTitle>
+						<DialogTitle>
+							{cleanings.find((c) => c.id === selectedCleaning)?.cleaner_id
+								? 'Reassign Cleaner'
+								: 'Assign Cleaner'}
+						</DialogTitle>
 						<DialogDescription>Select which cleaner to assign</DialogDescription>
 					</DialogHeader>
 					<div className="space-y-4">
@@ -373,39 +479,13 @@ export function AdminCleaningsPage() {
 								Cancel
 							</Button>
 							<Button onClick={handleAssignCleaner} disabled={assigning}>
-								{assigning ? <Loader2 className="size-4 animate-spin" /> : 'Assign'}
-							</Button>
-						</div>
-					</div>
-				</DialogContent>
-			</Dialog>
-
-			<Dialog open={isStatusModalOpen} onOpenChange={setIsStatusModalOpen}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>Change Status</DialogTitle>
-						<DialogDescription>Select new status</DialogDescription>
-					</DialogHeader>
-					<div className="space-y-4">
-						<Select value={newStatus} onValueChange={setNewStatus}>
-							<SelectTrigger>
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="draft">Draft</SelectItem>
-								<SelectItem value="requested">Requested</SelectItem>
-								<SelectItem value="confirmed">Confirmed</SelectItem>
-								<SelectItem value="in_progress">In Progress</SelectItem>
-								<SelectItem value="completed">Completed</SelectItem>
-								<SelectItem value="cancelled">Cancelled</SelectItem>
-							</SelectContent>
-						</Select>
-						<div className="flex justify-end gap-2">
-							<Button variant="outline" onClick={() => setIsStatusModalOpen(false)}>
-								Cancel
-							</Button>
-							<Button onClick={handleUpdateStatus} disabled={updatingStatus}>
-								{updatingStatus ? <Loader2 className="size-4 animate-spin" /> : 'Update'}
+								{assigning ? (
+									<Loader2 className="size-4 animate-spin" />
+								) : cleanings.find((c) => c.id === selectedCleaning)?.cleaner_id ? (
+									'Reassign'
+								) : (
+									'Assign'
+								)}
 							</Button>
 						</div>
 					</div>

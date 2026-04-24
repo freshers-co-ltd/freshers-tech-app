@@ -3,6 +3,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { Toaster } from '@/components/Toast';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthProvider } from '@/features/auth/AuthContext';
 import { CleaningProvider } from '@/features/cleanings/CleaningContext';
 import { PropertyProvider } from '@/features/properties/PropertyContext';
@@ -30,8 +31,10 @@ createRoot(rootElement).render(
 		<AuthProvider>
 			<PropertyProvider>
 				<CleaningProvider>
-					<RouterProvider router={router} />
-					<Toaster />
+					<TooltipProvider>
+						<RouterProvider router={router} />
+						<Toaster />
+					</TooltipProvider>
 				</CleaningProvider>
 			</PropertyProvider>
 		</AuthProvider>

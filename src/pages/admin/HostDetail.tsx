@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, Loader2, Plus, User } from 'lucide-react';
+import { ArrowLeft, ArrowUp, KeyRound, Loader2, Plus, User } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DICT } from '@/dictionary';
 import { cleaningService } from '@/features/admin/cleaningService';
 import { type AdminHostDetail, userService } from '@/features/admin/userService';
@@ -53,6 +53,50 @@ export function AdminHostDetailPage() {
 	useEffect(() => {
 		fetchHostDetail();
 	}, [fetchHostDetail]);
+
+	const handleResetPassword = async () => {
+		if (!host) {
+			return;
+		}
+		const result = await userService.resetPassword(host.id);
+		if (result.error) {
+			toast.error(result.error);
+		} else {
+			toast.success('Password reset email sent');
+		}
+	};
+
+	const handleBan = async () => {
+		if (!host) {
+			return;
+		}
+		if (!window.confirm('Are you sure you want to ban this user?')) {
+			return;
+		}
+		const result = await userService.banUser(host.id);
+		if (result.error) {
+			toast.error(result.error);
+		} else {
+			toast.success('User banned');
+			fetchHostDetail();
+		}
+	};
+
+	const handleUnban = async () => {
+		if (!host) {
+			return;
+		}
+		if (!window.confirm('Are you sure you want to unban this user?')) {
+			return;
+		}
+		const result = await userService.unbanUser(host.id);
+		if (result.error) {
+			toast.error(result.error);
+		} else {
+			toast.success('User unbanned');
+			fetchHostDetail();
+		}
+	};
 
 	const handleCreateCleaning = async () => {
 		if (!host || !selectedProperty || !scheduledStart) {
@@ -96,126 +140,169 @@ export function AdminHostDetailPage() {
 
 	return (
 		<main className="max-width-container">
-			<Button variant="ghost" onClick={() => navigate('/admin/users')} className="mb-4">
-				<ArrowLeft className="size-4 mr-2" />
-				Back to Users
-			</Button>
-			<PageHeader title={host.full_name || 'Host Details'} description={host.email || ''} />
-			<div className="grid gap-6 md:grid-cols-2">
-				<Card className="p-6">
-					<h3 className="text-lg font-semibold mb-4">Profile</h3>
-					<div className="flex items-center gap-4 mb-4">
-						<div className="size-16 rounded-full bg-muted flex items-center justify-center">
-							<User className="size-8 text-muted-foreground" />
-						</div>
-						<div>
-							<p className="text-xl font-bold">{host.full_name || 'Unknown'}</p>
-							<p className="text-muted-foreground">{host.email}</p>
-						</div>
-					</div>
-					<Separator className="my-4" />
-					<div className="space-y-2">
-						<p>
-							<span className="text-muted-foreground">Status:</span>{' '}
-							<span className={host.banned_until ? 'text-warning' : 'text-success'}>
-								{host.banned_until ? 'Banned' : 'Online'}
+			<div className="flex items-center justify-between mb-4">
+				<Button variant="ghost" onClick={() => navigate('/admin/users')}>
+					<ArrowLeft className="size-4 mr-2" />
+					Back
+				</Button>
+				<div className="flex gap-2">
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<span>
+								<Button variant="outline" size="sm" onClick={handleResetPassword}>
+									<KeyRound className="size-4 mr-2" />
+									Reset Password
+								</Button>
 							</span>
-						</p>
-						<p>
-							<span className="text-muted-foreground">Verified:</span>{' '}
-							{host.is_verified ? 'Yes' : 'No'}
-						</p>
+						</TooltipTrigger>
+						<TooltipContent>
+							<p>Send password reset email</p>
+						</TooltipContent>
+					</Tooltip>
+					{host.banned_until ? (
+						<Button variant="outline" size="sm" onClick={handleUnban}>
+							<ArrowUp className="size-4 mr-2" />
+							Unban
+						</Button>
+					) : (
+						<Button variant="destructive" size="sm" onClick={handleBan}>
+							<ArrowUp className="size-4 mr-2" />
+							Ban
+						</Button>
+					)}
+				</div>
+			</div>
+
+			<PageHeader title={host.full_name || 'Host Details'} description={host.email || ''} />
+
+			<div className="grid gap-4 md:grid-cols-2 mb-6">
+				<Card className="p-4">
+					<div className="flex items-center gap-3">
+						<div className="size-12 rounded-full bg-muted flex items-center justify-center shrink-0">
+							{host.avatar_url ? (
+								<img src={host.avatar_url} alt="" className="size-full rounded-full object-cover" />
+							) : (
+								<User className="size-5 text-muted-foreground" />
+							)}
+						</div>
+						<div className="flex-1 min-w-0">
+							<p className="font-semibold truncate">{host.full_name || 'Unknown'}</p>
+							<p className="text-sm text-muted-foreground truncate">{host.email}</p>
+							<div className="flex items-center gap-2 mt-1">
+								<span
+									className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+										host.banned_until ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+									}`}>
+									{host.banned_until ? 'Banned' : 'Active'}
+								</span>
+								{host.is_verified && (
+									<span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+										Verified
+									</span>
+								)}
+							</div>
+						</div>
 					</div>
 				</Card>
-				<Card className="p-6">
-					<h3 className="text-lg font-semibold mb-4">{d.STATS}</h3>
-					<div className="grid grid-cols-2 gap-4">
-						<div className="text-center p-4 bg-muted/50 rounded-lg">
-							<p className="text-3xl font-bold">{stats?.total || 0}</p>
-							<p className="text-sm text-muted-foreground">Total Cleanings</p>
+				<Card className="p-4">
+					<div className="grid grid-cols-4 gap-3 text-center">
+						<div>
+							<p className="text-xl font-bold">{stats?.total || 0}</p>
+							<p className="text-xs text-muted-foreground">Total</p>
 						</div>
-						<div className="text-center p-4 bg-muted/50 rounded-lg">
-							<p className="text-3xl font-bold text-success">{stats?.completed || 0}</p>
-							<p className="text-sm text-muted-foreground">Completed</p>
+						<div>
+							<p className="text-xl font-bold text-green-600">{stats?.completed || 0}</p>
+							<p className="text-xs text-muted-foreground">Completed</p>
 						</div>
-						<div className="text-center p-4 bg-muted/50 rounded-lg">
-							<p className="text-3xl font-bold text-warning">{stats?.pending || 0}</p>
-							<p className="text-sm text-muted-foreground">Pending</p>
+						<div>
+							<p className="text-xl font-bold text-orange-500">{stats?.pending || 0}</p>
+							<p className="text-xs text-muted-foreground">Pending</p>
 						</div>
-						<div className="text-center p-4 bg-muted/50 rounded-lg">
-							<p className="text-3xl font-bold text-primary">{stats?.in_progress || 0}</p>
-							<p className="text-sm text-muted-foreground">In Progress</p>
+						<div>
+							<p className="text-xl font-bold text-blue-600">{stats?.in_progress || 0}</p>
+							<p className="text-xs text-muted-foreground">In Progress</p>
 						</div>
 					</div>
 				</Card>
 			</div>
-			<Card className="p-6 mt-6">
-				<div className="flex items-center justify-between mb-4">
-					<h3 className="text-lg font-semibold">{d.PROPERTIES}</h3>
+
+			<Card className="mb-4">
+				<div className="flex items-center justify-between p-4 border-b">
+					<h3 className="font-semibold">{d.PROPERTIES}</h3>
+					<span className="text-sm text-muted-foreground">
+						{properties.length} {properties.length === 1 ? 'property' : 'properties'}
+					</span>
 				</div>
 				{properties.length === 0 ? (
-					<p className="text-muted-foreground">No properties found</p>
+					<p className="p-4 text-sm text-muted-foreground">No properties found</p>
 				) : (
-					<div className="space-y-2">
+					<div className="divide-y">
 						{properties.map((property) => (
-							<div key={property.id} className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
-								<div className="size-12 rounded-md bg-muted flex items-center justify-center shrink-0">
+							<button
+								type="button"
+								key={property.id}
+								className="flex items-center gap-3 p-3 w-full text-left hover:bg-muted/50 cursor-pointer"
+								onClick={() => navigate(`/admin/cleanings?property=${property.id}`)}>
+								<div className="size-10 rounded-md bg-muted flex items-center justify-center shrink-0">
 									{property.main_image_url ? (
 										<img
 											src={property.main_image_url}
 											alt={property.address_line_1}
-											className="size-full object-cover rounded-md"
+											className="size-full rounded-md object-cover"
 										/>
 									) : (
-										<User className="size-5 text-muted-foreground" />
+										<User className="size-4 text-muted-foreground" />
 									)}
 								</div>
 								<div className="flex-1 min-w-0">
-									<p className="font-medium truncate">{property.address_line_1}</p>
-									<p className="text-sm text-muted-foreground">
+									<p className="text-sm font-medium truncate">{property.address_line_1}</p>
+									<p className="text-xs text-muted-foreground">
 										{property.postcode} {property.town_city}
 									</p>
 								</div>
-								<p className="text-sm text-muted-foreground">
-									{property.bedrooms} bed, {property.bathrooms} bath
+								<p className="text-xs text-muted-foreground">
+									{property.bedrooms}bd / {property.bathrooms}ba
 								</p>
-							</div>
+							</button>
 						))}
 					</div>
 				)}
 			</Card>
-			<Card className="p-6 mt-6">
-				<div className="flex items-center justify-between mb-4">
-					<h3 className="text-lg font-semibold">{d.CLEANINGS}</h3>
-					<Button
-						size="sm"
-						onClick={() => setIsCreateModalOpen(true)}
-						disabled={properties.length === 0}>
-						<Plus className="size-4 mr-2" />
-						{d.CREATE_CLEANING}
+
+			<Card>
+				<div className="flex items-center justify-between p-4 border-b">
+					<h3 className="font-semibold">{d.CLEANINGS}</h3>
+					<Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
+						<Plus className="size-4 mr-1" />
+						New
 					</Button>
 				</div>
 				{cleanings.length === 0 ? (
-					<p className="text-muted-foreground">No cleaning requests found</p>
+					<p className="p-4 text-sm text-muted-foreground">No cleanings found</p>
 				) : (
-					<div className="space-y-2">
+					<div className="divide-y">
 						{cleanings.map((cleaning) => (
-							<div key={cleaning.id} className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
+							<button
+								type="button"
+								key={cleaning.id}
+								className="flex items-center gap-3 p-3 w-full text-left hover:bg-muted/50 cursor-pointer"
+								onClick={() => navigate(`/admin/cleanings?cleaning=${cleaning.id}`)}>
 								<div className="flex-1 min-w-0">
-									<p className="font-medium truncate">
-										Property: {cleaning.property_id.slice(0, 8)}...
+									<p className="text-sm font-medium truncate">
+										{cleaning.property_id.slice(0, 8)}...
 									</p>
-									<p className="text-sm text-muted-foreground">
-										Scheduled: {new Date(cleaning.scheduled_start).toLocaleDateString()}
+									<p className="text-xs text-muted-foreground">
+										{new Date(cleaning.scheduled_start).toLocaleDateString()}
 									</p>
 								</div>
 								<CleaningStatusBadge status={cleaning.status} />
 								<p className="text-sm font-medium">£{cleaning.service_cost}</p>
-							</div>
+							</button>
 						))}
 					</div>
 				)}
 			</Card>
+
 			<Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
 				<DialogContent>
 					<DialogHeader>

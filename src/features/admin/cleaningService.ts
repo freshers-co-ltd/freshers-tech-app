@@ -28,7 +28,7 @@ export interface AdminCleaning {
 
 export interface CleaningFilters {
 	status?: CleaningStatus;
-	cleanerId?: string;
+	cleanerId?: string | null;
 	hostId?: string;
 	search?: string;
 }
@@ -50,7 +50,7 @@ export const cleaningService = {
 
 		const { data, error } = await supabase.rpc('admin_get_all_cleanings', {
 			p_status: (status ?? null) as string,
-			p_cleaner_id: (cleanerId ?? null) as string,
+			p_cleaner_id: (cleanerId === 'unassigned' ? null : (cleanerId ?? null)) as string,
 			p_host_id: (hostId ?? null) as string,
 			p_search: (search ?? null) as string,
 			p_page: page,
@@ -69,7 +69,7 @@ export const cleaningService = {
 
 		const { data, error } = await supabase.rpc('admin_get_cleanings_count', {
 			p_status: (status ?? null) as string,
-			p_cleaner_id: (cleanerId ?? null) as string,
+			p_cleaner_id: (cleanerId === 'unassigned' ? null : (cleanerId ?? null)) as string,
 			p_host_id: (hostId ?? null) as string,
 			p_search: (search ?? null) as string,
 		});

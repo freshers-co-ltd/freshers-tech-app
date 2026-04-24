@@ -35,6 +35,12 @@
 	--color-ring: oklch(83.414% 0.03681 257.439);
 	--color-popover: oklch(1 0 0);
 	--color-popover-foreground: oklch(0.129 0.042 264.695);
+
+	--color-chart-1: oklch(0.49 0.22 264);
+	--color-chart-2: oklch(0.627 0.265 150);
+	--color-chart-3: oklch(0.769 0.188 70.08);
+	--color-chart-4: oklch(0.627 0.265 150);
+	--color-chart-5: oklch(0.769 0.188 70.08);
 }
 
 @layer base {

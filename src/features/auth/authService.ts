@@ -28,8 +28,8 @@ const mapAuthError = (error: AuthError): string => {
 			return DICT.ERRORS.AUTH.INVALID_CREDENTIALS;
 		case 'email_not_confirmed':
 			return DICT.ERRORS.AUTH.EMAIL_NOT_CONFIRMED;
-        case  'user_banned':
-            return DICT.ERRORS.AUTH.USER_BANNED;
+		case 'user_banned':
+			return DICT.ERRORS.AUTH.USER_BANNED;
 		default:
 			if (error.message?.includes('Failed to fetch')) {
 				return DICT.ERRORS.COMMON.NETWORK;

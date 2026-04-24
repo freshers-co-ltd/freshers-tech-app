@@ -52,6 +52,37 @@ export interface AuditFilters {
 	actionType?: string;
 }
 
+export interface MonthlyStats {
+	month: string;
+	cleanings: number;
+	revenue: number;
+}
+
+export interface UserGrowthByMonth {
+	month: string;
+	hosts: number;
+	cleaners: number;
+}
+
+export interface StatusBreakdown {
+	status: string;
+	count: number;
+}
+
+export interface RevenueMetrics {
+	completed_count: number;
+	cancelled_count: number;
+	pending_count: number;
+	in_progress_count: number;
+	revenue_current: number;
+	revenue_last_month: number;
+	avg_completion_hours: number;
+	revenue_change_pct: number;
+	completed_change_pct: number;
+}
+
+type RpcParams = Record<string, unknown>;
+
 export const analyticsService = {
 	async getVolumeMetrics(): Promise<ActionResult<VolumeMetrics>> {
 		const { data, error } = await supabase.from('admin_volume_metrics').select('*').single();
@@ -77,6 +108,8 @@ export const analyticsService = {
 		filters: AuditFilters = {},
 		page = 1,
 		limit = 50,
+		dateFrom: string | null = null,
+		dateTo: string | null = null,
 	): Promise<ActionResult<AuditLogEntry[]>> {
 		const { targetTable, actionType } = filters;
 
@@ -85,6 +118,8 @@ export const analyticsService = {
 			p_action_type: (actionType ?? null) as string,
 			p_page: page,
 			p_limit: limit,
+			p_date_from: dateFrom,
+			p_date_to: dateTo,
 		});
 
 		if (error) {
@@ -101,10 +136,89 @@ export const analyticsService = {
 			return { data: null, error: mapDatabaseError(error) };
 		}
 
-		if (!data || data.length === 0) {
+		if (!data || !Array.isArray(data) || data.length === 0) {
 			return { data: null, error: 'No stats available' };
 		}
 
 		return { data: data[0] as unknown as UserStats, error: null };
+	},
+
+	async getRevenueMetrics(): Promise<ActionResult<RevenueMetrics>> {
+		const fnName = 'admin_get_revenue_metrics' as const;
+		const { data, error } = await supabase.rpc(
+			fnName as Parameters<typeof supabase.rpc>[0],
+			{ p_months: 1 } as RpcParams,
+		);
+
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+
+		if (!data || !Array.isArray(data)) {
+			return { data: null, error: 'No revenue data available' };
+		}
+
+		return { data: data[0] as unknown as RevenueMetrics, error: null };
+	},
+
+	async getMonthlyStats(): Promise<ActionResult<MonthlyStats[]>> {
+		const fnName = 'admin_get_monthly_stats' as const;
+		const { data, error } = await supabase.rpc(
+			fnName as Parameters<typeof supabase.rpc>[0],
+			{ p_months: 6 } as RpcParams,
+		);
+
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+
+		return { data: (data ?? []) as unknown as MonthlyStats[], error: null };
+	},
+
+	async getUserGrowthByMonth(): Promise<ActionResult<UserGrowthByMonth[]>> {
+		const fnName = 'admin_get_user_growth_by_month' as const;
+		const { data, error } = await supabase.rpc(
+			fnName as Parameters<typeof supabase.rpc>[0],
+			{ p_months: 6 } as RpcParams,
+		);
+
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+
+		return { data: (data ?? []) as unknown as UserGrowthByMonth[], error: null };
+	},
+
+	async getActiveCleanings(): Promise<ActionResult<StatusBreakdown[]>> {
+		const fnName = 'admin_get_active_cleanings' as const;
+		const { data, error } = await supabase.rpc(fnName as Parameters<typeof supabase.rpc>[0]);
+
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+
+		return { data: (data ?? []) as unknown as StatusBreakdown[], error: null };
+	},
+
+	async getCleaningsOverTime(): Promise<ActionResult<MonthlyStats[]>> {
+		const fnName = 'admin_get_cleanings_over_time' as const;
+		const { data, error } = await supabase.rpc(fnName as Parameters<typeof supabase.rpc>[0]);
+
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+
+		return { data: (data ?? []) as unknown as MonthlyStats[], error: null };
+	},
+
+	async getRevenueOverTime(): Promise<ActionResult<MonthlyStats[]>> {
+		const fnName = 'admin_get_revenue_over_time' as const;
+		const { data, error } = await supabase.rpc(fnName as Parameters<typeof supabase.rpc>[0]);
+
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+
+		return { data: (data ?? []) as unknown as MonthlyStats[], error: null };
 	},
 };
