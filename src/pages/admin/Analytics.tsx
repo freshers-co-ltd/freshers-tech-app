@@ -136,7 +136,7 @@ export function AdminAnalyticsPage() {
 			label: d.VOLUME.TOTAL_EARNINGS,
 			value: revenueMetrics?.revenue_current
 				? formatCurrency(revenueMetrics.revenue_current)
-				: '£0',
+				: `${DICT.FORMAT.CURRENCY}0`,
 			icon: PoundSterling,
 			iconColor: 'text-success',
 			trend:

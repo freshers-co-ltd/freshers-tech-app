@@ -137,7 +137,10 @@ export function HostCleaningDetailView({
 								<p className="text-xs text-muted-foreground uppercase font-bold tracking-tight">
 									Total Cost
 								</p>
-								<p className="text-sm font-bold text-primary">£{cleaning.service_cost}</p>
+								<p className="text-sm font-bold text-primary">
+									{DICT.FORMAT.CURRENCY}
+									{cleaning.service_cost}
+								</p>
 							</div>
 						</div>
 					</div>

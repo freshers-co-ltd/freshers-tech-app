@@ -303,11 +303,23 @@ export const DICT = {
 	ADMIN: {
 		USERS: {
 			TITLE: 'User Management',
+			MESSAGE: 'Manage platform users',
 			TABS: {
 				ALL: 'All Users',
 				HOSTS: 'Hosts',
 				CLEANERS: 'Cleaners',
 				ADMINS: 'Admins',
+			},
+			ACTIONS: {
+				VIEW: 'View Details',
+				RESET_PASSWORD: 'Reset Password',
+				BAN: 'Ban User',
+				UNBAN: 'Unban User',
+			},
+			STATUS_LABELS: {
+				ACTIVE: 'Active',
+				BANNED: 'Banned',
+				UNKNOWN: 'Unknown',
 			},
 			SEARCH_PLACEHOLDER: 'Search by name or email...',
 			FILTER: {
@@ -318,8 +330,11 @@ export const DICT = {
 			INVITE: 'Invite User',
 			TABLE: {
 				NAME: 'Name',
+				EMAIL: 'Email',
 				ROLE: 'Role',
 				STATUS: 'Status',
+				LAST_ONLINE: 'Last Online',
+				JOINED: 'Joined',
 				PROPERTIES: 'Properties',
 				CLEANINGS: 'Cleanings',
 				ACTIONS: 'Actions',
@@ -336,12 +351,23 @@ export const DICT = {
 				STATS: 'Statistics',
 				CREATE_CLEANING: 'Create Cleaning Request',
 				ASSIGN_CLEANER: 'Assign Cleaner',
+				TITLE: 'Host Details',
+				STATUS_ACTIVE: 'Active',
+				STATUS_BANNED: 'Banned',
+				UNKNOWN: 'Unknown',
 			},
-			ACTIONS: {
-				VIEW: 'View Details',
-				RESET_PASSWORD: 'Reset Password',
-				BAN: 'Ban',
-				UNBAN: 'Unban',
+			TOASTS: {
+				PASSWORD_RESET_SENT: 'Password reset email sent',
+				BAN_CONFIRM: 'Are you sure you want to ban this user?',
+				USER_BANNED: 'User banned',
+				UNBAN_CONFIRM: 'Are you sure you want to unban this user?',
+				USER_UNBANNED: 'User unbanned',
+				FILL_REQUIRED: 'Please fill in all required fields',
+				CLEANING_CREATED: 'Cleaning request created',
+			},
+			CREATE: {
+				TITLE: 'Create Cleaning Request',
+				SUBMIT: 'Create',
 			},
 			MODAL: {
 				INVITE_TITLE: 'Invite New User',
@@ -356,12 +382,23 @@ export const DICT = {
 		},
 		CLEANINGS: {
 			TITLE: 'Cleaning Operations',
+			MESSAGE: 'Manage cleaning requests',
+			STATUS_OPTIONS: {
+				ALL: 'All Statuses',
+				DRAFT: 'Draft',
+				REQUESTED: 'Requested',
+				CONFIRMED: 'Confirmed',
+				IN_PROGRESS: 'In Progress',
+				COMPLETED: 'Completed',
+				CANCELLED: 'Cancelled',
+			},
 			TABS: {
 				ALL: 'All',
 				REQUESTED: 'Requested',
 				CONFIRMED: 'Confirmed',
 				IN_PROGRESS: 'In Progress',
 				COMPLETED: 'Completed',
+				CANCELLED: 'Cancelled',
 			},
 			TABLE: {
 				DATE: 'Date',
@@ -448,9 +485,28 @@ export const DICT = {
 			TITLE: 'Admin Dashboard',
 			WELCOME: 'Welcome, Admin',
 			MESSAGE: 'Manage your cleaning operations.',
+			GREETING: {
+				MORNING: 'Good morning',
+				AFTERNOON: 'Good afternoon',
+				EVENING: 'Good evening',
+			},
+			STATS: {
+				ACTIVE_PROPERTIES: 'Active Properties',
+				ACTIVE_HOSTS: 'Active Hosts',
+				COMPLETED_THIS_MONTH: 'Completed This Month',
+				IN_PROGRESS: 'In Progress',
+			},
+			RECENT_CLEANINGS: 'Recent Cleanings',
+			VIEW_ALL: 'View All',
+			NO_RECENT: 'No recent cleanings',
+			UNASSIGNED: 'Unassigned',
 		},
 	},
 
+	FORMAT: {
+		CURRENCY: '£',
+		CURRENCY_SYMBOL: '£',
+	},
 	ERRORS: {
 		COMMON: {
 			GENERIC: 'An unexpected error occurred. Please try again.',

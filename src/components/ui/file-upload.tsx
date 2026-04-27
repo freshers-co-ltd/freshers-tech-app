@@ -18,6 +18,7 @@ import {
 	useDropzone,
 } from 'react-dropzone';
 import { toast } from 'sonner';
+import { mediaService } from '@/lib/mediaService';
 import { cn } from '@/lib/utils';
 import { Button } from './button';
 
@@ -32,6 +33,11 @@ type FileUploaderContextType = {
 	setActiveIndex: Dispatch<SetStateAction<number>>;
 	orientation: 'horizontal' | 'vertical';
 	direction: DirectionOptions;
+	existingImages?: string[];
+	onRemoveExisting?: (path: string) => void;
+	bucket?: string;
+	maxFiles?: number;
+	value: File[] | null;
 };
 
 const FileUploaderContext = createContext<FileUploaderContextType | null>(null);
@@ -50,6 +56,9 @@ type FileUploaderProps = {
 	onValueChange: (value: File[] | null) => void;
 	dropzoneOptions: DropzoneOptions;
 	orientation?: 'horizontal' | 'vertical';
+	existingImages?: string[];
+	onRemoveExisting?: (path: string) => void;
+	bucket?: string;
 };
 
 export const FileUploader = forwardRef<
@@ -63,7 +72,10 @@ export const FileUploader = forwardRef<
 			value,
 			onValueChange,
 			reSelect,
-			orientation = 'vertical',
+			orientation = 'horizontal',
+			existingImages,
+			onRemoveExisting,
+			bucket,
 			children,
 			dir,
 			...props
@@ -227,6 +239,11 @@ export const FileUploader = forwardRef<
 					setActiveIndex,
 					orientation,
 					direction,
+					existingImages,
+					onRemoveExisting,
+					bucket,
+					maxFiles,
+					value,
 				}}>
 				<div
 					ref={ref}
@@ -247,7 +264,13 @@ FileUploader.displayName = 'FileUploader';
 
 export const FileUploaderContent = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
 	({ children, className, ...props }, ref) => {
-		const { orientation } = useFileUpload();
+		const { orientation, existingImages, onRemoveExisting, bucket, maxFiles, value } =
+			useFileUpload();
+
+		const hasNewFiles = value && value.length > 0;
+		const isSingleImage = maxFiles === 1;
+
+		const firstExistingImage = existingImages?.[0];
 
 		return (
 			<div className={cn('w-full px-1')} aria-description="content file holder">
@@ -259,6 +282,37 @@ export const FileUploaderContent = forwardRef<HTMLDivElement, React.HTMLAttribut
 						orientation === 'horizontal' ? 'grid grid-cols-2' : 'flex flex-col',
 						className,
 					)}>
+					{firstExistingImage && !hasNewFiles && (
+						<div
+							key={firstExistingImage}
+							className="relative p-0 overflow-hidden border rounded-md size-20">
+							<img
+								src={mediaService.getMediaUrl(firstExistingImage, bucket || 'property-media')}
+								alt="Current"
+								className="object-cover size-20"
+							/>
+							{isSingleImage ? (
+								<div className="absolute top-1 right-1 px-1.5 py-0.5 text-[8px] font-medium text-white rounded-md bg-primary">
+									CURRENT
+								</div>
+							) : (
+								onRemoveExisting && (
+									<Button
+										type="button"
+										variant="destructive"
+										size="xs"
+										className="absolute size-5 top-[0.145em] right-1"
+										onClick={(e) => {
+											e.preventDefault();
+											e.stopPropagation();
+											onRemoveExisting(firstExistingImage);
+										}}>
+										<Trash2 />
+									</Button>
+								)
+							)}
+						</div>
+					)}
 					{children}
 				</div>
 			</div>
@@ -287,13 +341,18 @@ export const FileUploaderItem = forwardRef<
 				{children}
 			</div>
 			<Button
+				type="button"
 				variant="destructive"
 				size="xs"
 				className={cn(
 					'absolute size-5',
 					direction === 'rtl' ? 'top-1 left-1' : 'top-[0.145em] right-1',
 				)}
-				onClick={() => removeFileFromSet(index)}>
+				onClick={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					removeFileFromSet(index);
+				}}>
 				<span className="sr-only">remove item {index}</span>
 				<Trash2 />
 			</Button>

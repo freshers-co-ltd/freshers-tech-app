@@ -55,10 +55,10 @@ type HostCleaningFormInput = {
 interface HostCleaningFormProps {
 	initialData?: CleaningRequest;
 	onSubmit: (values: HostCleaningFormValues) => Promise<void>;
-	onCancel: () => void;
+	onCancel?: () => void;
 }
 
-export function HostCleaningForm({ initialData, onSubmit, onCancel }: HostCleaningFormProps) {
+export function HostCleaningForm({ initialData, onSubmit }: HostCleaningFormProps) {
 	const isRestricted = initialData
 		? STATUS_GROUPS.CAN_EDIT_RESTRICTED.includes(initialData.status)
 		: false;
@@ -166,6 +166,11 @@ export function HostCleaningForm({ initialData, onSubmit, onCancel }: HostCleani
 		}
 	};
 
+	const handlePropertyFormCancel = () => {
+		setEntryMode('select');
+		setStep(1);
+	};
+
 	const handleFinalSubmit: SubmitHandler<HostCleaningFormValues> = async (values) => {
 		try {
 			await onSubmit(values);
@@ -177,7 +182,11 @@ export function HostCleaningForm({ initialData, onSubmit, onCancel }: HostCleani
 	return (
 		<div className="space-y-6">
 			{step === 1 && entryMode === 'create' ? (
-				<PropertyForm onSubmit={handlePropertySubmit} onCancel={onCancel} />
+				<PropertyForm
+					onSubmit={handlePropertySubmit}
+					onCancel={handlePropertyFormCancel}
+					cancelLabel={DICT.COMMON.BACK}
+				/>
 			) : (
 				<form onSubmit={handleSubmit(handleFinalSubmit)} className="space-y-6">
 					<input type="hidden" {...register('property_id')} />
@@ -351,7 +360,10 @@ export function HostCleaningForm({ initialData, onSubmit, onCancel }: HostCleani
 									<p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
 										{d.LABELS.COST}
 									</p>
-									<p className="text-2xl font-black text-primary">£{calculatedPrice.toFixed(2)}</p>
+									<p className="text-2xl font-black text-primary">
+										{DICT.FORMAT.CURRENCY}
+										{calculatedPrice.toFixed(2)}
+									</p>
 								</div>
 							</FieldGroup>
 

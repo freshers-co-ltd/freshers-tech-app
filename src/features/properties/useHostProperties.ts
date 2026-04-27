@@ -12,7 +12,7 @@ export function useHostProperties() {
 	const { user } = useAuth();
 	const { properties, upsertProperty, deleteProperty, isLoading } = useProperties();
 	const { fetchCleanings } = useCleanings();
-	const modal = useResourceModals('property');
+	const modal = useResourceModals({ resourceName: 'property' });
 
 	const viewingProperty = useMemo(() => {
 		return properties.find((p) => p.id === modal.viewId);

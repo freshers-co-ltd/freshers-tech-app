@@ -5,6 +5,7 @@ import { Banknote, Calendar, ClipboardCheck, MapPin, Pencil, Trash2 } from 'luci
 import { memo, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { DICT } from '@/dictionary';
 import { type CleaningRequest, STATUS_GROUPS } from '@/features/cleanings/cleaningService';
 import { CleaningStatusBadge } from '@/features/cleanings/components/CleaningStatusBadge';
 import { mediaService } from '@/lib/mediaService';
@@ -111,7 +112,10 @@ export const HostCleaningCard = memo(
 								<Banknote className="size-3" />
 								Cost
 							</div>
-							<p className="text-sm font-bold text-primary">£{cleaning.service_cost}</p>
+							<p className="text-sm font-bold text-primary">
+								{DICT.FORMAT.CURRENCY}
+								{cleaning.service_cost}
+							</p>
 						</div>
 					</div>
 				</CardContent>

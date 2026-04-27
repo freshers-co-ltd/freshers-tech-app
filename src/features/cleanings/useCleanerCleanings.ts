@@ -18,7 +18,7 @@ export function useCleanerCleanings() {
 		deleteEvidence,
 		upsertReport,
 	} = useCleanings();
-	const modal = useResourceModals('cleaning');
+	const modal = useResourceModals({ resourceName: 'cleaning' });
 
 	const cleanerCleanings = useMemo(
 		() => cleanings.filter((c) => c.cleaner_id === user?.id),

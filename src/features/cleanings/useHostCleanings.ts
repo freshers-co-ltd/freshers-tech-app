@@ -10,7 +10,7 @@ import { useResourceModals } from '@/hooks/useResourceModals';
 export function useHostCleanings() {
 	const { properties } = useProperties();
 	const { cleanings, upsertCleaning, deleteCleaning, isLoading } = useCleanings();
-	const modal = useResourceModals('cleaning');
+	const modal = useResourceModals({ resourceName: 'cleaning' });
 
 	const viewingCleaning = useMemo(() => {
 		return cleanings.find((c) => c.id === modal.viewId);

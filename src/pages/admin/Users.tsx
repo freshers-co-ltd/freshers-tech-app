@@ -1,9 +1,6 @@
 'use client';
 
 import {
-	ArrowDown,
-	ArrowUp,
-	ArrowUpDown,
 	Eye,
 	KeyRound,
 	Loader2,
@@ -17,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { type ColumnDef, DataTable } from '@/components/DataTable';
 import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
@@ -41,7 +39,6 @@ import { useAdminUsers } from '@/features/admin/useAdminUsers';
 import type { UserRole } from '@/features/auth/authService';
 
 type UserTab = 'all' | 'host' | 'cleaner' | 'admin';
-type SortField = 'name' | 'email' | 'role' | 'status' | 'last_online' | 'joined';
 
 export function AdminUsersPage() {
 	const navigate = useNavigate();
@@ -85,80 +82,168 @@ export function AdminUsersPage() {
 		setInviteFullName('');
 	};
 
-	const SortIcon = ({ field }: { field: SortField }) => {
-		if (sortField !== field) {
-			return <ArrowUpDown className="ml-1 size-3" />;
-		}
-		return sortDirection === 'asc' ? (
-			<ArrowUp className="ml-1 size-3" />
-		) : (
-			<ArrowDown className="ml-1 size-3" />
-		);
-	};
-
 	const getLastOnlineText = (user: { last_sign_in_text?: string | null }) =>
 		user.last_sign_in_text || 'Unknown';
 
-	const renderActionButton = (
-		action: 'view' | 'reset' | 'ban',
-		user: { id: string; role: string; banned_until?: string | null },
-	) => {
-		const isView = action === 'view';
-		const isReset = action === 'reset';
-		const isBan = action === 'ban';
+	const userColumns: ColumnDef<(typeof users)[0]>[] = [
+		{
+			key: 'name',
+			label: 'Name',
+			sortable: true,
+			render: (user) => (
+				<div className="flex items-center gap-2">
+					<div className="size-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+						{user.avatar_url ? (
+							<img src={user.avatar_url} alt="" className="size-8 rounded-full object-cover" />
+						) : (
+							<User className="size-4 text-muted-foreground" />
+						)}
+					</div>
+					<span className="font-medium text-sm truncate">{user.full_name || 'Unknown'}</span>
+				</div>
+			),
+		},
+		{
+			key: 'email',
+			label: 'Email',
+			sortable: true,
+			render: (user) => (
+				<span className="text-sm text-muted-foreground truncate max-w-[200px]">{user.email}</span>
+			),
+		},
+		{
+			key: 'role',
+			label: 'Role',
+			sortable: true,
+			className: 'text-center',
+			render: (user) => <StatusBadge variant="role" value={user.role} />,
+		},
+		{
+			key: 'status',
+			label: 'Status',
+			sortable: true,
+			className: 'text-center',
+			render: (user) => (
+				<StatusBadge value={user.banned_until ? 'banned' : user.is_online ? 'online' : 'offline'} />
+			),
+		},
+		{
+			key: 'last_online',
+			label: 'Last Online',
+			sortable: true,
+			render: (user) => (
+				<span className="text-sm text-muted-foreground">{getLastOnlineText(user)}</span>
+			),
+		},
+		{
+			key: 'joined',
+			label: 'Joined',
+			sortable: true,
+			render: (user) => (
+				<span className="text-sm text-muted-foreground">
+					{user.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}
+				</span>
+			),
+		},
+		{
+			key: 'actions',
+			label: 'Actions',
+			sortable: false,
+			className: 'text-center',
+			render: (user) => (
+				<div className="flex items-center justify-center gap-1">
+					{user.role !== 'admin' && (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									variant="secondary"
+									size="sm"
+									className="h-8 w-8 p-0"
+									onClick={() =>
+										navigate(
+											`/admin/users/${user.role === 'host' ? 'hosts' : 'cleaners'}/${user.id}`,
+										)
+									}>
+									<Eye className="size-4" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p>View Details</p>
+							</TooltipContent>
+						</Tooltip>
+					)}
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								variant="secondary"
+								size="sm"
+								className="h-8 w-8 p-0"
+								onClick={() => handleResetPassword(user.id)}>
+								<KeyRound className="size-4" />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>
+							<p>Reset Password</p>
+						</TooltipContent>
+					</Tooltip>
+					{user.role !== 'admin' && (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									variant="secondary"
+									size="sm"
+									className="h-8 w-8 p-0"
+									onClick={() => (user.banned_until ? handleUnban(user.id) : handleBan(user.id))}>
+									{user.banned_until ? (
+										<ShieldCheck className="size-4" />
+									) : (
+										<ShieldBan className="size-4" />
+									)}
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p>{user.banned_until ? 'Unban User' : 'Ban User'}</p>
+							</TooltipContent>
+						</Tooltip>
+					)}
+				</div>
+			),
+		},
+	];
 
-		const isDisabled = isView && user.role === 'admin';
-		const label = isView
-			? 'View Details'
-			: isReset
-				? 'Reset Password'
-				: user.banned_until
-					? 'Unban User'
-					: 'Ban User';
-		const variant = isBan ? (user.banned_until ? 'default' : 'destructive') : 'secondary';
-
-		const handleClick = () => {
-			if (isView) {
-				navigate(`/admin/users/${user.role === 'host' ? 'hosts' : 'cleaners'}/${user.id}`);
-			} else if (isReset) {
-				handleResetPassword(user.id);
-			} else if (user.banned_until) {
-				handleUnban(user.id);
-			} else {
-				handleBan(user.id);
-			}
-		};
-
-		const icon = isView ? (
-			<Eye className="size-4" />
-		) : isReset ? (
-			<KeyRound className="size-4" />
-		) : user.banned_until ? (
-			<ShieldCheck className="size-4" />
-		) : (
-			<ShieldBan className="size-4" />
-		);
-
-		return (
-			<Tooltip>
-				<TooltipTrigger asChild>
-					<span>
-						<Button
-							variant={variant}
-							size="sm"
-							className="h-8 w-8 p-0"
-							disabled={isDisabled}
-							onClick={handleClick}>
-							{icon}
-						</Button>
-					</span>
-				</TooltipTrigger>
-				<TooltipContent>
-					<p>{label}</p>
-				</TooltipContent>
-			</Tooltip>
-		);
-	};
+	const renderMobileCard = (user: (typeof users)[0]) => (
+		<>
+			<div className="flex items-center gap-3 mb-3">
+				<div className="size-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+					{user.avatar_url ? (
+						<img src={user.avatar_url} alt="" className="size-full rounded-full object-cover" />
+					) : (
+						<User className="size-5 text-muted-foreground" />
+					)}
+				</div>
+				<div className="min-w-0 flex-1">
+					<p className="font-medium truncate">{user.full_name || 'Unknown'}</p>
+					<p className="text-sm text-muted-foreground truncate">{user.email}</p>
+				</div>
+			</div>
+			<div className="flex flex-col gap-2 text-sm">
+				<div className="grid grid-cols-[1fr_1.5fr] border-b py-2">
+					<span className="font-medium">Role</span>
+					<StatusBadge variant="role" value={user.role} />
+				</div>
+				<div className="grid grid-cols-[1fr_1.5fr] border-b py-2">
+					<span className="font-medium">Status</span>
+					<StatusBadge
+						value={user.banned_until ? 'banned' : user.is_online ? 'online' : 'offline'}
+					/>
+				</div>
+				<div className="grid grid-cols-[1fr_1.5fr] py-2">
+					<span className="font-medium">Last Online</span>
+					<span className="text-muted-foreground">{getLastOnlineText(user)}</span>
+				</div>
+			</div>
+		</>
+	);
 
 	return (
 		<main className="max-width-container">
@@ -356,143 +441,23 @@ export function AdminUsersPage() {
 						))}
 					</div>
 
-					<Card className="hidden md:block p-0 overflow-hidden">
-						<div className="overflow-x-auto">
-							<table className="w-full">
-								<thead className="bg-muted/50">
-									<tr>
-										<th className="text-left p-3 font-medium text-sm">
-											<button
-												type="button"
-												className="flex items-center gap-1"
-												onClick={() => handleSort('name')}>
-												Name
-												<SortIcon field="name" />
-											</button>
-										</th>
-										<th className="text-left p-3 font-medium text-sm">
-											<button
-												type="button"
-												className="flex items-center gap-1"
-												onClick={() => handleSort('email')}>
-												Email
-												<SortIcon field="email" />
-											</button>
-										</th>
-										<th className="text-center p-3 font-medium text-sm">
-											<button
-												type="button"
-												className="flex items-center gap-1"
-												onClick={() => handleSort('role')}>
-												Role
-												<SortIcon field="role" />
-											</button>
-										</th>
-										<th className="text-center p-3 font-medium text-sm">
-											<button
-												type="button"
-												className="flex items-center gap-1"
-												onClick={() => handleSort('status')}>
-												Status
-												<SortIcon field="status" />
-											</button>
-										</th>
-										<th className="text-left p-3 font-medium text-sm">
-											<button
-												type="button"
-												className="flex items-center gap-1"
-												onClick={() => handleSort('last_online')}>
-												Last Online
-												<SortIcon field="last_online" />
-											</button>
-										</th>
-										<th className="text-left p-3 font-medium text-sm">
-											<button
-												type="button"
-												className="flex items-center gap-1"
-												onClick={() => handleSort('joined')}>
-												Joined
-												<SortIcon field="joined" />
-											</button>
-										</th>
-										<th className="text-center p-3 font-medium text-sm">Actions</th>
-									</tr>
-								</thead>
-								<tbody>
-									{users.map((user) => (
-										<tr key={user.id} className="border-t hover:bg-muted/30">
-											<td className="p-3">
-												<div className="flex items-center gap-2">
-													<div className="size-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-														{user.avatar_url ? (
-															<img
-																src={user.avatar_url}
-																alt=""
-																className="size-8 rounded-full object-cover"
-															/>
-														) : (
-															<User className="size-4 text-muted-foreground" />
-														)}
-													</div>
-													<span className="font-medium text-sm truncate">
-														{user.full_name || 'Unknown'}
-													</span>
-												</div>
-											</td>
-											<td className="p-3 text-sm text-muted-foreground truncate max-w-[200px]">
-												{user.email}
-											</td>
-											<td className="p-3">
-												<StatusBadge variant="role" value={user.role} />
-											</td>
-											<td className="p-3">
-												<StatusBadge
-													value={
-														user.banned_until ? 'banned' : user.is_online ? 'online' : 'offline'
-													}
-												/>
-											</td>
-											<td className="p-3 text-sm">{getLastOnlineText(user)}</td>
-											<td className="p-3 text-sm text-muted-foreground">
-												{user.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}
-											</td>
-											<td className="p-3 text-right">
-												<div className="flex items-center justify-end gap-1">
-													{renderActionButton('view', user)}
-													{renderActionButton('reset', user)}
-													{renderActionButton('ban', user)}
-												</div>
-											</td>
-										</tr>
-									))}
-								</tbody>
-							</table>
-						</div>
-
-						{users.length > 0 && (
-							<div className="flex items-center justify-between p-4 border-t">
-								<p className="text-sm text-muted-foreground">
-									Showing {users.length} of {totalCount}
-								</p>
-								<div className="flex gap-2">
-									<Button
-										variant="outline"
-										size="sm"
-										disabled={page === 1}
-										onClick={() => setPage(page - 1)}>
-										Previous
-									</Button>
-									<Button
-										variant="outline"
-										size="sm"
-										disabled={page * 20 >= totalCount}
-										onClick={() => setPage(page + 1)}>
-										Next
-									</Button>
-								</div>
-							</div>
-						)}
-					</Card>
+					<DataTable
+						data={users}
+						columns={userColumns}
+						loading={loading}
+						emptyMessage="No users found"
+						sortField={sortField}
+						sortDirection={sortDirection}
+						onSort={(field) =>
+							handleSort(field as 'name' | 'email' | 'role' | 'status' | 'last_online' | 'joined')
+						}
+						page={page}
+						totalCount={totalCount}
+						pageSize={20}
+						onPageChange={setPage}
+						keyField="id"
+						renderMobileCard={renderMobileCard}
+					/>
 				</>
 			)}
 
