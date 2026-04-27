@@ -3,7 +3,6 @@
 import { ChevronLeft, ChevronRight, Loader2, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
-import { AuditLogEntryComponent } from '@/components/admin/AuditLogEntry';
 import { Button } from '@/components/ui/button';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import {
@@ -15,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import type { AuditFilters, AuditLogEntry } from '@/features/admin/analyticsService';
 import { analyticsService } from '@/features/admin/analyticsService';
+import { AuditLogEntryComponent } from '@/features/admin/components/AuditLogEntry';
 
 interface AuditLogDialogProps {
 	open: boolean;

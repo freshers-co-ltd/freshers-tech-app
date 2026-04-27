@@ -4,8 +4,6 @@ import { format, subMonths } from 'date-fns';
 import { Clock, PoundSterling, ShieldX, SkipForward } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
-import { AuditLogDialog } from '@/components/admin/AuditLogDialog';
-import { AuditLogEntryComponent } from '@/components/admin/AuditLogEntry';
 import { PageHeader } from '@/components/PageHeader';
 import { StatCard } from '@/components/StatCard';
 import { StackedAreaChart } from '@/components/ui/area-chart';
@@ -24,6 +22,8 @@ import {
 	type StatusBreakdown,
 	type UserGrowthByMonth,
 } from '@/features/admin/analyticsService';
+import { AuditLogDialog } from '@/features/admin/components/AuditLogDialog';
+import { AuditLogEntryComponent } from '@/features/admin/components/AuditLogEntry';
 
 function generateLast6Months(): string[] {
 	const months: string[] = [];

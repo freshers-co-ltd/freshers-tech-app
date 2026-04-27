@@ -41,7 +41,7 @@ interface AccountFormProps {
 }
 
 export function AccountForm({ type }: AccountFormProps) {
-	const { user, profile } = useAuth();
+	const { user, profile, refreshProfile } = useAuth();
 
 	const personalForm = useForm<PersonalFormValues>({
 		resolver: zodResolver(personalSchema),
@@ -79,6 +79,7 @@ export function AccountForm({ type }: AccountFormProps) {
 			toast.error(error);
 		} else {
 			toast.success(DICT.ACCOUNT.NOTIFICATIONS.UPDATE_SUCCESS);
+			await refreshProfile();
 		}
 	};
 

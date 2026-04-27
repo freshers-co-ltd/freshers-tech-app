@@ -1,10 +1,8 @@
 'use client';
 
 import { Home, Loader2, Search, UserPlus, UserX } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'sonner';
 import { PageHeader } from '@/components/PageHeader';
-import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -24,108 +22,30 @@ import {
 } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DICT } from '@/dictionary';
-import {
-	type AdminCleaning,
-	type CleaningFilters,
-	type CleaningStatus,
-	cleaningService,
-} from '@/features/admin/cleaningService';
-import { type AvailableCleaner, userService } from '@/features/admin/userService';
+import { useAdminCleanings } from '@/features/admin/useAdminCleanings';
 
 export function AdminCleaningsPage() {
-	const [cleanings, setCleanings] = useState<AdminCleaning[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [totalCount, setTotalCount] = useState(0);
-
-	const [statusFilter, setStatusFilter] = useState<string>('all');
-	const [searchQuery, setSearchQuery] = useState('');
-	const [cleanerFilter, setCleanerFilter] = useState<string>('all');
-	const [page, setPage] = useState(1);
-	const limit = 20;
-
-	const [availableCleaners, setAvailableCleaners] = useState<AvailableCleaner[]>([]);
-
-	const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-	const [selectedCleaning, setSelectedCleaning] = useState<string>('');
-	const [selectedCleaner, setSelectedCleaner] = useState<string>('');
-	const [assigning, setAssigning] = useState(false);
-
-	const fetchCleanings = useCallback(async () => {
-		setLoading(true);
-
-		const filters: CleaningFilters = {};
-		if (statusFilter !== 'all') {
-			filters.status = statusFilter as CleaningStatus;
-		}
-		if (cleanerFilter !== 'all') {
-			filters.cleanerId = cleanerFilter;
-		}
-		filters.search = searchQuery || undefined;
-
-		const [cleaningsResult, countResult] = await Promise.all([
-			cleaningService.getAllCleanings(filters, page, limit),
-			cleaningService.getCleaningsCount(filters),
-		]);
-
-		if (cleaningsResult.error) {
-			toast.error(cleaningsResult.error);
-		} else {
-			setCleanings(cleaningsResult.data || []);
-		}
-
-		if (!countResult.error) {
-			setTotalCount(countResult.data || 0);
-		}
-		setLoading(false);
-	}, [statusFilter, cleanerFilter, page, searchQuery]);
-
-	const fetchAvailableCleaners = useCallback(async () => {
-		const result = await userService.getAvailableCleaners();
-		if (!result.error) {
-			setAvailableCleaners(result.data || []);
-		}
-	}, []);
-
-	useEffect(() => {
-		fetchCleanings();
-	}, [fetchCleanings]);
-
-	useEffect(() => {
-		fetchAvailableCleaners();
-	}, [fetchAvailableCleaners]);
-
-	const handleAssignCleaner = async () => {
-		if (!selectedCleaning || !selectedCleaner) {
-			toast.error('Please select a cleaner');
-			return;
-		}
-		setAssigning(true);
-		const result = await cleaningService.assignCleaner(selectedCleaning, selectedCleaner);
-		setAssigning(false);
-		if (result.error) {
-			toast.error(result.error);
-		} else {
-			toast.success('Cleaner assigned');
-			setIsAssignModalOpen(false);
-			fetchCleanings();
-		}
-	};
-
-	const handleUnassignCleaner = async (cleaningId: string) => {
-		const result = await cleaningService.unassignCleaner(cleaningId);
-		if (result.error) {
-			toast.error(result.error);
-		} else {
-			toast.success('Cleaner unassigned');
-			fetchCleanings();
-		}
-	};
-
-	const openAssignModal = (cleaningId: string) => {
-		setSelectedCleaning(cleaningId);
-		setSelectedCleaner('');
-		setIsAssignModalOpen(true);
-	};
+	const {
+		cleanings,
+		loading,
+		totalCount,
+		statusFilter,
+		searchQuery,
+		cleanerFilter,
+		page,
+		availableCleaners,
+		isAssignModalOpen,
+		selectedCleaner,
+		setStatusFilter,
+		setSearchQuery,
+		setCleanerFilter,
+		setPage,
+		setIsAssignModalOpen,
+		setSelectedCleaner,
+		handleAssignCleaner,
+		handleUnassignCleaner,
+		openAssignModal,
+	} = useAdminCleanings();
 
 	const d = DICT.ADMIN.CLEANINGS;
 
@@ -139,19 +59,7 @@ export function AdminCleaningsPage() {
 		{ label: 'Cancelled', value: 'cancelled' },
 	];
 
-	const getStatusBadge = (status: string) => {
-		const colors: Record<string, string> = {
-			draft: 'bg-gray-100 text-gray-700',
-			requested: 'bg-blue-100 text-blue-700',
-			confirmed: 'bg-yellow-100 text-yellow-700',
-			in_progress: 'bg-purple-100 text-purple-700',
-			completed: 'bg-green-100 text-green-700',
-			cancelled: 'bg-red-100 text-red-700',
-		};
-		return colors[status] || 'bg-gray-100 text-gray-700';
-	};
-
-	const isDisabled = (cleaning: AdminCleaning) =>
+	const isDisabled = (cleaning: { status: string }) =>
 		cleaning.status === 'in_progress' || cleaning.status === 'completed';
 
 	return (
@@ -170,7 +78,6 @@ export function AdminCleaningsPage() {
 							onKeyDown={(e) => {
 								if (e.key === 'Enter') {
 									setPage(1);
-									fetchCleanings();
 								}
 							}}
 						/>
@@ -269,15 +176,7 @@ export function AdminCleaningsPage() {
 													<span className="text-muted-foreground">Unassigned</span>
 												),
 											},
-											{
-												label: 'Status',
-												value: (
-													<Badge
-														className={`${getStatusBadge(cleaning.status)} capitalize text-xs`}>
-														{cleaning.status.replace('_', ' ')}
-													</Badge>
-												),
-											},
+											{ label: 'Status', value: <StatusBadge value={cleaning.status} /> },
 											{ label: 'Cost', value: `£${cleaning.service_cost}` },
 										].map((item) => (
 											<div
@@ -373,9 +272,7 @@ export function AdminCleaningsPage() {
 												)}
 											</td>
 											<td className="p-4">
-												<Badge className={`${getStatusBadge(cleaning.status)} capitalize`}>
-													{cleaning.status.replace('_', ' ')}
-												</Badge>
+												<StatusBadge value={cleaning.status} />
 											</td>
 											<td className="p-4 font-medium">£{cleaning.service_cost}</td>
 											<td className="p-4 text-right">
@@ -426,7 +323,7 @@ export function AdminCleaningsPage() {
 					</>
 				)}
 
-				{totalCount > limit && (
+				{cleanings.length > 0 && (
 					<div className="flex items-center justify-between p-4 border-t">
 						<p className="text-sm text-muted-foreground">
 							Showing {cleanings.length} of {totalCount}
@@ -442,7 +339,7 @@ export function AdminCleaningsPage() {
 							<Button
 								variant="outline"
 								size="sm"
-								disabled={page * limit >= totalCount}
+								disabled={page * 20 >= totalCount}
 								onClick={() => setPage(page + 1)}>
 								Next
 							</Button>
@@ -454,11 +351,7 @@ export function AdminCleaningsPage() {
 			<Dialog open={isAssignModalOpen} onOpenChange={setIsAssignModalOpen}>
 				<DialogContent>
 					<DialogHeader>
-						<DialogTitle>
-							{cleanings.find((c) => c.id === selectedCleaning)?.cleaner_id
-								? 'Reassign Cleaner'
-								: 'Assign Cleaner'}
-						</DialogTitle>
+						<DialogTitle>Assign Cleaner</DialogTitle>
 						<DialogDescription>Select which cleaner to assign</DialogDescription>
 					</DialogHeader>
 					<div className="space-y-4">
@@ -478,15 +371,7 @@ export function AdminCleaningsPage() {
 							<Button variant="outline" onClick={() => setIsAssignModalOpen(false)}>
 								Cancel
 							</Button>
-							<Button onClick={handleAssignCleaner} disabled={assigning}>
-								{assigning ? (
-									<Loader2 className="size-4 animate-spin" />
-								) : cleanings.find((c) => c.id === selectedCleaning)?.cleaner_id ? (
-									'Reassign'
-								) : (
-									'Assign'
-								)}
-							</Button>
+							<Button onClick={handleAssignCleaner}>Assign</Button>
 						</div>
 					</div>
 				</DialogContent>
