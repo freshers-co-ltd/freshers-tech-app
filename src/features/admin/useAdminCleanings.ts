@@ -18,6 +18,8 @@ interface UseAdminCleaningsResult {
 	searchQuery: string;
 	cleanerFilter: string;
 	page: number;
+	sortField: string;
+	sortDirection: 'asc' | 'desc';
 	availableCleaners: AvailableCleaner[];
 	isAssignModalOpen: boolean;
 	selectedCleaning: string;
@@ -26,6 +28,8 @@ interface UseAdminCleaningsResult {
 	setSearchQuery: (query: string) => void;
 	setCleanerFilter: (filter: string) => void;
 	setPage: (page: number) => void;
+	setSortField: (field: string) => void;
+	setSortDirection: (direction: 'asc' | 'desc') => void;
 	setIsAssignModalOpen: (open: boolean) => void;
 	setSelectedCleaning: (id: string) => void;
 	setSelectedCleaner: (id: string) => void;
@@ -44,6 +48,8 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 	const [searchQuery, setSearchQuery] = useState('');
 	const [cleanerFilter, setCleanerFilter] = useState<string>('all');
 	const [page, setPage] = useState(1);
+	const [sortField, setSortField] = useState<string>('');
+	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 	const limit = 20;
 
 	const [availableCleaners, setAvailableCleaners] = useState<AvailableCleaner[]>([]);
@@ -65,7 +71,7 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 		filters.search = searchQuery || undefined;
 
 		const [cleaningsResult, countResult] = await Promise.all([
-			cleaningService.getAllCleanings(filters, page, limit),
+			cleaningService.getAllCleanings(filters, page, limit, sortField, sortDirection),
 			cleaningService.getCleaningsCount(filters),
 		]);
 
@@ -79,7 +85,7 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 			setTotalCount(countResult.data || 0);
 		}
 		setLoading(false);
-	}, [statusFilter, cleanerFilter, page, searchQuery]);
+	}, [statusFilter, cleanerFilter, page, searchQuery, sortField, sortDirection]);
 
 	const fetchAvailableCleaners = useCallback(async () => {
 		const result = await userService.getAvailableCleaners();
@@ -130,11 +136,15 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 		[fetchCleanings],
 	);
 
-	const openAssignModal = useCallback((cleaningId: string) => {
-		setSelectedCleaning(cleaningId);
-		setSelectedCleaner('');
-		setIsAssignModalOpen(true);
-	}, []);
+	const openAssignModal = useCallback(
+		(cleaningId: string) => {
+			setSelectedCleaning(cleaningId);
+			const cleaning = cleanings.find((c) => c.id === cleaningId);
+			setSelectedCleaner(cleaning?.cleaner_id || '');
+			setIsAssignModalOpen(true);
+		},
+		[cleanings],
+	);
 
 	return {
 		cleanings,
@@ -144,6 +154,8 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 		searchQuery,
 		cleanerFilter,
 		page,
+		sortField,
+		sortDirection,
 		availableCleaners,
 		isAssignModalOpen,
 		selectedCleaning,
@@ -152,6 +164,8 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 		setSearchQuery,
 		setCleanerFilter,
 		setPage,
+		setSortField,
+		setSortDirection,
 		setIsAssignModalOpen,
 		setSelectedCleaning,
 		setSelectedCleaner,

@@ -2,6 +2,7 @@ import { BarChart3, ClipboardList, Home, LayoutDashboard, User, Users } from 'lu
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/features/auth/AuthContext';
 import type { UserRole } from '@/features/auth/authService';
+import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 import { cn } from '@/lib/utils';
 
 type NavItem = {
@@ -61,6 +62,9 @@ export function Navigation() {
 								{item.name}
 							</Link>
 						))}
+						<div className="ml-2 pl-2 border-l">
+							<NotificationBell />
+						</div>
 					</div>
 				</div>
 			</nav>

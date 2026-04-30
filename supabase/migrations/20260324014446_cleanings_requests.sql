@@ -453,6 +453,9 @@ OR REPLACE FUNCTION public.handle_cleaning_status_transitions () RETURNS TRIGGER
 SET
     search_path = public AS $$
 BEGIN
+    IF OLD.cleaner_id IS NULL AND NEW.cleaner_id IS NOT NULL THEN
+        NEW.status := 'confirmed';
+    END IF;
     IF OLD.clock_in_time IS NULL AND NEW.clock_in_time IS NOT NULL THEN
         NEW.status := 'in_progress';
     END IF;
@@ -466,6 +469,158 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER on_cleaning_timestamp_update BEFORE
 UPDATE ON public.cleanings FOR EACH ROW
 EXECUTE FUNCTION public.handle_cleaning_status_transitions ();
+
+CREATE
+OR REPLACE FUNCTION public.handle_cleaning_notifications () RETURNS TRIGGER SECURITY DEFINER
+SET
+    search_path = public AS $$
+DECLARE
+    v_property_address TEXT;
+    v_host_id UUID;
+    v_scheduled_date TEXT;
+BEGIN
+    SELECT COALESCE(p.address_line_1, 'Unknown property'), c.host_id
+    INTO v_property_address, v_host_id
+    FROM public.cleanings c
+    LEFT JOIN public.properties p ON c.property_id = p.id
+    WHERE c.id = NEW.id;
+
+    v_scheduled_date := TO_CHAR(NEW.scheduled_start, 'FMMonth FMDD, YYYY');
+
+    IF TG_OP = 'INSERT' AND NEW.status = 'requested' THEN
+        INSERT INTO public.notifications (user_id, type, title, message, data, link)
+        SELECT p.id, 'cleaning_requested', 'New Cleaning Requested',
+            'Host ' || COALESCE(hp.full_name, 'Unknown') || ' has requested a cleaning at ' || v_property_address,
+            jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id),
+            '/admin/cleanings?cleaning_view=' || NEW.id::TEXT
+        FROM public.profiles p
+        CROSS JOIN (SELECT full_name FROM public.profiles WHERE id = v_host_id) hp
+        WHERE p.role = 'admin'
+        ON CONFLICT DO NOTHING;
+    END IF;
+
+    IF NEW.cleaner_id IS DISTINCT FROM OLD.cleaner_id AND NEW.cleaner_id IS NOT NULL THEN
+        INSERT INTO public.notifications (user_id, type, title, message, data, link)
+        VALUES (
+            NEW.cleaner_id,
+            'cleaning_assigned',
+            'New Cleaning Assigned',
+            'You have been assigned to clean ' || v_property_address || ' on ' || v_scheduled_date || '.',
+            jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id, 'property_address', v_property_address),
+            '/cleaner/cleanings?cleaning_view=' || NEW.id::TEXT
+        )
+        ON CONFLICT DO NOTHING;
+
+        IF v_host_id IS NOT NULL THEN
+            INSERT INTO public.notifications (user_id, type, title, message, data, link)
+            VALUES (
+                v_host_id,
+                'cleaning_confirmed',
+                'Cleaning Confirmed',
+                'Your cleaning request for ' || v_property_address || ' has been confirmed and a cleaner has been assigned.',
+                jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id),
+                '/host/cleanings?cleaning_view=' || NEW.id::TEXT
+            )
+            ON CONFLICT DO NOTHING;
+        END IF;
+    END IF;
+
+    IF (OLD.clock_in_time IS NULL AND NEW.clock_in_time IS NOT NULL) THEN
+        IF v_host_id IS NOT NULL THEN
+            INSERT INTO public.notifications (user_id, type, title, message, data, link)
+            VALUES (
+                v_host_id,
+                'cleaning_started',
+                'Cleaning Started',
+                'Cleaning has started at ' || v_property_address || '.',
+                jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id),
+                '/host/cleanings?cleaning_view=' || NEW.id::TEXT
+            )
+            ON CONFLICT DO NOTHING;
+        END IF;
+
+        INSERT INTO public.notifications (user_id, type, title, message, data, link)
+        SELECT p.id, 'cleaning_started', 'Cleaning Started',
+            'Cleaning has started at ' || v_property_address || '.',
+            jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id),
+            '/admin/cleanings?cleaning_view=' || NEW.id::TEXT
+        FROM public.profiles p
+        WHERE p.role = 'admin'
+        ON CONFLICT DO NOTHING;
+    END IF;
+
+    IF (OLD.clock_out_time IS NULL AND NEW.clock_out_time IS NOT NULL) THEN
+        IF v_host_id IS NOT NULL THEN
+            INSERT INTO public.notifications (user_id, type, title, message, data, link)
+            VALUES (
+                v_host_id,
+                'cleaning_completed',
+                'Cleaning Completed',
+                'Your cleaning at ' || v_property_address || ' has been completed.',
+                jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id),
+                '/host/cleanings?cleaning_view=' || NEW.id::TEXT
+            )
+            ON CONFLICT DO NOTHING;
+        END IF;
+
+        INSERT INTO public.notifications (user_id, type, title, message, data, link)
+        SELECT p.id, 'cleaning_completed', 'Cleaning Completed',
+            'Cleaning at ' || v_property_address || ' has been completed.',
+            jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id),
+            '/admin/cleanings?cleaning_view=' || NEW.id::TEXT
+        FROM public.profiles p
+        WHERE p.role = 'admin'
+        ON CONFLICT DO NOTHING;
+    END IF;
+
+    IF NEW.status = 'cancelled' AND OLD.status != 'cancelled' THEN
+        INSERT INTO public.notifications (user_id, type, title, message, data, link)
+        SELECT p.id, 'cleaning_cancelled', 'Cleaning Cancelled',
+            'Cleaning at ' || v_property_address || ' has been cancelled.',
+            jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id),
+            '/admin/cleanings?cleaning_view=' || NEW.id::TEXT
+        FROM public.profiles p
+        WHERE p.role = 'admin'
+        ON CONFLICT DO NOTHING;
+    END IF;
+
+    IF NEW.status = 'requested' AND OLD.status = 'requested' THEN
+        IF NEW.scheduled_start IS DISTINCT FROM OLD.scheduled_start
+            OR NEW.instructions IS DISTINCT FROM OLD.instructions
+            OR NEW.stocks_included IS DISTINCT FROM OLD.stocks_included
+            OR EXISTS (SELECT 1 FROM public.cleaning_tasks ct WHERE ct.cleaning_id = NEW.id AND ct.deleted_at IS NULL AND (SELECT count(*) FROM public.cleaning_tasks ct2 WHERE ct2.cleaning_id = NEW.id AND ct2.deleted_at IS NULL) != (SELECT count(*) FROM public.cleaning_tasks ct3 WHERE ct3.cleaning_id = OLD.id AND ct3.deleted_at IS NULL)) THEN
+
+            IF NEW.cleaner_id IS NOT NULL THEN
+                INSERT INTO public.notifications (user_id, type, title, message, data, link)
+                VALUES (
+                    NEW.cleaner_id,
+                    'cleaning_updated',
+                    'Cleaning Details Updated',
+                    'The cleaning at ' || v_property_address || ' has been updated.',
+                    jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id),
+                    '/cleaner/cleanings?cleaning_view=' || NEW.id::TEXT
+                )
+                ON CONFLICT DO NOTHING;
+            END IF;
+
+            INSERT INTO public.notifications (user_id, type, title, message, data, link)
+            SELECT p.id, 'cleaning_updated', 'Cleaning Details Updated',
+                'Cleaning at ' || v_property_address || ' has been updated by the host.',
+                jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id),
+                '/admin/cleanings?cleaning_view=' || NEW.id::TEXT
+            FROM public.profiles p
+            WHERE p.role = 'admin'
+            ON CONFLICT DO NOTHING;
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER on_cleaning_notifications AFTER
+INSERT OR UPDATE ON public.cleanings FOR EACH ROW
+EXECUTE FUNCTION public.handle_cleaning_notifications ();
 
 CREATE POLICY "Cleaners can upload evidence to assigned cleaning folders" ON STORAGE.objects FOR INSERT TO authenticated
 WITH
@@ -846,14 +1001,26 @@ CREATE
 OR REPLACE FUNCTION public.soft_delete_cleaning (p_cleaning_id UUID) RETURNS VOID SECURITY DEFINER
 SET
     search_path = public AS $$
+DECLARE
+    v_status public.cleaning_status;
+    v_is_admin BOOLEAN;
 BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM public.cleanings 
-        WHERE id = p_cleaning_id 
-        AND host_id = (SELECT auth.uid()) 
-        AND deleted_at IS NULL
-    ) AND (SELECT auth.jwt() -> 'app_metadata' ->> 'role') <> 'admin' THEN
-        RAISE EXCEPTION 'Unauthorised or record already deleted' USING ERRCODE = 'P0001';
+    v_is_admin := (SELECT auth.jwt() -> 'app_metadata' ->> 'role') = 'admin';
+
+    IF NOT v_is_admin THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM public.cleanings 
+            WHERE id = p_cleaning_id 
+            AND host_id = (SELECT auth.uid()) 
+            AND deleted_at IS NULL
+        ) THEN
+            RAISE EXCEPTION 'Unauthorised or record already deleted' USING ERRCODE = 'P0001';
+        END IF;
+
+        SELECT status INTO v_status FROM public.cleanings WHERE id = p_cleaning_id;
+        IF v_status NOT IN ('draft', 'completed', 'cancelled') THEN
+            RAISE EXCEPTION 'Soft delete not allowed for this status. Use cancel instead.' USING ERRCODE = 'P0001';
+        END IF;
     END IF;
 
     UPDATE public.cleanings SET deleted_at = now() WHERE id = p_cleaning_id;
@@ -865,6 +1032,35 @@ $$ LANGUAGE plpgsql;
 
 GRANT
 EXECUTE ON FUNCTION public.soft_delete_cleaning TO authenticated;
+
+CREATE
+OR REPLACE FUNCTION public.host_cancel_cleaning (p_cleaning_id UUID) RETURNS VOID SECURITY DEFINER
+SET
+    search_path = public AS $$
+DECLARE
+    v_status public.cleaning_status;
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM public.cleanings 
+        WHERE id = p_cleaning_id 
+        AND host_id = (SELECT auth.uid()) 
+        AND deleted_at IS NULL
+    ) THEN
+        RAISE EXCEPTION 'Unauthorised or cleaning not found' USING ERRCODE = 'P0001';
+    END IF;
+
+    SELECT status INTO v_status FROM public.cleanings WHERE id = p_cleaning_id;
+
+    IF v_status NOT IN ('draft', 'requested') THEN
+        RAISE EXCEPTION 'Cannot cancel a cleaning that is already in progress, confirmed, or completed' USING ERRCODE = 'P0001';
+    END IF;
+
+    UPDATE public.cleanings SET status = 'cancelled', updated_at = now() WHERE id = p_cleaning_id;
+END;
+$$ LANGUAGE plpgsql;
+
+GRANT
+EXECUTE ON FUNCTION public.host_cancel_cleaning TO authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.soft_delete_cleaning_task (p_task_id UUID) RETURNS VOID SECURITY DEFINER

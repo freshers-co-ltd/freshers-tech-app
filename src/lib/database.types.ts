@@ -268,6 +268,63 @@ export type Database = {
 					},
 				];
 			};
+			notification_preferences: {
+				Row: {
+					created_at: string | null;
+					enabled: boolean | null;
+					updated_at: string | null;
+					user_id: string;
+				};
+				Insert: {
+					created_at?: string | null;
+					enabled?: boolean | null;
+					updated_at?: string | null;
+					user_id: string;
+				};
+				Update: {
+					created_at?: string | null;
+					enabled?: boolean | null;
+					updated_at?: string | null;
+					user_id?: string;
+				};
+				Relationships: [];
+			};
+			notifications: {
+				Row: {
+					created_at: string;
+					data: Json | null;
+					id: string;
+					is_read: boolean | null;
+					link: string | null;
+					message: string;
+					title: string;
+					type: Database['public']['Enums']['notification_type'];
+					user_id: string;
+				};
+				Insert: {
+					created_at?: string;
+					data?: Json | null;
+					id?: string;
+					is_read?: boolean | null;
+					link?: string | null;
+					message: string;
+					title: string;
+					type: Database['public']['Enums']['notification_type'];
+					user_id: string;
+				};
+				Update: {
+					created_at?: string;
+					data?: Json | null;
+					id?: string;
+					is_read?: boolean | null;
+					link?: string | null;
+					message?: string;
+					title?: string;
+					type?: Database['public']['Enums']['notification_type'];
+					user_id?: string;
+				};
+				Relationships: [];
+			};
 			profiles: {
 				Row: {
 					avatar_url: string | null;
@@ -455,12 +512,22 @@ export type Database = {
 				};
 				Returns: string;
 			};
+			admin_get_active_cleanings: {
+				Args: never;
+				Returns: {
+					count: number;
+					status: string;
+				}[];
+			};
 			admin_get_all_cleanings: {
 				Args: {
 					p_cleaner_id?: string;
 					p_host_id?: string;
 					p_limit?: number;
 					p_page?: number;
+					p_search?: string;
+					p_sort_direction?: string;
+					p_sort_field?: string;
 					p_status?: string;
 				};
 				Returns: {
@@ -487,6 +554,8 @@ export type Database = {
 			admin_get_audit_logs: {
 				Args: {
 					p_action_type?: string;
+					p_date_from?: string;
+					p_date_to?: string;
 					p_limit?: number;
 					p_page?: number;
 					p_target_table?: string;
@@ -528,9 +597,28 @@ export type Database = {
 					updated_at: string;
 				}[];
 			};
+			admin_get_cleaning_status_breakdown: {
+				Args: { p_end_date?: string; p_start_date?: string };
+				Returns: {
+					count: number;
+					status: string;
+				}[];
+			};
 			admin_get_cleanings_count: {
-				Args: { p_cleaner_id?: string; p_host_id?: string; p_status?: string };
+				Args: {
+					p_cleaner_id?: string;
+					p_host_id?: string;
+					p_search?: string;
+					p_status?: string;
+				};
 				Returns: number;
+			};
+			admin_get_cleanings_over_time: {
+				Args: { p_end_date?: string; p_start_date?: string };
+				Returns: {
+					cleanings: number;
+					date: string;
+				}[];
 			};
 			admin_get_host_detail: {
 				Args: { p_host_id: string };
@@ -548,6 +636,35 @@ export type Database = {
 					updated_at: string;
 				}[];
 			};
+			admin_get_monthly_stats: {
+				Args: { p_months?: number };
+				Returns: {
+					cleanings: number;
+					month: string;
+					revenue: number;
+				}[];
+			};
+			admin_get_revenue_metrics: {
+				Args: { p_months?: number };
+				Returns: {
+					avg_completion_hours: number;
+					cancelled_count: number;
+					completed_change_pct: number;
+					completed_count: number;
+					in_progress_count: number;
+					pending_count: number;
+					revenue_change_pct: number;
+					revenue_current: number;
+					revenue_last_month: number;
+				}[];
+			};
+			admin_get_revenue_over_time: {
+				Args: { p_end_date?: string; p_start_date?: string };
+				Returns: {
+					date: string;
+					revenue: number;
+				}[];
+			};
 			admin_get_standard_tasks: {
 				Args: never;
 				Returns: {
@@ -555,6 +672,22 @@ export type Database = {
 					description: string;
 					id: string;
 					is_active: boolean;
+				}[];
+			};
+			admin_get_user_growth: {
+				Args: { p_end_date?: string; p_start_date?: string };
+				Returns: {
+					cleaners: number;
+					date: string;
+					hosts: number;
+				}[];
+			};
+			admin_get_user_growth_by_month: {
+				Args: { p_months?: number };
+				Returns: {
+					cleaners: number;
+					hosts: number;
+					month: string;
 				}[];
 			};
 			admin_get_user_stats: {
@@ -572,7 +705,14 @@ export type Database = {
 				}[];
 			};
 			admin_get_users: {
-				Args: { p_limit?: number; p_page?: number; p_role?: string };
+				Args: {
+					p_limit?: number;
+					p_page?: number;
+					p_role?: string;
+					p_search?: string;
+					p_sort_direction?: string;
+					p_sort_field?: string;
+				};
 				Returns: {
 					active_bookings: number;
 					avatar_url: string;
@@ -593,13 +733,27 @@ export type Database = {
 					total_user_count: number;
 				}[];
 			};
-			admin_get_users_count: { Args: { p_role?: string }; Returns: number };
+			admin_get_users_count: {
+				Args: { p_role?: string; p_search?: string };
+				Returns: number;
+			};
+			admin_get_volume_metrics_trend: {
+				Args: { p_period_days?: number };
+				Returns: {
+					active_cleaners: number;
+					active_hosts: number;
+					active_properties: number;
+					completed_change: number;
+					completed_current: number;
+					completed_previous: number;
+					properties_change: number;
+					total_change: number;
+					total_current: number;
+					total_previous: number;
+				}[];
+			};
 			admin_unassign_cleaner: {
 				Args: { p_cleaning_id: string };
-				Returns: undefined;
-			};
-			admin_update_cleaning_status: {
-				Args: { p_cleaning_id: string; p_status: string };
 				Returns: undefined;
 			};
 			admin_update_standard_tasks: {
@@ -616,6 +770,30 @@ export type Database = {
 					p_stocks_included?: boolean;
 				};
 				Returns: string;
+			};
+			create_notification_for_user: {
+				Args: {
+					p_data?: Json;
+					p_link?: string;
+					p_message: string;
+					p_title: string;
+					p_type: Database['public']['Enums']['notification_type'];
+					p_user_id: string;
+				};
+				Returns: string;
+			};
+			get_or_create_notification_preferences: {
+				Args: never;
+				Returns: {
+					pref_created_at: string;
+					pref_enabled: boolean;
+					pref_updated_at: string;
+					pref_user_id: string;
+				}[];
+			};
+			host_cancel_cleaning: {
+				Args: { p_cleaning_id: string };
+				Returns: undefined;
 			};
 			is_not_banned: { Args: never; Returns: boolean };
 			soft_delete_cleaning: {
@@ -659,6 +837,15 @@ export type Database = {
 				| 'completed'
 				| 'cancelled';
 			media_type: 'image' | 'video';
+			notification_type:
+				| 'cleaning_requested'
+				| 'cleaning_confirmed'
+				| 'cleaning_started'
+				| 'cleaning_completed'
+				| 'cleaning_cancelled'
+				| 'cleaning_assigned'
+				| 'cleaning_reassigned'
+				| 'cleaning_updated';
 			property_type: 'house' | 'apartment' | 'studio';
 			user_role: 'cleaner' | 'host' | 'admin';
 		};
@@ -1322,6 +1509,16 @@ export const Constants = {
 		Enums: {
 			cleaning_status: ['draft', 'requested', 'confirmed', 'in_progress', 'completed', 'cancelled'],
 			media_type: ['image', 'video'],
+			notification_type: [
+				'cleaning_requested',
+				'cleaning_confirmed',
+				'cleaning_started',
+				'cleaning_completed',
+				'cleaning_cancelled',
+				'cleaning_assigned',
+				'cleaning_reassigned',
+				'cleaning_updated',
+			],
 			property_type: ['house', 'apartment', 'studio'],
 			user_role: ['cleaner', 'host', 'admin'],
 		},

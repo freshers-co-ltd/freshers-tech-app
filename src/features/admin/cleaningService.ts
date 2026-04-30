@@ -45,6 +45,8 @@ export const cleaningService = {
 		filters: CleaningFilters = {},
 		page = 1,
 		limit = 20,
+		sortField?: string,
+		sortDirection: 'asc' | 'desc' = 'desc',
 	): Promise<ActionResult<AdminCleaning[]>> {
 		const { status, cleanerId, hostId, search } = filters;
 
@@ -55,6 +57,8 @@ export const cleaningService = {
 			p_search: (search ?? null) as string,
 			p_page: page,
 			p_limit: limit,
+			p_sort_field: (sortField ?? null) as string,
+			p_sort_direction: sortDirection,
 		});
 
 		if (error) {
@@ -79,19 +83,6 @@ export const cleaningService = {
 		}
 
 		return { data: data as number, error: null };
-	},
-
-	async updateStatus(cleaningId: string, status: CleaningStatus): Promise<ActionResult<void>> {
-		const { error } = await supabase.rpc('admin_update_cleaning_status', {
-			p_cleaning_id: cleaningId,
-			p_status: status,
-		});
-
-		if (error) {
-			return { data: null, error: mapDatabaseError(error) };
-		}
-
-		return { data: undefined, error: null };
 	},
 
 	async assignCleaner(cleaningId: string, cleanerId: string): Promise<ActionResult<void>> {

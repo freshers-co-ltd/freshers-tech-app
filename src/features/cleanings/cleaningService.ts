@@ -259,6 +259,26 @@ export const cleaningService = {
 	},
 
 	async softDeleteCleaningRequest(id: string): Promise<{ error: string | null }> {
+		const { data: cleaning, error: fetchError } = await supabase
+			.from('cleanings')
+			.select('status')
+			.eq('id', id)
+			.single();
+
+		if (fetchError) {
+			return { error: mapDatabaseError(fetchError) };
+		}
+
+		if (cleaning?.status === 'requested') {
+			const { error: cancelError } = await supabase.rpc('host_cancel_cleaning', {
+				p_cleaning_id: id,
+			});
+			if (cancelError) {
+				return { error: mapDatabaseError(cancelError) };
+			}
+			return { error: null };
+		}
+
 		const { error } = await supabase.rpc('soft_delete_cleaning', {
 			p_cleaning_id: id,
 		});

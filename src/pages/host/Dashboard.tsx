@@ -2,6 +2,7 @@
 
 import { Calendar, ClipboardList, Home, ShieldCheck, Zap } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { StatCard } from '@/components/StatCard';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,8 @@ import {
 	HostCleaningForm,
 	type HostCleaningFormValues,
 } from '@/features/cleanings/components/HostCleaningForm';
+import type { Notification } from '@/features/notifications/types';
+import { useNotifications } from '@/features/notifications/useNotifications';
 import { useProperties } from '@/features/properties/PropertyContext';
 import type { Property } from '@/features/properties/propertyService';
 
@@ -59,43 +62,11 @@ export function HostDashboardPage() {
 				<Card className="p-5 md:p-8">
 					<div className="flex items-center justify-between">
 						<h2 className="text-lg md:text-xl font-bold uppercase">{d.ACTIVITY_CARD.TITLE}</h2>
-						<Button variant="link" className="px-0 font-bold h-auto">
-							{d.ACTIVITY_CARD.VIEW_ALL}
+						<Button variant="link" className="px-0 font-bold h-auto" asChild>
+							<Link to="/host/notifications">{d.ACTIVITY_CARD.VIEW_ALL}</Link>
 						</Button>
 					</div>
-					<div className="flex flex-col">
-						{[
-							{ cleaner: 'Maria S.', property: 'Apartment 4B', time: '10 mins ago' },
-							{ cleaner: 'John D.', property: 'Ocean View Villa', time: '1 hour ago' },
-							{ cleaner: 'Elena R.', property: 'Apartment 4B', time: '3 hours ago' },
-						].map((activity, index, array) => (
-							<div key={activity.cleaner + activity.property}>
-								<div className="flex items-start md:items-center gap-3 md:gap-4 py-4 overflow-hidden">
-									<div className="font-bold rounded-lg flex items-center justify-center text-muted-foreground size-10 md:size-12 bg-muted shrink-0">
-										{activity.cleaner[0]}
-									</div>
-									<div className="flex-1 min-w-0">
-										<p className="text-sm font-bold truncate leading-snug">
-											<span className="text-primary">{activity.cleaner}</span>
-											<span className="font-medium text-muted-foreground/80">
-												{' '}
-												{d.ACTIVITY_CARD.APPLIED}{' '}
-											</span>
-											<span className="block md:inline truncate">{activity.property}</span>
-										</p>
-										<p className="text-xs text-muted-foreground mt-0.5">{activity.time}</p>
-									</div>
-									<Button
-										size="sm"
-										variant="outline"
-										className="shrink-0 text-xs md:text-sm h-8 md:h-9">
-										{d.ACTIVITY_CARD.REVIEW_BUTTON}
-									</Button>
-								</div>
-								{index < array.length - 1 && <Separator />}
-							</div>
-						))}
-					</div>
+					<ActivityList />
 				</Card>
 
 				<Card className="p-5 md:p-8 flex flex-col md:justify-between bg-primary text-primary-foreground">
@@ -148,5 +119,48 @@ export function HostDashboardPage() {
 				</DialogContent>
 			</Dialog>
 		</main>
+	);
+}
+
+function ActivityList() {
+	const { notifications, isLoading, markAsRead } = useNotifications();
+	const d = DICT.HOST_DASHBOARD.ACTIVITY_CARD;
+
+	if (isLoading) {
+		return <div className="py-8 text-center text-muted-foreground">Loading...</div>;
+	}
+
+	if (notifications.length === 0) {
+		return <div className="py-8 text-center text-muted-foreground">No recent activity</div>;
+	}
+
+	return (
+		<div className="flex flex-col">
+			{(notifications.slice(0, 5) as Notification[]).map((notification, index, array) => (
+				<div key={notification.id}>
+					<div className="flex items-start md:items-center gap-3 md:gap-4 py-4 overflow-hidden">
+						<div className="font-bold rounded-lg flex items-center justify-center text-muted-foreground size-10 md:size-12 bg-muted shrink-0">
+							{notification.title[0]}
+						</div>
+						<div className="flex-1 min-w-0">
+							<p className="text-sm font-bold truncate leading-snug">
+								<span className="text-primary">{notification.title}</span>
+							</p>
+							<p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+								{notification.message}
+							</p>
+						</div>
+						<Button
+							size="sm"
+							variant="outline"
+							className="shrink-0 text-xs md:text-sm h-8 md:h-9"
+							onClick={() => markAsRead(notification.id)}>
+							{d.REVIEW_BUTTON}
+						</Button>
+					</div>
+					{index < array.length - 1 && <Separator />}
+				</div>
+			))}
+		</div>
 	);
 }

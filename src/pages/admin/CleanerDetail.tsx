@@ -7,10 +7,21 @@ import { toast } from 'sonner';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DICT } from '@/dictionary';
 import { type AdminCleanerDetail, userService } from '@/features/admin/userService';
+import type { CleaningRequest } from '@/features/cleanings/cleaningService';
+import { cleaningService } from '@/features/cleanings/cleaningService';
+import { CleanerCleaningDetailView } from '@/features/cleanings/components/CleanerCleaningDetailView';
 import { CleaningStatusBadge } from '@/features/cleanings/components/CleaningStatusBadge';
+import { useResourceModals } from '@/hooks/useResourceModals';
 import { AdminLayout } from '@/layouts/AdminLayout';
 
 export function AdminCleanerDetailPage() {
@@ -20,6 +31,30 @@ export function AdminCleanerDetailPage() {
 	const navigate = useNavigate();
 	const [cleaner, setCleaner] = useState<AdminCleanerDetail | null>(null);
 	const [loading, setLoading] = useState(true);
+	const [viewingCleaning, setViewingCleaning] = useState<CleaningRequest | null>(null);
+	const [viewingLoading, setViewingLoading] = useState(false);
+
+	const modal = useResourceModals({ resourceName: 'cleaning' });
+
+	const fetchViewingCleaning = useCallback(async () => {
+		if (!modal.viewId) {
+			return;
+		}
+		setViewingLoading(true);
+		const result = await cleaningService.getCleaningRequestById(modal.viewId);
+		if (!result.error && result.data) {
+			setViewingCleaning(result.data);
+		}
+		setViewingLoading(false);
+	}, [modal.viewId]);
+
+	useEffect(() => {
+		if (modal.isViewOpen && modal.viewId) {
+			fetchViewingCleaning();
+		} else {
+			setViewingCleaning(null);
+		}
+	}, [modal.isViewOpen, modal.viewId, fetchViewingCleaning]);
 
 	const fetchCleanerDetail = useCallback(async () => {
 		if (!id) {
@@ -224,7 +259,7 @@ export function AdminCleanerDetailPage() {
 									type="button"
 									key={cleaning.id}
 									className="flex items-center gap-3 p-3 w-full text-left hover:bg-muted/50 cursor-pointer"
-									onClick={() => navigate(`/admin/cleanings?cleaning=${cleaning.id}`)}>
+									onClick={() => modal.openView(cleaning.id)}>
 									<div className="flex-1 min-w-0">
 										<p className="text-sm font-medium truncate">
 											{cleaning.property_address || detail.UNKNOWN}
@@ -244,6 +279,26 @@ export function AdminCleanerDetailPage() {
 						</div>
 					)}
 				</Card>
+
+				<Dialog open={modal.isViewOpen} onOpenChange={() => modal.handleClose()}>
+					<DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+						<DialogHeader>
+							<DialogTitle>Cleaning Details</DialogTitle>
+							<DialogDescription>View complete cleaning information</DialogDescription>
+						</DialogHeader>
+						{viewingLoading ? (
+							<div className="flex items-center justify-center py-8">
+								<Loader2 className="size-6 animate-spin text-muted-foreground" />
+							</div>
+						) : viewingCleaning ? (
+							<CleanerCleaningDetailView
+								cleaning={viewingCleaning}
+								open={modal.isViewOpen}
+								onOpenChange={(open) => !open && modal.handleClose()}
+							/>
+						) : null}
+					</DialogContent>
+				</Dialog>
 			</main>
 		</AdminLayout>
 	);

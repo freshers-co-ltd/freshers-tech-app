@@ -197,6 +197,10 @@ const routesConfig: RouteObject[] = [
 						path: 'account',
 						element: lazyLoad(() => import('@/pages/Account'), 'AccountPage'),
 					},
+					{
+						path: 'notifications',
+						element: lazyLoad(() => import('@/pages/Notifications'), 'NotificationsPage'),
+					},
 				],
 			},
 			{
@@ -218,6 +222,10 @@ const routesConfig: RouteObject[] = [
 					{
 						path: 'account',
 						element: lazyLoad(() => import('@/pages/Account'), 'AccountPage'),
+					},
+					{
+						path: 'notifications',
+						element: lazyLoad(() => import('@/pages/Notifications'), 'NotificationsPage'),
 					},
 				],
 			},
@@ -259,6 +267,10 @@ const routesConfig: RouteObject[] = [
 					{
 						path: 'account',
 						element: lazyLoad(() => import('@/pages/Account'), 'AccountPage'),
+					},
+					{
+						path: 'notifications',
+						element: lazyLoad(() => import('@/pages/Notifications'), 'NotificationsPage'),
 					},
 				],
 			},

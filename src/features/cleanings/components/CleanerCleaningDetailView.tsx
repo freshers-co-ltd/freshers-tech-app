@@ -219,7 +219,7 @@ export function CleanerCleaningDetailView({
 								</span>
 							</div>
 						</div>
-						<CleaningStatusBadge status={cleaning.status} />
+						<CleaningStatusBadge status={cleaning.status} isCleanerView={true} />
 					</div>
 				</DialogHeader>
 

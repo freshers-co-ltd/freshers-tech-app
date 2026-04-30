@@ -1,8 +1,8 @@
 'use client';
 
-import { Home, Loader2, Search, UserPlus, UserX } from 'lucide-react';
+import { Eye, Loader2, Recycle, Search, UserPlus, UserX } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { type ColumnDef, DataTable } from '@/components/DataTable';
-import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -24,6 +24,10 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DICT } from '@/dictionary';
 import { useAdminCleanings } from '@/features/admin/useAdminCleanings';
+import type { CleaningRequest } from '@/features/cleanings/cleaningService';
+import { cleaningService } from '@/features/cleanings/cleaningService';
+import { CleanerCleaningDetailView } from '@/features/cleanings/components/CleanerCleaningDetailView';
+import { useResourceModals } from '@/hooks/useResourceModals';
 import { AdminLayout } from '@/layouts/AdminLayout';
 
 export function AdminCleaningsPage() {
@@ -35,6 +39,8 @@ export function AdminCleaningsPage() {
 		searchQuery,
 		cleanerFilter,
 		page,
+		sortField,
+		sortDirection,
 		availableCleaners,
 		isAssignModalOpen,
 		selectedCleaner,
@@ -42,12 +48,39 @@ export function AdminCleaningsPage() {
 		setSearchQuery,
 		setCleanerFilter,
 		setPage,
+		setSortField,
+		setSortDirection,
 		setIsAssignModalOpen,
 		setSelectedCleaner,
 		handleAssignCleaner,
 		handleUnassignCleaner,
 		openAssignModal,
 	} = useAdminCleanings();
+
+	const modal = useResourceModals({ resourceName: 'cleaning' });
+
+	const [viewingCleaning, setViewingCleaning] = useState<CleaningRequest | null>(null);
+	const [viewingLoading, setViewingLoading] = useState(false);
+
+	const fetchViewingCleaning = useCallback(async () => {
+		if (!modal.viewId) {
+			return;
+		}
+		setViewingLoading(true);
+		const result = await cleaningService.getCleaningRequestById(modal.viewId);
+		if (!result.error && result.data) {
+			setViewingCleaning(result.data);
+		}
+		setViewingLoading(false);
+	}, [modal.viewId]);
+
+	useEffect(() => {
+		if (modal.isViewOpen && modal.viewId) {
+			fetchViewingCleaning();
+		} else {
+			setViewingCleaning(null);
+		}
+	}, [modal.isViewOpen, modal.viewId, fetchViewingCleaning]);
 
 	const d = DICT.ADMIN.CLEANINGS;
 
@@ -133,8 +166,12 @@ export function AdminCleaningsPage() {
 				<div className="flex items-center justify-end gap-1">
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<Button variant="secondary" size="sm" className="h-8 w-8 p-0">
-								<Home className="size-4" />
+							<Button
+								variant="secondary"
+								size="sm"
+								className="h-8 w-8 p-0"
+								onClick={() => modal.openView(cleaning.id)}>
+								<Eye className="size-4" />
 							</Button>
 						</TooltipTrigger>
 						<TooltipContent>
@@ -158,20 +195,36 @@ export function AdminCleaningsPage() {
 						</Tooltip>
 					)}
 					{cleaning.cleaner_name && !isDisabled(cleaning) && (
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Button
-									variant="secondary"
-									size="sm"
-									className="h-8 w-8 p-0"
-									onClick={() => handleUnassignCleaner(cleaning.id)}>
-									<UserX className="size-4" />
-								</Button>
-							</TooltipTrigger>
-							<TooltipContent>
-								<p>Unassign</p>
-							</TooltipContent>
-						</Tooltip>
+						<>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										variant="secondary"
+										size="sm"
+										className="h-8 w-8 p-0"
+										onClick={() => openAssignModal(cleaning.id)}>
+										<Recycle className="size-4" />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>Reassign Cleaner</p>
+								</TooltipContent>
+							</Tooltip>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										variant="secondary"
+										size="sm"
+										className="h-8 w-8 p-0"
+										onClick={() => handleUnassignCleaner(cleaning.id)}>
+										<UserX className="size-4" />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>Unassign</p>
+								</TooltipContent>
+							</Tooltip>
+						</>
 					)}
 				</div>
 			),
@@ -209,14 +262,38 @@ export function AdminCleaningsPage() {
 					</span>
 				</div>
 			</div>
+			<div className="flex gap-2 mt-3">
+				<Button size="sm" variant="outline" onClick={() => modal.openView(cleaning.id)}>
+					<Eye className="size-3 mr-1" />
+					View Details
+				</Button>
+				{!cleaning.cleaner_name ? (
+					<Button size="sm" onClick={() => openAssignModal(cleaning.id)}>
+						<UserPlus className="size-3 mr-1" />
+						Assign
+					</Button>
+				) : !isDisabled(cleaning) ? (
+					<>
+						<Button size="sm" variant="outline" onClick={() => openAssignModal(cleaning.id)}>
+							<Recycle className="size-3 mr-1" />
+							Reassign
+						</Button>
+						<Button
+							size="sm"
+							variant="destructive"
+							onClick={() => handleUnassignCleaner(cleaning.id)}>
+							<UserX className="size-3 mr-1" />
+							Unassign
+						</Button>
+					</>
+				) : null}
+			</div>
 		</>
 	);
 
 	return (
 		<AdminLayout title={d.TITLE} stats={[]}>
 			<main className="max-width-container">
-				<PageHeader title={d.TITLE} description="Manage cleaning requests" />
-
 				<Card className="mb-6 py-1">
 					<div className="p-3 flex flex-wrap gap-4">
 						<div className="flex-1 relative min-w-[200px]">
@@ -302,6 +379,17 @@ export function AdminCleaningsPage() {
 							onPageChange={setPage}
 							keyField="id"
 							renderMobileCard={renderMobileCard}
+							sortField={sortField}
+							sortDirection={sortDirection}
+							onSort={(field) => {
+								if (sortField === field) {
+									setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+								} else {
+									setSortField(field);
+									setSortDirection('desc');
+								}
+								setPage(1);
+							}}
 						/>
 					)}
 				</Card>
@@ -332,6 +420,26 @@ export function AdminCleaningsPage() {
 								<Button onClick={handleAssignCleaner}>Assign</Button>
 							</div>
 						</div>
+					</DialogContent>
+				</Dialog>
+
+				<Dialog open={modal.isViewOpen} onOpenChange={() => modal.handleClose()}>
+					<DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+						<DialogHeader>
+							<DialogTitle>Cleaning Details</DialogTitle>
+							<DialogDescription>View complete cleaning information</DialogDescription>
+						</DialogHeader>
+						{viewingLoading ? (
+							<div className="flex items-center justify-center py-8">
+								<Loader2 className="size-6 animate-spin text-muted-foreground" />
+							</div>
+						) : viewingCleaning ? (
+							<CleanerCleaningDetailView
+								cleaning={viewingCleaning}
+								open={modal.isViewOpen}
+								onOpenChange={(open) => !open && modal.handleClose()}
+							/>
+						) : null}
 					</DialogContent>
 				</Dialog>
 			</main>

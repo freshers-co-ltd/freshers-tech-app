@@ -8,6 +8,7 @@ import { Toaster } from '@/components/Toast';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthProvider } from '@/features/auth/AuthContext';
 import { CleaningProvider } from '@/features/cleanings/CleaningContext';
+import { NotificationProvider } from '@/features/notifications/NotificationContext';
 import { PropertyProvider } from '@/features/properties/PropertyContext';
 import { router } from '@/routes.tsx';
 import '@/index.css';
@@ -41,16 +42,18 @@ createRoot(rootElement).render(
 	<StrictMode>
 		<QueryClientProvider client={queryClient}>
 			<AuthProvider>
-				<PropertyProvider>
-					<CleaningProvider>
-						<TooltipProvider>
-							<NuqsAdapter>
-								<RouterProvider router={router} />
-							</NuqsAdapter>
-							<Toaster />
-						</TooltipProvider>
-					</CleaningProvider>
-				</PropertyProvider>
+				<NotificationProvider>
+					<PropertyProvider>
+						<CleaningProvider>
+							<TooltipProvider>
+								<NuqsAdapter>
+									<RouterProvider router={router} />
+								</NuqsAdapter>
+								<Toaster />
+							</TooltipProvider>
+						</CleaningProvider>
+					</PropertyProvider>
+				</NotificationProvider>
 			</AuthProvider>
 		</QueryClientProvider>
 	</StrictMode>,

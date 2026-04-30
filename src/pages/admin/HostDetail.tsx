@@ -18,10 +18,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DICT } from '@/dictionary';
-import { cleaningService } from '@/features/admin/cleaningService';
 import { type AdminHostDetail, userService } from '@/features/admin/userService';
+import type { CleaningRequest } from '@/features/cleanings/cleaningService';
+import { cleaningService } from '@/features/cleanings/cleaningService';
+import { CleanerCleaningDetailView } from '@/features/cleanings/components/CleanerCleaningDetailView';
 import { CleaningStatusBadge } from '@/features/cleanings/components/CleaningStatusBadge';
+import { PropertyDetailView } from '@/features/properties/components/PropertyDetailView';
+import type { Property } from '@/features/properties/propertyService';
+import { useResourceModals } from '@/hooks/useResourceModals';
 import { AdminLayout } from '@/layouts/AdminLayout';
+import { supabase } from '@/lib/supabaseClient';
 
 export function AdminHostDetailPage() {
 	const d = DICT.ADMIN.USERS;
@@ -37,6 +43,58 @@ export function AdminHostDetailPage() {
 	const [instructions, setInstructions] = useState('');
 	const [stocksIncluded, setStocksIncluded] = useState(false);
 	const [creating, setCreating] = useState(false);
+
+	const cleaningModal = useResourceModals({ resourceName: 'cleaning' });
+	const propertyModal = useResourceModals({ resourceName: 'property' });
+
+	const [viewingCleaning, setViewingCleaning] = useState<CleaningRequest | null>(null);
+	const [viewingCleaningLoading, setViewingCleaningLoading] = useState(false);
+	const [viewingProperty, setViewingProperty] = useState<Property | null>(null);
+	const [viewingPropertyLoading, setViewingPropertyLoading] = useState(false);
+
+	const fetchViewingCleaning = useCallback(async () => {
+		if (!cleaningModal.viewId) {
+			return;
+		}
+		setViewingCleaningLoading(true);
+		const result = await cleaningService.getCleaningRequestById(cleaningModal.viewId);
+		if (!result.error && result.data) {
+			setViewingCleaning(result.data);
+		}
+		setViewingCleaningLoading(false);
+	}, [cleaningModal.viewId]);
+
+	const fetchViewingProperty = useCallback(async () => {
+		if (!propertyModal.viewId) {
+			return;
+		}
+		setViewingPropertyLoading(true);
+		const { data, error } = await supabase
+			.from('properties')
+			.select('*')
+			.eq('id', propertyModal.viewId)
+			.single();
+		if (!error && data) {
+			setViewingProperty(data as Property);
+		}
+		setViewingPropertyLoading(false);
+	}, [propertyModal.viewId]);
+
+	useEffect(() => {
+		if (cleaningModal.isViewOpen && cleaningModal.viewId) {
+			fetchViewingCleaning();
+		} else {
+			setViewingCleaning(null);
+		}
+	}, [cleaningModal.isViewOpen, cleaningModal.viewId, fetchViewingCleaning]);
+
+	useEffect(() => {
+		if (propertyModal.isViewOpen && propertyModal.viewId) {
+			fetchViewingProperty();
+		} else {
+			setViewingProperty(null);
+		}
+	}, [propertyModal.isViewOpen, propertyModal.viewId, fetchViewingProperty]);
 
 	const fetchHostDetail = useCallback(async () => {
 		if (!id) {
@@ -107,13 +165,13 @@ export function AdminHostDetailPage() {
 			return;
 		}
 		setCreating(true);
-		const result = await cleaningService.createCleaningForHost(
-			host.id,
-			selectedProperty,
-			scheduledStart,
-			serviceCost,
-			{ instructions, stocksIncluded },
-		);
+		const result = await cleaningService.createCleaningRequest({
+			property_id: selectedProperty,
+			scheduled_start: scheduledStart,
+			service_cost: serviceCost,
+			instructions: instructions,
+			custom_tasks: [],
+		});
 		setCreating(false);
 		if (result.error) {
 			toast.error(result.error);
@@ -252,7 +310,7 @@ export function AdminHostDetailPage() {
 									type="button"
 									key={property.id}
 									className="flex items-center gap-3 p-3 w-full text-left hover:bg-muted/50 cursor-pointer"
-									onClick={() => navigate(`/admin/cleanings?property=${property.id}`)}>
+									onClick={() => propertyModal.openView(property.id)}>
 									<div className="size-10 rounded-md bg-muted flex items-center justify-center shrink-0">
 										{property.main_image_url ? (
 											<img
@@ -296,7 +354,7 @@ export function AdminHostDetailPage() {
 									type="button"
 									key={cleaning.id}
 									className="flex items-center gap-3 p-3 w-full text-left hover:bg-muted/50 cursor-pointer"
-									onClick={() => navigate(`/admin/cleanings?cleaning=${cleaning.id}`)}>
+									onClick={() => cleaningModal.openView(cleaning.id)}>
 									<div className="flex-1 min-w-0">
 										<p className="text-sm font-medium truncate">
 											{cleaning.property_id.slice(0, 8)}...
@@ -380,6 +438,46 @@ export function AdminHostDetailPage() {
 								</Button>
 							</div>
 						</div>
+					</DialogContent>
+				</Dialog>
+
+				<Dialog open={cleaningModal.isViewOpen} onOpenChange={() => cleaningModal.handleClose()}>
+					<DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+						<DialogHeader>
+							<DialogTitle>Cleaning Details</DialogTitle>
+							<DialogDescription>View complete cleaning information</DialogDescription>
+						</DialogHeader>
+						{viewingCleaningLoading ? (
+							<div className="flex items-center justify-center py-8">
+								<Loader2 className="size-6 animate-spin text-muted-foreground" />
+							</div>
+						) : viewingCleaning ? (
+							<CleanerCleaningDetailView
+								cleaning={viewingCleaning}
+								open={cleaningModal.isViewOpen}
+								onOpenChange={(open) => !open && cleaningModal.handleClose()}
+							/>
+						) : null}
+					</DialogContent>
+				</Dialog>
+
+				<Dialog open={propertyModal.isViewOpen} onOpenChange={() => propertyModal.handleClose()}>
+					<DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+						<DialogHeader>
+							<DialogTitle>Property Details</DialogTitle>
+							<DialogDescription>View complete property information</DialogDescription>
+						</DialogHeader>
+						{viewingPropertyLoading ? (
+							<div className="flex items-center justify-center py-8">
+								<Loader2 className="size-6 animate-spin text-muted-foreground" />
+							</div>
+						) : viewingProperty ? (
+							<PropertyDetailView
+								property={viewingProperty}
+								onEdit={() => {}}
+								onDelete={() => {}}
+							/>
+						) : null}
 					</DialogContent>
 				</Dialog>
 			</main>

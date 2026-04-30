@@ -22,6 +22,7 @@ import {
 	type TaskUpdate,
 	type UpdateCleaningRequestPayload,
 } from '@/features/cleanings/cleaningService';
+import { supabase } from '@/lib/supabaseClient';
 
 interface CleaningContextType {
 	cleanings: CleaningRequest[];
@@ -54,6 +55,7 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const { user, profile } = useAuth();
 	const abortControllerRef = useRef<AbortController | null>(null);
+	const cleaningChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
 	const fetchCleanings = useCallback(
 		async (signal?: AbortSignal) => {
@@ -90,6 +92,50 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 
 		return () => {
 			abortControllerRef.current?.abort();
+		};
+	}, [user, profile, fetchCleanings]);
+
+	useEffect(() => {
+		if (!user || !profile) {
+			if (cleaningChannelRef.current) {
+				supabase.removeChannel(cleaningChannelRef.current);
+				cleaningChannelRef.current = null;
+			}
+			return;
+		}
+
+		if (cleaningChannelRef.current) {
+			return;
+		}
+
+		const isCleaner = profile.role === 'cleaner';
+		if (!isCleaner) {
+			return;
+		}
+
+		const newChannel = supabase
+			.channel('cleanings-realtime')
+			.on(
+				'postgres_changes',
+				{
+					event: '*',
+					schema: 'public',
+					table: 'cleanings',
+					filter: `cleaner_id=eq.${user.id}`,
+				},
+				() => {
+					fetchCleanings();
+				},
+			)
+			.subscribe();
+
+		cleaningChannelRef.current = newChannel;
+
+		return () => {
+			if (cleaningChannelRef.current) {
+				supabase.removeChannel(cleaningChannelRef.current);
+				cleaningChannelRef.current = null;
+			}
 		};
 	}, [user, profile, fetchCleanings]);
 

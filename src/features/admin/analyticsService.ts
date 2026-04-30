@@ -118,8 +118,8 @@ export const analyticsService = {
 			p_action_type: (actionType ?? null) as string,
 			p_page: page,
 			p_limit: limit,
-			p_date_from: dateFrom,
-			p_date_to: dateTo,
+			p_date_from: dateFrom ?? undefined,
+			p_date_to: dateTo ?? undefined,
 		});
 
 		if (error) {

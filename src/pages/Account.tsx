@@ -1,14 +1,14 @@
 'use client';
 
-import { Bell, Globe, LogOut, Mail, Send, Settings, Shield, User } from 'lucide-react';
+import { Globe, LogOut, Mail, Send, Settings, Shield, User } from 'lucide-react';
 import { Loading } from '@/components/Loading';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
 import { DICT } from '@/dictionary';
 import { AccountAvatar } from '@/features/account/components/AccountAvatar';
 import { AccountForm } from '@/features/account/components/AccountForm';
 import { useAuth } from '@/features/auth/AuthContext';
+import { NotificationPreferencesForm } from '@/features/notifications/components/NotificationPreferencesForm';
 
 export function AccountPage() {
 	const { loading, signOut } = useAuth();
@@ -102,35 +102,8 @@ export function AccountPage() {
 								</p>
 							</div>
 							<Separator />
-							<div className="max-w-2xl space-y-4 mb-8 md:scroll-mt-22">
-								<div className="flex items-center justify-between rounded-lg border p-4">
-									<div className="flex gap-4">
-										<Bell className="size-5 text-muted-foreground mt-0.5" />
-										<div className="space-y-0.5">
-											<p className="text-sm font-medium">
-												{DICT.ACCOUNT.PREFERENCES.EMAIL_NOTIFICATIONS}
-											</p>
-											<p className="text-xs text-muted-foreground">
-												{DICT.ACCOUNT.PREFERENCES.EMAIL_NOTIFICATIONS_DESC}
-											</p>
-										</div>
-									</div>
-									<Switch defaultChecked />
-								</div>
-								<div className="flex items-center justify-between rounded-lg border p-4">
-									<div className="flex gap-4">
-										<Shield className="size-5 text-muted-foreground mt-0.5" />
-										<div className="space-y-0.5">
-											<p className="text-sm font-medium">
-												{DICT.ACCOUNT.PREFERENCES.SECURITY_ALERTS}
-											</p>
-											<p className="text-xs text-muted-foreground">
-												{DICT.ACCOUNT.PREFERENCES.SECURITY_ALERTS_DESC}
-											</p>
-										</div>
-									</div>
-									<Switch defaultChecked />
-								</div>
+							<div className="max-w-2xl mb-8 md:scroll-mt-22">
+								<NotificationPreferencesForm />
 							</div>
 						</section>
 

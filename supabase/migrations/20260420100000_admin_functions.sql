@@ -1,7 +1,14 @@
 BEGIN;
 
 CREATE
-OR REPLACE FUNCTION public.admin_get_users (p_role TEXT DEFAULT NULL, p_search TEXT DEFAULT NULL, p_page INT DEFAULT 1, p_limit INT DEFAULT 20, p_sort_field TEXT DEFAULT 'joined', p_sort_direction TEXT DEFAULT 'desc') RETURNS TABLE (
+OR REPLACE FUNCTION public.admin_get_users (
+    p_role TEXT DEFAULT NULL,
+    p_search TEXT DEFAULT NULL,
+    p_page INT DEFAULT 1,
+    p_limit INT DEFAULT 20,
+    p_sort_field TEXT DEFAULT 'joined',
+    p_sort_direction TEXT DEFAULT 'desc'
+) RETURNS TABLE (
     id UUID,
     email TEXT,
     full_name TEXT,
@@ -240,7 +247,9 @@ OR REPLACE FUNCTION public.admin_get_all_cleanings (
     p_host_id UUID DEFAULT NULL,
     p_search TEXT DEFAULT NULL,
     p_page INT DEFAULT 1,
-    p_limit INT DEFAULT 20
+    p_limit INT DEFAULT 20,
+    p_sort_field TEXT DEFAULT NULL,
+    p_sort_direction TEXT DEFAULT 'desc'
 ) RETURNS TABLE (
     id UUID,
     host_id UUID,
@@ -280,36 +289,22 @@ BEGIN
         AND (p_host_id IS NULL OR c.host_id = p_host_id)
         AND (p_search IS NULL OR hp.full_name ILIKE '%' || p_search || '%' OR cp.full_name ILIKE '%' || p_search || '%' OR pr.address_line_1 ILIKE '%' || p_search || '%' OR pr.postcode ILIKE '%' || p_search || '%')
         AND c.deleted_at IS NULL
-    ORDER BY c.scheduled_start DESC
+    ORDER BY
+        CASE WHEN p_sort_field = 'date' AND p_sort_direction = 'asc' THEN c.scheduled_start END ASC,
+        CASE WHEN p_sort_field = 'date' AND (p_sort_direction IS NULL OR p_sort_direction = 'desc') THEN c.scheduled_start END DESC,
+        CASE WHEN p_sort_field = 'property' AND p_sort_direction = 'asc' THEN pr.address_line_1 END ASC,
+        CASE WHEN p_sort_field = 'property' AND (p_sort_direction IS NULL OR p_sort_direction = 'desc') THEN pr.address_line_1 END DESC,
+        CASE WHEN p_sort_field = 'host' AND p_sort_direction = 'asc' THEN hp.full_name END ASC,
+        CASE WHEN p_sort_field = 'host' AND (p_sort_direction IS NULL OR p_sort_direction = 'desc') THEN hp.full_name END DESC,
+        CASE WHEN p_sort_field = 'cleaner' AND p_sort_direction = 'asc' THEN cp.full_name END ASC,
+        CASE WHEN p_sort_field = 'cleaner' AND (p_sort_direction IS NULL OR p_sort_direction = 'desc') THEN cp.full_name END DESC,
+        CASE WHEN p_sort_field = 'status' AND p_sort_direction = 'asc' THEN c.status END ASC,
+        CASE WHEN p_sort_field = 'status' AND (p_sort_direction IS NULL OR p_sort_direction = 'desc') THEN c.status END DESC,
+        CASE WHEN p_sort_field = 'cost' AND p_sort_direction = 'asc' THEN c.service_cost END ASC,
+        CASE WHEN p_sort_field = 'cost' AND (p_sort_direction IS NULL OR p_sort_direction = 'desc') THEN c.service_cost END DESC,
+        CASE WHEN p_sort_field IS NULL OR p_sort_field = '' THEN c.scheduled_start END DESC
     LIMIT p_limit
     OFFSET (p_page - 1) * p_limit;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE
-OR REPLACE FUNCTION public.admin_update_cleaning_status (p_cleaning_id UUID, p_status TEXT) RETURNS VOID SECURITY DEFINER
-SET
-    search_path = public AS $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM public.cleanings WHERE id = p_cleaning_id AND deleted_at IS NULL) THEN
-        RAISE EXCEPTION 'Cleaning not found' USING ERRCODE = 'P0001';
-    END IF;
-    UPDATE public.cleanings
-    SET status = p_status::public.cleaning_status, updated_at = now()
-    WHERE id = p_cleaning_id;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE
-OR REPLACE FUNCTION public.admin_assign_cleaner (p_cleaning_id UUID, p_cleaner_id UUID) RETURNS VOID SECURITY DEFINER
-SET
-    search_path = public AS $$
-DECLARE v_status public.cleaning_status;
-BEGIN
-    SELECT status INTO v_status FROM public.cleanings WHERE id = p_cleaning_id AND deleted_at IS NULL;
-    IF v_status IS NULL THEN RAISE EXCEPTION 'Cleaning not found'; END IF;
-    IF v_status::TEXT IN ('in_progress', 'completed') THEN RAISE EXCEPTION 'Reassignment blocked'; END IF;
-    UPDATE public.cleanings SET cleaner_id = p_cleaner_id, updated_at = now() WHERE id = p_cleaning_id;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -322,6 +317,23 @@ BEGIN
     SELECT status INTO v_status FROM public.cleanings WHERE id = p_cleaning_id AND deleted_at IS NULL;
     IF v_status::TEXT IN ('in_progress', 'completed') THEN RAISE EXCEPTION 'Unassignment blocked'; END IF;
     UPDATE public.cleanings SET cleaner_id = NULL, updated_at = now() WHERE id = p_cleaning_id;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE
+OR REPLACE FUNCTION public.admin_assign_cleaner (p_cleaning_id UUID, p_cleaner_id UUID) RETURNS VOID SECURITY DEFINER
+SET
+    search_path = public AS $$
+DECLARE v_status public.cleaning_status;
+BEGIN
+    SELECT status INTO v_status FROM public.cleanings WHERE id = p_cleaning_id AND deleted_at IS NULL;
+    IF v_status NOT IN ('requested') THEN
+        RAISE EXCEPTION 'Can only assign cleaner to requested cleanings';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = p_cleaner_id AND role = 'cleaner') THEN
+        RAISE EXCEPTION 'Invalid cleaner ID';
+    END IF;
+    UPDATE public.cleanings SET cleaner_id = p_cleaner_id, updated_at = now() WHERE id = p_cleaning_id;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -554,7 +566,12 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE
-OR REPLACE FUNCTION public.admin_get_cleanings_count (p_status TEXT DEFAULT NULL, p_cleaner_id UUID DEFAULT NULL, p_host_id UUID DEFAULT NULL, p_search TEXT DEFAULT NULL) RETURNS INT LANGUAGE plpgsql SECURITY DEFINER AS $$
+OR REPLACE FUNCTION public.admin_get_cleanings_count (
+    p_status TEXT DEFAULT NULL,
+    p_cleaner_id UUID DEFAULT NULL,
+    p_host_id UUID DEFAULT NULL,
+    p_search TEXT DEFAULT NULL
+) RETURNS INT LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
     RETURN (SELECT count(*)::INT FROM public.cleanings c
     LEFT JOIN public.profiles hp ON c.host_id = hp.id
