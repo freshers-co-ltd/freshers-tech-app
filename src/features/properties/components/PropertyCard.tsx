@@ -76,19 +76,19 @@ export const PropertyCard = memo(({ property, onDelete, onEdit, onView }: Proper
 					<div className="flex items-center gap-2">
 						<Bed className="size-4" />
 						<span>
-							{property.bedrooms} {DICT.PROPERTIES.LABELS.BEDS}
+							{property.bedrooms} {DICT.COMMON.LABELS.BEDS}
 						</span>
 					</div>
 					<div className="flex items-center gap-2">
 						<Bath className="size-4" />
 						<span>
-							{property.bathrooms} {DICT.PROPERTIES.LABELS.BATHS}
+							{property.bathrooms} {DICT.COMMON.LABELS.BATHS}
 						</span>
 					</div>
 				</div>
 			</CardContent>
 			<CardFooter className="pt-0 text-xs capitalize text-muted-foreground">
-				{DICT.PROPERTIES.LABELS.TYPE}: {property.type}
+				{DICT.COMMON.LABELS.TYPE}: {property.type}
 			</CardFooter>
 		</Card>
 	);

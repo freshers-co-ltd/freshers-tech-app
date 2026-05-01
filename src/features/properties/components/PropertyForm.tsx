@@ -34,12 +34,12 @@ const POSTCODE_REGEX = /^[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}$/i;
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
 const propertySchema = z.object({
-	address_line_1: z.string().min(1, DICT.FORMS.VALIDATION.ADDRESS_REQUIRED),
+	address_line_1: z.string().min(1, DICT.COMMON.VALIDATION.ADDRESS_REQUIRED),
 	address_line_2: z.string().optional(),
-	town_city: z.string().min(1, DICT.FORMS.VALIDATION.TOWN_REQUIRED),
+	town_city: z.string().min(1, DICT.COMMON.VALIDATION.TOWN_REQUIRED),
 	postcode: z
 		.string()
-		.regex(POSTCODE_REGEX, DICT.FORMS.VALIDATION.POSTCODE_INVALID)
+		.regex(POSTCODE_REGEX, DICT.COMMON.VALIDATION.POSTCODE_INVALID)
 		.transform((val) => {
 			const cleaned = val.replace(/\s+/g, '').toUpperCase();
 			const incode = cleaned.slice(-3);
@@ -47,11 +47,11 @@ const propertySchema = z.object({
 			return `${outcode} ${incode}`;
 		}),
 	type: z.enum(propertyTypeValues),
-	bedrooms: z.coerce.number().min(0, DICT.FORMS.VALIDATION.NUMBER_INVALID),
-	bathrooms: z.coerce.number().min(0, DICT.FORMS.VALIDATION.NUMBER_INVALID),
+	bedrooms: z.coerce.number().min(0, DICT.COMMON.VALIDATION.NUMBER_INVALID),
+	bathrooms: z.coerce.number().min(0, DICT.COMMON.VALIDATION.NUMBER_INVALID),
 	main_image_url: z.string().optional(),
 	has_main_image: z.boolean().refine((val) => val === true, {
-		message: DICT.FORMS.VALIDATION.IMAGE_REQUIRED,
+		message: DICT.COMMON.VALIDATION.IMAGE_REQUIRED,
 	}),
 });
 
@@ -145,7 +145,7 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 			if (extraImages && extraImages.length > 0) {
 				const totalImages = extraImagesPaths.length + extraImages.length;
 				if (totalImages > 10) {
-					form.setError('root', { message: DICT.FORMS.VALIDATION.IMAGE_LIMIT });
+					form.setError('root', { message: DICT.COMMON.VALIDATION.IMAGE_LIMIT });
 					setIsUploading(false);
 					return;
 				}
@@ -190,11 +190,12 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 			className="space-y-6">
 			<FieldGroup>
 				<Field>
-					<FieldLabel htmlFor="address_line_1">{DICT.FORMS.LABELS.ADDRESS_LINE_1}</FieldLabel>
+					<FieldLabel htmlFor="address_line_1">{DICT.COMMON.LABELS.ADDRESS_LINE_1}</FieldLabel>
 					<Input
 						{...form.register('address_line_1')}
 						id="address_line_1"
-						placeholder={DICT.FORMS.PLACEHOLDERS.ADDRESS_LINE_1}
+						type="text"
+						placeholder={DICT.COMMON.PLACEHOLDERS.ADDRESS_LINE_1}
 					/>
 					{form.formState.errors.address_line_1 && (
 						<FieldError>{form.formState.errors.address_line_1.message}</FieldError>
@@ -202,32 +203,32 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 				</Field>
 
 				<Field>
-					<FieldLabel htmlFor="address_line_2">{DICT.FORMS.LABELS.ADDRESS_LINE_2}</FieldLabel>
+					<FieldLabel htmlFor="address_line_2">{DICT.COMMON.LABELS.ADDRESS_LINE_2}</FieldLabel>
 					<Input
 						{...form.register('address_line_2')}
 						id="address_line_2"
-						placeholder={DICT.FORMS.PLACEHOLDERS.ADDRESS_LINE_2}
+						placeholder={DICT.COMMON.PLACEHOLDERS.ADDRESS_LINE_2}
 					/>
 				</Field>
 
 				<div className="grid grid-cols-2 gap-4">
 					<Field>
-						<FieldLabel htmlFor="town_city">{DICT.FORMS.LABELS.TOWN_CITY}</FieldLabel>
+						<FieldLabel htmlFor="town_city">{DICT.COMMON.LABELS.TOWN_CITY}</FieldLabel>
 						<Input
 							{...form.register('town_city')}
 							id="town_city"
-							placeholder={DICT.FORMS.PLACEHOLDERS.TOWN_CITY}
+							placeholder={DICT.COMMON.PLACEHOLDERS.TOWN_CITY}
 						/>
 						{form.formState.errors.town_city && (
 							<FieldError>{form.formState.errors.town_city.message}</FieldError>
 						)}
 					</Field>
 					<Field>
-						<FieldLabel htmlFor="postcode">{DICT.FORMS.LABELS.POSTCODE}</FieldLabel>
+						<FieldLabel htmlFor="postcode">{DICT.COMMON.LABELS.POSTCODE}</FieldLabel>
 						<Input
 							{...form.register('postcode')}
 							id="postcode"
-							placeholder={DICT.FORMS.PLACEHOLDERS.POSTCODE}
+							placeholder={DICT.COMMON.PLACEHOLDERS.POSTCODE}
 							className="uppercase"
 						/>
 						{form.formState.errors.postcode && (
@@ -237,7 +238,7 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 				</div>
 
 				<Field>
-					<FieldLabel>{DICT.FORMS.LABELS.PROPERTY_TYPE}</FieldLabel>
+					<FieldLabel>{DICT.COMMON.LABELS.PROPERTY_TYPE}</FieldLabel>
 					<Select
 						onValueChange={(value) => form.setValue('type', value as PropertyFormValues['type'])}
 						defaultValue={form.getValues('type')}>
@@ -254,7 +255,7 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 
 				<div className="grid grid-cols-2 gap-4">
 					<Field>
-						<FieldLabel htmlFor="bedrooms">{DICT.FORMS.LABELS.BEDROOMS}</FieldLabel>
+						<FieldLabel htmlFor="bedrooms">{DICT.COMMON.LABELS.BEDROOMS}</FieldLabel>
 						<Input
 							{...form.register('bedrooms')}
 							id="bedrooms"
@@ -267,7 +268,7 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 						)}
 					</Field>
 					<Field>
-						<FieldLabel htmlFor="bathrooms">{DICT.FORMS.LABELS.BATHROOMS}</FieldLabel>
+						<FieldLabel htmlFor="bathrooms">{DICT.COMMON.LABELS.BATHROOMS}</FieldLabel>
 						<Input
 							{...form.register('bathrooms')}
 							id="bathrooms"
@@ -279,7 +280,7 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 				</div>
 
 				<Field>
-					<FieldLabel>{DICT.FORMS.LABELS.MAIN_IMAGE}</FieldLabel>
+					<FieldLabel>{DICT.COMMON.IMAGES.MAIN}</FieldLabel>
 					<FileUploader
 						value={mainImage}
 						onValueChange={setMainImage}
@@ -317,8 +318,8 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 
 				<Field>
 					<FieldLabel>
-						{DICT.FORMS.LABELS.ADDITIONAL_IMAGES} (
-						{extraImagesPaths.length + (extraImages?.length || 0)}/10)
+						{DICT.COMMON.IMAGES.ADDITIONAL} ({extraImagesPaths.length + (extraImages?.length || 0)}
+						/10)
 					</FieldLabel>
 					<FileUploader
 						value={extraImages}
@@ -336,7 +337,7 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 							<FileSvgDraw accept={{ 'image/*': ['.jpg', '.jpeg', '.png'] }} />
 							{remainingSlots <= 0 && (
 								<p className="mt-2 text-xs font-medium text-center text-destructive">
-									{DICT.FORMS.LABELS.LIMIT_REACHED}
+									{DICT.COMMON.IMAGES.LIMIT_REACHED}
 								</p>
 							)}
 						</FileInput>
@@ -360,14 +361,14 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 
 			<div className="flex justify-end gap-3 pt-4 overflow-visible border-t border-border">
 				<Button type="button" variant="outline" onClick={onCancel}>
-					{cancelLabel ?? DICT.PROPERTIES.ACTIONS.CANCEL}
+					{cancelLabel ?? DICT.COMMON.ACTIONS.CANCEL}
 				</Button>
 				<Button type="submit" disabled={isUploading || form.formState.isSubmitting}>
 					{isUploading
-						? DICT.PROPERTIES.ACTIONS.UPLOADING
+						? DICT.PROPERTIES.UPLOADING
 						: initialData
-							? DICT.PROPERTIES.ACTIONS.UPDATE
-							: DICT.PROPERTIES.ACTIONS.ADD}
+							? DICT.COMMON.ACTIONS.UPDATE_PROPERTY
+							: DICT.COMMON.ACTIONS.ADD_PROPERTY}
 				</Button>
 			</div>
 		</form>

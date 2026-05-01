@@ -10,11 +10,18 @@ import {
 	useReactTable,
 	type VisibilityState,
 } from '@tanstack/react-table';
-import { Loader2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Loader2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { SortIcon } from '@/components/SortIcon';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardFooter } from '@/components/ui/card';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
 
 export interface ColumnDef<T> {
 	key: string;
@@ -37,7 +44,9 @@ interface DataTableProps<T> {
 	pageSize?: number;
 	onPageChange?: (page: number) => void;
 	keyField: keyof T;
-	renderMobileCard?: (item: T) => React.ReactNode;
+	renderMobileHeader?: (item: T) => React.ReactNode;
+	priorityColumns?: string[];
+	excludeFromExpanded?: string[];
 }
 
 export function DataTable<T>({
@@ -53,7 +62,9 @@ export function DataTable<T>({
 	pageSize = 20,
 	onPageChange,
 	keyField,
-	renderMobileCard,
+	renderMobileHeader,
+	priorityColumns,
+	excludeFromExpanded,
 }: DataTableProps<T>) {
 	const [sorting, setSorting] = useState<SortingState>(() => {
 		if (sortField) {
@@ -63,6 +74,19 @@ export function DataTable<T>({
 	});
 
 	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+	const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+
+	const toggleExpanded = (id: string) => {
+		setExpandedCards((prev) => {
+			const next = new Set(prev);
+			if (next.has(id)) {
+				next.delete(id);
+			} else {
+				next.add(id);
+			}
+			return next;
+		});
+	};
 
 	const tanStackColumns = useMemo<TanStackColumnDef<T>[]>(
 		() =>
@@ -117,33 +141,109 @@ export function DataTable<T>({
 		);
 	}
 
-	const hasPagination = totalCount && totalCount > pageSize;
+	const showPagination = totalCount !== undefined;
+	const sortableColumns = columns.filter((col) => col.sortable);
+	const priorityKeys = new Set(priorityColumns || []);
+	const excludeKeys = new Set(excludeFromExpanded || []);
 
 	return (
 		<>
-			<div className="grid gap-4 md:hidden">
-				{renderMobileCard
-					? data.map((item) => (
-							<Card key={String(item[keyField])} className="p-4">
-								{renderMobileCard(item)}
-							</Card>
-						))
-					: data.map((item) => (
-							<Card key={String(item[keyField])} className="p-4">
-								{columns.map((col) => (
-									<div
-										key={col.key}
-										className="grid grid-cols-[1fr_1.5fr] border-b last:border-0 text-sm">
-										<div className="py-2 font-medium border-r">{col.label}</div>
-										<div className="px-3 py-2 flex items-center justify-center">
+			<div className="grid gap-3 md:hidden w-full max-w-full box-border overflow-hidden">
+				{sortableColumns.length > 0 && (
+					<div className="flex gap-2">
+						<Select
+							value={sortField || sortableColumns[0]?.key || ''}
+							onValueChange={(value) => {
+								onSort?.(value);
+							}}>
+							<SelectTrigger className="flex-1 h-9">
+								<SelectValue>
+									{`Sort by: ${sortableColumns.find((c) => c.key === (sortField || sortableColumns[0]?.key))?.label || ''}`}
+								</SelectValue>
+							</SelectTrigger>
+							<SelectContent>
+								{sortableColumns.map((col) => (
+									<SelectItem key={col.key} value={col.key}>
+										{col.label}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+						<Button
+							variant="outline"
+							size="icon-sm"
+							onClick={() => {
+								if (sortField && onSort) {
+									onSort(sortField);
+								} else if (sortableColumns[0]?.key && onSort) {
+									onSort(sortableColumns[0].key);
+								}
+							}}>
+							{sortDirection === 'asc' ? (
+								<ArrowUp className="size-4" />
+							) : (
+								<ArrowDown className="size-4" />
+							)}
+						</Button>
+					</div>
+				)}
+				{data.map((item) => {
+					const itemId = String(item[keyField]);
+					const isExpanded = expandedCards.has(itemId);
+
+					const expandedColumns = columns.filter(
+						(col) => !priorityKeys.has(col.key) && !excludeKeys.has(col.key),
+					);
+
+					return (
+						<Card
+							key={itemId}
+							className="w-full max-w-full box-border overflow-hidden p-3 pb-1 gap-2">
+							{renderMobileHeader ? (
+								renderMobileHeader(item)
+							) : (
+								<div>
+									{columns.slice(0, 3).map((col) => (
+										<div key={col.key}>
 											{col.render
 												? col.render(item)
 												: String((item as Record<string, unknown>)[col.key] ?? '-')}
 										</div>
-									</div>
-								))}
-							</Card>
-						))}
+									))}
+								</div>
+							)}
+
+							{isExpanded && expandedColumns.length > 0 && (
+								<div className="mt-2 pt-2 border-t">
+									{expandedColumns.map((col) => (
+										<div key={col.key} className="grid grid-cols-[100px_1fr] py-1 gap-x-2">
+											<span className="text-sm font-medium truncate">{col.label}</span>
+											<span className="text-sm truncate">
+												{col.render
+													? col.render(item)
+													: String((item as Record<string, unknown>)[col.key] ?? '-')}
+											</span>
+										</div>
+									))}
+								</div>
+							)}
+
+							{(priorityColumns || excludeFromExpanded) && (
+								<CardFooter className="border-t p-0!">
+									<Button
+										variant="ghost"
+										className="w-full p-0 h-8 text-sm"
+										onClick={(e) => {
+											e.stopPropagation();
+											toggleExpanded(itemId);
+										}}>
+										{isExpanded ? 'Show Less' : 'Show More'}
+									</Button>
+								</CardFooter>
+							)}
+						</Card>
+					);
+				})}
 			</div>
 
 			<Card className="hidden md:block p-0 overflow-hidden">
@@ -159,18 +259,15 @@ export function DataTable<T>({
 												key={header.id}
 												className={`text-left p-3 font-medium text-sm ${colDef?.className || ''}`}>
 												{header.isPlaceholder ? null : colDef?.sortable && onSort ? (
-													<button
-														type="button"
-														className="flex items-center gap-1 cursor-pointer bg-transparent border-none p-0 font-inherit"
-														onClick={() => header.column.toggleSorting()}>
+													<div className="flex items-center gap-1">
 														{flexRender(header.column.columnDef.header, header.getContext())}
 														<SortIcon
 															currentField={header.id}
 															sortField={sortField || ''}
 															sortDirection={sortDirection || 'asc'}
-															onClick={() => {}}
+															onClick={() => header.column.toggleSorting()}
 														/>
-													</button>
+													</div>
 												) : (
 													<span>
 														{flexRender(header.column.columnDef.header, header.getContext())}
@@ -199,10 +296,14 @@ export function DataTable<T>({
 					</table>
 				</div>
 
-				{hasPagination && (
-					<div className="flex items-center justify-between p-4 border-t">
+				{showPagination && (
+					<div className="flex items-center justify-between px-4 py-2 border-t">
 						<p className="text-sm text-muted-foreground">
-							Showing {data.length} of {totalCount}
+							{(() => {
+								const start = (page - 1) * pageSize + 1;
+								const end = Math.min(page * pageSize, totalCount ?? 0);
+								return totalCount === 0 ? '0 results' : `Showing ${start}-${end} of ${totalCount}`;
+							})()}
 						</p>
 						<div className="flex gap-2">
 							<Button
@@ -215,7 +316,7 @@ export function DataTable<T>({
 							<Button
 								variant="outline"
 								size="sm"
-								disabled={page * pageSize >= totalCount}
+								disabled={!totalCount || page * pageSize >= totalCount}
 								onClick={() => onPageChange?.(page + 1)}>
 								Next
 							</Button>

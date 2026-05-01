@@ -3,11 +3,11 @@
 import { format } from 'date-fns';
 import { Banknote, Calendar, ClipboardCheck, MapPin, Pencil, Trash2 } from 'lucide-react';
 import { memo, useMemo } from 'react';
+import { EntityBadge } from '@/components/EntityBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { DICT } from '@/dictionary';
 import { type CleaningRequest, STATUS_GROUPS } from '@/features/cleanings/cleaningService';
-import { CleaningStatusBadge } from '@/features/cleanings/components/CleaningStatusBadge';
 import { mediaService } from '@/lib/mediaService';
 
 interface HostCleaningCardProps {
@@ -85,7 +85,7 @@ export const HostCleaningCard = memo(
 
 				<CardHeader className="pb-2">
 					<div className="absolute top-2 left-2">
-						<CleaningStatusBadge status={cleaning.status} />
+						<EntityBadge variant={{ type: 'cleaning', value: cleaning.status }} />
 					</div>
 					<CardTitle className="text-lg font-bold truncate">
 						{cleaning.property?.address_line_1}

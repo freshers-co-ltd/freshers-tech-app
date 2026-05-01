@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { EntityBadge } from '@/components/EntityBadge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -36,7 +37,6 @@ import {
 	CleaningEvidenceForm,
 	type EvidenceFormValues,
 } from '@/features/cleanings/components/CleaningEvidenceForm';
-import { CleaningStatusBadge } from '@/features/cleanings/components/CleaningStatusBadge';
 import { useCleanerCleanings } from '@/features/cleanings/useCleanerCleanings';
 import { useCarousel } from '@/hooks/useCarousel';
 import { useGeolocation } from '@/hooks/useGeolocation';
@@ -219,7 +219,10 @@ export function CleanerCleaningDetailView({
 								</span>
 							</div>
 						</div>
-						<CleaningStatusBadge status={cleaning.status} isCleanerView={true} />
+						<EntityBadge
+							variant={{ type: 'cleaning', value: cleaning.status }}
+							customLabel={cleaning.status === 'confirmed' ? 'ASSIGNED' : undefined}
+						/>
 					</div>
 				</DialogHeader>
 
@@ -413,9 +416,7 @@ export function CleanerCleaningDetailView({
 				<Dialog open={isFullScreen} onOpenChange={setIsFullScreen}>
 					<DialogContent className="max-w-7xl! w-[95vw] h-[90vh] p-0 bg-card border-none flex flex-col items-center justify-start overflow-hidden rounded-lg shadow-xl [&>button]:hidden">
 						<DialogHeader>
-							<DialogTitle className="sr-only">
-								{DICT.PROPERTIES.LABELS.FULLSCREEN_VIEW}
-							</DialogTitle>
+							<DialogTitle className="sr-only">{DICT.PROPERTIES.FULLSCREEN_VIEW}</DialogTitle>
 							<DialogDescription className="sr-only">
 								Viewing evidence {currentIndex + 1}.
 							</DialogDescription>

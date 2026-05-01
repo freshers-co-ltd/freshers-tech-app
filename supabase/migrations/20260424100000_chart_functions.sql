@@ -190,10 +190,10 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE
-OR REPLACE FUNCTION public.admin_get_volume_metrics_trend (p_period_days INT DEFAULT 30) RETURNS TABLE (
-    active_properties INT,
-    active_hosts INT,
-    active_cleaners INT,
+OR REPLACE FUNCTION public.admin_get_platform_stats_trend (p_period_days INT DEFAULT 30) RETURNS TABLE (
+    total_properties INT,
+    total_hosts INT,
+    total_cleaners INT,
     completed_current INT,
     completed_previous INT,
     total_current INT,
@@ -206,76 +206,45 @@ SET
     search_path = public AS $$
 BEGIN
     RETURN QUERY
+    WITH periods AS (
+        SELECT 
+            NOW() - (p_period_days || ' days')::INTERVAL AS current_start,
+            NOW() AS current_end,
+            NOW() - ((p_period_days * 2) || ' days')::INTERVAL AS previous_start,
+            NOW() - (p_period_days || ' days')::INTERVAL AS previous_end
+    ),
+    stats AS (
+        SELECT 
+            (SELECT COUNT(*)::INT FROM public.properties WHERE deleted_at IS NULL) AS total_properties,
+            (SELECT COUNT(*)::INT FROM public.profiles WHERE role::TEXT = 'host') AS total_hosts,
+            (SELECT COUNT(*)::INT FROM public.profiles WHERE role::TEXT = 'cleaner') AS total_cleaners,
+            (SELECT COUNT(*)::INT FROM public.cleanings WHERE status = 'completed' AND deleted_at IS NULL AND created_at >= periods.current_start) AS completed_current,
+            (SELECT COUNT(*)::INT FROM public.cleanings WHERE status = 'completed' AND deleted_at IS NULL AND created_at >= periods.previous_start AND created_at < periods.previous_end) AS completed_previous,
+            (SELECT COUNT(*)::INT FROM public.cleanings WHERE deleted_at IS NULL AND created_at >= periods.current_start) AS total_current,
+            (SELECT COUNT(*)::INT FROM public.cleanings WHERE deleted_at IS NULL AND created_at >= periods.previous_start AND created_at < periods.previous_end) AS total_previous,
+            (SELECT COUNT(*)::INT FROM public.properties WHERE deleted_at IS NULL AND created_at >= periods.current_start) AS properties_current,
+            (SELECT COUNT(*)::NUMERIC FROM public.properties WHERE deleted_at IS NULL AND created_at >= periods.current_start) AS properties_current_numeric,
+            (SELECT COUNT(*)::NUMERIC FROM public.properties WHERE deleted_at IS NULL) AS properties_total
+        FROM periods
+    )
     SELECT 
-        (SELECT COUNT(*)::INT FROM public.properties WHERE deleted_at IS NULL) AS active_properties,
-        (SELECT COUNT(*)::INT FROM public.profiles WHERE role::TEXT = 'host') AS active_hosts,
-        (SELECT COUNT(*)::INT FROM public.profiles WHERE role::TEXT = 'cleaner') AS active_cleaners,
-        
-        (SELECT COUNT(*)::INT FROM public.cleanings 
-         WHERE status = 'completed' 
-         AND deleted_at IS NULL
-         AND created_at > NOW() - (p_period_days || ' days')::INTERVAL) AS completed_current,
-         
-        (SELECT COUNT(*)::INT FROM public.cleanings 
-         WHERE status = 'completed' 
-         AND deleted_at IS NULL
-         AND created_at > NOW() - ((p_period_days * 2) || ' days')::INTERVAL
-         AND created_at <= NOW() - (p_period_days || ' days')::INTERVAL) AS completed_previous,
-         
-        (SELECT COUNT(*)::INT FROM public.cleanings 
-         WHERE deleted_at IS NULL
-         AND created_at > NOW() - (p_period_days || ' days')::INTERVAL) AS total_current,
-         
-        (SELECT COUNT(*)::INT FROM public.cleanings 
-         WHERE deleted_at IS NULL
-         AND created_at > NOW() - ((p_period_days * 2) || ' days')::INTERVAL
-         AND created_at <= NOW() - (p_period_days || ' days')::INTERVAL) AS total_previous,
-         
-        CASE 
-            WHEN (SELECT COUNT(*)::INT FROM public.properties WHERE deleted_at IS NULL AND created_at > NOW() - (p_period_days || ' days')::INTERVAL) = 0 THEN 0
-            ELSE ((SELECT COUNT(*)::NUMERIC FROM public.properties WHERE deleted_at IS NULL AND created_at > NOW() - (p_period_days || ' days')::INTERVAL) / 
-                 NULLIF((SELECT COUNT(*)::NUMERIC FROM public.properties WHERE deleted_at IS NULL), 0) * 100)
+        stats.total_properties,
+        stats.total_hosts,
+        stats.total_cleaners,
+        stats.completed_current,
+        stats.completed_previous,
+        stats.total_current,
+        stats.total_previous,
+        CASE WHEN stats.properties_current = 0 THEN 0::NUMERIC
+            ELSE (stats.properties_current_numeric / NULLIF(stats.properties_total, 0) * 100)
         END AS properties_change,
-        
-        CASE 
-            WHEN (SELECT COUNT(*)::INT FROM public.cleanings 
-                 WHERE status = 'completed' 
-                 AND deleted_at IS NULL
-                 AND created_at > NOW() - ((p_period_days * 2) || ' days')::INTERVAL
-                 AND created_at <= NOW() - (p_period_days || ' days')::INTERVAL) = 0 THEN 0
-            ELSE (((SELECT COUNT(*)::NUMERIC FROM public.cleanings 
-                    WHERE status = 'completed' 
-                    AND deleted_at IS NULL
-                    AND created_at > NOW() - (p_period_days || ' days')::INTERVAL) -
-                   (SELECT COUNT(*)::NUMERIC FROM public.cleanings 
-                    WHERE status = 'completed' 
-                    AND deleted_at IS NULL
-                    AND created_at > NOW() - ((p_period_days * 2) || ' days')::INTERVAL
-                    AND created_at <= NOW() - (p_period_days || ' days')::INTERVAL)) /
-                  NULLIF((SELECT COUNT(*)::NUMERIC FROM public.cleanings 
-                        WHERE status = 'completed' 
-                        AND deleted_at IS NULL
-                        AND created_at > NOW() - ((p_period_days * 2) || ' days')::INTERVAL
-                        AND created_at <= NOW() - (p_period_days || ' days')::INTERVAL), 0) * 100)
+        CASE WHEN stats.completed_previous = 0 THEN 0::NUMERIC
+            ELSE (((stats.completed_current::NUMERIC - stats.completed_previous::NUMERIC) / NULLIF(stats.completed_previous::NUMERIC, 0)) * 100)
         END AS completed_change,
-        
-        CASE 
-            WHEN (SELECT COUNT(*)::INT FROM public.cleanings 
-                 WHERE deleted_at IS NULL
-                 AND created_at > NOW() - ((p_period_days * 2) || ' days')::INTERVAL
-                 AND created_at <= NOW() - (p_period_days || ' days')::INTERVAL) = 0 THEN 0
-            ELSE (((SELECT COUNT(*)::NUMERIC FROM public.cleanings 
-                    WHERE deleted_at IS NULL
-                    AND created_at > NOW() - (p_period_days || ' days')::INTERVAL) -
-                   (SELECT COUNT(*)::NUMERIC FROM public.cleanings 
-                    WHERE deleted_at IS NULL
-                    AND created_at > NOW() - ((p_period_days * 2) || ' days')::INTERVAL
-                    AND created_at <= NOW() - (p_period_days || ' days')::INTERVAL)) /
-                  NULLIF((SELECT COUNT(*)::NUMERIC FROM public.cleanings 
-                        WHERE deleted_at IS NULL
-                        AND created_at > NOW() - ((p_period_days * 2) || ' days')::INTERVAL
-                        AND created_at <= NOW() - (p_period_days || ' days')::INTERVAL), 0) * 100)
-        END AS total_change;
+        CASE WHEN stats.total_previous = 0 THEN 0::NUMERIC
+            ELSE (((stats.total_current::NUMERIC - stats.total_previous::NUMERIC) / NULLIF(stats.total_previous::NUMERIC, 0)) * 100)
+        END AS total_change
+    FROM stats;
 END;
 $$ LANGUAGE plpgsql;
 

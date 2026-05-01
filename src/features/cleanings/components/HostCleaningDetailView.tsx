@@ -20,7 +20,7 @@ import {
 	X,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-
+import { EntityBadge } from '@/components/EntityBadge';
 import { Button } from '@/components/ui/button';
 import {
 	Dialog,
@@ -34,7 +34,6 @@ import { Separator } from '@/components/ui/separator';
 import { DICT } from '@/dictionary';
 import { useAuth } from '@/features/auth/AuthContext';
 import { type CleaningRequest, STATUS_GROUPS } from '@/features/cleanings/cleaningService';
-import { CleaningStatusBadge } from '@/features/cleanings/components/CleaningStatusBadge';
 import { useCarousel } from '@/hooks/useCarousel';
 import { mediaService } from '@/lib/mediaService';
 
@@ -109,7 +108,7 @@ export function HostCleaningDetailView({
 							</span>
 						</div>
 					</div>
-					<CleaningStatusBadge status={cleaning.status} />
+					<EntityBadge variant={{ type: 'cleaning', value: cleaning.status }} />
 				</div>
 			</DialogHeader>
 
@@ -255,7 +254,7 @@ export function HostCleaningDetailView({
 									className="flex-1"
 									disabled={!canEdit}
 									onClick={() => onEdit(cleaning.id)}>
-									<Pencil className="mr-2 size-4" /> {DICT.CLEANINGS.EDIT}
+									<Pencil className="mr-2 size-4" /> {DICT.COMMON.ACTIONS.EDIT}
 								</Button>
 							)}
 							{canCancel && (
@@ -264,7 +263,9 @@ export function HostCleaningDetailView({
 									className="flex-1 "
 									onClick={() => onDelete(cleaning.id)}>
 									<Trash2 className="mr-2 size-4" />{' '}
-									{cleaning.status === 'confirmed' ? 'Cancel Cleaning' : DICT.CLEANINGS.DELETE}
+									{cleaning.status === 'confirmed'
+										? DICT.COMMON.ACTIONS.CANCEL_CLEANING
+										: DICT.COMMON.ACTIONS.DELETE}
 								</Button>
 							)}
 						</div>
@@ -366,7 +367,7 @@ export function HostCleaningDetailView({
 			<Dialog open={isFullScreen} onOpenChange={setIsFullScreen}>
 				<DialogContent className="max-w-7xl! w-[95vw] h-[90vh] p-0 bg-card border-none flex flex-col items-center justify-start overflow-hidden rounded-lg shadow-xl [&>button]:hidden">
 					<DialogHeader>
-						<DialogTitle className="sr-only">{DICT.PROPERTIES.LABELS.FULLSCREEN_VIEW}</DialogTitle>
+						<DialogTitle className="sr-only">{DICT.PROPERTIES.FULLSCREEN_VIEW}</DialogTitle>
 						<DialogDescription className="sr-only">
 							Viewing image {currentIndex + 1} of {allImages.length}.
 						</DialogDescription>
@@ -416,7 +417,7 @@ export function HostCleaningDetailView({
 						<img
 							src={activeImage}
 							className="relative z-10 object-contain w-full max-h-[85dvh] select-none"
-							alt={DICT.PROPERTIES.LABELS.FULLSCREEN_VIEW}
+							alt={DICT.PROPERTIES.FULLSCREEN_VIEW}
 							onError={(e) => {
 								(e.target as HTMLImageElement).src = '/placeholder-property.jpg';
 							}}

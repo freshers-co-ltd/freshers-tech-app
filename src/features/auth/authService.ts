@@ -169,6 +169,14 @@ export const authService = {
 		return { error: null };
 	},
 
+	async updateUserMetadata(data: Record<string, unknown>): Promise<{ error: string | null }> {
+		const { error } = await supabase.auth.updateUser({ data });
+		if (error) {
+			return { error: mapAuthError(error) };
+		}
+		return { error: null };
+	},
+
 	async reauthenticate(password: string): Promise<{ error: string | null }> {
 		const {
 			data: { user },

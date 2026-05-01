@@ -1,60 +1,22 @@
 'use client';
 
-import { ArrowLeft, ArrowUp, Clock, KeyRound, Loader2, User } from 'lucide-react';
+import { BrushCleaning, ClipboardList, Clock, Sparkles } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { PageHeader } from '@/components/PageHeader';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from '@/components/ui/dialog';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { DICT } from '@/dictionary';
+import { CleaningsTable } from '@/components/CleaningsTable';
 import { type AdminCleanerDetail, userService } from '@/features/admin/userService';
-import type { CleaningRequest } from '@/features/cleanings/cleaningService';
-import { cleaningService } from '@/features/cleanings/cleaningService';
-import { CleanerCleaningDetailView } from '@/features/cleanings/components/CleanerCleaningDetailView';
-import { CleaningStatusBadge } from '@/features/cleanings/components/CleaningStatusBadge';
 import { useResourceModals } from '@/hooks/useResourceModals';
-import { AdminLayout } from '@/layouts/AdminLayout';
+import { UserDetailLayout } from '@/layouts/UserDetailLayout';
+import { formatHours } from '@/lib/utils';
 
 export function AdminCleanerDetailPage() {
-	const d = DICT.ADMIN.USERS;
-	const detail = DICT.ADMIN.USERS.DETAIL;
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
 	const [cleaner, setCleaner] = useState<AdminCleanerDetail | null>(null);
 	const [loading, setLoading] = useState(true);
-	const [viewingCleaning, setViewingCleaning] = useState<CleaningRequest | null>(null);
-	const [viewingLoading, setViewingLoading] = useState(false);
 
 	const modal = useResourceModals({ resourceName: 'cleaning' });
-
-	const fetchViewingCleaning = useCallback(async () => {
-		if (!modal.viewId) {
-			return;
-		}
-		setViewingLoading(true);
-		const result = await cleaningService.getCleaningRequestById(modal.viewId);
-		if (!result.error && result.data) {
-			setViewingCleaning(result.data);
-		}
-		setViewingLoading(false);
-	}, [modal.viewId]);
-
-	useEffect(() => {
-		if (modal.isViewOpen && modal.viewId) {
-			fetchViewingCleaning();
-		} else {
-			setViewingCleaning(null);
-		}
-	}, [modal.isViewOpen, modal.viewId, fetchViewingCleaning]);
 
 	const fetchCleanerDetail = useCallback(async () => {
 		if (!id) {
@@ -77,59 +39,34 @@ export function AdminCleanerDetailPage() {
 
 	const handleResetPassword = async () => {
 		if (!cleaner) {
-			return;
+			return { error: 'No user loaded' };
 		}
 		const result = await userService.resetPassword(cleaner.id);
-		if (result.error) {
-			toast.error(result.error);
-		} else {
-			toast.success(d.TOASTS.PASSWORD_RESET_SENT);
-		}
+		return result;
 	};
 
 	const handleBan = async () => {
 		if (!cleaner) {
-			return;
-		}
-		if (!window.confirm(d.TOASTS.BAN_CONFIRM)) {
-			return;
+			return { error: 'No user loaded' };
 		}
 		const result = await userService.banUser(cleaner.id);
-		if (result.error) {
-			toast.error(result.error);
-		} else {
-			toast.success(d.TOASTS.USER_BANNED);
+		if (!result.error) {
 			fetchCleanerDetail();
 		}
+		return result;
 	};
 
 	const handleUnban = async () => {
 		if (!cleaner) {
-			return;
-		}
-		if (!window.confirm(d.TOASTS.UNBAN_CONFIRM)) {
-			return;
+			return { error: 'No user loaded' };
 		}
 		const result = await userService.unbanUser(cleaner.id);
-		if (result.error) {
-			toast.error(result.error);
-		} else {
-			toast.success(d.TOASTS.USER_UNBANNED);
+		if (!result.error) {
 			fetchCleanerDetail();
 		}
+		return result;
 	};
 
-	if (loading) {
-		return (
-			<AdminLayout title={detail.TITLE}>
-				<div className="max-width-container">
-					<div className="flex items-center justify-center p-8">
-						<Loader2 className="size-8 animate-spin text-muted-foreground" />
-					</div>
-				</div>
-			</AdminLayout>
-		);
-	}
 	if (!cleaner) {
 		return null;
 	}
@@ -137,169 +74,78 @@ export function AdminCleanerDetailPage() {
 	const cleanings = cleaner.assigned_cleanings || [];
 	const stats = cleaner.cleaner_stats;
 
+	const tableData = cleanings.map((c) => ({
+		id: c.id,
+		status: c.status,
+		scheduled_start: c.scheduled_start,
+		service_cost: c.service_cost,
+		cleaner_id: cleaner.id,
+		cleaner_name: cleaner.full_name,
+		host_id: c.host_id,
+		host_name: c.host_name || undefined,
+		property_id: c.property_id,
+		property_address: c.property_address,
+		property_postcode: c.property_postcode,
+		property_town_city: c.property_town_city,
+		created_at: c.created_at,
+	}));
+
+	const statsConfig = [
+		{
+			id: 'total-assigned',
+			label: 'Total Assigned Cleanings',
+			value: stats?.total_assigned || 0,
+			icon: ClipboardList,
+			iconColor: 'text-purple-600',
+		},
+		{
+			id: 'current-assigned',
+			label: 'Current Assigned Cleanings',
+			value: stats?.confirmed || 0,
+			icon: BrushCleaning,
+			iconColor: 'text-blue-600',
+		},
+		{
+			id: 'completed',
+			label: 'Completed Cleanings',
+			value: stats?.completed || 0,
+			icon: Sparkles,
+			iconColor: 'text-yellow-400',
+		},
+		{
+			id: 'avg-completion',
+			label: 'Average Completion Time',
+			value: stats?.avg_completion_hours ? formatHours(stats.avg_completion_hours) : '0 hours',
+			icon: Clock,
+			iconColor: 'text-orange-500',
+		},
+	];
+
 	return (
-		<AdminLayout title={detail.TITLE} stats={[]}>
-			<main className="max-width-container">
-				<div className="flex items-center justify-between mb-4">
-					<Button variant="ghost" onClick={() => navigate('/admin/users')}>
-						<ArrowLeft className="size-4 mr-2" />
-						Back
-					</Button>
-					<div className="flex gap-2">
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<span>
-									<Button variant="outline" size="sm" onClick={handleResetPassword}>
-										<KeyRound className="size-4 mr-2" />
-										Reset Password
-									</Button>
-								</span>
-							</TooltipTrigger>
-							<TooltipContent>
-								<p>Send password reset email</p>
-							</TooltipContent>
-						</Tooltip>
-						{cleaner.banned_until ? (
-							<Button variant="outline" size="sm" onClick={handleUnban}>
-								<ArrowUp className="size-4 mr-2" />
-								Unban
-							</Button>
-						) : (
-							<Button variant="destructive" size="sm" onClick={handleBan}>
-								<ArrowUp className="size-4 mr-2" />
-								Ban
-							</Button>
-						)}
-					</div>
-				</div>
-
-				<PageHeader title={cleaner.full_name || detail.TITLE} description={cleaner.email || ''} />
-
-				<div className="grid gap-4 md:grid-cols-2 mb-6">
-					<Card className="p-4">
-						<div className="flex items-center gap-3">
-							<div className="size-12 rounded-full bg-muted flex items-center justify-center shrink-0">
-								{cleaner.avatar_url ? (
-									<img
-										src={cleaner.avatar_url}
-										alt=""
-										className="size-full rounded-full object-cover"
-									/>
-								) : (
-									<User className="size-5 text-muted-foreground" />
-								)}
-							</div>
-							<div className="flex-1 min-w-0">
-								<p className="font-semibold truncate">{cleaner.full_name || detail.UNKNOWN}</p>
-								<p className="text-sm text-muted-foreground truncate">{cleaner.email}</p>
-								<div className="flex items-center gap-2 mt-1">
-									<span
-										className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-											cleaner.banned_until
-												? 'bg-red-100 text-red-700'
-												: 'bg-green-100 text-green-700'
-										}`}>
-										{cleaner.banned_until ? detail.STATUS_BANNED : detail.STATUS_ACTIVE}
-									</span>
-									{cleaner.is_verified && (
-										<span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-											Verified
-										</span>
-									)}
-								</div>
-							</div>
-						</div>
-					</Card>
-					<Card className="p-4">
-						<div className="grid grid-cols-4 gap-3 text-center">
-							<div>
-								<p className="text-xl font-bold">{stats?.total_assigned || 0}</p>
-								<p className="text-xs text-muted-foreground">Total</p>
-							</div>
-							<div>
-								<p className="text-xl font-bold text-green-600">{stats?.completed || 0}</p>
-								<p className="text-xs text-muted-foreground">Completed</p>
-							</div>
-							<div>
-								<p className="text-xl font-bold text-blue-600">{stats?.in_progress || 0}</p>
-								<p className="text-xs text-muted-foreground">In Progress</p>
-							</div>
-							<div>
-								<p className="text-xl font-bold">
-									{DICT.FORMAT.CURRENCY}
-									{stats?.total_earnings?.toFixed(0) || '0'}
-								</p>
-								<p className="text-xs text-muted-foreground">Earned</p>
-							</div>
-						</div>
-						{stats?.avg_completion_hours !== null && stats.avg_completion_hours > 0 && (
-							<div className="flex items-center justify-center gap-2 mt-3 pt-3 border-t">
-								<Clock className="size-3.5 text-muted-foreground" />
-								<span className="text-xs text-muted-foreground">
-									Avg: {stats.avg_completion_hours.toFixed(1)}h
-								</span>
-							</div>
-						)}
-					</Card>
-				</div>
-
-				<Card>
-					<div className="flex items-center justify-between p-4 border-b">
-						<h3 className="font-semibold">Assigned Cleanings</h3>
-						<span className="text-sm text-muted-foreground">
-							{cleanings.length} {cleanings.length === 1 ? 'cleaning' : 'cleanings'}
-						</span>
-					</div>
-					{cleanings.length === 0 ? (
-						<p className="p-4 text-sm text-muted-foreground">No cleanings assigned</p>
-					) : (
-						<div className="divide-y">
-							{cleanings.map((cleaning) => (
-								<button
-									type="button"
-									key={cleaning.id}
-									className="flex items-center gap-3 p-3 w-full text-left hover:bg-muted/50 cursor-pointer"
-									onClick={() => modal.openView(cleaning.id)}>
-									<div className="flex-1 min-w-0">
-										<p className="text-sm font-medium truncate">
-											{cleaning.property_address || detail.UNKNOWN}
-										</p>
-										<p className="text-xs text-muted-foreground">
-											{new Date(cleaning.scheduled_start).toLocaleDateString()} ·{' '}
-											{cleaning.host_name || detail.UNKNOWN}
-										</p>
-									</div>
-									<CleaningStatusBadge status={cleaning.status} />
-									<p className="text-sm font-medium">
-										{DICT.FORMAT.CURRENCY}
-										{cleaning.service_cost}
-									</p>
-								</button>
-							))}
-						</div>
-					)}
-				</Card>
-
-				<Dialog open={modal.isViewOpen} onOpenChange={() => modal.handleClose()}>
-					<DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-						<DialogHeader>
-							<DialogTitle>Cleaning Details</DialogTitle>
-							<DialogDescription>View complete cleaning information</DialogDescription>
-						</DialogHeader>
-						{viewingLoading ? (
-							<div className="flex items-center justify-center py-8">
-								<Loader2 className="size-6 animate-spin text-muted-foreground" />
-							</div>
-						) : viewingCleaning ? (
-							<CleanerCleaningDetailView
-								cleaning={viewingCleaning}
-								open={modal.isViewOpen}
-								onOpenChange={(open) => !open && modal.handleClose()}
-							/>
-						) : null}
-					</DialogContent>
-				</Dialog>
-			</main>
-		</AdminLayout>
+		<UserDetailLayout
+			user={cleaner}
+			userRole="cleaner"
+			isLoading={loading}
+			onResetPassword={handleResetPassword}
+			onBan={handleBan}
+			onUnban={handleUnban}
+			stats={statsConfig}
+			sections={[
+				{
+					title: 'Assigned Cleanings',
+					content: (
+						<CleaningsTable
+							data={tableData}
+							excludeCleaner={true}
+							emptyMessage="No cleanings assigned"
+							onRefresh={fetchCleanerDetail}
+							onView={(id) => modal.openView(id)}
+							pageSize={10}
+							totalCount={cleanings.length}
+						/>
+					),
+				},
+			]}
+		/>
 	);
 }

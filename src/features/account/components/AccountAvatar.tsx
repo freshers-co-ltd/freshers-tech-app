@@ -5,7 +5,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/features/auth/AuthContext';
 import { authService } from '@/features/auth/authService';
 import { mediaService } from '@/lib/mediaService';
-import { supabase } from '@/lib/supabaseClient';
 import { cn } from '@/lib/utils';
 
 export function AccountAvatar() {
@@ -30,9 +29,7 @@ export function AccountAvatar() {
 			if (updateError) {
 				toast.error(updateError);
 			} else {
-				await supabase.auth.updateUser({
-					data: { avatar_url: publicUrl },
-				});
+				await authService.updateUserMetadata({ avatar_url: publicUrl });
 				await refreshProfile();
 				toast.success('Avatar updated');
 			}

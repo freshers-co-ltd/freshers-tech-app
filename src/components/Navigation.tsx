@@ -2,7 +2,6 @@ import { BarChart3, ClipboardList, Home, LayoutDashboard, User, Users } from 'lu
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/features/auth/AuthContext';
 import type { UserRole } from '@/features/auth/authService';
-import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 import { cn } from '@/lib/utils';
 
 type NavItem = {
@@ -54,7 +53,7 @@ export function Navigation() {
 								to={item.path}
 								className={cn(
 									'flex items-center gap-2 px-5 py-2.5 text-sm font-bold transition-all rounded-lg',
-									location.pathname === item.path
+									location.pathname.startsWith(item.path)
 										? 'bg-primary text-primary-foreground shadow-md'
 										: 'text-muted-foreground hover:bg-muted',
 								)}>
@@ -62,9 +61,6 @@ export function Navigation() {
 								{item.name}
 							</Link>
 						))}
-						<div className="ml-2 pl-2 border-l">
-							<NotificationBell />
-						</div>
 					</div>
 				</div>
 			</nav>
@@ -79,12 +75,12 @@ export function Navigation() {
 							to={item.path}
 							className={cn(
 								'flex flex-col items-center justify-center gap-1 transition-all w-full',
-								location.pathname === item.path ? 'text-primary' : 'text-muted-foreground',
+								location.pathname.startsWith(item.path) ? 'text-primary' : 'text-muted-foreground',
 							)}>
 							<div
 								className={cn(
 									'p-2 rounded-lg transition-all',
-									location.pathname === item.path && 'bg-primary/10',
+									location.pathname.startsWith(item.path) && 'bg-primary/10',
 								)}>
 								<item.icon className="size-6" />
 							</div>

@@ -41,13 +41,13 @@ VALUES
         'authenticated',
         'admin@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '180 days',
-        NOW() - INTERVAL '1 day',
+        NOW() - INTERVAL '140 days',
+        NOW() - INTERVAL '2 hours',
         '{"provider": "email", "providers": ["email"], "role": "admin"}',
         '{"sub": "00000000-0000-0000-0000-000000000001", "role": "admin", "full_name": "Steve Admin", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '180 days',
-        NOW() - INTERVAL '1 day',
+        NOW() - INTERVAL '140 days',
+        NOW() - INTERVAL '2 hours',
         '',
         '',
         '',
@@ -66,13 +66,13 @@ VALUES
         'authenticated',
         'host@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '175 days',
-        NOW() - INTERVAL '3 days',
+        NOW() - INTERVAL '100 days',
+        NOW() - INTERVAL '4 hours',
         '{"provider": "email", "providers": ["email"], "role": "host"}',
         '{"sub": "00000000-0000-0000-0000-000000000002", "role": "host", "full_name": "John Host", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '175 days',
-        NOW() - INTERVAL '3 days',
+        NOW() - INTERVAL '100 days',
+        NOW() - INTERVAL '4 hours',
         '',
         '',
         '',
@@ -91,13 +91,13 @@ VALUES
         'authenticated',
         'cleaner@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '170 days',
-        NOW() - INTERVAL '2 days',
+        NOW() - INTERVAL '80 days',
+        NOW() - INTERVAL '5 hours',
         '{"provider": "email", "providers": ["email"], "role": "cleaner"}',
         '{"sub": "00000000-0000-0000-0000-000000000003", "role": "cleaner", "full_name": "Mark Cleaner", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '170 days',
-        NOW() - INTERVAL '2 days',
+        NOW() - INTERVAL '80 days',
+        NOW() - INTERVAL '5 hours',
         '',
         '',
         '',
@@ -116,13 +116,13 @@ VALUES
         'authenticated',
         'sarah@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '160 days',
-        NOW() - INTERVAL '5 days',
+        NOW() - INTERVAL '70 days',
+        NOW() - INTERVAL '6 hours',
         '{"provider": "email", "providers": ["email"], "role": "host"}',
         '{"sub": "00000000-0000-0000-0000-000000000004", "role": "host", "full_name": "Sarah Smith", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '160 days',
-        NOW() - INTERVAL '5 days',
+        NOW() - INTERVAL '70 days',
+        NOW() - INTERVAL '6 hours',
         '',
         '',
         '',
@@ -141,13 +141,13 @@ VALUES
         'authenticated',
         'emily@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '150 days',
-        NOW() - INTERVAL '1 day',
+        NOW() - INTERVAL '60 days',
+        NOW() - INTERVAL '3 hours',
         '{"provider": "email", "providers": ["email"], "role": "cleaner"}',
         '{"sub": "00000000-0000-0000-0000-000000000005", "role": "cleaner", "full_name": "Emily Johnson", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '150 days',
-        NOW() - INTERVAL '1 day',
+        NOW() - INTERVAL '60 days',
+        NOW() - INTERVAL '3 hours',
         '',
         '',
         '',
@@ -166,13 +166,13 @@ VALUES
         'authenticated',
         'david@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '145 days',
-        NOW() - INTERVAL '4 days',
+        NOW() - INTERVAL '50 days',
+        NOW() - INTERVAL '1 day',
         '{"provider": "email", "providers": ["email"], "role": "host"}',
         '{"sub": "00000000-0000-0000-0000-000000000006", "role": "host", "full_name": "David Brown", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '145 days',
-        NOW() - INTERVAL '4 days',
+        NOW() - INTERVAL '50 days',
+        NOW() - INTERVAL '1 day',
         '',
         '',
         '',
@@ -191,13 +191,13 @@ VALUES
         'authenticated',
         'lisa@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '140 days',
-        NOW() - INTERVAL '6 days',
+        NOW() - INTERVAL '45 days',
+        NOW() - INTERVAL '7 hours',
         '{"provider": "email", "providers": ["email"], "role": "cleaner"}',
         '{"sub": "00000000-0000-0000-0000-000000000007", "role": "cleaner", "full_name": "Lisa Williams", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '140 days',
-        NOW() - INTERVAL '6 days',
+        NOW() - INTERVAL '45 days',
+        NOW() - INTERVAL '7 hours',
         '',
         '',
         '',
@@ -216,13 +216,13 @@ VALUES
         'authenticated',
         'james@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '135 days',
-        NOW() - INTERVAL '7 days',
+        NOW() - INTERVAL '40 days',
+        NOW() - INTERVAL '8 hours',
         '{"provider": "email", "providers": ["email"], "role": "host"}',
         '{"sub": "00000000-0000-0000-0000-000000000008", "role": "host", "full_name": "James Wilson", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '135 days',
-        NOW() - INTERVAL '7 days',
+        NOW() - INTERVAL '40 days',
+        NOW() - INTERVAL '8 hours',
         '',
         '',
         '',
@@ -241,13 +241,13 @@ VALUES
         'authenticated',
         'jessica@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '130 days',
-        NOW() - INTERVAL '2 days',
+        NOW() - INTERVAL '35 days',
+        NOW() - INTERVAL '9 hours',
         '{"provider": "email", "providers": ["email"], "role": "cleaner"}',
         '{"sub": "00000000-0000-0000-0000-000000000009", "role": "cleaner", "full_name": "Jessica Taylor", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '130 days',
-        NOW() - INTERVAL '2 days',
+        NOW() - INTERVAL '35 days',
+        NOW() - INTERVAL '9 hours',
         '',
         '',
         '',
@@ -266,13 +266,13 @@ VALUES
         'authenticated',
         'michael@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '125 days',
-        NOW() - INTERVAL '3 days',
+        NOW() - INTERVAL '30 days',
+        NOW() - INTERVAL '10 hours',
         '{"provider": "email", "providers": ["email"], "role": "host"}',
         '{"sub": "00000000-0000-0000-0000-000000000010", "role": "host", "full_name": "Michael Davis", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '125 days',
-        NOW() - INTERVAL '3 days',
+        NOW() - INTERVAL '30 days',
+        NOW() - INTERVAL '10 hours',
         '',
         '',
         '',
@@ -291,13 +291,13 @@ VALUES
         'authenticated',
         'amanda@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '120 days',
-        NOW() - INTERVAL '1 day',
+        NOW() - INTERVAL '25 days',
+        NOW() - INTERVAL '11 hours',
         '{"provider": "email", "providers": ["email"], "role": "cleaner"}',
         '{"sub": "00000000-0000-0000-0000-000000000011", "role": "cleaner", "full_name": "Amanda Martinez", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '120 days',
-        NOW() - INTERVAL '1 day',
+        NOW() - INTERVAL '25 days',
+        NOW() - INTERVAL '11 hours',
         '',
         '',
         '',
@@ -316,13 +316,13 @@ VALUES
         'authenticated',
         'robert@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '115 days',
-        NOW() - INTERVAL '5 days',
+        NOW() - INTERVAL '20 days',
+        NOW() - INTERVAL '12 hours',
         '{"provider": "email", "providers": ["email"], "role": "host"}',
         '{"sub": "00000000-0000-0000-0000-000000000012", "role": "host", "full_name": "Robert Anderson", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '115 days',
-        NOW() - INTERVAL '5 days',
+        NOW() - INTERVAL '20 days',
+        NOW() - INTERVAL '12 hours',
         '',
         '',
         '',
@@ -341,13 +341,13 @@ VALUES
         'authenticated',
         'rachel@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '110 days',
-        NOW() - INTERVAL '4 days',
+        NOW() - INTERVAL '18 days',
+        NOW() - INTERVAL '1 day',
         '{"provider": "email", "providers": ["email"], "role": "cleaner"}',
         '{"sub": "00000000-0000-0000-0000-000000000013", "role": "cleaner", "full_name": "Rachel White", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '110 days',
-        NOW() - INTERVAL '4 days',
+        NOW() - INTERVAL '18 days',
+        NOW() - INTERVAL '1 day',
         '',
         '',
         '',
@@ -366,13 +366,13 @@ VALUES
         'authenticated',
         'chris@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '105 days',
-        NOW() - INTERVAL '2 days',
+        NOW() - INTERVAL '15 days',
+        NOW() - INTERVAL '1 day',
         '{"provider": "email", "providers": ["email"], "role": "host"}',
         '{"sub": "00000000-0000-0000-0000-000000000014", "role": "host", "full_name": "Chris Thompson", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '105 days',
-        NOW() - INTERVAL '2 days',
+        NOW() - INTERVAL '15 days',
+        NOW() - INTERVAL '1 day',
         '',
         '',
         '',
@@ -391,12 +391,12 @@ VALUES
         'authenticated',
         'sophie@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '100 days',
+        NOW() - INTERVAL '12 days',
         NOW() - INTERVAL '1 day',
         '{"provider": "email", "providers": ["email"], "role": "cleaner"}',
         '{"sub": "00000000-0000-0000-0000-000000000015", "role": "cleaner", "full_name": "Sophie Garcia", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '100 days',
+        NOW() - INTERVAL '12 days',
         NOW() - INTERVAL '1 day',
         '',
         '',
@@ -416,13 +416,13 @@ VALUES
         'authenticated',
         'daniel@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '95 days',
-        NOW() - INTERVAL '6 days',
+        NOW() - INTERVAL '10 days',
+        NOW() - INTERVAL '1 day',
         '{"provider": "email", "providers": ["email"], "role": "host"}',
         '{"sub": "00000000-0000-0000-0000-000000000016", "role": "host", "full_name": "Daniel Lee", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '95 days',
-        NOW() - INTERVAL '6 days',
+        NOW() - INTERVAL '10 days',
+        NOW() - INTERVAL '1 day',
         '',
         '',
         '',
@@ -441,13 +441,13 @@ VALUES
         'authenticated',
         'natalie@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '90 days',
-        NOW() - INTERVAL '3 days',
+        NOW() - INTERVAL '8 days',
+        NOW() - INTERVAL '1 day',
         '{"provider": "email", "providers": ["email"], "role": "cleaner"}',
         '{"sub": "00000000-0000-0000-0000-000000000017", "role": "cleaner", "full_name": "Natalie Clark", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '90 days',
-        NOW() - INTERVAL '3 days',
+        NOW() - INTERVAL '8 days',
+        NOW() - INTERVAL '1 day',
         '',
         '',
         '',
@@ -466,13 +466,13 @@ VALUES
         'authenticated',
         'paul@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '85 days',
-        NOW() - INTERVAL '4 days',
+        NOW() - INTERVAL '6 days',
+        NOW() - INTERVAL '1 day',
         '{"provider": "email", "providers": ["email"], "role": "host"}',
         '{"sub": "00000000-0000-0000-0000-000000000018", "role": "host", "full_name": "Paul Harris", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '85 days',
-        NOW() - INTERVAL '4 days',
+        NOW() - INTERVAL '6 days',
+        NOW() - INTERVAL '1 day',
         '',
         '',
         '',
@@ -491,13 +491,13 @@ VALUES
         'authenticated',
         'ashley@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '80 days',
-        NOW() - INTERVAL '2 days',
+        NOW() - INTERVAL '4 days',
+        NOW() - INTERVAL '12 hours',
         '{"provider": "email", "providers": ["email"], "role": "cleaner"}',
         '{"sub": "00000000-0000-0000-0000-000000000019", "role": "cleaner", "full_name": "Ashley Robinson", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '80 days',
-        NOW() - INTERVAL '2 days',
+        NOW() - INTERVAL '4 days',
+        NOW() - INTERVAL '12 hours',
         '',
         '',
         '',
@@ -516,13 +516,13 @@ VALUES
         'authenticated',
         'kevin@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '75 days',
-        NOW() - INTERVAL '5 days',
+        NOW() - INTERVAL '3 days',
+        NOW() - INTERVAL '6 hours',
         '{"provider": "email", "providers": ["email"], "role": "host"}',
         '{"sub": "00000000-0000-0000-0000-000000000020", "role": "host", "full_name": "Kevin Lewis", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '75 days',
-        NOW() - INTERVAL '5 days',
+        NOW() - INTERVAL '3 days',
+        NOW() - INTERVAL '6 hours',
         '',
         '',
         '',
@@ -541,13 +541,13 @@ VALUES
         'authenticated',
         'bruce@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '70 days',
-        NOW() - INTERVAL '1 day',
+        NOW() - INTERVAL '2 days',
+        NOW() - INTERVAL '3 hours',
         '{"provider": "email", "providers": ["email"], "role": "admin"}',
         '{"sub": "00000000-0000-0000-0000-000000000021", "role": "admin", "full_name": "Bruce Green", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '70 days',
-        NOW() - INTERVAL '1 day',
+        NOW() - INTERVAL '2 days',
+        NOW() - INTERVAL '3 hours',
         '',
         '',
         '',
@@ -566,13 +566,13 @@ VALUES
         'authenticated',
         'linda@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '68 days',
-        NOW() - INTERVAL '2 days',
+        NOW() - INTERVAL '1 day',
+        NOW() - INTERVAL '2 hours',
         '{"provider": "email", "providers": ["email"], "role": "admin"}',
         '{"sub": "00000000-0000-0000-0000-000000000022", "role": "admin", "full_name": "Linda Smith", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '68 days',
-        NOW() - INTERVAL '2 days',
+        NOW() - INTERVAL '1 day',
+        NOW() - INTERVAL '2 hours',
         '',
         '',
         '',
@@ -591,13 +591,13 @@ VALUES
         'authenticated',
         'marta@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '66 days',
-        NOW() - INTERVAL '3 days',
+        NOW() - INTERVAL '12 hours',
+        NOW() - INTERVAL '1 hour',
         '{"provider": "email", "providers": ["email"], "role": "admin"}',
         '{"sub": "00000000-0000-0000-0000-000000000023", "role": "admin", "full_name": "Marta Hansen", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '66 days',
-        NOW() - INTERVAL '3 days',
+        NOW() - INTERVAL '12 hours',
+        NOW() - INTERVAL '1 hour',
         '',
         '',
         '',
@@ -616,13 +616,13 @@ VALUES
         'authenticated',
         'joe@test.com',
         extensions.crypt ('password1!', extensions.gen_salt ('bf', 10)),
-        NOW() - INTERVAL '64 days',
-        NOW() - INTERVAL '4 days',
+        NOW() - INTERVAL '6 hours',
+        NOW() - INTERVAL '30 minutes',
         '{"provider": "email", "providers": ["email"], "role": "admin"}',
         '{"sub": "00000000-0000-0000-0000-000000000024", "role": "admin", "full_name": "Joe Stu", "email_verified": true}',
         FALSE,
-        NOW() - INTERVAL '64 days',
-        NOW() - INTERVAL '4 days',
+        NOW() - INTERVAL '6 hours',
+        NOW() - INTERVAL '30 minutes',
         '',
         '',
         '',
@@ -675,9 +675,9 @@ VALUES
         '{"sub":"00000000-0000-0000-0000-000000000004","email":"sarah@test.com","email_verified":true}'::jsonb,
         'email',
         '00000000-0000-0000-0000-000000000004',
-        NOW() - INTERVAL '160 days',
-        NOW() - INTERVAL '160 days',
-        NOW() - INTERVAL '160 days'
+        NOW() - INTERVAL '70 days',
+        NOW() - INTERVAL '70 days',
+        NOW() - INTERVAL '70 days'
     ),
     (
         gen_random_uuid (),
@@ -685,9 +685,9 @@ VALUES
         '{"sub":"00000000-0000-0000-0000-000000000005","email":"emily@test.com","email_verified":true}'::jsonb,
         'email',
         '00000000-0000-0000-0000-000000000005',
-        NOW() - INTERVAL '150 days',
-        NOW() - INTERVAL '150 days',
-        NOW() - INTERVAL '150 days'
+        NOW() - INTERVAL '60 days',
+        NOW() - INTERVAL '60 days',
+        NOW() - INTERVAL '60 days'
     ),
     (
         gen_random_uuid (),
@@ -695,9 +695,9 @@ VALUES
         '{"sub":"00000000-0000-0000-0000-000000000006","email":"david@test.com","email_verified":true}'::jsonb,
         'email',
         '00000000-0000-0000-0000-000000000006',
-        NOW() - INTERVAL '145 days',
-        NOW() - INTERVAL '145 days',
-        NOW() - INTERVAL '145 days'
+        NOW() - INTERVAL '50 days',
+        NOW() - INTERVAL '50 days',
+        NOW() - INTERVAL '50 days'
     ),
     (
         gen_random_uuid (),
@@ -705,9 +705,9 @@ VALUES
         '{"sub":"00000000-0000-0000-0000-000000000007","email":"lisa@test.com","email_verified":true}'::jsonb,
         'email',
         '00000000-0000-0000-0000-000000000007',
-        NOW() - INTERVAL '140 days',
-        NOW() - INTERVAL '140 days',
-        NOW() - INTERVAL '140 days'
+        NOW() - INTERVAL '45 days',
+        NOW() - INTERVAL '45 days',
+        NOW() - INTERVAL '45 days'
     ),
     (
         gen_random_uuid (),
@@ -715,9 +715,9 @@ VALUES
         '{"sub":"00000000-0000-0000-0000-000000000008","email":"james@test.com","email_verified":true}'::jsonb,
         'email',
         '00000000-0000-0000-0000-000000000008',
-        NOW() - INTERVAL '135 days',
-        NOW() - INTERVAL '135 days',
-        NOW() - INTERVAL '135 days'
+        NOW() - INTERVAL '40 days',
+        NOW() - INTERVAL '40 days',
+        NOW() - INTERVAL '40 days'
     ),
     (
         gen_random_uuid (),
@@ -725,9 +725,9 @@ VALUES
         '{"sub":"00000000-0000-0000-0000-000000000009","email":"jessica@test.com","email_verified":true}'::jsonb,
         'email',
         '00000000-0000-0000-0000-000000000009',
-        NOW() - INTERVAL '130 days',
-        NOW() - INTERVAL '130 days',
-        NOW() - INTERVAL '130 days'
+        NOW() - INTERVAL '35 days',
+        NOW() - INTERVAL '35 days',
+        NOW() - INTERVAL '35 days'
     ),
     (
         gen_random_uuid (),
@@ -735,9 +735,9 @@ VALUES
         '{"sub":"00000000-0000-0000-0000-000000000010","email":"michael@test.com","email_verified":true}'::jsonb,
         'email',
         '00000000-0000-0000-0000-000000000010',
-        NOW() - INTERVAL '125 days',
-        NOW() - INTERVAL '125 days',
-        NOW() - INTERVAL '125 days'
+        NOW() - INTERVAL '30 days',
+        NOW() - INTERVAL '30 days',
+        NOW() - INTERVAL '30 days'
     ),
     (
         gen_random_uuid (),
@@ -745,9 +745,9 @@ VALUES
         '{"sub":"00000000-0000-0000-0000-000000000011","email":"amanda@test.com","email_verified":true}'::jsonb,
         'email',
         '00000000-0000-0000-0000-000000000011',
-        NOW() - INTERVAL '120 days',
-        NOW() - INTERVAL '120 days',
-        NOW() - INTERVAL '120 days'
+        NOW() - INTERVAL '25 days',
+        NOW() - INTERVAL '25 days',
+        NOW() - INTERVAL '25 days'
     ),
     (
         gen_random_uuid (),
@@ -755,9 +755,9 @@ VALUES
         '{"sub":"00000000-0000-0000-0000-000000000012","email":"robert@test.com","email_verified":true}'::jsonb,
         'email',
         '00000000-0000-0000-0000-000000000012',
-        NOW() - INTERVAL '115 days',
-        NOW() - INTERVAL '115 days',
-        NOW() - INTERVAL '115 days'
+        NOW() - INTERVAL '20 days',
+        NOW() - INTERVAL '20 days',
+        NOW() - INTERVAL '20 days'
     ),
     (
         gen_random_uuid (),
@@ -765,9 +765,9 @@ VALUES
         '{"sub":"00000000-0000-0000-0000-000000000013","email":"rachel@test.com","email_verified":true}'::jsonb,
         'email',
         '00000000-0000-0000-0000-000000000013',
-        NOW() - INTERVAL '110 days',
-        NOW() - INTERVAL '110 days',
-        NOW() - INTERVAL '110 days'
+        NOW() - INTERVAL '18 days',
+        NOW() - INTERVAL '18 days',
+        NOW() - INTERVAL '18 days'
     ),
     (
         gen_random_uuid (),
@@ -775,9 +775,9 @@ VALUES
         '{"sub":"00000000-0000-0000-0000-000000000014","email":"chris@test.com","email_verified":true}'::jsonb,
         'email',
         '00000000-0000-0000-0000-000000000014',
-        NOW() - INTERVAL '105 days',
-        NOW() - INTERVAL '105 days',
-        NOW() - INTERVAL '105 days'
+        NOW() - INTERVAL '15 days',
+        NOW() - INTERVAL '15 days',
+        NOW() - INTERVAL '15 days'
     ),
     (
         gen_random_uuid (),
@@ -785,9 +785,9 @@ VALUES
         '{"sub":"00000000-0000-0000-0000-000000000015","email":"sophie@test.com","email_verified":true}'::jsonb,
         'email',
         '00000000-0000-0000-0000-000000000015',
-        NOW() - INTERVAL '100 days',
-        NOW() - INTERVAL '100 days',
-        NOW() - INTERVAL '100 days'
+        NOW() - INTERVAL '12 days',
+        NOW() - INTERVAL '12 days',
+        NOW() - INTERVAL '12 days'
     ),
     (
         gen_random_uuid (),
@@ -795,9 +795,9 @@ VALUES
         '{"sub":"00000000-0000-0000-0000-000000000016","email":"daniel@test.com","email_verified":true}'::jsonb,
         'email',
         '00000000-0000-0000-0000-000000000016',
-        NOW() - INTERVAL '95 days',
-        NOW() - INTERVAL '95 days',
-        NOW() - INTERVAL '95 days'
+        NOW() - INTERVAL '10 days',
+        NOW() - INTERVAL '10 days',
+        NOW() - INTERVAL '10 days'
     ),
     (
         gen_random_uuid (),
@@ -805,9 +805,9 @@ VALUES
         '{"sub":"00000000-0000-0000-0000-000000000017","email":"natalie@test.com","email_verified":true}'::jsonb,
         'email',
         '00000000-0000-0000-0000-000000000017',
-        NOW() - INTERVAL '90 days',
-        NOW() - INTERVAL '90 days',
-        NOW() - INTERVAL '90 days'
+        NOW() - INTERVAL '8 days',
+        NOW() - INTERVAL '8 days',
+        NOW() - INTERVAL '8 days'
     ),
     (
         gen_random_uuid (),
@@ -815,9 +815,9 @@ VALUES
         '{"sub":"00000000-0000-0000-0000-000000000018","email":"paul@test.com","email_verified":true}'::jsonb,
         'email',
         '00000000-0000-0000-0000-000000000018',
-        NOW() - INTERVAL '85 days',
-        NOW() - INTERVAL '85 days',
-        NOW() - INTERVAL '85 days'
+        NOW() - INTERVAL '6 days',
+        NOW() - INTERVAL '6 days',
+        NOW() - INTERVAL '6 days'
     ),
     (
         gen_random_uuid (),
@@ -825,9 +825,9 @@ VALUES
         '{"sub":"00000000-0000-0000-0000-000000000019","email":"ashley@test.com","email_verified":true}'::jsonb,
         'email',
         '00000000-0000-0000-0000-000000000019',
-        NOW() - INTERVAL '80 days',
-        NOW() - INTERVAL '80 days',
-        NOW() - INTERVAL '80 days'
+        NOW() - INTERVAL '4 days',
+        NOW() - INTERVAL '4 days',
+        NOW() - INTERVAL '4 days'
     ),
     (
         gen_random_uuid (),
@@ -835,9 +835,9 @@ VALUES
         '{"sub":"00000000-0000-0000-0000-000000000020","email":"kevin@test.com","email_verified":true}'::jsonb,
         'email',
         '00000000-0000-0000-0000-000000000020',
-        NOW() - INTERVAL '75 days',
-        NOW() - INTERVAL '75 days',
-        NOW() - INTERVAL '75 days'
+        NOW() - INTERVAL '3 days',
+        NOW() - INTERVAL '3 days',
+        NOW() - INTERVAL '3 days'
     ),
     (
         gen_random_uuid (),
@@ -845,9 +845,9 @@ VALUES
         '{"sub":"00000000-0000-0000-0000-000000000021","email":"bruce@test.com","email_verified":true}'::jsonb,
         'email',
         '00000000-0000-0000-0000-000000000021',
-        NOW() - INTERVAL '70 days',
-        NOW() - INTERVAL '70 days',
-        NOW() - INTERVAL '70 days'
+        NOW() - INTERVAL '2 days',
+        NOW() - INTERVAL '2 days',
+        NOW() - INTERVAL '2 days'
     ),
     (
         gen_random_uuid (),
@@ -855,9 +855,9 @@ VALUES
         '{"sub":"00000000-0000-0000-0000-000000000022","email":"linda@test.com","email_verified":true}'::jsonb,
         'email',
         '00000000-0000-0000-0000-000000000022',
-        NOW() - INTERVAL '68 days',
-        NOW() - INTERVAL '68 days',
-        NOW() - INTERVAL '68 days'
+        NOW() - INTERVAL '1 day',
+        NOW() - INTERVAL '1 day',
+        NOW() - INTERVAL '1 day'
     ),
     (
         gen_random_uuid (),
@@ -865,9 +865,9 @@ VALUES
         '{"sub":"00000000-0000-0000-0000-000000000023","email":"marta@test.com","email_verified":true}'::jsonb,
         'email',
         '00000000-0000-0000-0000-000000000023',
-        NOW() - INTERVAL '66 days',
-        NOW() - INTERVAL '66 days',
-        NOW() - INTERVAL '66 days'
+        NOW() - INTERVAL '12 hours',
+        NOW() - INTERVAL '12 hours',
+        NOW() - INTERVAL '12 hours'
     ),
     (
         gen_random_uuid (),
@@ -875,9 +875,9 @@ VALUES
         '{"sub":"00000000-0000-0000-0000-000000000024","email":"joe@test.com","email_verified":true}'::jsonb,
         'email',
         '00000000-0000-0000-0000-000000000024',
-        NOW() - INTERVAL '64 days',
-        NOW() - INTERVAL '64 days',
-        NOW() - INTERVAL '64 days'
+        NOW() - INTERVAL '6 hours',
+        NOW() - INTERVAL '6 hours',
+        NOW() - INTERVAL '6 hours'
     );
 
 -- 4. PUBLIC PROFILES
@@ -911,26 +911,6 @@ VALUES
 
 SET
     session_replication_role = 'origin';
-
--- 5. STANDARD TASKS
-INSERT INTO
-    public.standard_tasks (description)
-VALUES
-    ('Vacuum all carpets'),
-    ('Mop hard floors'),
-    ('Clean bathroom surfaces'),
-    ('Change bed linens'),
-    ('Dust all surfaces'),
-    ('Clean kitchen appliances'),
-    ('Wipe down countertops'),
-    ('Clean mirrors and glass'),
-    ('Empty trash bins'),
-    ('Replace towels'),
-    ('Clean toilet and sanitize'),
-    ('Wash dishes or load dishwasher'),
-    ('Sweep and mop entrance'),
-    ('Clean window sills'),
-    ('Launder and fold clothes');
 
 -- 6. PROPERTIES
 INSERT INTO
@@ -1267,18 +1247,18 @@ INSERT INTO
         clock_out_time
     )
 VALUES
-    -- Historical completed cleanings (oldest first - 170 days ago to 90 days ago)
+    -- Historical completed cleanings (5-6 months ago)
     (
         'c0000000-0000-0000-0000-000000000001',
         '00000000-0000-0000-0000-000000000002',
         '11111111-1111-1111-1111-111111111111',
         '00000000-0000-0000-0000-000000000003',
         'completed',
-        NOW() - INTERVAL '170 days',
+        NOW() - INTERVAL '165 days',
         45.00,
         'Standard clean before move-in.',
-        NOW() - INTERVAL '170 days' + INTERVAL '10 hours',
-        NOW() - INTERVAL '170 days' + INTERVAL '12 hours'
+        NOW() - INTERVAL '165 days' + INTERVAL '10 hours',
+        NOW() - INTERVAL '165 days' + INTERVAL '12 hours'
     ),
     (
         'c0000000-0000-0000-0000-000000000002',
@@ -1286,11 +1266,11 @@ VALUES
         '33333333-3333-3333-3333-333333333333',
         '00000000-0000-0000-0000-000000000005',
         'completed',
-        NOW() - INTERVAL '165 days',
+        NOW() - INTERVAL '160 days',
         40.00,
         'Please focus on kitchen.',
-        NOW() - INTERVAL '165 days' + INTERVAL '9 hours',
-        NOW() - INTERVAL '165 days' + INTERVAL '11 hours'
+        NOW() - INTERVAL '160 days' + INTERVAL '9 hours',
+        NOW() - INTERVAL '160 days' + INTERVAL '11 hours'
     ),
     (
         'c0000000-0000-0000-0000-000000000003',
@@ -1298,11 +1278,11 @@ VALUES
         '22222222-2222-2222-2222-222222222222',
         '00000000-0000-0000-0000-000000000003',
         'completed',
-        NOW() - INTERVAL '160 days',
+        NOW() - INTERVAL '155 days',
         60.00,
         'Check-out clean needed.',
-        NOW() - INTERVAL '160 days' + INTERVAL '8 hours',
-        NOW() - INTERVAL '160 days' + INTERVAL '11 hours'
+        NOW() - INTERVAL '155 days' + INTERVAL '8 hours',
+        NOW() - INTERVAL '155 days' + INTERVAL '11 hours'
     ),
     (
         'c0000000-0000-0000-0000-000000000004',
@@ -1310,23 +1290,24 @@ VALUES
         '55555555-5555-5555-5555-555555555555',
         '00000000-0000-0000-0000-000000000007',
         'completed',
-        NOW() - INTERVAL '155 days',
+        NOW() - INTERVAL '150 days',
         35.00,
         'Quick turn-around clean.',
-        NOW() - INTERVAL '155 days' + INTERVAL '14 hours',
-        NOW() - INTERVAL '155 days' + INTERVAL '16 hours'
+        NOW() - INTERVAL '150 days' + INTERVAL '14 hours',
+        NOW() - INTERVAL '150 days' + INTERVAL '16 hours'
     ),
+    -- 3-4 months ago
     (
         'c0000000-0000-0000-0000-000000000005',
         '00000000-0000-0000-0000-000000000004',
         '44444444-4444-4444-4444-444444444444',
         '00000000-0000-0000-0000-000000000009',
         'completed',
-        NOW() - INTERVAL '150 days',
+        NOW() - INTERVAL '120 days',
         55.00,
         'Deep clean required before event.',
-        NOW() - INTERVAL '150 days' + INTERVAL '9 hours',
-        NOW() - INTERVAL '150 days' + INTERVAL '13 hours'
+        NOW() - INTERVAL '120 days' + INTERVAL '9 hours',
+        NOW() - INTERVAL '120 days' + INTERVAL '13 hours'
     ),
     (
         'c0000000-0000-0000-0000-000000000006',
@@ -1334,11 +1315,11 @@ VALUES
         '77777777-7777-7777-7777-777777777777',
         '00000000-0000-0000-0000-000000000005',
         'completed',
-        NOW() - INTERVAL '145 days',
+        NOW() - INTERVAL '110 days',
         50.00,
         'Regular weekly clean.',
-        NOW() - INTERVAL '145 days' + INTERVAL '10 hours',
-        NOW() - INTERVAL '145 days' + INTERVAL '12 hours'
+        NOW() - INTERVAL '110 days' + INTERVAL '10 hours',
+        NOW() - INTERVAL '110 days' + INTERVAL '12 hours'
     ),
     (
         'c0000000-0000-0000-0000-000000000007',
@@ -1346,11 +1327,11 @@ VALUES
         '99999999-9999-9999-9999-999999999999',
         '00000000-0000-0000-0000-000000000011',
         'completed',
-        NOW() - INTERVAL '140 days',
+        NOW() - INTERVAL '100 days',
         40.00,
         'Studio apartment, quick clean.',
-        NOW() - INTERVAL '140 days' + INTERVAL '11 hours',
-        NOW() - INTERVAL '140 days' + INTERVAL '13 hours'
+        NOW() - INTERVAL '100 days' + INTERVAL '11 hours',
+        NOW() - INTERVAL '100 days' + INTERVAL '13 hours'
     ),
     (
         'c0000000-0000-0000-0000-000000000008',
@@ -1358,11 +1339,11 @@ VALUES
         'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
         '00000000-0000-0000-0000-000000000007',
         'completed',
-        NOW() - INTERVAL '135 days',
+        NOW() - INTERVAL '95 days',
         45.00,
         'Balcony needs attention too.',
-        NOW() - INTERVAL '135 days' + INTERVAL '9 hours',
-        NOW() - INTERVAL '135 days' + INTERVAL '12 hours'
+        NOW() - INTERVAL '95 days' + INTERVAL '9 hours',
+        NOW() - INTERVAL '95 days' + INTERVAL '12 hours'
     ),
     (
         'c0000000-0000-0000-0000-000000000009',
@@ -1370,11 +1351,11 @@ VALUES
         'dddddddd-dddd-dddd-dddd-dddddddddddd',
         '00000000-0000-0000-0000-000000000013',
         'completed',
-        NOW() - INTERVAL '130 days',
+        NOW() - INTERVAL '90 days',
         35.00,
         'Small flat, regular clean.',
-        NOW() - INTERVAL '130 days' + INTERVAL '10 hours',
-        NOW() - INTERVAL '130 days' + INTERVAL '12 hours'
+        NOW() - INTERVAL '90 days' + INTERVAL '10 hours',
+        NOW() - INTERVAL '90 days' + INTERVAL '12 hours'
     ),
     (
         'c0000000-0000-0000-0000-000000000010',
@@ -1382,23 +1363,24 @@ VALUES
         'ffffffff-ffff-ffff-ffff-ffffffffffff',
         '00000000-0000-0000-0000-000000000015',
         'completed',
-        NOW() - INTERVAL '125 days',
+        NOW() - INTERVAL '105 days',
         30.00,
         'Studio clean.',
-        NOW() - INTERVAL '125 days' + INTERVAL '14 hours',
-        NOW() - INTERVAL '125 days' + INTERVAL '16 hours'
+        NOW() - INTERVAL '105 days' + INTERVAL '14 hours',
+        NOW() - INTERVAL '105 days' + INTERVAL '16 hours'
     ),
+    -- 1-2 months ago
     (
         'c0000000-0000-0000-0000-000000000011',
         '00000000-0000-0000-0000-000000000018',
         '11111111-1111-1111-1111-111111111113',
         '00000000-0000-0000-0000-000000000019',
         'completed',
-        NOW() - INTERVAL '120 days',
+        NOW() - INTERVAL '85 days',
         45.00,
         'Pre-tenancy clean.',
-        NOW() - INTERVAL '120 days' + INTERVAL '9 hours',
-        NOW() - INTERVAL '120 days' + INTERVAL '12 hours'
+        NOW() - INTERVAL '85 days' + INTERVAL '9 hours',
+        NOW() - INTERVAL '85 days' + INTERVAL '12 hours'
     ),
     (
         'c0000000-0000-0000-0000-000000000012',
@@ -1406,24 +1388,24 @@ VALUES
         '11111111-1111-1111-1111-111111111115',
         '00000000-0000-0000-0000-000000000011',
         'completed',
-        NOW() - INTERVAL '115 days',
+        NOW() - INTERVAL '80 days',
         40.00,
         'Sea view apartment.',
-        NOW() - INTERVAL '115 days' + INTERVAL '10 hours',
-        NOW() - INTERVAL '115 days' + INTERVAL '12 hours'
+        NOW() - INTERVAL '80 days' + INTERVAL '10 hours',
+        NOW() - INTERVAL '80 days' + INTERVAL '12 hours'
     ),
-    -- More recent: 110-90 days ago
+    -- Current month (0-30 days)
     (
         'c0000000-0000-0000-0000-000000000013',
         '00000000-0000-0000-0000-000000000002',
         '11111111-1111-1111-1111-111111111111',
         '00000000-0000-0000-0000-000000000003',
         'completed',
-        NOW() - INTERVAL '110 days',
+        NOW() - INTERVAL '28 days',
         45.00,
         'Monthly deep clean.',
-        NOW() - INTERVAL '110 days' + INTERVAL '9 hours',
-        NOW() - INTERVAL '110 days' + INTERVAL '13 hours'
+        NOW() - INTERVAL '28 days' + INTERVAL '9 hours',
+        NOW() - INTERVAL '28 days' + INTERVAL '13 hours'
     ),
     (
         'c0000000-0000-0000-0000-000000000014',
@@ -1431,11 +1413,11 @@ VALUES
         '33333333-3333-3333-3333-333333333333',
         '00000000-0000-0000-0000-000000000005',
         'completed',
-        NOW() - INTERVAL '105 days',
+        NOW() - INTERVAL '25 days',
         40.00,
         'Post-guest clean.',
-        NOW() - INTERVAL '105 days' + INTERVAL '11 hours',
-        NOW() - INTERVAL '105 days' + INTERVAL '14 hours'
+        NOW() - INTERVAL '25 days' + INTERVAL '11 hours',
+        NOW() - INTERVAL '25 days' + INTERVAL '14 hours'
     ),
     (
         'c0000000-0000-0000-0000-000000000015',
@@ -1443,11 +1425,11 @@ VALUES
         '66666666-6666-6666-6666-666666666666',
         '00000000-0000-0000-0000-000000000007',
         'completed',
-        NOW() - INTERVAL '100 days',
+        NOW() - INTERVAL '22 days',
         35.00,
         'Seaside cottage refresh.',
-        NOW() - INTERVAL '100 days' + INTERVAL '10 hours',
-        NOW() - INTERVAL '100 days' + INTERVAL '12 hours'
+        NOW() - INTERVAL '22 days' + INTERVAL '10 hours',
+        NOW() - INTERVAL '22 days' + INTERVAL '12 hours'
     ),
     (
         'c0000000-0000-0000-0000-000000000016',
@@ -1455,24 +1437,23 @@ VALUES
         '88888888-8888-8888-8888-888888888888',
         '00000000-0000-0000-0000-000000000009',
         'completed',
-        NOW() - INTERVAL '95 days',
+        NOW() - INTERVAL '18 days',
         70.00,
         'Large house deep clean.',
-        NOW() - INTERVAL '95 days' + INTERVAL '8 hours',
-        NOW() - INTERVAL '95 days' + INTERVAL '14 hours'
+        NOW() - INTERVAL '18 days' + INTERVAL '8 hours',
+        NOW() - INTERVAL '18 days' + INTERVAL '14 hours'
     ),
-    -- Recent past: 89-30 days ago (in_progress/completed)
     (
         'c0000000-0000-0000-0000-000000000017',
         '00000000-0000-0000-0000-000000000010',
         'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
         '00000000-0000-0000-0000-000000000011',
         'completed',
-        NOW() - INTERVAL '75 days',
+        NOW() - INTERVAL '15 days',
         55.00,
         'Beach house clean before guests.',
-        NOW() - INTERVAL '75 days' + INTERVAL '9 hours',
-        NOW() - INTERVAL '75 days' + INTERVAL '12 hours'
+        NOW() - INTERVAL '15 days' + INTERVAL '9 hours',
+        NOW() - INTERVAL '15 days' + INTERVAL '12 hours'
     ),
     (
         'c0000000-0000-0000-0000-000000000018',
@@ -1480,11 +1461,11 @@ VALUES
         'cccccccc-cccc-cccc-cccc-cccccccccccc',
         '00000000-0000-0000-0000-000000000013',
         'completed',
-        NOW() - INTERVAL '60 days',
+        NOW() - INTERVAL '12 days',
         50.00,
         'Weekly clean.',
-        NOW() - INTERVAL '60 days' + INTERVAL '10 hours',
-        NOW() - INTERVAL '60 days' + INTERVAL '13 hours'
+        NOW() - INTERVAL '12 days' + INTERVAL '10 hours',
+        NOW() - INTERVAL '12 days' + INTERVAL '13 hours'
     ),
     (
         'c0000000-0000-0000-0000-000000000019',
@@ -1492,11 +1473,11 @@ VALUES
         'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
         '00000000-0000-0000-0000-000000000015',
         'completed',
-        NOW() - INTERVAL '50 days',
+        NOW() - INTERVAL '10 days',
         75.00,
         'Month-end deep clean.',
-        NOW() - INTERVAL '50 days' + INTERVAL '8 hours',
-        NOW() - INTERVAL '50 days' + INTERVAL '13 hours'
+        NOW() - INTERVAL '10 days' + INTERVAL '8 hours',
+        NOW() - INTERVAL '10 days' + INTERVAL '13 hours'
     ),
     (
         'c0000000-0000-0000-0000-000000000020',
@@ -1504,11 +1485,11 @@ VALUES
         '11111111-1111-1111-1111-111111111112',
         '00000000-0000-0000-0000-000000000019',
         'completed',
-        NOW() - INTERVAL '45 days',
+        NOW() - INTERVAL '8 days',
         55.00,
         'Standard weekly service.',
-        NOW() - INTERVAL '45 days' + INTERVAL '10 hours',
-        NOW() - INTERVAL '45 days' + INTERVAL '13 hours'
+        NOW() - INTERVAL '8 days' + INTERVAL '10 hours',
+        NOW() - INTERVAL '8 days' + INTERVAL '13 hours'
     ),
     (
         'c0000000-0000-0000-0000-000000000021',
@@ -1516,11 +1497,11 @@ VALUES
         '11111111-1111-1111-1111-111111111114',
         '00000000-0000-0000-0000-000000000011',
         'completed',
-        NOW() - INTERVAL '38 days',
+        NOW() - INTERVAL '5 days',
         50.00,
         'Coastal way regular clean.',
-        NOW() - INTERVAL '38 days' + INTERVAL '11 hours',
-        NOW() - INTERVAL '38 days' + INTERVAL '14 hours'
+        NOW() - INTERVAL '5 days' + INTERVAL '11 hours',
+        NOW() - INTERVAL '5 days' + INTERVAL '14 hours'
     ),
     (
         'c0000000-0000-0000-0000-000000000022',
@@ -1528,24 +1509,24 @@ VALUES
         '11111111-1111-1111-1111-111111111116',
         '00000000-0000-0000-0000-000000000013',
         'completed',
-        NOW() - INTERVAL '30 days',
+        NOW() - INTERVAL '3 days',
         60.00,
         'Meadow drive clean.',
-        NOW() - INTERVAL '30 days' + INTERVAL '9 hours',
-        NOW() - INTERVAL '30 days' + INTERVAL '12 hours'
+        NOW() - INTERVAL '3 days' + INTERVAL '9 hours',
+        NOW() - INTERVAL '3 days' + INTERVAL '12 hours'
     ),
-    -- Recent completed (last 30 days)
+    -- Last few days / today
     (
         'c0000000-0000-0000-0000-000000000023',
         '00000000-0000-0000-0000-000000000002',
         '22222222-2222-2222-2222-222222222222',
         '00000000-0000-0000-0000-000000000003',
         'completed',
-        NOW() - INTERVAL '20 days',
+        NOW() - INTERVAL '1 day',
         60.00,
         'Check-out clean for new tenant.',
-        NOW() - INTERVAL '20 days' + INTERVAL '9 hours',
-        NOW() - INTERVAL '20 days' + INTERVAL '12 hours'
+        NOW() - INTERVAL '1 day' + INTERVAL '9 hours',
+        NOW() - INTERVAL '1 day' + INTERVAL '12 hours'
     ),
     (
         'c0000000-0000-0000-0000-000000000024',
@@ -1553,11 +1534,11 @@ VALUES
         '44444444-4444-4444-4444-444444444444',
         '00000000-0000-0000-0000-000000000005',
         'completed',
-        NOW() - INTERVAL '15 days',
+        NOW() - INTERVAL '2 days',
         55.00,
         'Monthly service clean.',
-        NOW() - INTERVAL '15 days' + INTERVAL '10 hours',
-        NOW() - INTERVAL '15 days' + INTERVAL '13 hours'
+        NOW() - INTERVAL '2 days' + INTERVAL '10 hours',
+        NOW() - INTERVAL '2 days' + INTERVAL '13 hours'
     ),
     (
         'c0000000-0000-0000-0000-000000000025',
@@ -1565,23 +1546,23 @@ VALUES
         '55555555-5555-5555-5555-555555555555',
         '00000000-0000-0000-0000-000000000007',
         'completed',
-        NOW() - INTERVAL '10 days',
+        NOW() - INTERVAL '12 hours',
         35.00,
         'Regular fortnightly clean.',
-        NOW() - INTERVAL '10 days' + INTERVAL '14 hours',
-        NOW() - INTERVAL '10 days' + INTERVAL '16 hours'
+        NOW() - INTERVAL '12 hours' + INTERVAL '14 hours',
+        NOW() - INTERVAL '12 hours' + INTERVAL '16 hours'
     ),
-    -- In progress (currently active)
+    -- In progress (started today)
     (
         'c0000000-0000-0000-0000-000000000026',
         '00000000-0000-0000-0000-000000000008',
         '77777777-7777-7777-7777-777777777777',
         '00000000-0000-0000-0000-000000000009',
         'in_progress',
-        NOW() - INTERVAL '2 days',
+        NOW() - INTERVAL '2 hours',
         50.00,
         'Marina view weekly clean.',
-        NOW() - INTERVAL '2 days' + INTERVAL '9 hours',
+        NOW() - INTERVAL '2 hours',
         NULL
     ),
     (
@@ -1590,10 +1571,10 @@ VALUES
         '99999999-9999-9999-9999-999999999999',
         '00000000-0000-0000-0000-000000000011',
         'in_progress',
-        NOW() - INTERVAL '1 day',
+        NOW() - INTERVAL '1 hour',
         40.00,
         'Central flat in progress.',
-        NOW() - INTERVAL '1 day' + INTERVAL '10 hours',
+        NOW() - INTERVAL '1 hour',
         NULL
     ),
     -- Confirmed (accepted, scheduled for future)
@@ -1706,14 +1687,14 @@ VALUES
         NULL,
         NULL
     ),
-    -- Some cancelled bookings
+    -- Some cancelled bookings (spread across past months)
     (
         'c0000000-0000-0000-0000-000000000037',
         '00000000-0000-0000-0000-000000000010',
         'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
         '00000000-0000-0000-0000-000000000011',
         'cancelled',
-        NOW() - INTERVAL '25 days',
+        NOW() - INTERVAL '60 days',
         55.00,
         'Was booked but cancelled.',
         NULL,
@@ -1725,7 +1706,7 @@ VALUES
         'cccccccc-cccc-cccc-cccc-cccccccccccc',
         '00000000-0000-0000-0000-000000000013',
         'cancelled',
-        NOW() - INTERVAL '18 days',
+        NOW() - INTERVAL '100 days',
         50.00,
         'Guests cancelled.',
         NULL,
@@ -1737,7 +1718,7 @@ VALUES
         'dddddddd-dddd-dddd-dddd-dddddddddddd',
         '00000000-0000-0000-0000-000000000015',
         'cancelled',
-        NOW() - INTERVAL '12 days',
+        NOW() - INTERVAL '130 days',
         35.00,
         'Booking cancelled by host.',
         NULL,

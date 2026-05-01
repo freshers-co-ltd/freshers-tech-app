@@ -24,6 +24,7 @@ export interface AdminCleaning {
 	cleaner_name: string | null;
 	property_address: string | null;
 	property_postcode: string | null;
+	property_town_city: string | null;
 }
 
 export interface CleaningFilters {
@@ -149,12 +150,12 @@ export const cleaningService = {
 	},
 
 	async updateStandardTasks(
-		taskDescriptions: string[],
-		isActive = true,
+		tasks: { id: string | null; description: string; is_active: boolean }[],
+		tasksToDelete: string[],
 	): Promise<ActionResult<void>> {
 		const { error } = await supabase.rpc('admin_update_standard_tasks', {
-			p_task_descriptions: taskDescriptions,
-			p_is_active: isActive,
+			p_tasks: tasks,
+			p_tasks_to_delete: tasksToDelete,
 		});
 
 		if (error) {

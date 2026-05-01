@@ -24,9 +24,8 @@ export function HostPropertiesPage() {
 	return (
 		<ManagementLayout
 			title={DICT.PROPERTIES.TITLE}
-			description={DICT.PROPERTIES.MESSAGE}
 			headerActions={
-				<Button onClick={modal.openCreate} size="lg">
+				<Button onClick={modal.openCreate}>
 					<Plus className="size-5" />
 					<span>{DICT.PROPERTIES.NEW}</span>
 				</Button>
@@ -66,13 +65,9 @@ export function HostPropertiesPage() {
 					</DialogContent>
 				)
 			}
-			formTitle={
-				editingProperty ? DICT.PROPERTIES.EDIT_DIALOG.TITLE : DICT.PROPERTIES.CREATE_DIALOG.TITLE
-			}
+			formTitle={editingProperty ? DICT.PROPERTIES.EDIT.TITLE : DICT.PROPERTIES.CREATE.TITLE}
 			formDescription={
-				editingProperty
-					? DICT.PROPERTIES.EDIT_DIALOG.MESSAGE
-					: DICT.PROPERTIES.CREATE_DIALOG.MESSAGE
+				editingProperty ? DICT.PROPERTIES.EDIT.MESSAGE : DICT.PROPERTIES.CREATE.MESSAGE
 			}
 			formContent={
 				<PropertyForm
@@ -84,8 +79,8 @@ export function HostPropertiesPage() {
 			deletingId={modal.deletingId}
 			onDeleteCancel={() => modal.setDeletingId(null)}
 			onDeleteConfirm={handleDelete}
-			deleteTitle={DICT.PROPERTIES.DELETE_DIALOG.TITLE}
-			deleteMessage={DICT.PROPERTIES.DELETE_DIALOG.MESSAGE}
+			deleteTitle={DICT.COMMON.DIALOGS.DELETE_PROPERTY.TITLE}
+			deleteMessage={DICT.COMMON.DIALOGS.DELETE_PROPERTY.MESSAGE}
 		/>
 	);
 }

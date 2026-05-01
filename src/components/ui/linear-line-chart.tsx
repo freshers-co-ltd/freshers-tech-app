@@ -1,7 +1,7 @@
 'use client';
 
 import { TrendingDown, TrendingUp } from 'lucide-react';
-import { CartesianGrid, Line, LineChart, XAxis } from 'recharts';
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
 
 import {
 	type ChartConfig,
@@ -40,15 +40,15 @@ export function LineChartComponent({
 	className,
 }: LineChartProps) {
 	return (
-		<div className={cn('flex flex-col p-4', className)}>
+		<div className={cn('flex flex-col', className)}>
 			{(title || subtitle) && (
 				<div className="mb-4">
 					{title && <h3 className="text-lg font-semibold">{title}</h3>}
 					{subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
 				</div>
 			)}
-			<div className="flex-1 flex items-center justify-center min-h-0">
-				<ChartContainer className="w-full h-[250px]" config={config}>
+			<div className="flex-1 min-h-0">
+				<ChartContainer className="h-full w-full" config={config}>
 					<LineChart
 						accessibilityLayer
 						data={data}
@@ -64,6 +64,7 @@ export function LineChartComponent({
 							tickLine={false}
 							tickMargin={8}
 						/>
+						<YAxis axisLine={false} tickLine={false} tickMargin={8} width={40} />
 						<ChartTooltip content={<ChartTooltipContent hideLabel />} cursor={false} />
 						<Line
 							dataKey={valueKey}
@@ -71,6 +72,7 @@ export function LineChartComponent({
 							stroke={`var(--color-${valueKey})`}
 							strokeWidth={2}
 							type="linear"
+							isAnimationActive={false}
 						/>
 					</LineChart>
 				</ChartContainer>

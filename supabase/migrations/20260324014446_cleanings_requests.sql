@@ -5,10 +5,31 @@ CREATE TYPE public.media_type AS ENUM('image', 'video');
 CREATE TABLE
     public.standard_tasks (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
-        description TEXT NOT NULL,
+        description TEXT NOT NULL UNIQUE,
         is_active BOOLEAN DEFAULT TRUE NOT NULL,
         created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
     );
+
+INSERT INTO
+    public.standard_tasks (description)
+VALUES
+    ('Vacuum all carpets'),
+    ('Mop hard floors'),
+    ('Clean bathroom surfaces'),
+    ('Change bed linens'),
+    ('Dust all surfaces'),
+    ('Clean kitchen appliances'),
+    ('Wipe down countertops'),
+    ('Clean mirrors and glass'),
+    ('Empty trash bins'),
+    ('Replace towels'),
+    ('Clean toilet and sanitize'),
+    ('Wash dishes or load dishwasher'),
+    ('Sweep and mop entrance'),
+    ('Clean window sills'),
+    ('Launder and fold clothes')
+ON CONFLICT (description)
+DO NOTHING;
 
 ALTER TABLE public.standard_tasks ENABLE ROW LEVEL SECURITY;
 
@@ -469,158 +490,6 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER on_cleaning_timestamp_update BEFORE
 UPDATE ON public.cleanings FOR EACH ROW
 EXECUTE FUNCTION public.handle_cleaning_status_transitions ();
-
-CREATE
-OR REPLACE FUNCTION public.handle_cleaning_notifications () RETURNS TRIGGER SECURITY DEFINER
-SET
-    search_path = public AS $$
-DECLARE
-    v_property_address TEXT;
-    v_host_id UUID;
-    v_scheduled_date TEXT;
-BEGIN
-    SELECT COALESCE(p.address_line_1, 'Unknown property'), c.host_id
-    INTO v_property_address, v_host_id
-    FROM public.cleanings c
-    LEFT JOIN public.properties p ON c.property_id = p.id
-    WHERE c.id = NEW.id;
-
-    v_scheduled_date := TO_CHAR(NEW.scheduled_start, 'FMMonth FMDD, YYYY');
-
-    IF TG_OP = 'INSERT' AND NEW.status = 'requested' THEN
-        INSERT INTO public.notifications (user_id, type, title, message, data, link)
-        SELECT p.id, 'cleaning_requested', 'New Cleaning Requested',
-            'Host ' || COALESCE(hp.full_name, 'Unknown') || ' has requested a cleaning at ' || v_property_address,
-            jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id),
-            '/admin/cleanings?cleaning_view=' || NEW.id::TEXT
-        FROM public.profiles p
-        CROSS JOIN (SELECT full_name FROM public.profiles WHERE id = v_host_id) hp
-        WHERE p.role = 'admin'
-        ON CONFLICT DO NOTHING;
-    END IF;
-
-    IF NEW.cleaner_id IS DISTINCT FROM OLD.cleaner_id AND NEW.cleaner_id IS NOT NULL THEN
-        INSERT INTO public.notifications (user_id, type, title, message, data, link)
-        VALUES (
-            NEW.cleaner_id,
-            'cleaning_assigned',
-            'New Cleaning Assigned',
-            'You have been assigned to clean ' || v_property_address || ' on ' || v_scheduled_date || '.',
-            jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id, 'property_address', v_property_address),
-            '/cleaner/cleanings?cleaning_view=' || NEW.id::TEXT
-        )
-        ON CONFLICT DO NOTHING;
-
-        IF v_host_id IS NOT NULL THEN
-            INSERT INTO public.notifications (user_id, type, title, message, data, link)
-            VALUES (
-                v_host_id,
-                'cleaning_confirmed',
-                'Cleaning Confirmed',
-                'Your cleaning request for ' || v_property_address || ' has been confirmed and a cleaner has been assigned.',
-                jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id),
-                '/host/cleanings?cleaning_view=' || NEW.id::TEXT
-            )
-            ON CONFLICT DO NOTHING;
-        END IF;
-    END IF;
-
-    IF (OLD.clock_in_time IS NULL AND NEW.clock_in_time IS NOT NULL) THEN
-        IF v_host_id IS NOT NULL THEN
-            INSERT INTO public.notifications (user_id, type, title, message, data, link)
-            VALUES (
-                v_host_id,
-                'cleaning_started',
-                'Cleaning Started',
-                'Cleaning has started at ' || v_property_address || '.',
-                jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id),
-                '/host/cleanings?cleaning_view=' || NEW.id::TEXT
-            )
-            ON CONFLICT DO NOTHING;
-        END IF;
-
-        INSERT INTO public.notifications (user_id, type, title, message, data, link)
-        SELECT p.id, 'cleaning_started', 'Cleaning Started',
-            'Cleaning has started at ' || v_property_address || '.',
-            jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id),
-            '/admin/cleanings?cleaning_view=' || NEW.id::TEXT
-        FROM public.profiles p
-        WHERE p.role = 'admin'
-        ON CONFLICT DO NOTHING;
-    END IF;
-
-    IF (OLD.clock_out_time IS NULL AND NEW.clock_out_time IS NOT NULL) THEN
-        IF v_host_id IS NOT NULL THEN
-            INSERT INTO public.notifications (user_id, type, title, message, data, link)
-            VALUES (
-                v_host_id,
-                'cleaning_completed',
-                'Cleaning Completed',
-                'Your cleaning at ' || v_property_address || ' has been completed.',
-                jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id),
-                '/host/cleanings?cleaning_view=' || NEW.id::TEXT
-            )
-            ON CONFLICT DO NOTHING;
-        END IF;
-
-        INSERT INTO public.notifications (user_id, type, title, message, data, link)
-        SELECT p.id, 'cleaning_completed', 'Cleaning Completed',
-            'Cleaning at ' || v_property_address || ' has been completed.',
-            jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id),
-            '/admin/cleanings?cleaning_view=' || NEW.id::TEXT
-        FROM public.profiles p
-        WHERE p.role = 'admin'
-        ON CONFLICT DO NOTHING;
-    END IF;
-
-    IF NEW.status = 'cancelled' AND OLD.status != 'cancelled' THEN
-        INSERT INTO public.notifications (user_id, type, title, message, data, link)
-        SELECT p.id, 'cleaning_cancelled', 'Cleaning Cancelled',
-            'Cleaning at ' || v_property_address || ' has been cancelled.',
-            jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id),
-            '/admin/cleanings?cleaning_view=' || NEW.id::TEXT
-        FROM public.profiles p
-        WHERE p.role = 'admin'
-        ON CONFLICT DO NOTHING;
-    END IF;
-
-    IF NEW.status = 'requested' AND OLD.status = 'requested' THEN
-        IF NEW.scheduled_start IS DISTINCT FROM OLD.scheduled_start
-            OR NEW.instructions IS DISTINCT FROM OLD.instructions
-            OR NEW.stocks_included IS DISTINCT FROM OLD.stocks_included
-            OR EXISTS (SELECT 1 FROM public.cleaning_tasks ct WHERE ct.cleaning_id = NEW.id AND ct.deleted_at IS NULL AND (SELECT count(*) FROM public.cleaning_tasks ct2 WHERE ct2.cleaning_id = NEW.id AND ct2.deleted_at IS NULL) != (SELECT count(*) FROM public.cleaning_tasks ct3 WHERE ct3.cleaning_id = OLD.id AND ct3.deleted_at IS NULL)) THEN
-
-            IF NEW.cleaner_id IS NOT NULL THEN
-                INSERT INTO public.notifications (user_id, type, title, message, data, link)
-                VALUES (
-                    NEW.cleaner_id,
-                    'cleaning_updated',
-                    'Cleaning Details Updated',
-                    'The cleaning at ' || v_property_address || ' has been updated.',
-                    jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id),
-                    '/cleaner/cleanings?cleaning_view=' || NEW.id::TEXT
-                )
-                ON CONFLICT DO NOTHING;
-            END IF;
-
-            INSERT INTO public.notifications (user_id, type, title, message, data, link)
-            SELECT p.id, 'cleaning_updated', 'Cleaning Details Updated',
-                'Cleaning at ' || v_property_address || ' has been updated by the host.',
-                jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id),
-                '/admin/cleanings?cleaning_view=' || NEW.id::TEXT
-            FROM public.profiles p
-            WHERE p.role = 'admin'
-            ON CONFLICT DO NOTHING;
-        END IF;
-    END IF;
-
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER on_cleaning_notifications AFTER
-INSERT OR UPDATE ON public.cleanings FOR EACH ROW
-EXECUTE FUNCTION public.handle_cleaning_notifications ();
 
 CREATE POLICY "Cleaners can upload evidence to assigned cleaning folders" ON STORAGE.objects FOR INSERT TO authenticated
 WITH

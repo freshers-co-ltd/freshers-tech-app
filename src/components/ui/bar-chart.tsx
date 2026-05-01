@@ -1,7 +1,7 @@
 'use client';
 
 import { TrendingDown, TrendingUp } from 'lucide-react';
-import { Bar, BarChart, CartesianGrid, LabelList, XAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts';
 
 import {
 	type ChartConfig,
@@ -9,7 +9,6 @@ import {
 	ChartTooltip,
 	ChartTooltipContent,
 } from '@/components/ui/chart';
-import { cn } from '@/lib/utils';
 
 export interface TrendData {
 	value: number;
@@ -37,21 +36,21 @@ export function BarChartComponent({
 	trend,
 	showTrend = true,
 	trendLabel,
-	className,
+	// className kept for API compatibility but not used in this component
 }: BarChartProps) {
 	console.log('DEBUG bar-chart: config', config);
 	console.log('DEBUG bar-chart: fill', config[valueKey]?.color);
 
 	return (
-		<div className={cn('flex flex-col p-4', className)}>
+		<div className="flex flex-col">
 			{(title || subtitle) && (
 				<div className="mb-4">
 					{title && <h3 className="text-lg font-semibold">{title}</h3>}
 					{subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
 				</div>
 			)}
-			<div className="flex-1 flex items-center justify-center min-h-0">
-				<ChartContainer className="h-[250px] w-full" config={config}>
+			<div className="flex-1 min-h-0">
+				<ChartContainer className="h-full w-full" config={config}>
 					<BarChart
 						accessibilityLayer
 						data={data}
@@ -66,6 +65,7 @@ export function BarChartComponent({
 							tickLine={false}
 							tickMargin={10}
 						/>
+						<YAxis axisLine={false} tickLine={false} tickMargin={10} width={32} />
 						<ChartTooltip content={<ChartTooltipContent hideLabel />} cursor={false} />
 						<Bar dataKey={valueKey} radius={8} fill={`var(--color-chart-1)`}>
 							<LabelList fontSize={12} offset={12} position="top" />

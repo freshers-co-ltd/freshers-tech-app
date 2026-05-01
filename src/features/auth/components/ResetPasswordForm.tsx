@@ -17,13 +17,13 @@ const resetPasswordSchema = z
 	.object({
 		password: z
 			.string()
-			.min(8, DICT.FORMS.VALIDATION.PASSWORD_MIN)
-			.regex(/[0-9]/, { message: DICT.FORMS.VALIDATION.PASSWORD_NUMBER })
-			.regex(/[^a-zA-Z0-9]/, { message: DICT.FORMS.VALIDATION.PASSWORD_SPECIAL }),
+			.min(8, DICT.COMMON.VALIDATION.PASSWORD_MIN)
+			.regex(/[0-9]/, { message: DICT.COMMON.VALIDATION.PASSWORD_NUMBER })
+			.regex(/[^a-zA-Z0-9]/, { message: DICT.COMMON.VALIDATION.PASSWORD_SPECIAL }),
 		confirmPassword: z.string(),
 	})
 	.refine((data) => data.password === data.confirmPassword, {
-		message: DICT.FORMS.VALIDATION.PASSWORDS_MATCH,
+		message: DICT.COMMON.VALIDATION.PASSWORDS_MATCH,
 		path: ['confirmPassword'],
 	});
 
@@ -76,12 +76,12 @@ export function ResetPasswordForm({ className, ...props }: React.ComponentProps<
 					render={({ field, fieldState }) => (
 						<Field>
 							{' '}
-							<FieldLabel htmlFor="password"> {DICT.FORMS.LABELS.NEW_PASSWORD} </FieldLabel>{' '}
+							<FieldLabel htmlFor="password"> {DICT.COMMON.LABELS.NEW_PASSWORD} </FieldLabel>{' '}
 							<PasswordInput
 								{...field}
 								id="password"
 								autoComplete="new-password"
-								placeholder={DICT.FORMS.PLACEHOLDERS.PASSWORD}
+								placeholder={DICT.COMMON.PLACEHOLDERS.PASSWORD}
 								error={!!fieldState.error}
 							/>{' '}
 							{fieldState.error && <FieldError errors={[fieldState.error]} />}{' '}
@@ -94,14 +94,11 @@ export function ResetPasswordForm({ className, ...props }: React.ComponentProps<
 					render={({ field, fieldState }) => (
 						<Field>
 							{' '}
-							<FieldLabel htmlFor="confirmPassword">
-								{' '}
-								{DICT.FORMS.LABELS.CONFIRM_PASSWORD}{' '}
-							</FieldLabel>{' '}
+							<FieldLabel htmlFor="confirmPassword"> {DICT.FORMS.CONFIRM_PASSWORD} </FieldLabel>{' '}
 							<PasswordInput
 								{...field}
 								id="confirmPassword"
-								placeholder={DICT.FORMS.PLACEHOLDERS.PASSWORD}
+								placeholder={DICT.COMMON.PLACEHOLDERS.PASSWORD}
 								error={!!fieldState.error}
 							/>{' '}
 							{fieldState.error && <FieldError errors={[fieldState.error]} />}{' '}

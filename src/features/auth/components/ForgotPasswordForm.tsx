@@ -21,7 +21,7 @@ import { authService } from '@/features/auth/authService';
 import { cn } from '@/lib/utils';
 
 const forgotPasswordSchema = z.object({
-	email: z.email(DICT.FORMS.VALIDATION.EMAIL_INVALID).trim(),
+	email: z.email(DICT.COMMON.VALIDATION.EMAIL_INVALID).trim(),
 });
 
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
@@ -73,13 +73,13 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
 					name="email"
 					render={({ field, fieldState }) => (
 						<Field>
-							<FieldLabel htmlFor="email">{DICT.FORMS.LABELS.EMAIL}</FieldLabel>
+							<FieldLabel htmlFor="email">{DICT.COMMON.LABELS.EMAIL}</FieldLabel>
 							<Input
 								{...field}
 								id="email"
 								type="email"
 								autoComplete="email"
-								placeholder={DICT.FORMS.PLACEHOLDERS.EMAIL}
+								placeholder={DICT.COMMON.PLACEHOLDERS.EMAIL}
 								aria-invalid={!!fieldState.error}
 								className={fieldState.error ? 'border-destructive' : ''}
 							/>

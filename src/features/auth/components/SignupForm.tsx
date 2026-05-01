@@ -17,17 +17,17 @@ import { cn } from '@/lib/utils';
 
 const signupSchema = z
 	.object({
-		name: z.string().trim().min(2, DICT.FORMS.VALIDATION.NAME_MIN),
-		email: z.email(DICT.FORMS.VALIDATION.EMAIL_INVALID).trim(),
+		name: z.string().trim().min(2, DICT.COMMON.VALIDATION.NAME_MIN),
+		email: z.email(DICT.COMMON.VALIDATION.EMAIL_INVALID).trim(),
 		password: z
 			.string()
-			.min(8, DICT.FORMS.VALIDATION.PASSWORD_MIN)
-			.regex(/[0-9]/, { message: DICT.FORMS.VALIDATION.PASSWORD_NUMBER })
-			.regex(/[^a-zA-Z0-9]/, { message: DICT.FORMS.VALIDATION.PASSWORD_SPECIAL }),
+			.min(8, DICT.COMMON.VALIDATION.PASSWORD_MIN)
+			.regex(/[0-9]/, { message: DICT.COMMON.VALIDATION.PASSWORD_NUMBER })
+			.regex(/[^a-zA-Z0-9]/, { message: DICT.COMMON.VALIDATION.PASSWORD_SPECIAL }),
 		confirmPassword: z.string(),
 	})
 	.refine((data) => data.password === data.confirmPassword, {
-		message: DICT.FORMS.VALIDATION.PASSWORDS_MATCH,
+		message: DICT.COMMON.VALIDATION.PASSWORDS_MATCH,
 		path: ['confirmPassword'],
 	});
 
@@ -213,12 +213,12 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 					name="name"
 					render={({ field, fieldState }) => (
 						<Field>
-							<FieldLabel htmlFor="name">{DICT.FORMS.LABELS.FULL_NAME}</FieldLabel>
+							<FieldLabel htmlFor="name">{DICT.COMMON.LABELS.FULL_NAME}</FieldLabel>
 							<Input
 								{...field}
 								id="name"
 								type="text"
-								placeholder={DICT.FORMS.PLACEHOLDERS.NAME}
+								placeholder={DICT.COMMON.PLACEHOLDERS.NAME}
 								aria-invalid={!!fieldState.error}
 								className={fieldState.error ? 'border-destructive' : ''}
 							/>
@@ -232,13 +232,13 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 					name="email"
 					render={({ field, fieldState }) => (
 						<Field>
-							<FieldLabel htmlFor="email">{DICT.FORMS.LABELS.EMAIL}</FieldLabel>
+							<FieldLabel htmlFor="email">{DICT.COMMON.LABELS.EMAIL}</FieldLabel>
 							<Input
 								{...field}
 								id="email"
 								type="email"
 								autoComplete="email"
-								placeholder={DICT.FORMS.PLACEHOLDERS.EMAIL}
+								placeholder={DICT.COMMON.PLACEHOLDERS.EMAIL}
 								aria-invalid={!!fieldState.error}
 								className={fieldState.error ? 'border-destructive' : ''}
 							/>
@@ -252,16 +252,16 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 					name="password"
 					render={({ field, fieldState }) => (
 						<Field>
-							<FieldLabel htmlFor="password">{DICT.FORMS.LABELS.PASSWORD}</FieldLabel>
+							<FieldLabel htmlFor="password">{DICT.COMMON.LABELS.PASSWORD}</FieldLabel>
 							<PasswordInput
 								{...field}
 								id="password"
 								autoComplete="new-password"
-								placeholder={DICT.FORMS.PLACEHOLDERS.PASSWORD}
+								placeholder={DICT.COMMON.PLACEHOLDERS.PASSWORD}
 								error={!!fieldState.error}
 							/>
 							{!fieldState.error && (
-								<FieldDescription>{DICT.FORMS.VALIDATION.PASSWORD_HINT}</FieldDescription>
+								<FieldDescription>{DICT.COMMON.VALIDATION.PASSWORD_HINT}</FieldDescription>
 							)}
 							{fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
 						</Field>
@@ -273,13 +273,11 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 					name="confirmPassword"
 					render={({ field, fieldState }) => (
 						<Field>
-							<FieldLabel htmlFor="confirm-password">
-								{DICT.FORMS.LABELS.CONFIRM_PASSWORD}
-							</FieldLabel>
+							<FieldLabel htmlFor="confirm-password">{DICT.FORMS.CONFIRM_PASSWORD}</FieldLabel>
 							<PasswordInput
 								{...field}
 								id="confirm-password"
-								placeholder={DICT.FORMS.PLACEHOLDERS.PASSWORD}
+								placeholder={DICT.COMMON.PLACEHOLDERS.PASSWORD}
 								error={!!fieldState.error}
 							/>
 							{fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}

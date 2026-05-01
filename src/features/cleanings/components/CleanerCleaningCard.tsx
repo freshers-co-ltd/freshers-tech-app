@@ -3,9 +3,9 @@
 import { format } from 'date-fns';
 import { Calendar, CheckCircle2, MapPin, Play } from 'lucide-react';
 import { memo, useMemo } from 'react';
+import { EntityBadge } from '@/components/EntityBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { CleaningRequest } from '@/features/cleanings/cleaningService';
-import { CleaningStatusBadge } from '@/features/cleanings/components/CleaningStatusBadge';
 import { mediaService } from '@/lib/mediaService';
 
 interface CleanerCleaningCardProps {
@@ -47,7 +47,10 @@ export const CleanerCleaningCard = memo(({ cleaning, onView }: CleanerCleaningCa
 				)}
 
 				<div className="absolute top-2 left-2">
-					<CleaningStatusBadge status={cleaning.status} isCleanerView={true} />
+					<EntityBadge
+						variant={{ type: 'cleaning', value: cleaning.status }}
+						customLabel={cleaning.status === 'confirmed' ? 'ASSIGNED' : undefined}
+					/>
 				</div>
 			</div>
 
@@ -71,20 +74,6 @@ export const CleanerCleaningCard = memo(({ cleaning, onView }: CleanerCleaningCa
 							{format(new Date(cleaning.scheduled_start), 'MMM d, h:mm a')}
 						</p>
 					</div>
-
-					{isActive ? (
-						<div className="flex items-center gap-1 text-primary animate-pulse font-bold text-xs uppercase">
-							<Play className="size-3 fill-current" />
-							Active Now
-						</div>
-					) : (
-						cleaning.status === 'completed' && (
-							<div className="flex items-center gap-1 text-green-600 font-bold text-xs uppercase">
-								<CheckCircle2 className="size-3" />
-								Done
-							</div>
-						)
-					)}
 				</div>
 			</CardContent>
 		</Card>

@@ -3,22 +3,17 @@
 import { type ActionResult, mapDatabaseError } from '@/lib/serviceUtils';
 import { supabase } from '@/lib/supabaseClient';
 
-export interface VolumeMetrics {
-	active_properties: number;
-	active_hosts: number;
-	active_cleaners: number;
-	completed_mtd: number;
-	completed_ytd: number;
-	total_mtd: number;
-	calculated_at: string;
-}
-
-export interface OperationalHealth {
+export interface PlatformStats {
+	total_properties: number;
+	total_hosts: number;
+	total_cleaners: number;
+	completed_cleanings_mtd: number;
+	completed_cleanings_ytd: number;
+	total_cleanings_mtd: number;
+	cleanings_in_progress: number;
 	avg_completion_hours: number;
 	broken_items_mtd: number;
 	low_supplies_mtd: number;
-	cleaner_utilization_pct: number;
-	in_progress: number;
 	calculated_at: string;
 }
 
@@ -84,24 +79,18 @@ export interface RevenueMetrics {
 type RpcParams = Record<string, unknown>;
 
 export const analyticsService = {
-	async getVolumeMetrics(): Promise<ActionResult<VolumeMetrics>> {
-		const { data, error } = await supabase.from('admin_volume_metrics').select('*').single();
+	async getPlatformStats(): Promise<ActionResult<PlatformStats>> {
+		const { data, error } = await supabase.from('platform_stats').select('*').single();
 
 		if (error) {
 			return { data: null, error: mapDatabaseError(error) };
 		}
 
-		return { data: data as VolumeMetrics, error: null };
+		return { data: data as PlatformStats, error: null };
 	},
 
-	async getOperationalHealth(): Promise<ActionResult<OperationalHealth>> {
-		const { data, error } = await supabase.from('admin_operational_health').select('*').single();
-
-		if (error) {
-			return { data: null, error: mapDatabaseError(error) };
-		}
-
-		return { data: data as OperationalHealth, error: null };
+	async getOperationalHealth(): Promise<ActionResult<PlatformStats>> {
+		return this.getPlatformStats();
 	},
 
 	async getAuditLogs(

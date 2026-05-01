@@ -1,20 +1,10 @@
 'use client';
 
-import {
-	Bath,
-	Bed,
-	ChevronLeft,
-	ChevronRight,
-	MapPin,
-	Maximize2,
-	Pencil,
-	Trash2,
-	X,
-} from 'lucide-react';
+import { Bath, Bed, MapPin, Maximize2, Pencil, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { FullscreenImageCarousel } from '@/components/FullscreenImageCarousel';
 import { Button } from '@/components/ui/button';
 import {
-	Dialog,
 	DialogContent,
 	DialogDescription,
 	DialogHeader,
@@ -45,14 +35,13 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 		return rawPaths.map((path) => mediaService.getMediaUrl(path || null, 'property-media'));
 	}, [property]);
 
-	const { activeImage, setActiveImage, currentIndex, nextImage, prevImage, allImages } =
-		useCarousel({
-			images,
-			initialImage: property.main_image_url
-				? mediaService.getMediaUrl(property.main_image_url || null, 'property-media')
-				: '',
-			isKeyboardEnabled: isFullScreen,
-		});
+	const { activeImage, setActiveImage, allImages } = useCarousel({
+		images,
+		initialImage: property.main_image_url
+			? mediaService.getMediaUrl(property.main_image_url || null, 'property-media')
+			: '',
+		isKeyboardEnabled: isFullScreen,
+	});
 
 	const isHost = user?.user_metadata?.role === 'host';
 
@@ -125,13 +114,13 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 							{isHost && (
 								<div className="flex flex-col gap-2">
 									<Button onClick={() => onEdit(property.id)} className="w-full">
-										<Pencil className="mr-2 size-4" /> {DICT.PROPERTIES.EDIT}
+										<Pencil className="mr-2 size-4" /> {DICT.COMMON.ACTIONS.EDIT}
 									</Button>
 									<Button
 										variant="destructive"
 										onClick={() => onDelete(property.id)}
 										className="w-full">
-										<Trash2 className="mr-2 size-4" /> {DICT.PROPERTIES.DELETE}
+										<Trash2 className="mr-2 size-4" /> {DICT.COMMON.ACTIONS.DELETE}
 									</Button>
 								</div>
 							)}
@@ -140,69 +129,14 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 				</ScrollArea>
 			</div>
 
-			<Dialog open={isFullScreen} onOpenChange={setIsFullScreen}>
-				<DialogContent className="max-w-7xl! w-[95vw] h-[90vh] p-0 bg-card border-none flex flex-col items-center justify-start overflow-hidden rounded-lg shadow-xl [&>button]:hidden">
-					<DialogHeader>
-						<DialogTitle className="sr-only">{DICT.PROPERTIES.LABELS.FULLSCREEN_VIEW}</DialogTitle>
-						<DialogDescription className="sr-only">
-							Viewing image {currentIndex + 1}.
-						</DialogDescription>
-					</DialogHeader>
-
-					<div className="absolute top-0 right-0 z-50 p-6">
-						<Button
-							variant="ghost"
-							size="icon"
-							className="rounded-full shadow-sm size-10 bg-background/80 backdrop-blur-md"
-							onClick={() => setIsFullScreen(false)}>
-							<X className="size-5" />
-						</Button>
-					</div>
-
-					{allImages.length > 1 && (
-						<div className="absolute left-0 right-0 z-50 px-6 flex-center bottom-5">
-							<div className="flex items-center gap-4 p-1 border rounded-xl shadow-lg bg-background/80 backdrop-blur-md">
-								<Button
-									variant="ghost"
-									size="icon"
-									className="size-10"
-									onClick={(e) => {
-										e.stopPropagation();
-										prevImage();
-									}}>
-									<ChevronLeft className="size-6" />
-								</Button>
-
-								<div className="px-2 text-sm font-semibold text-muted-foreground">
-									{currentIndex + 1} / {allImages.length}
-								</div>
-
-								<Button
-									variant="ghost"
-									size="icon"
-									className="size-10"
-									onClick={(e) => {
-										e.stopPropagation();
-										nextImage();
-									}}>
-									<ChevronRight className="size-6" />
-								</Button>
-							</div>
-						</div>
-					)}
-
-					<div className="relative flex-col-center size-full">
-						<img
-							src={activeImage}
-							className="relative z-10 object-contain w-full max-h-[85dvh] select-none"
-							alt={DICT.PROPERTIES.LABELS.FULLSCREEN_VIEW}
-							onError={(e) => {
-								(e.target as HTMLImageElement).src = '/placeholder-property.jpg';
-							}}
-						/>
-					</div>
-				</DialogContent>
-			</Dialog>
+			<FullscreenImageCarousel
+				images={allImages}
+				initialImage={activeImage}
+				open={isFullScreen}
+				onOpenChange={setIsFullScreen}
+				alt="Property"
+				placeholderSrc="/placeholder-property.jpg"
+			/>
 		</DialogContent>
 	);
 }

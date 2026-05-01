@@ -3,8 +3,8 @@
 import { CalendarX } from 'lucide-react';
 import { DialogContent } from '@/components/ui/dialog';
 import { DICT } from '@/dictionary';
-import { CleanerCleaningDetailView } from '@/features/cleanings/components/CleanerCleaningDetailView';
 import { CleanerCleaningGrid } from '@/features/cleanings/components/CleanerCleaningGrid';
+import { CleaningDetailView } from '@/features/cleanings/components/CleaningDetailView';
 import { useCleanerCleanings } from '@/features/cleanings/useCleanerCleanings';
 import { ManagementLayout } from '@/layouts/ManagementLayout';
 
@@ -14,7 +14,6 @@ export function CleanerCleaningsPage() {
 	return (
 		<ManagementLayout
 			title={DICT.CLEANINGS.TITLE}
-			description="Manage your assigned cleaning jobs and track your progress."
 			headerActions={null}
 			isLoading={isLoading}
 			loadingMessage="Fetching assigned cleanings..."
@@ -36,8 +35,9 @@ export function CleanerCleaningsPage() {
 			onClose={modal.handleClose}
 			viewContent={
 				viewingCleaning ? (
-					<CleanerCleaningDetailView
+					<CleaningDetailView
 						cleaning={viewingCleaning}
+						userRole="cleaner"
 						open={modal.isViewOpen}
 						onOpenChange={modal.handleClose}
 					/>

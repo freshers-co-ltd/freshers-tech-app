@@ -58,8 +58,8 @@ const FileSvgDraw = ({ accept }: { accept?: Record<string, string[]> }) => {
 				/>
 			</svg>
 			<p className="mb-1 text-sm text-primary">
-				<span className="font-semibold">{DICT.FORMS.LABELS.UPLOAD_PROMPT}</span>{' '}
-				{DICT.FORMS.LABELS.UPLOAD_DRAG_DROP}
+				<span className="font-semibold">{DICT.COMMON.IMAGES.UPLOAD_PROMPT}</span>{' '}
+				{DICT.COMMON.IMAGES.UPLOAD_DRAG_DROP}
 			</p>
 			<p className="text-xs text-primary">{allowedExtensions}</p>
 		</>
@@ -120,7 +120,7 @@ export function CleaningEvidenceForm({ onSubmit }: CleaningEvidenceFormProps) {
 				</Field>
 
 				<Field>
-					<FieldLabel>Cleaning Evidence (Photos/Videos)</FieldLabel>
+					<FieldLabel>Cleaning Evidence</FieldLabel>
 					<FileUploader
 						value={files}
 						onValueChange={onFilesChange}

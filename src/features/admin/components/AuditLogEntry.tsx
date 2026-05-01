@@ -4,6 +4,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import type { AuditLogEntry } from '@/features/admin/analyticsService';
+import { formatDate } from '@/lib/utils';
 
 const ACTION_LABELS: Record<string, string> = {
 	INSERT: 'created',
@@ -95,9 +96,9 @@ export function AuditLogEntryComponent({ log }: AuditLogEntryProps) {
 
 	return (
 		<div className="rounded-lg border bg-card">
-			<div className="flex items-center justify-between p-4">
+			<div className="flex flex-col gap-2 p-4 md:flex-row md:items-center md:justify-between md:gap-0">
 				<div className="flex-1 min-w-0">
-					<p className="font-medium text-foreground truncate">
+					<p className="font-medium text-foreground whitespace-normal break-words">
 						<span>{log.actor_name || 'System'}</span>
 						<span className="font-normal">
 							{' '}
@@ -105,7 +106,7 @@ export function AuditLogEntryComponent({ log }: AuditLogEntryProps) {
 						</span>
 					</p>
 				</div>
-				<div className="flex items-center gap-3 shrink-0 ml-2">
+				<div className="flex items-center gap-3 shrink-0">
 					{changeCount > 0 && (
 						<span className="text-sm text-muted-foreground">
 							{changeCount} field{changeCount !== 1 ? 's' : ''} changed
@@ -130,29 +131,42 @@ export function AuditLogEntryComponent({ log }: AuditLogEntryProps) {
 					</Button>
 				</div>
 			</div>
-			<div className="text-sm text-muted-foreground px-4 pb-3">
-				{new Date(log.created_at).toLocaleString()}
-			</div>
+			<div className="text-sm text-muted-foreground px-4 pb-3">{formatDate(log.created_at)}</div>
 			{isExpanded && changeCount > 0 && (
 				<div className="border-t px-4 py-3 bg-muted/30">
-					<table className="w-full text-sm">
-						<thead>
-							<tr className="text-left text-muted-foreground">
-								<th className="pb-2 font-medium">Field</th>
-								<th className="pb-2 font-medium">Old Value</th>
-								<th className="pb-2 font-medium">New Value</th>
-							</tr>
-						</thead>
-						<tbody>
+					<div className="overflow-x-auto md:table md:w-full md:text-sm">
+						<tbody className="block md:table-row-group">
 							{diffs.map((diff) => (
-								<tr key={diff.field} className="border-t border-muted">
-									<td className="py-2 font-mono text-xs text-foreground">{diff.field}</td>
-									<td className="py-2 font-mono text-xs text-muted-foreground">{diff.oldValue}</td>
-									<td className="py-2 font-mono text-xs text-foreground">{diff.newValue}</td>
-								</tr>
+								<div
+									key={diff.field}
+									className="block md:table-row border-b border-muted pb-4 mb-4 last:mb-0 md:pb-0 md:mb-0 md:border-0">
+									<div className="hidden md:table-header-group">
+										<tr className="text-left text-muted-foreground">
+											<th className="pb-2 font-medium">Field</th>
+											<th className="pb-2 font-medium">Old Value</th>
+											<th className="pb-2 font-medium">New Value</th>
+										</tr>
+									</div>
+									<div className="block md:table-cell py-2 md:py-2">
+										<div className="md:hidden text-xs text-muted-foreground mb-1">Field</div>
+										<div className="font-mono text-xs text-foreground">{diff.field}</div>
+									</div>
+									<div className="block md:table-cell py-2 md:py-2">
+										<div className="md:hidden text-xs text-muted-foreground mb-1">Old Value</div>
+										<div className="font-mono text-xs text-muted-foreground whitespace-nowrap">
+											{diff.oldValue}
+										</div>
+									</div>
+									<div className="block md:table-cell py-2 md:py-2">
+										<div className="md:hidden text-xs text-muted-foreground mb-1">New Value</div>
+										<div className="font-mono text-xs text-foreground whitespace-nowrap">
+											{diff.newValue}
+										</div>
+									</div>
+								</div>
 							))}
 						</tbody>
-					</table>
+					</div>
 				</div>
 			)}
 			{isExpanded && changeCount === 0 && (

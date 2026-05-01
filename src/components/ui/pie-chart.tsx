@@ -58,23 +58,23 @@ export function PieChartComponent({
 	);
 
 	return (
-		<div className={cn('flex flex-col p-4', className)}>
+		<div className={cn('flex flex-col', className)}>
 			{(title || subtitle) && (
 				<div className="mb-4">
 					{title && <h3 className="text-lg font-semibold">{title}</h3>}
 					{subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
 				</div>
 			)}
-			<div className="flex-1 flex items-center justify-center min-h-0">
-				<ChartContainer className="w-full h-[250px]" config={config}>
+			<div className="flex-1 min-h-0">
+				<ChartContainer className="h-full w-full" config={config}>
 					<PieChart>
 						<Tooltip content={<ChartTooltipContent hideLabel />} />
 						<Pie
 							data={data}
 							cx="50%"
 							cy="50%"
-							innerRadius={60}
-							outerRadius={100}
+							innerRadius="60%"
+							outerRadius="100%"
 							paddingAngle={2}
 							dataKey="value">
 							{data.map((entry, index) => (
@@ -105,7 +105,7 @@ export function PieChartComponent({
 								}}
 							/>
 							<span className="text-sm text-muted-foreground">
-								{formatLabels ? formatLabel(entry.name) : entry.name} ({entry.value})
+								{formatLabels ? formatLabel(entry.name) : entry.name}
 							</span>
 						</div>
 					))}

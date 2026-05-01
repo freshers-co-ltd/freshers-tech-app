@@ -23,7 +23,6 @@ OR REPLACE FUNCTION public.admin_get_users (
     total_properties INT,
     total_cleanings INT,
     completed_cleanings INT,
-    active_bookings INT,
     last_sign_in_text TEXT,
     total_user_count INT
 ) SECURITY DEFINER
@@ -46,7 +45,6 @@ BEGIN
         (SELECT count(*)::INT FROM public.properties pr WHERE pr.host_id = p.id AND pr.deleted_at IS NULL),
         (SELECT count(*)::INT FROM public.cleanings c WHERE (c.host_id = p.id OR c.cleaner_id = p.id) AND c.deleted_at IS NULL),
         (SELECT count(*)::INT FROM public.cleanings c WHERE (c.host_id = p.id OR c.cleaner_id = p.id) AND c.status = 'completed' AND c.deleted_at IS NULL),
-        (SELECT count(*)::INT FROM public.cleanings c WHERE c.cleaner_id = p.id AND c.status IN ('requested', 'confirmed', 'in_progress') AND c.deleted_at IS NULL),
         CASE 
             WHEN MAX(au.last_sign_in_at) IS NULL THEN 'Never'
             WHEN MAX(au.last_sign_in_at) > now() - interval '24 hours' THEN 'Today'
@@ -94,7 +92,11 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE
-OR REPLACE FUNCTION public.admin_get_host_detail (p_host_id UUID) RETURNS TABLE (
+OR REPLACE FUNCTION public.admin_get_host_detail (
+    p_host_id UUID,
+    p_properties_sort_field TEXT DEFAULT 'created_at',
+    p_properties_sort_direction TEXT DEFAULT 'desc'
+) RETURNS TABLE (
     id UUID,
     email TEXT,
     full_name TEXT,
@@ -102,7 +104,9 @@ OR REPLACE FUNCTION public.admin_get_host_detail (p_host_id UUID) RETURNS TABLE 
     is_verified BOOLEAN,
     avatar_url TEXT,
     banned_until TIMESTAMP WITH TIME ZONE,
-    updated_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE,
+    last_sign_in_at TIMESTAMP WITH TIME ZONE,
+    last_sign_in_text TEXT,
     properties JSONB,
     cleanings JSONB,
     cleaning_stats JSONB
@@ -111,7 +115,7 @@ SET
     search_path = public AS $$
 BEGIN
     RETURN QUERY
-    SELECT 
+    SELECT
         p.id,
         p.email,
         p.full_name,
@@ -119,34 +123,75 @@ BEGIN
         p.is_verified,
         p.avatar_url,
         au.banned_until,
-        p.updated_at,
+        au.created_at AS created_at,
+        au.last_sign_in_at AS last_sign_in_at,
+        CASE 
+            WHEN au.last_sign_in_at IS NULL THEN 'Never'
+            WHEN au.last_sign_in_at > NOW() - INTERVAL '24 hours' THEN 'Today'
+            WHEN au.last_sign_in_at > NOW() - INTERVAL '7 days' THEN 'This week'
+            WHEN au.last_sign_in_at > NOW() - INTERVAL '30 days' THEN 'This month'
+            WHEN au.last_sign_in_at > NOW() - INTERVAL '3 months' THEN 'Past 3 months'
+            WHEN au.last_sign_in_at > NOW() - INTERVAL '6 months' THEN 'Past 6 months'
+            WHEN au.last_sign_in_at > NOW() - INTERVAL '1 year' THEN 'Past year'
+            ELSE 'More than a year ago'
+        END AS last_sign_in_text,
         (
-            SELECT jsonb_agg(jsonb_build_object(
-                'id', pr.id,
-                'address_line_1', pr.address_line_1,
-                'postcode', pr.postcode,
-                'town_city', pr.town_city,
-                'type', pr.type,
-                'bedrooms', pr.bedrooms,
-                'bathrooms', pr.bathrooms,
-                'main_image_url', pr.main_image_url,
-                'created_at', pr.created_at
-            ))
-            FROM public.properties pr
-            WHERE pr.host_id = p_host_id AND pr.deleted_at IS NULL
+            SELECT jsonb_agg(row ORDER BY
+                CASE WHEN p_properties_sort_direction = 'asc' THEN
+                    CASE p_properties_sort_field
+                        WHEN 'address_line_1' THEN (row->>'address_line_1')::text
+                        WHEN 'postcode' THEN (row->>'postcode')::text
+                        WHEN 'town_city' THEN (row->>'town_city')::text
+                        WHEN 'type' THEN (row->>'type')::text
+                        WHEN 'bedrooms' THEN (row->>'bedrooms')::text
+                        WHEN 'bathrooms' THEN (row->>'bathrooms')::text
+                        ELSE (row->>'created_at')::text
+                    END
+                END ASC NULLS LAST,
+                CASE WHEN p_properties_sort_direction = 'desc' OR p_properties_sort_direction IS NULL THEN
+                    CASE p_properties_sort_field
+                        WHEN 'address_line_1' THEN (row->>'address_line_1')::text
+                        WHEN 'postcode' THEN (row->>'postcode')::text
+                        WHEN 'town_city' THEN (row->>'town_city')::text
+                        WHEN 'type' THEN (row->>'type')::text
+                        WHEN 'bedrooms' THEN (row->>'bedrooms')::text
+                        WHEN 'bathrooms' THEN (row->>'bathrooms')::text
+                        ELSE (row->>'created_at')::text
+                    END
+                END DESC NULLS LAST
+            )
+            FROM (
+                SELECT jsonb_build_object(
+                    'id', pr.id,
+                    'address_line_1', pr.address_line_1,
+                    'postcode', pr.postcode,
+                    'town_city', pr.town_city,
+                    'type', pr.type,
+                    'bedrooms', pr.bedrooms,
+                    'bathrooms', pr.bathrooms,
+                    'main_image_url', pr.main_image_url,
+                    'created_at', pr.created_at
+                ) AS row
+                FROM public.properties pr
+                WHERE pr.host_id = p_host_id AND pr.deleted_at IS NULL
+            ) AS props
         ),
         (
             SELECT jsonb_agg(row ORDER BY created_at DESC)
             FROM (
-                SELECT 
+                SELECT
                     c.id,
                     c.status,
                     c.scheduled_start,
                     c.service_cost,
                     c.cleaner_id,
                     c.property_id,
-                    c.created_at
+                    c.created_at,
+                    cl.full_name AS cleaner_name,
+                    pr.town_city AS property_town_city
                 FROM public.cleanings c
+                LEFT JOIN public.profiles cl ON cl.id = c.cleaner_id
+                LEFT JOIN public.properties pr ON c.property_id = pr.id
                 WHERE c.host_id = p_host_id AND c.deleted_at IS NULL
                 ORDER BY c.created_at DESC
                 LIMIT 50
@@ -155,9 +200,9 @@ BEGIN
         (
             SELECT jsonb_build_object(
                 'total', count(*),
-                'completed', count(*) FILTER (WHERE c.status = 'completed'),
-                'in_progress', count(*) FILTER (WHERE c.status = 'in_progress'),
-                'pending', count(*) FILTER (WHERE c.status IN ('draft', 'requested', 'confirmed'))
+                'requested', count(*) FILTER (WHERE c.status = 'requested'),
+                'confirmed', count(*) FILTER (WHERE c.status = 'confirmed'),
+                'in_progress', count(*) FILTER (WHERE c.status = 'in_progress')
             )
             FROM public.cleanings c
             WHERE c.host_id = p_host_id AND c.deleted_at IS NULL
@@ -177,7 +222,9 @@ OR REPLACE FUNCTION public.admin_get_cleaner_detail (p_cleaner_id UUID) RETURNS 
     is_verified BOOLEAN,
     avatar_url TEXT,
     banned_until TIMESTAMP WITH TIME ZONE,
-    updated_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE,
+    last_sign_in_at TIMESTAMP WITH TIME ZONE,
+    last_sign_in_text TEXT,
     assigned_cleanings JSONB,
     cleaner_stats JSONB
 ) SECURITY DEFINER
@@ -193,7 +240,18 @@ BEGIN
         p.is_verified,
         p.avatar_url,
         au.banned_until,
-        p.updated_at,
+        au.created_at AS created_at,
+        au.last_sign_in_at AS last_sign_in_at,
+        CASE 
+            WHEN au.last_sign_in_at IS NULL THEN 'Never'
+            WHEN au.last_sign_in_at > NOW() - INTERVAL '24 hours' THEN 'Today'
+            WHEN au.last_sign_in_at > NOW() - INTERVAL '7 days' THEN 'This week'
+            WHEN au.last_sign_in_at > NOW() - INTERVAL '30 days' THEN 'This month'
+            WHEN au.last_sign_in_at > NOW() - INTERVAL '3 months' THEN 'Past 3 months'
+            WHEN au.last_sign_in_at > NOW() - INTERVAL '6 months' THEN 'Past 6 months'
+            WHEN au.last_sign_in_at > NOW() - INTERVAL '1 year' THEN 'Past year'
+            ELSE 'More than a year ago'
+        END AS last_sign_in_text,
         (
             SELECT jsonb_agg(row ORDER BY scheduled_start DESC)
             FROM (
@@ -208,7 +266,9 @@ BEGIN
                     c.clock_out_time,
                     c.created_at,
                     hp.full_name AS host_name,
-                    pr.address_line_1 AS property_address
+                    pr.address_line_1 AS property_address,
+                    pr.postcode AS property_postcode,
+                    pr.town_city AS property_town_city
                 FROM public.cleanings c
                 LEFT JOIN public.profiles hp ON c.host_id = hp.id
                 LEFT JOIN public.properties pr ON c.property_id = pr.id
@@ -221,9 +281,7 @@ BEGIN
             SELECT jsonb_build_object(
                 'total_assigned', count(*),
                 'completed', count(*) FILTER (WHERE c.status = 'completed'),
-                'in_progress', count(*) FILTER (WHERE c.status = 'in_progress'),
                 'confirmed', count(*) FILTER (WHERE c.status = 'confirmed'),
-                'total_earnings', COALESCE(sum(c.service_cost) FILTER (WHERE c.status = 'completed'), 0),
                 'avg_completion_hours', 
                     CASE 
                         WHEN count(*) FILTER (WHERE c.clock_out_time IS NOT NULL AND c.clock_in_time IS NOT NULL) > 0
@@ -268,7 +326,8 @@ OR REPLACE FUNCTION public.admin_get_all_cleanings (
     host_name TEXT,
     cleaner_name TEXT,
     property_address TEXT,
-    property_postcode TEXT
+    property_postcode TEXT,
+    property_town_city TEXT
 ) SECURITY DEFINER
 SET
     search_path = public AS $$
@@ -278,7 +337,7 @@ BEGIN
         c.id, c.host_id, c.property_id, c.cleaner_id, c.status::TEXT,
         c.scheduled_start, c.service_cost, c.instructions, c.stocks_included,
         c.clock_in_time, c.clock_out_time, c.created_at, c.updated_at, c.deleted_at,
-        hp.full_name, cp.full_name, pr.address_line_1, pr.postcode
+        hp.full_name, cp.full_name, pr.address_line_1, pr.postcode, pr.town_city
     FROM public.cleanings c
     LEFT JOIN public.profiles hp ON c.host_id = hp.id
     LEFT JOIN public.profiles cp ON c.cleaner_id = cp.id
@@ -327,8 +386,8 @@ SET
 DECLARE v_status public.cleaning_status;
 BEGIN
     SELECT status INTO v_status FROM public.cleanings WHERE id = p_cleaning_id AND deleted_at IS NULL;
-    IF v_status NOT IN ('requested') THEN
-        RAISE EXCEPTION 'Can only assign cleaner to requested cleanings';
+    IF v_status NOT IN ('requested', 'confirmed') THEN
+        RAISE EXCEPTION 'Can only assign or reassign cleaner to requested or confirmed cleanings';
     END IF;
     IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = p_cleaner_id AND role = 'cleaner') THEN
         RAISE EXCEPTION 'Invalid cleaner ID';
@@ -368,20 +427,31 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE
-OR REPLACE FUNCTION public.admin_update_standard_tasks (p_task_descriptions TEXT[]) RETURNS VOID SECURITY DEFINER
+OR REPLACE FUNCTION public.admin_update_standard_tasks (p_tasks JSONB, p_tasks_to_delete UUID[]) RETURNS VOID SECURITY DEFINER
 SET
     search_path = public AS $$
 BEGIN
-    UPDATE public.standard_tasks SET is_active = false;
-    IF array_length(p_task_descriptions, 1) > 0 THEN
-        FOR i IN 1..array_length(p_task_descriptions, 1) LOOP
-            IF p_task_descriptions[i] IS NOT NULL THEN
-                INSERT INTO public.standard_tasks (description, is_active)
-                VALUES (trim(p_task_descriptions[i]), true)
-                ON CONFLICT (description) DO UPDATE SET is_active = true;
-            END IF;
-        END LOOP;
+    IF array_length(p_tasks_to_delete, 1) > 0 THEN
+        DELETE FROM public.standard_tasks WHERE id = ANY(p_tasks_to_delete);
     END IF;
+
+    FOR i IN 0..jsonb_array_length(p_tasks) - 1 LOOP
+        DECLARE
+            task_data JSONB := p_tasks->i;
+            task_id TEXT := task_data->>'id';
+            task_desc TEXT := task_data->>'description';
+            task_active BOOLEAN := (task_data->>'is_active')::BOOLEAN;
+        BEGIN
+            IF task_id IS NOT NULL AND task_id != '' THEN
+                UPDATE public.standard_tasks 
+                SET description = trim(task_desc), is_active = task_active 
+                WHERE id = task_id::UUID;
+            ELSE
+                INSERT INTO public.standard_tasks (description, is_active)
+                VALUES (trim(task_desc), task_active);
+            END IF;
+        END;
+    END LOOP;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -409,7 +479,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE VIEW
-    public.admin_volume_metrics AS
+    public.platform_stats AS
 SELECT
     (
         SELECT
@@ -418,7 +488,7 @@ SELECT
             public.properties
         WHERE
             deleted_at IS NULL
-    ) AS active_properties,
+    ) AS total_properties,
     (
         SELECT
             COUNT(*)
@@ -426,7 +496,7 @@ SELECT
             public.profiles
         WHERE
             role = 'host'
-    ) AS active_hosts,
+    ) AS total_hosts,
     (
         SELECT
             COUNT(*)
@@ -434,7 +504,7 @@ SELECT
             public.profiles
         WHERE
             role = 'cleaner'
-    ) AS active_cleaners,
+    ) AS total_cleaners,
     (
         SELECT
             COUNT(*)
@@ -444,7 +514,7 @@ SELECT
             status = 'completed'
             AND deleted_at IS NULL
             AND created_at >= DATE_TRUNC('month', NOW())
-    ) AS completed_mtd,
+    ) AS completed_cleanings_mtd,
     (
         SELECT
             COUNT(*)
@@ -454,7 +524,7 @@ SELECT
             status = 'completed'
             AND deleted_at IS NULL
             AND created_at >= DATE_TRUNC('year', NOW())
-    ) AS completed_ytd,
+    ) AS completed_cleanings_ytd,
     (
         SELECT
             COUNT(*)
@@ -463,19 +533,35 @@ SELECT
         WHERE
             deleted_at IS NULL
             AND created_at >= DATE_TRUNC('month', NOW())
-    ) AS total_mtd,
-    NOW() AS calculated_at;
-
-CREATE OR REPLACE VIEW
-    public.admin_operational_health AS
-SELECT
+    ) AS total_cleanings_mtd,
+    (
+        SELECT
+            COUNT(*)
+        FROM
+            public.cleanings
+        WHERE
+            status = 'in_progress'
+            AND deleted_at IS NULL
+    ) AS cleanings_in_progress,
     COALESCE(
-        AVG(
-            EXTRACT(
-                EPOCH
-                FROM
-                    (clock_out_time - clock_in_time)
-            ) / 3600
+        (
+            SELECT
+                ROUND(
+                    AVG(
+                        EXTRACT(
+                            EPOCH
+                            FROM
+                                (clock_out_time - clock_in_time)
+                        ) / 3600
+                    )::numeric,
+                    2
+                )
+            FROM
+                public.cleanings
+            WHERE
+                status = 'completed'
+                AND clock_out_time IS NOT NULL
+                AND deleted_at IS NULL
         ),
         0
     ) AS avg_completion_hours,
@@ -499,41 +585,7 @@ SELECT
             AND deleted_at IS NULL
             AND created_at >= DATE_TRUNC('month', NOW())
     ) AS low_supplies_mtd,
-    CASE
-        WHEN (
-            SELECT
-                COUNT(*)
-            FROM
-                public.profiles
-            WHERE
-                role = 'cleaner'
-        ) > 0 THEN (
-            (
-                SELECT
-                    COUNT(DISTINCT cleaner_id)
-                FROM
-                    public.cleanings
-                WHERE
-                    status = 'in_progress'
-                    AND deleted_at IS NULL
-            ) * 100.0 / (
-                SELECT
-                    COUNT(*)
-                FROM
-                    public.profiles
-                WHERE
-                    role = 'cleaner'
-            )
-        )
-        ELSE 0
-    END AS cleaner_utilization_pct,
-    NOW() AS calculated_at
-FROM
-    public.cleanings
-WHERE
-    status = 'completed'
-    AND clock_out_time IS NOT NULL
-    AND deleted_at IS NULL;
+    NOW() AS calculated_at;
 
 CREATE
 OR REPLACE FUNCTION public.admin_get_audit_logs (

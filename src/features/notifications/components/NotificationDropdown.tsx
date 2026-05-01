@@ -3,6 +3,7 @@
 import { Bell, CheckCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { DICT } from '@/dictionary';
 import { useNotifications } from '../useNotifications';
 import { NotificationItem } from './NotificationItem';
 
@@ -39,9 +40,13 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
 
 			<div className="max-h-96 overflow-y-auto">
 				{isLoading ? (
-					<div className="p-4 text-center text-muted-foreground text-sm">Loading...</div>
+					<div className="p-4 text-center text-muted-foreground text-sm">
+						{DICT.COMMON.LOADING.MESSAGE}
+					</div>
 				) : notifications.length === 0 ? (
-					<div className="p-4 text-center text-muted-foreground text-sm">No notifications yet</div>
+					<div className="p-4 text-center text-muted-foreground text-sm">
+						{DICT.NOTIFICATIONS.EMPTY}
+					</div>
 				) : (
 					notifications
 						.slice(0, 5)

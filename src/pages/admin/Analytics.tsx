@@ -1,11 +1,10 @@
 'use client';
 
 import { format, subMonths } from 'date-fns';
-import { Clock, PoundSterling, ShieldX, SkipForward } from 'lucide-react';
+import { CalendarX, Clock, PoundSterling, Sparkles } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
-import { PageHeader } from '@/components/PageHeader';
-import { StatCard } from '@/components/StatCard';
+import { Loading } from '@/components/Loading';
 import { StackedAreaChart } from '@/components/ui/area-chart';
 import { BarChartComponent } from '@/components/ui/bar-chart';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { LineChartComponent } from '@/components/ui/linear-line-chart';
 import { PieChartComponent } from '@/components/ui/pie-chart';
+import { Stat, StatIndicator, StatLabel, StatValue } from '@/components/ui/stat';
 import { DICT } from '@/dictionary';
 import {
 	type AuditLogEntry,
@@ -24,6 +24,7 @@ import {
 } from '@/features/admin/analyticsService';
 import { AuditLogDialog } from '@/features/admin/components/AuditLogDialog';
 import { AuditLogEntryComponent } from '@/features/admin/components/AuditLogEntry';
+import { formatCurrency, formatHours } from '@/lib/utils';
 
 function generateLast6Months(): string[] {
 	const months: string[] = [];
@@ -86,68 +87,7 @@ export function AdminAnalyticsPage() {
 		fetchData();
 	}, [fetchData]);
 
-	const d = DICT.ADMIN.ANALYTICS;
-
-	const formatCurrency = (value: number): string => {
-		return new Intl.NumberFormat('en-GB', {
-			style: 'currency',
-			currency: 'GBP',
-			minimumFractionDigits: 0,
-			maximumFractionDigits: 0,
-		}).format(value);
-	};
-
-	const formatHours = (hours: number): string => {
-		if (hours < 1) {
-			return `${Math.round(hours * 60)} mins`;
-		}
-		return `${hours.toFixed(1)} hours`;
-	};
-
-	const statCards = [
-		{
-			label: d.VOLUME.COMPLETED_THIS_MONTH,
-			value: revenueMetrics?.completed_count?.toString() ?? '0',
-			icon: SkipForward,
-			iconColor: 'text-success',
-			trend:
-				revenueMetrics?.completed_change_pct != null
-					? {
-							value: Math.abs(revenueMetrics.completed_change_pct),
-							isPositive: revenueMetrics.completed_change_pct >= 0,
-						}
-					: undefined,
-		},
-		{
-			label: d.VOLUME.CANCELLED_THIS_MONTH,
-			value: revenueMetrics?.cancelled_count?.toString() ?? '0',
-			icon: ShieldX,
-			iconColor: 'text-destructive',
-		},
-		{
-			label: d.VOLUME.AVG_COMPLETION_TIME,
-			value: revenueMetrics?.avg_completion_hours
-				? formatHours(revenueMetrics.avg_completion_hours)
-				: '0 hours',
-			icon: Clock,
-			iconColor: 'text-primary',
-		},
-		{
-			label: d.VOLUME.TOTAL_EARNINGS,
-			value: revenueMetrics?.revenue_current
-				? formatCurrency(revenueMetrics.revenue_current)
-				: `${DICT.FORMAT.CURRENCY}0`,
-			icon: PoundSterling,
-			iconColor: 'text-success',
-			trend:
-				revenueMetrics?.revenue_change_pct != null
-					? {
-							value: Math.abs(revenueMetrics.revenue_change_pct),
-							isPositive: revenueMetrics.revenue_change_pct >= 0,
-						}
-					: undefined,
-		},
-	];
+	const dict = DICT.ADMIN.ANALYTICS;
 
 	const barChartConfig = {
 		cleanings: {
@@ -165,11 +105,11 @@ export function AdminAnalyticsPage() {
 
 	const areaChartConfig = {
 		hosts: {
-			label: d.CHARTS.HOSTS,
+			label: dict.CHARTS.HOSTS,
 			color: 'var(--color-chart-3)',
 		},
 		cleaners: {
-			label: d.CHARTS.CLEANERS,
+			label: dict.CHARTS.CLEANERS,
 			color: 'var(--color-chart-4)',
 		},
 	};
@@ -214,98 +154,127 @@ export function AdminAnalyticsPage() {
 		value: item.count,
 	}));
 
-	const renderContent = () => {
-		if (loading) {
-			return (
-				<div className="flex items-center justify-center p-12">
-					<div className="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-				</div>
-			);
-		}
-
-		return (
-			<>
-				<div className="flex items-center justify-between mb-6">
-					<h3 className="text-lg font-semibold">{d.CHARTS.TITLE}</h3>
-					<DatePickerWithRange value={dateRange} onChange={setDateRange} />
-				</div>
-
-				<div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-					{statCards.map((stat) => (
-						<StatCard key={stat.label} {...stat} />
-					))}
-				</div>
-
-				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-					<Card>
-						<CardHeader>
-							<CardTitle>{d.CHARTS.CLEANING_REQUESTS}</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<BarChartComponent data={cleaningsData} config={barChartConfig} />
-						</CardContent>
-					</Card>
-
-					<Card>
-						<CardHeader>
-							<CardTitle>{d.CHARTS.REVENUE}</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<LineChartComponent data={revenueData} config={lineChartConfig} />
-						</CardContent>
-					</Card>
-				</div>
-
-				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-					<Card>
-						<CardHeader>
-							<CardTitle>{d.CHARTS.USER_GROWTH}</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<StackedAreaChart
-								data={userGrowthData as unknown as Array<Record<string, string | number>>}
-								config={areaChartConfig}
-							/>
-						</CardContent>
-					</Card>
-
-					<Card>
-						<CardHeader>
-							<CardTitle>{d.CHARTS.STATUS_BREAKDOWN}</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<PieChartComponent data={activeCleaningsData} />
-						</CardContent>
-					</Card>
-				</div>
-
-				<Card className="p-6">
-					<div className="flex items-center justify-between mb-4">
-						<h3 className="text-lg font-semibold">{d.AUDIT.TITLE}</h3>
-						<Button variant="ghost" size="sm" onClick={() => setIsAuditDialogOpen(true)}>
-							<span className="sr-only">View all</span>
-							{d.AUDIT.VIEW_ALL}
-						</Button>
-					</div>
-
-					{auditLogs.length === 0 ? (
-						<p className="text-muted-foreground py-8 text-center">No activity recorded</p>
-					) : (
-						<div className="space-y-3">
-							{auditLogs.map((log) => (
-								<AuditLogEntryComponent key={log.id} log={log} />
-							))}
-						</div>
-					)}
-				</Card>
-			</>
-		);
-	};
+	// const isloading = true;
 
 	return (
-		<main className="max-width-container">
-			<PageHeader title={d.TITLE} />
-			{renderContent()}
+		<main className="max-width-container p-2 md:p-8">
+			<header className="mb-6">
+				<div className="space-y-1">
+					<h1 className="text-3xl font-bold uppercase text-center md:text-left">{dict.TITLE}</h1>
+				</div>
+			</header>
+			{loading ? (
+				<Loading />
+			) : (
+				<>
+					<h2 className="text-xl font-semibold mb-2">Month to Date</h2>
+					<div className="flex-1 grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+						<Stat>
+							<StatIndicator variant="icon" className="text-yellow-400">
+								<Sparkles />
+							</StatIndicator>
+							<StatValue>{revenueMetrics?.completed_count?.toString() ?? '0'}</StatValue>
+							<StatLabel>{dict.PLATFORM.COMPLETED_THIS_MONTH}</StatLabel>
+						</Stat>
+
+						<Stat>
+							<StatIndicator variant="icon" className="text-red-600">
+								<CalendarX />
+							</StatIndicator>
+							<StatValue>{revenueMetrics?.cancelled_count?.toString() ?? '0'}</StatValue>
+							<StatLabel>{dict.PLATFORM.CANCELLED_THIS_MONTH}</StatLabel>
+						</Stat>
+
+						<Stat>
+							<StatIndicator variant="icon" className="text-orange-500">
+								<Clock />
+							</StatIndicator>
+							<StatValue>
+								{revenueMetrics?.avg_completion_hours
+									? formatHours(revenueMetrics.avg_completion_hours)
+									: '0 hours'}
+							</StatValue>
+							<StatLabel>{dict.PLATFORM.AVG_COMPLETION_TIME}</StatLabel>
+						</Stat>
+
+						<Stat>
+							<StatIndicator variant="icon" className="text-success">
+								<PoundSterling />
+							</StatIndicator>
+							<StatValue>
+								{revenueMetrics?.revenue_current
+									? formatCurrency(revenueMetrics.revenue_current)
+									: `${DICT.FORMAT.CURRENCY}0`}
+							</StatValue>
+							<StatLabel>{dict.PLATFORM.TOTAL_EARNINGS}</StatLabel>
+						</Stat>
+					</div>
+
+					<DatePickerWithRange className="mb-4" value={dateRange} onChange={setDateRange} />
+
+					<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+						<Card className="flex-1 py-3 md:py-6">
+							<CardHeader>
+								<CardTitle>{dict.CHARTS.CLEANING_REQUESTS}</CardTitle>
+							</CardHeader>
+							<CardContent className="flex-1 px-3 md:px-6">
+								<BarChartComponent data={cleaningsData} config={barChartConfig} />
+							</CardContent>
+						</Card>
+
+						<Card className="flex-1 py-3 md:py-6">
+							<CardHeader>
+								<CardTitle>{dict.CHARTS.REVENUE}</CardTitle>
+							</CardHeader>
+							<CardContent className="flex-1 px-3 md:px-6">
+								<LineChartComponent data={revenueData} config={lineChartConfig} />
+							</CardContent>
+						</Card>
+					</div>
+
+					<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+						<Card className="flex-1 py-3 md:py-6">
+							<CardHeader>
+								<CardTitle>{dict.CHARTS.USER_GROWTH}</CardTitle>
+							</CardHeader>
+							<CardContent className="flex-1 px-3 md:px-6">
+								<StackedAreaChart
+									data={userGrowthData as unknown as Array<Record<string, string | number>>}
+									config={areaChartConfig}
+								/>
+							</CardContent>
+						</Card>
+
+						<Card className="flex-1 py-3 md:py-6">
+							<CardHeader>
+								<CardTitle>{dict.CHARTS.STATUS_BREAKDOWN}</CardTitle>
+							</CardHeader>
+							<CardContent className="flex-1 px-3 md:px-6">
+								<PieChartComponent data={activeCleaningsData} />
+							</CardContent>
+						</Card>
+					</div>
+
+					<Card className="p-3 sm:p-6">
+						<div className="flex items-center justify-between">
+							<h3 className="text-lg font-semibold">{dict.AUDIT.TITLE}</h3>
+							<Button variant="outline" size="sm" onClick={() => setIsAuditDialogOpen(true)}>
+								{dict.AUDIT.VIEW_ALL}
+							</Button>
+						</div>
+
+						{auditLogs.length === 0 ? (
+							<p className="text-muted-foreground py-8 text-center">No activity recorded</p>
+						) : (
+							<div className="space-y-3">
+								{auditLogs.map((log) => (
+									<AuditLogEntryComponent key={log.id} log={log} />
+								))}
+							</div>
+						)}
+					</Card>
+				</>
+			)}
 			<AuditLogDialog open={isAuditDialogOpen} onOpenChange={setIsAuditDialogOpen} />
 		</main>
 	);

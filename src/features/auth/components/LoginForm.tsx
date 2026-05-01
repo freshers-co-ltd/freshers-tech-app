@@ -22,8 +22,8 @@ import { authService } from '@/features/auth/authService';
 import { cn } from '@/lib/utils';
 
 const loginSchema = z.object({
-	email: z.email(DICT.FORMS.VALIDATION.EMAIL_INVALID).trim(),
-	password: z.string().min(1, DICT.FORMS.VALIDATION.PASSWORD_REQUIRED),
+	email: z.email(DICT.COMMON.VALIDATION.EMAIL_INVALID).trim(),
+	password: z.string().min(1, DICT.COMMON.VALIDATION.PASSWORD_REQUIRED),
 	rememberMe: z.boolean(),
 });
 
@@ -78,13 +78,13 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
 					name="email"
 					render={({ field, fieldState }) => (
 						<Field>
-							<FieldLabel htmlFor="email">{DICT.FORMS.LABELS.EMAIL}</FieldLabel>
+							<FieldLabel htmlFor="email">{DICT.COMMON.LABELS.EMAIL}</FieldLabel>
 							<Input
 								{...field}
 								id="email"
 								type="email"
 								autoComplete="username"
-								placeholder={DICT.FORMS.PLACEHOLDERS.EMAIL}
+								placeholder={DICT.COMMON.PLACEHOLDERS.EMAIL}
 								aria-invalid={!!fieldState.error}
 								className={fieldState.error ? 'border-destructive' : ''}
 							/>
@@ -98,12 +98,12 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
 					name="password"
 					render={({ field, fieldState }) => (
 						<Field>
-							<FieldLabel htmlFor="password">{DICT.FORMS.LABELS.PASSWORD}</FieldLabel>
+							<FieldLabel htmlFor="password">{DICT.COMMON.LABELS.PASSWORD}</FieldLabel>
 							<PasswordInput
 								{...field}
 								id="password"
 								autoComplete="current-password"
-								placeholder={DICT.FORMS.PLACEHOLDERS.PASSWORD}
+								placeholder={DICT.COMMON.PLACEHOLDERS.PASSWORD}
 								error={!!fieldState.error}
 							/>
 							{fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}

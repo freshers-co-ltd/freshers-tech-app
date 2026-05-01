@@ -20,8 +20,8 @@ export function ErrorPage() {
 		const knownError = DICT.ERRORS.HTTP[error.status as keyof typeof DICT.ERRORS.HTTP];
 
 		if (knownError && typeof knownError === 'object') {
-			title = knownError.title;
-			message = knownError.msg;
+			title = knownError.TITLE;
+			message = knownError.MESSAGE;
 		} else {
 			title = `Error ${error.status}`;
 			message = error.statusText || message;

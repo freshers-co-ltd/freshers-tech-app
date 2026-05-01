@@ -4,8 +4,8 @@ import { CalendarX, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DialogContent } from '@/components/ui/dialog';
 import { DICT } from '@/dictionary';
-import { HostCleaningDetailView } from '@/features/cleanings/components/HostCleaningDetailView';
-import { HostCleaningForm } from '@/features/cleanings/components/HostCleaningForm';
+import { CleaningDetailView } from '@/features/cleanings/components/CleaningDetailView';
+import { CleaningForm } from '@/features/cleanings/components/CleaningForm';
 import { HostCleaningGrid } from '@/features/cleanings/components/HostCleaningGrid';
 import { useHostCleanings } from '@/features/cleanings/useHostCleanings';
 import { ManagementLayout } from '@/layouts/ManagementLayout';
@@ -24,9 +24,8 @@ export function HostCleaningsPage() {
 	return (
 		<ManagementLayout
 			title={DICT.CLEANINGS.TITLE}
-			description={DICT.CLEANINGS.MESSAGE}
 			headerActions={
-				<Button onClick={modal.openCreate} size="lg">
+				<Button onClick={modal.openCreate}>
 					<Plus className="size-5" />
 					<span>{DICT.CLEANINGS.NEW}</span>
 				</Button>
@@ -55,8 +54,11 @@ export function HostCleaningsPage() {
 			onClose={modal.handleClose}
 			viewContent={
 				viewingCleaning ? (
-					<HostCleaningDetailView
+					<CleaningDetailView
 						cleaning={viewingCleaning}
+						userRole="host"
+						open={modal.isViewOpen}
+						onOpenChange={modal.handleClose}
 						onEdit={modal.openEdit}
 						onDelete={modal.setDeletingId}
 					/>
@@ -66,14 +68,12 @@ export function HostCleaningsPage() {
 					</DialogContent>
 				)
 			}
-			formTitle={
-				editingCleaning ? DICT.CLEANINGS.EDIT_DIALOG.TITLE : DICT.CLEANINGS.CREATE_DIALOG.TITLE
-			}
+			formTitle={editingCleaning ? DICT.CLEANINGS.EDIT.TITLE : DICT.CLEANINGS.CREATE.TITLE}
 			formDescription={
-				editingCleaning ? DICT.CLEANINGS.EDIT_DIALOG.MESSAGE : DICT.CLEANINGS.CREATE_DIALOG.MESSAGE
+				editingCleaning ? DICT.CLEANINGS.EDIT.MESSAGE : DICT.CLEANINGS.CREATE.MESSAGE
 			}
 			formContent={
-				<HostCleaningForm
+				<CleaningForm
 					initialData={editingCleaning}
 					onSubmit={handleUpsert}
 					onCancel={modal.handleClose}
@@ -82,8 +82,8 @@ export function HostCleaningsPage() {
 			deletingId={modal.deletingId}
 			onDeleteCancel={() => modal.setDeletingId(null)}
 			onDeleteConfirm={handleDelete}
-			deleteTitle={DICT.CLEANINGS.DELETE_DIALOG.TITLE}
-			deleteMessage={DICT.CLEANINGS.DELETE_DIALOG.MESSAGE}
+			deleteTitle={DICT.COMMON.DIALOGS.DELETE_CLEANING.TITLE}
+			deleteMessage={DICT.COMMON.DIALOGS.DELETE_CLEANING.MESSAGE}
 		/>
 	);
 }

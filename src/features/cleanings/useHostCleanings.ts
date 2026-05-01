@@ -3,7 +3,7 @@
 import { useCallback, useMemo } from 'react';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
 import { calculateServiceCost } from '@/features/cleanings/cleaningService';
-import type { HostCleaningFormValues } from '@/features/cleanings/components/HostCleaningForm';
+import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
 import { useProperties } from '@/features/properties/PropertyContext';
 import { useResourceModals } from '@/hooks/useResourceModals';
 
@@ -21,7 +21,7 @@ export function useHostCleanings() {
 	}, [cleanings, modal.editId]);
 
 	const handleUpsert = useCallback(
-		async (data: HostCleaningFormValues) => {
+		async (data: CleaningFormValues) => {
 			const property = properties.find((p) => p.id === data.property_id);
 			const serviceCost = property
 				? calculateServiceCost(property.bedrooms, property.type, false)

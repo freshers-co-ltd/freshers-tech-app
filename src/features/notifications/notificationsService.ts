@@ -173,20 +173,22 @@ export const notificationsService = {
 			return { data: null, error: mapDatabaseError(error) };
 		}
 
-		if (Array.isArray(data) && data.length > 0) {
-			const pref = data[0] as Record<string, unknown>;
-			return {
-				data: {
-					user_id: pref.pref_user_id as string,
-					enabled: pref.pref_enabled as boolean,
-					created_at: pref.pref_created_at as string,
-					updated_at: pref.pref_updated_at as string,
-				},
-				error: null,
-			};
+		const userId = data;
+		if (!userId || typeof userId !== 'string') {
+			return { data: null, error: null };
 		}
 
-		return { data: null, error: null };
+		const { data: prefs, error: fetchError } = await supabase
+			.from('notification_preferences')
+			.select('*')
+			.eq('user_id', userId)
+			.single();
+
+		if (fetchError || !prefs) {
+			return { data: null, error: mapDatabaseError(fetchError) };
+		}
+
+		return { data: prefs, error: null };
 	},
 
 	async updatePreferences(

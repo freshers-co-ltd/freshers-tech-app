@@ -1,6 +1,5 @@
 import { Loader2 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { PageHeader } from '@/components/PageHeader';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -17,7 +16,6 @@ import { DICT } from '@/dictionary';
 
 interface ManagementLayoutProps {
 	title: string;
-	description: string;
 	headerActions: ReactNode;
 	isLoading: boolean;
 	loadingMessage: string;
@@ -40,7 +38,6 @@ interface ManagementLayoutProps {
 
 export function ManagementLayout({
 	title,
-	description,
 	headerActions,
 	isLoading,
 	loadingMessage,
@@ -61,8 +58,13 @@ export function ManagementLayout({
 	deleteMessage,
 }: ManagementLayoutProps) {
 	return (
-		<main className="max-width-container">
-			<PageHeader title={title} description={description} actions={headerActions} />
+		<main className="max-width-container p-2 md:p-8">
+			<header className="mb-6 flex flex-col gap-8 md:flex-row md:justify-between">
+				<div className="space-y-1">
+					<h1 className="text-3xl font-bold uppercase text-center md:text-left">{title}</h1>
+				</div>
+				{headerActions}
+			</header>
 
 			<section className="mt-12">
 				{isLoading ? (
@@ -96,11 +98,11 @@ export function ManagementLayout({
 						<AlertDialogDescription>{deleteMessage}</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
-						<AlertDialogCancel>{DICT.COMMON.BACK}</AlertDialogCancel>
+						<AlertDialogCancel>{DICT.COMMON.ACTIONS.BACK}</AlertDialogCancel>
 						<AlertDialogAction
 							className="bg-destructive text-white hover:bg-destructive/90"
 							onClick={onDeleteConfirm}>
-							{DICT.COMMON.DELETE}
+							{DICT.COMMON.ACTIONS.DELETE}
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>

@@ -22,7 +22,7 @@ export function SortIcon({
 	return (
 		<button
 			type="button"
-			className={`flex items-center gap-1 hover:text-foreground ${className || ''}`}
+			className={`flex items-center gap-1 hover:cursor-pointer ${className || ''}`}
 			onClick={onClick}>
 			{isActive ? (
 				sortDirection === 'asc' ? (

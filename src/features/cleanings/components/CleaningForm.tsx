@@ -30,7 +30,7 @@ import { useProperties } from '@/features/properties/PropertyContext';
 import type { Property, PropertyInsert } from '@/features/properties/propertyService';
 import { supabase } from '@/lib/supabaseClient';
 
-const hostCleaningSchema = z.object({
+const cleaningFormSchema = z.object({
 	property_id: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, {
 		message: 'Please select a valid property',
 	}),
@@ -42,9 +42,9 @@ const hostCleaningSchema = z.object({
 	),
 });
 
-export type HostCleaningFormValues = z.infer<typeof hostCleaningSchema>;
+export type CleaningFormValues = z.infer<typeof cleaningFormSchema>;
 
-type HostCleaningFormInput = {
+type CleaningFormInput = {
 	property_id: string;
 	scheduled_start: Date;
 	instructions?: string;
@@ -52,26 +52,43 @@ type HostCleaningFormInput = {
 	custom_tasks: { description: string }[];
 };
 
-interface HostCleaningFormProps {
+interface CleaningFormProps {
 	initialData?: CleaningRequest;
-	onSubmit: (values: HostCleaningFormValues) => Promise<void>;
+	onSubmit: (values: CleaningFormValues) => Promise<void>;
 	onCancel?: () => void;
+	disableCreateProperty?: boolean;
+	availableProperties?: {
+		id: string;
+		address_line_1: string;
+		postcode: string;
+		bedrooms: number;
+		type: string;
+	}[];
 }
 
-export function HostCleaningForm({ initialData, onSubmit }: HostCleaningFormProps) {
+export function CleaningForm({
+	initialData,
+	onSubmit,
+	disableCreateProperty = false,
+	availableProperties,
+}: CleaningFormProps) {
 	const isRestricted = initialData
 		? STATUS_GROUPS.CAN_EDIT_RESTRICTED.includes(initialData.status)
 		: false;
 	const [step, setStep] = useState<1 | 2 | 3>(isRestricted ? 3 : initialData ? 2 : 1);
-	const [entryMode, setEntryMode] = useState<'select' | 'create'>('select');
+	const [entryMode, setEntryMode] = useState<'select' | 'create'>(
+		disableCreateProperty ? 'select' : 'select',
+	);
 	const [standardTasks, setStandardTasks] = useState<{ id: string; description: string }[]>([]);
-	const { properties, upsertProperty } = useProperties();
+	const { properties: contextProperties, upsertProperty } = useProperties();
 	const navigate = useNavigate();
 
-	const d = DICT.CLEANINGS.FORM;
+	const displayedProperties = availableProperties || contextProperties;
 
-	const form = useForm<HostCleaningFormInput, object, HostCleaningFormValues>({
-		resolver: zodResolver(hostCleaningSchema),
+	const dict = DICT.CLEANINGS.FORM;
+
+	const form = useForm<CleaningFormInput, object, CleaningFormValues>({
+		resolver: zodResolver(cleaningFormSchema),
 		mode: 'onChange',
 		shouldUnregister: false,
 		defaultValues: {
@@ -142,8 +159,8 @@ export function HostCleaningForm({ initialData, onSubmit }: HostCleaningFormProp
 	}, []);
 
 	const selectedProperty = useMemo(
-		() => properties.find((p) => p.id === selectedPropertyId),
-		[properties, selectedPropertyId],
+		() => displayedProperties.find((p) => p.id === selectedPropertyId),
+		[displayedProperties, selectedPropertyId],
 	);
 
 	const calculatedPrice = useMemo(() => {
@@ -171,7 +188,7 @@ export function HostCleaningForm({ initialData, onSubmit }: HostCleaningFormProp
 		setStep(1);
 	};
 
-	const handleFinalSubmit: SubmitHandler<HostCleaningFormValues> = async (values) => {
+	const handleFinalSubmit: SubmitHandler<CleaningFormValues> = async (values) => {
 		try {
 			await onSubmit(values);
 		} catch {
@@ -185,7 +202,7 @@ export function HostCleaningForm({ initialData, onSubmit }: HostCleaningFormProp
 				<PropertyForm
 					onSubmit={handlePropertySubmit}
 					onCancel={handlePropertyFormCancel}
-					cancelLabel={DICT.COMMON.BACK}
+					cancelLabel={DICT.COMMON.ACTIONS.BACK}
 				/>
 			) : (
 				<form onSubmit={handleSubmit(handleFinalSubmit)} className="space-y-6">
@@ -193,31 +210,26 @@ export function HostCleaningForm({ initialData, onSubmit }: HostCleaningFormProp
 
 					{step === 1 && entryMode === 'select' && (
 						<FieldGroup>
-							<div className="flex gap-2 p-1 border rounded-md bg-muted/50">
-								<Button
-									variant={entryMode === 'select' ? 'default' : 'ghost'}
-									className="flex-1"
-									onClick={() => setEntryMode('select')}>
-									{d.LABELS.SELECT_PROPERTY}
-								</Button>
-								<Button variant="ghost" className="flex-1" onClick={() => setEntryMode('create')}>
-									{d.LABELS.NEW_PROPERTY}
-								</Button>
-							</div>
-
 							<div className="space-y-4">
+								{!disableCreateProperty && (
+									<Button
+										variant="secondary"
+										className="w-full"
+										onClick={() => setEntryMode('create')}>
+										{dict.LABELS.NEW_PROPERTY}
+									</Button>
+								)}
 								<Field>
-									<FieldLabel>{DICT.FORMS.LABELS.ADDRESS}</FieldLabel>
 									<Controller
 										control={control}
 										name="property_id"
 										render={({ field }) => (
 											<Select onValueChange={field.onChange} value={field.value}>
 												<SelectTrigger>
-													<SelectValue placeholder={d.LABELS.SELECT_PROPERTY} />
+													<SelectValue placeholder={dict.LABELS.SELECT_PROPERTY} />
 												</SelectTrigger>
 												<SelectContent>
-													{properties.map((p) => (
+													{displayedProperties.map((p) => (
 														<SelectItem key={p.id} value={p.id}>
 															{p.address_line_1}, {p.postcode}
 														</SelectItem>
@@ -228,6 +240,7 @@ export function HostCleaningForm({ initialData, onSubmit }: HostCleaningFormProp
 									/>
 									{errors.property_id && <FieldError>{errors.property_id.message}</FieldError>}
 								</Field>
+
 								<Button
 									className="w-full"
 									onClick={async () => {
@@ -236,7 +249,7 @@ export function HostCleaningForm({ initialData, onSubmit }: HostCleaningFormProp
 											setStep(2);
 										}
 									}}>
-									{d.BUTTONS.NEXT_DETAILS}
+									{dict.BUTTONS.NEXT_DETAILS}
 								</Button>
 							</div>
 						</FieldGroup>
@@ -260,14 +273,14 @@ export function HostCleaningForm({ initialData, onSubmit }: HostCleaningFormProp
 								</div>
 
 								<FieldGroup className="gap-0!">
-									<FieldLabel className="mb-2">{d.LABELS.CUSTOM_TASKS}</FieldLabel>
+									<FieldLabel className="mb-2">{dict.LABELS.CUSTOM_TASKS}</FieldLabel>
 									<div className="space-y-3">
 										{fields.map((field, index) => (
 											<div key={field.id} className="flex gap-2">
 												<Field className="flex-1">
 													<Input
 														{...register(`custom_tasks.${index}.description` as const)}
-														placeholder={d.PLACEHOLDERS.TASK}
+														placeholder={dict.PLACEHOLDERS.TASK}
 													/>
 													{errors.custom_tasks?.[index]?.description && (
 														<FieldError>
@@ -285,7 +298,7 @@ export function HostCleaningForm({ initialData, onSubmit }: HostCleaningFormProp
 											size="sm"
 											className="w-full border-dashed"
 											onClick={() => append({ description: '' })}>
-											<Plus className="mr-2 size-4" /> {d.BUTTONS.ADD_TASK}
+											<Plus className="mr-2 size-4" /> {dict.BUTTONS.ADD_TASK}
 										</Button>
 										{errors.custom_tasks?.root?.message && (
 											<FieldError>{errors.custom_tasks.root.message}</FieldError>
@@ -297,7 +310,7 @@ export function HostCleaningForm({ initialData, onSubmit }: HostCleaningFormProp
 							<div className="flex gap-3">
 								{!initialData && (
 									<Button variant="outline" onClick={() => setStep(1)}>
-										{DICT.COMMON.BACK}
+										{DICT.COMMON.ACTIONS.BACK}
 									</Button>
 								)}
 								<Button
@@ -308,7 +321,7 @@ export function HostCleaningForm({ initialData, onSubmit }: HostCleaningFormProp
 											setStep(3);
 										}
 									}}>
-									{d.BUTTONS.NEXT_DETAILS}
+									{dict.BUTTONS.NEXT_DETAILS}
 								</Button>
 							</div>
 						</div>
@@ -334,16 +347,16 @@ export function HostCleaningForm({ initialData, onSubmit }: HostCleaningFormProp
 								</div>
 
 								<Field>
-									<FieldLabel>{d.LABELS.INSTRUCTIONS}</FieldLabel>
+									<FieldLabel>{dict.LABELS.INSTRUCTIONS}</FieldLabel>
 									<Textarea
 										{...register('instructions')}
 										className="min-h-25 resize-none"
-										placeholder={d.PLACEHOLDERS.INSTRUCTIONS}
+										placeholder={dict.PLACEHOLDERS.INSTRUCTIONS}
 									/>
 								</Field>
 
 								<Field>
-									<FieldLabel>{d.LABELS.SCHEDULED_DATE}</FieldLabel>
+									<FieldLabel>{dict.LABELS.SCHEDULED_DATE}</FieldLabel>
 									<Controller
 										control={control}
 										name="scheduled_start"
@@ -358,7 +371,7 @@ export function HostCleaningForm({ initialData, onSubmit }: HostCleaningFormProp
 
 								<div className="p-4 rounded-xl border bg-muted/20">
 									<p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-										{d.LABELS.COST}
+										{dict.LABELS.COST}
 									</p>
 									<p className="text-2xl font-black text-primary">
 										{DICT.FORMAT.CURRENCY}
@@ -370,11 +383,11 @@ export function HostCleaningForm({ initialData, onSubmit }: HostCleaningFormProp
 							<div className="flex gap-3 pt-4 border-t">
 								{!isRestricted && (
 									<Button variant="outline" onClick={() => setStep(2)}>
-										{DICT.COMMON.BACK}
+										{DICT.COMMON.ACTIONS.BACK}
 									</Button>
 								)}
 								<Button type="submit" className="flex-1" disabled={isSubmitting}>
-									{isSubmitting ? d.BUTTONS.SUBMITTING : d.BUTTONS.SUBMIT}
+									{isSubmitting ? dict.BUTTONS.SUBMITTING : dict.BUTTONS.SUBMIT}
 								</Button>
 							</div>
 						</div>
@@ -385,5 +398,5 @@ export function HostCleaningForm({ initialData, onSubmit }: HostCleaningFormProp
 	);
 }
 
-HostCleaningForm.title = DICT.CLEANINGS.CREATE_DIALOG.TITLE;
-HostCleaningForm.description = DICT.CLEANINGS.CREATE_DIALOG.MESSAGE;
+CleaningForm.title = DICT.CLEANINGS.CREATE.TITLE;
+CleaningForm.description = DICT.CLEANINGS.CREATE.MESSAGE;

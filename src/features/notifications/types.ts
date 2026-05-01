@@ -18,6 +18,7 @@ export interface NotificationData {
 	cleaner_name?: string;
 	host_name?: string;
 	scheduled_date?: string;
+	scheduled_time?: string;
 	amount?: string;
 	[key: string]: unknown;
 }
@@ -31,6 +32,9 @@ export const NOTIFICATION_TYPES: Record<NotificationType, NotificationType> = {
 	cleaning_assigned: 'cleaning_assigned',
 	cleaning_reassigned: 'cleaning_reassigned',
 	cleaning_updated: 'cleaning_updated',
+	cleaning_reminder: 'cleaning_reminder',
+	cleaning_starting_soon: 'cleaning_starting_soon',
+	cleaning_missed_clockin: 'cleaning_missed_clockin',
 };
 
 export interface GetNotificationsOptions {

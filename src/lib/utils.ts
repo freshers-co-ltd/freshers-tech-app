@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
 
-export type DateFormatVariant = 'short' | 'long' | 'time' | 'datetime';
+export type DateFormatVariant = 'short' | 'long' | 'time' | 'datetime' | 'numeric';
 
 interface FormatDateOptions {
 	variant?: DateFormatVariant;
@@ -21,6 +21,12 @@ export function formatDate(date: Date | string, options: FormatDateOptions = {})
 	}
 
 	switch (variant) {
+		case 'numeric':
+			return dateObj.toLocaleDateString(locale, {
+				day: '2-digit',
+				month: '2-digit',
+				year: '2-digit',
+			});
 		case 'short':
 			return dateObj.toLocaleDateString(locale, {
 				day: 'numeric',
@@ -44,4 +50,23 @@ export function formatDate(date: Date | string, options: FormatDateOptions = {})
 		default:
 			return dateObj.toLocaleDateString();
 	}
+}
+
+export function formatCurrency(value: number): string {
+	return new Intl.NumberFormat('en-GB', {
+		style: 'currency',
+		currency: 'GBP',
+		minimumFractionDigits: 0,
+		maximumFractionDigits: 0,
+	}).format(value);
+}
+
+export function formatHours(hours: number, isShort: boolean = false): string {
+	if (hours < 1) {
+		const suffix = isShort ? 'm' : ' mins';
+		return `${Math.round(hours * 60)} ${suffix}`;
+	}
+
+	const suffix = isShort ? 'h' : ' hours';
+	return `${hours.toFixed(1)} ${suffix}`;
 }

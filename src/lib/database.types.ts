@@ -447,25 +447,19 @@ export type Database = {
 			};
 		};
 		Views: {
-			admin_operational_health: {
+			platform_stats: {
 				Row: {
 					avg_completion_hours: number | null;
 					broken_items_mtd: number | null;
 					calculated_at: string | null;
-					cleaner_utilization_pct: number | null;
+					cleanings_in_progress: number | null;
+					completed_cleanings_mtd: number | null;
+					completed_cleanings_ytd: number | null;
 					low_supplies_mtd: number | null;
-				};
-				Relationships: [];
-			};
-			admin_volume_metrics: {
-				Row: {
-					active_cleaners: number | null;
-					active_hosts: number | null;
-					active_properties: number | null;
-					calculated_at: string | null;
-					completed_mtd: number | null;
-					completed_ytd: number | null;
-					total_mtd: number | null;
+					total_cleaners: number | null;
+					total_cleanings_mtd: number | null;
+					total_hosts: number | null;
+					total_properties: number | null;
 				};
 				Relationships: [];
 			};
@@ -544,6 +538,7 @@ export type Database = {
 					property_address: string;
 					property_id: string;
 					property_postcode: string;
+					property_town_city: string;
 					scheduled_start: string;
 					service_cost: number;
 					status: string;
@@ -621,7 +616,11 @@ export type Database = {
 				}[];
 			};
 			admin_get_host_detail: {
-				Args: { p_host_id: string };
+				Args: {
+					p_host_id: string;
+					p_properties_sort_direction?: string;
+					p_properties_sort_field?: string;
+				};
 				Returns: {
 					avatar_url: string;
 					banned_until: string;
@@ -642,6 +641,21 @@ export type Database = {
 					cleanings: number;
 					month: string;
 					revenue: number;
+				}[];
+			};
+			admin_get_platform_stats_trend: {
+				Args: { p_period_days?: number };
+				Returns: {
+					completed_change: number;
+					completed_current: number;
+					completed_previous: number;
+					properties_change: number;
+					total_change: number;
+					total_cleaners: number;
+					total_current: number;
+					total_hosts: number;
+					total_previous: number;
+					total_properties: number;
 				}[];
 			};
 			admin_get_revenue_metrics: {
@@ -714,7 +728,6 @@ export type Database = {
 					p_sort_field?: string;
 				};
 				Returns: {
-					active_bookings: number;
 					avatar_url: string;
 					banned_until: string;
 					completed_cleanings: number;
@@ -737,27 +750,12 @@ export type Database = {
 				Args: { p_role?: string; p_search?: string };
 				Returns: number;
 			};
-			admin_get_volume_metrics_trend: {
-				Args: { p_period_days?: number };
-				Returns: {
-					active_cleaners: number;
-					active_hosts: number;
-					active_properties: number;
-					completed_change: number;
-					completed_current: number;
-					completed_previous: number;
-					properties_change: number;
-					total_change: number;
-					total_current: number;
-					total_previous: number;
-				}[];
-			};
 			admin_unassign_cleaner: {
 				Args: { p_cleaning_id: string };
 				Returns: undefined;
 			};
 			admin_update_standard_tasks: {
-				Args: { p_task_descriptions: string[] };
+				Args: { p_tasks: Json; p_tasks_to_delete: string[] };
 				Returns: undefined;
 			};
 			create_cleaning_request: {
@@ -782,20 +780,15 @@ export type Database = {
 				};
 				Returns: string;
 			};
-			get_or_create_notification_preferences: {
-				Args: never;
-				Returns: {
-					pref_created_at: string;
-					pref_enabled: boolean;
-					pref_updated_at: string;
-					pref_user_id: string;
-				}[];
-			};
+			get_or_create_notification_preferences: { Args: never; Returns: string };
 			host_cancel_cleaning: {
 				Args: { p_cleaning_id: string };
 				Returns: undefined;
 			};
 			is_not_banned: { Args: never; Returns: boolean };
+			notify_cleaning_reminders: { Args: never; Returns: undefined };
+			notify_cleaning_starting_soon: { Args: never; Returns: undefined };
+			notify_missed_clockin: { Args: never; Returns: undefined };
 			soft_delete_cleaning: {
 				Args: { p_cleaning_id: string };
 				Returns: undefined;
@@ -845,7 +838,10 @@ export type Database = {
 				| 'cleaning_cancelled'
 				| 'cleaning_assigned'
 				| 'cleaning_reassigned'
-				| 'cleaning_updated';
+				| 'cleaning_updated'
+				| 'cleaning_reminder'
+				| 'cleaning_starting_soon'
+				| 'cleaning_missed_clockin';
 			property_type: 'house' | 'apartment' | 'studio';
 			user_role: 'cleaner' | 'host' | 'admin';
 		};
@@ -1518,6 +1514,9 @@ export const Constants = {
 				'cleaning_assigned',
 				'cleaning_reassigned',
 				'cleaning_updated',
+				'cleaning_reminder',
+				'cleaning_starting_soon',
+				'cleaning_missed_clockin',
 			],
 			property_type: ['house', 'apartment', 'studio'],
 			user_role: ['cleaner', 'host', 'admin'],

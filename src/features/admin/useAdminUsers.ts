@@ -138,9 +138,6 @@ export function useAdminUsers(): UseAdminUsersResult {
 
 	const handleBan = useCallback(
 		async (userId: string): Promise<boolean> => {
-			if (!window.confirm('Are you sure you want to ban this user?')) {
-				return false;
-			}
 			const result = await userService.banUser(userId);
 			if (result.error) {
 				toast.error(result.error);
@@ -155,9 +152,6 @@ export function useAdminUsers(): UseAdminUsersResult {
 
 	const handleUnban = useCallback(
 		async (userId: string): Promise<boolean> => {
-			if (!window.confirm('Are you sure you want to unban this user?')) {
-				return false;
-			}
 			const result = await userService.unbanUser(userId);
 			if (result.error) {
 				toast.error(result.error);

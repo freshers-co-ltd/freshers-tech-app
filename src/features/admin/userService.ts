@@ -33,14 +33,15 @@ export interface AdminHostDetail extends AdminUser {
 		scheduled_start: string;
 		service_cost: number;
 		cleaner_id: string | null;
+		cleaner_name: string | null;
 		property_id: string;
 		created_at: string;
 	}[];
 	cleaning_stats: {
 		total: number;
-		completed: number;
+		requested: number;
+		confirmed: number;
 		in_progress: number;
-		pending: number;
 	};
 }
 
@@ -57,13 +58,13 @@ export interface AdminCleanerDetail extends AdminUser {
 		created_at: string;
 		host_name: string | null;
 		property_address: string | null;
+		property_postcode: string | null;
+		property_town_city: string | null;
 	}[];
 	cleaner_stats: {
 		total_assigned: number;
 		completed: number;
-		in_progress: number;
 		confirmed: number;
-		total_earnings: number | null;
 		avg_completion_hours: number | null;
 	};
 }
@@ -125,9 +126,15 @@ export const userService = {
 		return { data: data as number, error: null };
 	},
 
-	async getHostDetail(hostId: string): Promise<ActionResult<AdminHostDetail>> {
+	async getHostDetail(
+		hostId: string,
+		propertiesSortField?: string,
+		propertiesSortDirection?: 'asc' | 'desc',
+	): Promise<ActionResult<AdminHostDetail>> {
 		const { data, error } = await supabase.rpc('admin_get_host_detail', {
 			p_host_id: hostId,
+			p_properties_sort_field: propertiesSortField || 'created_at',
+			p_properties_sort_direction: propertiesSortDirection || 'desc',
 		});
 
 		if (error) {

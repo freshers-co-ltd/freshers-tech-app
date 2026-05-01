@@ -28,7 +28,7 @@ export function HostCleaningGrid({ onView, onEdit, onDelete }: HostCleaningGridP
 	const [statusFilter, setStatusFilter] = useState('all');
 	const [sortBy, setSortBy] = useState('date_desc');
 
-	const d = DICT.CLEANINGS;
+	const dict = DICT.CLEANINGS;
 
 	const filteredCleanings = useMemo(() => {
 		let result = [...cleanings];
@@ -72,7 +72,7 @@ export function HostCleaningGrid({ onView, onEdit, onDelete }: HostCleaningGridP
 				<div className="relative flex-1 md:max-w-72">
 					<Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
 					<Input
-						placeholder={d.SEARCH.PLACEHOLDER}
+						placeholder={dict.SEARCH.PLACEHOLDER}
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
 						className="pl-9 h-8"
@@ -84,7 +84,7 @@ export function HostCleaningGrid({ onView, onEdit, onDelete }: HostCleaningGridP
 						<SelectValue placeholder="Status" />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="all">{d.SEARCH.ALL_STATUSES}</SelectItem>
+						<SelectItem value="all">{dict.SEARCH.ALL_STATUSES}</SelectItem>
 						{STATUS_GROUPS.ALL.map((status) => (
 							<SelectItem key={status} value={status}>
 								{status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
@@ -98,16 +98,16 @@ export function HostCleaningGrid({ onView, onEdit, onDelete }: HostCleaningGridP
 						<SelectValue placeholder="Sort by" />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="date_desc">{d.SORT.DATE_DESC}</SelectItem>
-						<SelectItem value="date_asc">{d.SORT.DATE_ASC}</SelectItem>
-						<SelectItem value="requested_desc">{d.SORT.REQUESTED_DESC}</SelectItem>
+						<SelectItem value="date_desc">{dict.SORT.DATE_DESC}</SelectItem>
+						<SelectItem value="date_asc">{dict.SORT.DATE_ASC}</SelectItem>
+						<SelectItem value="requested_desc">{dict.SORT.REQUESTED_DESC}</SelectItem>
 					</SelectContent>
 				</Select>
 			</div>
 
 			{filteredCleanings.length === 0 ? (
 				<div className="flex h-64 items-center justify-center rounded-xl border border-dashed text-muted-foreground">
-					{d.SEARCH.NO_RESULTS}
+					{dict.SEARCH.NO_RESULTS}
 				</div>
 			) : (
 				<div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
