@@ -10,7 +10,13 @@ OR REPLACE FUNCTION public.admin_get_revenue_metrics (p_months INT DEFAULT 1) RE
     revenue_last_month NUMERIC,
     avg_completion_hours NUMERIC,
     revenue_change_pct NUMERIC,
-    completed_change_pct NUMERIC
+    completed_change_pct NUMERIC,
+    gross_revenue_current NUMERIC,
+    net_revenue_current NUMERIC,
+    gross_revenue_last_month NUMERIC,
+    net_revenue_last_month NUMERIC,
+    gross_revenue_change_pct NUMERIC,
+    net_revenue_change_pct NUMERIC
 ) SECURITY DEFINER
 SET
     search_path = public AS $$
@@ -24,6 +30,7 @@ BEGIN
             COUNT(*) FILTER (WHERE c.status = 'confirmed')::INT AS confirmed,
             COUNT(*) FILTER (WHERE c.status = 'in_progress')::INT AS in_progress,
             COALESCE(SUM(c.service_cost) FILTER (WHERE c.status = 'completed'), 0)::NUMERIC AS revenue,
+            COALESCE(SUM(c.service_cost - COALESCE(c.cleaner_pay, 0)) FILTER (WHERE c.status = 'completed'), 0)::NUMERIC AS net_revenue,
             AVG(EXTRACT(EPOCH FROM (c.clock_out_time - c.clock_in_time)) / 3600) FILTER (WHERE c.status = 'completed' AND c.clock_out_time IS NOT NULL AND c.clock_in_time IS NOT NULL)::NUMERIC AS avg_hours
         FROM public.cleanings c
         WHERE c.deleted_at IS NULL
@@ -32,6 +39,7 @@ BEGIN
      last_month AS (
         SELECT 
             COALESCE(SUM(c.service_cost), 0)::NUMERIC AS revenue,
+            COALESCE(SUM(c.service_cost - COALESCE(c.cleaner_pay, 0)), 0)::NUMERIC AS net_revenue,
             COUNT(*) FILTER (WHERE c.status = 'completed')::INT AS completed
         FROM public.cleanings c
         WHERE c.deleted_at IS NULL
@@ -42,21 +50,31 @@ BEGIN
         COALESCE(current_month.cancelled, 0)::INT AS cancelled_count,
         COALESCE(current_month.pending, 0)::INT AS pending_count,
         COALESCE(current_month.in_progress, 0)::INT AS in_progress_count,
-        COALESCE(current_month.revenue, 0)::NUMERIC AS revenue_current,
-        COALESCE(last_month.revenue, 0)::NUMERIC AS revenue_last_month,
+        COALESCE(current_month.net_revenue, 0)::NUMERIC AS revenue_current,
+        COALESCE(last_month.net_revenue, 0)::NUMERIC AS revenue_last_month,
         COALESCE(current_month.avg_hours, 0)::NUMERIC AS avg_completion_hours,
-        CASE WHEN COALESCE(last_month.revenue, 0) = 0 THEN 0::NUMERIC
-            ELSE ((COALESCE(current_month.revenue, 0) - COALESCE(last_month.revenue, 0)) / NULLIF(COALESCE(last_month.revenue, 0), 0) * 100)::NUMERIC
+        CASE WHEN COALESCE(last_month.net_revenue, 0) = 0 THEN 0::NUMERIC
+            ELSE ((COALESCE(current_month.net_revenue, 0) - COALESCE(last_month.net_revenue, 0)) / NULLIF(COALESCE(last_month.net_revenue, 0), 0) * 100)::NUMERIC
         END AS revenue_change_pct,
         CASE WHEN COALESCE(last_month.completed, 0) = 0 THEN 0::NUMERIC
             ELSE ((COALESCE(current_month.completed, 0) - COALESCE(last_month.completed, 0)) / NULLIF(COALESCE(last_month.completed, 0), 0) * 100)::NUMERIC
-        END AS completed_change_pct
+        END AS completed_change_pct,
+        COALESCE(current_month.revenue, 0)::NUMERIC AS gross_revenue_current,
+        COALESCE(current_month.net_revenue, 0)::NUMERIC AS net_revenue_current,
+        COALESCE(last_month.revenue, 0)::NUMERIC AS gross_revenue_last_month,
+        COALESCE(last_month.net_revenue, 0)::NUMERIC AS net_revenue_last_month,
+        CASE WHEN COALESCE(last_month.revenue, 0) = 0 THEN 0::NUMERIC
+            ELSE ((COALESCE(current_month.revenue, 0) - COALESCE(last_month.revenue, 0)) / NULLIF(COALESCE(last_month.revenue, 0), 0) * 100)::NUMERIC
+        END AS gross_revenue_change_pct,
+        CASE WHEN COALESCE(last_month.net_revenue, 0) = 0 THEN 0::NUMERIC
+            ELSE ((COALESCE(current_month.net_revenue, 0) - COALESCE(last_month.net_revenue, 0)) / NULLIF(COALESCE(last_month.net_revenue, 0), 0) * 100)::NUMERIC
+        END AS net_revenue_change_pct
     FROM current_month, last_month;
 END;
 $$ LANGUAGE plpgsql;
 
 CREATE
-OR REPLACE FUNCTION public.admin_get_monthly_stats (p_months INT DEFAULT 6) RETURNS TABLE (month TEXT, cleanings INT, revenue NUMERIC) SECURITY DEFINER
+OR REPLACE FUNCTION public.admin_get_monthly_stats (p_months INT DEFAULT 6) RETURNS TABLE (month TEXT, cleanings INT, revenue NUMERIC, gross NUMERIC, net NUMERIC) SECURITY DEFINER
 SET
     search_path = public AS $$
 BEGIN
@@ -64,7 +82,9 @@ BEGIN
     SELECT 
         TO_CHAR(DATE_TRUNC('month', c.scheduled_start), 'Mon YYYY') AS month,
         COUNT(*)::INT AS cleanings,
-        COALESCE(SUM(COALESCE(c.service_cost)) FILTER (WHERE c.status = 'completed'), 0)::NUMERIC AS revenue
+        COALESCE(SUM(c.service_cost - COALESCE(c.cleaner_pay, 0)) FILTER (WHERE c.status = 'completed'), 0)::NUMERIC AS revenue,
+        COALESCE(SUM(c.service_cost) FILTER (WHERE c.status = 'completed'), 0)::NUMERIC AS gross,
+        COALESCE(SUM(c.service_cost - COALESCE(c.cleaner_pay, 0)) FILTER (WHERE c.status = 'completed'), 0)::NUMERIC AS net
     FROM public.cleanings c
     WHERE c.deleted_at IS NULL
     AND c.scheduled_start > NOW() - (p_months || ' months')::INTERVAL
@@ -132,14 +152,16 @@ CREATE
 OR REPLACE FUNCTION public.admin_get_revenue_over_time (
     p_start_date TIMESTAMP WITH TIME ZONE DEFAULT NOW() - INTERVAL '180 days',
     p_end_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-) RETURNS TABLE (date TEXT, revenue NUMERIC) SECURITY DEFINER
+) RETURNS TABLE (date TEXT, revenue NUMERIC, gross NUMERIC, net NUMERIC) SECURITY DEFINER
 SET
     search_path = public AS $$
 BEGIN
     RETURN QUERY
     SELECT 
         TO_CHAR(DATE_TRUNC('month', c.scheduled_start), 'Mon YYYY') AS date,
-        COALESCE(SUM(c.service_cost), 0)::NUMERIC AS revenue
+        COALESCE(SUM(c.service_cost - COALESCE(c.cleaner_pay, 0)), 0)::NUMERIC AS revenue,
+        COALESCE(SUM(c.service_cost), 0)::NUMERIC AS gross,
+        COALESCE(SUM(c.service_cost - COALESCE(c.cleaner_pay, 0)), 0)::NUMERIC AS net
     FROM public.cleanings c
     WHERE c.deleted_at IS NULL
     AND c.status = 'completed'

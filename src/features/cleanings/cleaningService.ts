@@ -399,6 +399,28 @@ export const cleaningService = {
 
 		return { data: data || [], error: null };
 	},
+
+	async getCleanerPayConfig(): Promise<ActionResult<CleanerPayConfig>> {
+		const { data, error } = await supabase.rpc('get_cleaner_pay_config');
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+		if (!data || data.length === 0) {
+			return { data: null, error: 'No config found' };
+		}
+		return { data: data[0] as unknown as CleanerPayConfig, error: null };
+	},
+
+	async updateCleanerPayConfig(config: CleanerPayConfig): Promise<ActionResult<void>> {
+		const { error } = await supabase.rpc('update_cleaner_pay_config', {
+			p_hourly_rate: config.hourly_rate,
+			p_target_times: config.target_times,
+		});
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+		return { data: undefined, error: null };
+	},
 };
 
 /**
@@ -442,3 +464,14 @@ export const calculateServiceCost = (
 
 	return 0;
 };
+
+export interface CleanerPayConfig {
+	hourly_rate: number;
+	target_times: {
+		studio: number;
+		'1_bed': number;
+		'2_bed': number;
+		'3_bed': number;
+		'4_bed': number;
+	};
+}

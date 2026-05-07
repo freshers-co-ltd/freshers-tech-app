@@ -51,6 +51,8 @@ export interface MonthlyStats {
 	month: string;
 	cleanings: number;
 	revenue: number;
+	gross: number;
+	net: number;
 }
 
 export interface UserGrowthByMonth {
@@ -74,6 +76,12 @@ export interface RevenueMetrics {
 	avg_completion_hours: number;
 	revenue_change_pct: number;
 	completed_change_pct: number;
+	gross_revenue_current: number;
+	net_revenue_current: number;
+	gross_revenue_last_month: number;
+	net_revenue_last_month: number;
+	gross_revenue_change_pct: number;
+	net_revenue_change_pct: number;
 }
 
 type RpcParams = Record<string, unknown>;

@@ -55,6 +55,7 @@ CREATE TABLE
         status public.cleaning_status NOT NULL DEFAULT 'draft',
         scheduled_start TIMESTAMPTZ NOT NULL,
         service_cost NUMERIC(10, 2) NOT NULL CHECK (service_cost > 0),
+        cleaner_pay NUMERIC(10, 2),
         instructions TEXT,
         stocks_included BOOLEAN DEFAULT FALSE NOT NULL,
         clock_in_time TIMESTAMPTZ,

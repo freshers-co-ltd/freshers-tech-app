@@ -1,7 +1,7 @@
 'use client';
 
 import { format } from 'date-fns';
-import { Calendar, CheckCircle2, MapPin, Play } from 'lucide-react';
+import { Calendar, HandCoins, MapPin } from 'lucide-react';
 import { memo, useMemo } from 'react';
 import { EntityBadge } from '@/components/EntityBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -73,6 +73,13 @@ export const CleanerCleaningCard = memo(({ cleaning, onView }: CleanerCleaningCa
 						<p className="text-sm font-medium">
 							{format(new Date(cleaning.scheduled_start), 'MMM d, h:mm a')}
 						</p>
+					</div>
+					<div className="text-right">
+						<div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase">
+							<HandCoins className="size-3" />
+							Earnings
+						</div>
+						<p className="text-sm font-medium">£{cleaning.cleaner_pay?.toFixed(2) ?? '0.00'}</p>
 					</div>
 				</div>
 			</CardContent>

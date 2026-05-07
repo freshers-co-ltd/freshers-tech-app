@@ -1,6 +1,6 @@
 'use client';
 
-import { Pencil, Play, SquareCheckBig, Trash2 } from 'lucide-react';
+import { Pencil, Play, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DICT } from '@/dictionary';
 import type { UserRole } from '@/features/auth/authService';
@@ -57,10 +57,9 @@ export function CleaningActionButtons({
 				)}
 				{isInProgress && (
 					<Button
-						className="w-full h-12 text-base font-bold"
+						className="w-full"
 						disabled={!allTasksCompleted || isFinishDisabled}
 						onClick={onFinish}>
-						<SquareCheckBig className="mr-2 size-5" />
 						{allTasksCompleted ? 'Finish & Submit Report' : 'Complete All Tasks to Finish'}
 					</Button>
 				)}

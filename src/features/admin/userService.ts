@@ -32,6 +32,7 @@ export interface AdminHostDetail extends AdminUser {
 		status: CleaningStatus;
 		scheduled_start: string;
 		service_cost: number;
+		cleaner_pay: number | null;
 		cleaner_id: string | null;
 		cleaner_name: string | null;
 		property_id: string;
@@ -51,6 +52,7 @@ export interface AdminCleanerDetail extends AdminUser {
 		status: CleaningStatus;
 		scheduled_start: string;
 		service_cost: number;
+		cleaner_pay: number | null;
 		host_id: string;
 		property_id: string;
 		clock_in_time: string | null;

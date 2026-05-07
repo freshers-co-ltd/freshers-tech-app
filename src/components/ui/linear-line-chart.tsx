@@ -6,6 +6,8 @@ import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
 import {
 	type ChartConfig,
 	ChartContainer,
+	ChartLegend,
+	ChartLegendContent,
 	ChartTooltip,
 	ChartTooltipContent,
 } from '@/components/ui/chart';
@@ -21,7 +23,6 @@ export interface LineChartProps {
 	subtitle?: string;
 	data: Array<Record<string, string | number>>;
 	config: ChartConfig;
-	valueKey?: string;
 	trend?: TrendData;
 	showTrend?: boolean;
 	trendLabel?: string;
@@ -33,12 +34,13 @@ export function LineChartComponent({
 	subtitle,
 	data,
 	config,
-	valueKey = Object.keys(config)[0] ?? '',
 	trend,
 	showTrend = false,
 	trendLabel,
 	className,
 }: LineChartProps) {
+	const dataKeys = Object.keys(config);
+
 	return (
 		<div className={cn('flex flex-col', className)}>
 			{(title || subtitle) && (
@@ -66,13 +68,21 @@ export function LineChartComponent({
 						/>
 						<YAxis axisLine={false} tickLine={false} tickMargin={8} width={40} />
 						<ChartTooltip content={<ChartTooltipContent hideLabel />} cursor={false} />
-						<Line
-							dataKey={valueKey}
-							dot={false}
-							stroke={`var(--color-${valueKey})`}
-							strokeWidth={2}
-							type="linear"
-							isAnimationActive={false}
+						{dataKeys.map((key) => (
+							<Line
+								key={key}
+								dataKey={key}
+								dot={false}
+								stroke={`var(--color-${key})`}
+								strokeWidth={2}
+								type="linear"
+								isAnimationActive={false}
+							/>
+						))}
+						<ChartLegend
+							content={(props) => (
+								<ChartLegendContent payload={props.payload} verticalAlign={props.verticalAlign} />
+							)}
 						/>
 					</LineChart>
 				</ChartContainer>

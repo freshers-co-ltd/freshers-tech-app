@@ -1,6 +1,16 @@
 'use client';
 
-import { AlertCircle, Bath, Bed, Clock, Info, MapPin, Package, User } from 'lucide-react';
+import {
+	AlertCircle,
+	Bath,
+	Bed,
+	Clock,
+	HandCoins,
+	Info,
+	MapPin,
+	Package,
+	User,
+} from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { EntityBadge } from '@/components/EntityBadge';
@@ -214,144 +224,155 @@ export function CleaningDetailView({
 	return (
 		<Dialog open={open} onOpenChange={handleDialogChange}>
 			<DialogContent className="max-w-2xl! w-screen sm:w-full h-[95svh] flex flex-col p-0 overflow-hidden">
-				<DialogHeader className="p-6 pb-2 shrink-0">
+				<DialogHeader className="p-6 pb-0 shrink-0">
 					<div className="flex justify-between items-start gap-4">
 						<div className="space-y-1 min-w-0">
 							<DialogTitle className="wrap-break-word text-xl font-bold leading-tight">
-								{cleaning.property?.address_line_1}
+								{showEvidenceForm ? 'Cleaning Report' : cleaning.property?.address_line_1}
 							</DialogTitle>
-							<div className="flex items-center gap-1 text-muted-foreground text-sm">
-								<MapPin className="size-3 shrink-0" />
-								<span className="truncate">
-									{cleaning.property?.town_city}, {cleaning.property?.postcode}
-								</span>
-							</div>
+							{!showEvidenceForm && (
+								<div className="flex items-center gap-1 text-muted-foreground text-sm">
+									<MapPin className="size-3 shrink-0" />
+									<span className="truncate">
+										{cleaning.property?.town_city}, {cleaning.property?.postcode}
+									</span>
+								</div>
+							)}
 						</div>
-						<EntityBadge
-							variant={{ type: 'cleaning', value: cleaning.status }}
-							customLabel={isCleaner && cleaning.status === 'confirmed' ? 'ASSIGNED' : undefined}
-						/>
+						{!showEvidenceForm && (
+							<EntityBadge
+								className="mr-8"
+								variant={{ type: 'cleaning', value: cleaning.status }}
+								customLabel={isCleaner && cleaning.status === 'confirmed' ? 'ASSIGNED' : undefined}
+							/>
+						)}
 					</div>
 				</DialogHeader>
 
 				<div className="relative flex-1 min-h-0">
 					<ScrollArea className="h-full w-full">
 						<div className="w-full p-4 sm:p-6 space-y-6 max-w-full overflow-hidden">
-							<Separator />
-
-							<div className="grid grid-cols-2 gap-4">
-								<div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 min-w-0">
-									<Clock className="size-5 text-primary shrink-0" />
-									<div className="min-w-0">
-										<p className="text-[10px] text-muted-foreground uppercase font-bold">
-											Scheduled
-										</p>
-										<p className="text-sm font-medium truncate">
-											{isHost || isAdmin ? (
-												<>
-													<span className="sm:hidden">{shortDate}</span>
-													<span className="hidden sm:inline">{longDate}</span>
-												</>
-											) : (
-												formattedTime
-											)}
-										</p>
-										{(isHost || isAdmin) && (
-											<p className="text-xs font-bold text-primary">{formattedTime}</p>
-										)}
-									</div>
-								</div>
-
-								{isHost || isAdmin ? (
-									<div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 min-w-0">
-										<User className="size-5 text-primary shrink-0" />
-										<div className="min-w-0">
-											<p className="text-[10px] text-muted-foreground uppercase font-bold">
-												Total Cost
-											</p>
-											<p className="text-sm font-bold text-primary">
-												{DICT.FORMAT.CURRENCY}
-												{cleaning.service_cost}
-											</p>
-										</div>
-									</div>
-								) : (
-									<div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 min-w-0">
-										<Info className="size-5 text-primary shrink-0" />
-										<div className="flex gap-3">
-											<div className="flex items-center gap-1">
-												<Bed className="size-3.5 text-muted-foreground" />
-												<span className="text-sm font-bold">{cleaning.property?.bedrooms}</span>
-											</div>
-											<div className="flex items-center gap-1">
-												<Bath className="size-3.5 text-muted-foreground" />
-												<span className="text-sm font-bold">{cleaning.property?.bathrooms}</span>
-											</div>
-										</div>
-									</div>
-								)}
-							</div>
-
-							{(isHost || isAdmin) && (
-								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-									<div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 min-w-0">
-										<Info className="size-5 text-primary shrink-0" />
-										<div className="flex gap-3">
-											<div className="flex items-center gap-1">
-												<Bed className="size-4 text-muted-foreground" />
-												<span>{cleaning.property?.bedrooms}</span>
-											</div>
-											<div className="flex items-center gap-1">
-												<Bath className="size-4 text-muted-foreground" />
-												<span>{cleaning.property?.bathrooms}</span>
-											</div>
-											<span className="ml-auto font-medium capitalize text-primary/80">
-												{cleaning.property?.type}
-											</span>
-										</div>
-									</div>
-
-									<div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 min-w-0">
-										<User className="size-5 text-primary shrink-0" />
-										<div className="min-w-0">
-											<p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">
-												Assigned Cleaner
-											</p>
-											{cleaning.cleaner?.full_name ? (
-												<span className="text-sm font-semibold truncate">
-													{cleaning.cleaner.full_name}
-												</span>
-											) : (
-												<span className="text-sm text-muted-foreground">Pending assignment...</span>
-											)}
-										</div>
-									</div>
-								</div>
-							)}
-
 							{showEvidenceForm && cleaning.cleaner_id ? (
-								<div className="space-y-4">
-									<Button variant="ghost" size="sm" onClick={() => setShowEvidenceForm(false)}>
-										← Back to Checklist
-									</Button>
-									<CleaningEvidenceForm
-										cleaningId={cleaning.id}
-										cleanerId={cleaning.cleaner_id}
-										onSubmit={onFormSubmit}
-									/>
-								</div>
+								<CleaningEvidenceForm
+									cleaningId={cleaning.id}
+									cleanerId={cleaning.cleaner_id}
+									onSubmit={onFormSubmit}
+									onCancel={() => setShowEvidenceForm(false)}
+								/>
 							) : (
 								<>
-									{cleaning.instructions && (
-										<div className="space-y-2">
-											<h4 className="text-xs font-bold uppercase text-muted-foreground tracking-wider flex items-center gap-2">
-												<Info className="size-4 text-primary" />{' '}
-												{isCleaner ? 'Instructions' : 'Special Instructions'}
-											</h4>
-											<div className="p-3 rounded-md border bg-muted/30">
-												<p className="text-sm leading-relaxed whitespace-pre-wrap">
-													{cleaning.instructions}
+									<Separator />
+
+									<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+										<div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 min-w-0">
+											<Clock className="size-5 text-primary shrink-0" />
+											<div className="min-w-0">
+												<p className="text-[10px] text-muted-foreground uppercase font-bold">
+													Scheduled
 												</p>
+												<span className="sm:hidden">{shortDate}</span>
+												<span className="hidden sm:inline">{longDate}</span>
+												<span> at {formattedTime}</span>
+											</div>
+										</div>
+
+										<div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 min-w-0">
+											<HandCoins className="size-5 text-primary shrink-0" />
+											<div className="min-w-0 flex gap-4">
+												{isAdmin ? (
+													<>
+														<div>
+															<p className="text-[10px] text-muted-foreground uppercase font-bold">
+																Host Cost
+															</p>
+															<p>
+																{DICT.FORMAT.CURRENCY}
+																{cleaning.service_cost}
+															</p>
+														</div>
+														<div>
+															<p className="text-[10px] text-muted-foreground uppercase font-bold">
+																Cleaner Pay
+															</p>
+															<p>
+																{DICT.FORMAT.CURRENCY}
+																{cleaning.cleaner_pay?.toFixed(2) ?? '0.00'}
+															</p>
+														</div>
+													</>
+												) : isHost ? (
+													<div>
+														<p className="text-[10px] text-muted-foreground uppercase font-bold">
+															Host Cost
+														</p>
+														<p>
+															{DICT.FORMAT.CURRENCY}
+															{cleaning.service_cost}
+														</p>
+													</div>
+												) : (
+													<div>
+														<p className="text-[10px] text-muted-foreground uppercase font-bold">
+															Earnings
+														</p>
+														<p>
+															{DICT.FORMAT.CURRENCY}
+															{cleaning.cleaner_pay?.toFixed(2) ?? '0.00'}
+														</p>
+													</div>
+												)}
+											</div>
+										</div>
+									</div>
+
+									<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+										<div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 min-w-0">
+											<Info className="size-5 text-primary shrink-0" />
+											<div className="">
+												<p className="text-[10px] text-muted-foreground uppercase font-bold">
+													Details
+												</p>
+
+												<div className="flex gap-3">
+													<div className="flex items-center gap-1">
+														<Bed className="size-4 " />
+														<span>{cleaning.property?.bedrooms}</span>
+													</div>
+													<div className="flex items-center gap-1">
+														<Bath className="size-4" />
+														<span>{cleaning.property?.bathrooms}</span>
+													</div>
+													<span className="ml-auto capitalize">{cleaning.property?.type}</span>
+												</div>
+											</div>
+										</div>
+										{(isHost || isAdmin) && (
+											<div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 min-w-0">
+												<User className="size-5 text-primary shrink-0" />
+												<div className="min-w-0">
+													<p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">
+														Assigned Cleaner
+													</p>
+													{cleaning.cleaner?.full_name ? (
+														<span className="text-sm truncate">{cleaning.cleaner.full_name}</span>
+													) : (
+														<span className="text-sm text-muted-foreground">
+															Pending assignment...
+														</span>
+													)}
+												</div>
+											</div>
+										)}
+									</div>
+
+									{cleaning.instructions && (
+										<div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 min-w-0">
+											<Clock className="size-5 text-primary shrink-0" />
+											<div className="min-w-0">
+												<p className="text-[10px] text-muted-foreground uppercase font-bold">
+													Instructions
+												</p>
+												<span>{cleaning.instructions}</span>
 											</div>
 										</div>
 									)}

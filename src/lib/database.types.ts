@@ -39,6 +39,27 @@ export type Database = {
 				};
 				Relationships: [];
 			};
+			cleaner_pay_config: {
+				Row: {
+					hourly_rate: number;
+					id: number;
+					target_times: Json;
+					updated_at: string | null;
+				};
+				Insert: {
+					hourly_rate?: number;
+					id?: number;
+					target_times?: Json;
+					updated_at?: string | null;
+				};
+				Update: {
+					hourly_rate?: number;
+					id?: number;
+					target_times?: Json;
+					updated_at?: string | null;
+				};
+				Relationships: [];
+			};
 			cleaning_reports: {
 				Row: {
 					broken_items_report: string | null;
@@ -132,6 +153,7 @@ export type Database = {
 			cleanings: {
 				Row: {
 					cleaner_id: string | null;
+					cleaner_pay: number | null;
 					clock_in_time: string | null;
 					clock_out_time: string | null;
 					created_at: string;
@@ -148,6 +170,7 @@ export type Database = {
 				};
 				Insert: {
 					cleaner_id?: string | null;
+					cleaner_pay?: number | null;
 					clock_in_time?: string | null;
 					clock_out_time?: string | null;
 					created_at?: string;
@@ -164,6 +187,7 @@ export type Database = {
 				};
 				Update: {
 					cleaner_id?: string | null;
+					cleaner_pay?: number | null;
 					clock_in_time?: string | null;
 					clock_out_time?: string | null;
 					created_at?: string;
@@ -584,12 +608,14 @@ export type Database = {
 					avatar_url: string;
 					banned_until: string;
 					cleaner_stats: Json;
+					created_at: string;
 					email: string;
 					full_name: string;
 					id: string;
 					is_verified: boolean;
+					last_sign_in_at: string;
+					last_sign_in_text: string;
 					role: string;
-					updated_at: string;
 				}[];
 			};
 			admin_get_cleaning_status_breakdown: {
@@ -626,20 +652,24 @@ export type Database = {
 					banned_until: string;
 					cleaning_stats: Json;
 					cleanings: Json;
+					created_at: string;
 					email: string;
 					full_name: string;
 					id: string;
 					is_verified: boolean;
+					last_sign_in_at: string;
+					last_sign_in_text: string;
 					properties: Json;
 					role: string;
-					updated_at: string;
 				}[];
 			};
 			admin_get_monthly_stats: {
 				Args: { p_months?: number };
 				Returns: {
 					cleanings: number;
+					gross: number;
 					month: string;
+					net: number;
 					revenue: number;
 				}[];
 			};
@@ -665,7 +695,13 @@ export type Database = {
 					cancelled_count: number;
 					completed_change_pct: number;
 					completed_count: number;
+					gross_revenue_change_pct: number;
+					gross_revenue_current: number;
+					gross_revenue_last_month: number;
 					in_progress_count: number;
+					net_revenue_change_pct: number;
+					net_revenue_current: number;
+					net_revenue_last_month: number;
 					pending_count: number;
 					revenue_change_pct: number;
 					revenue_current: number;
@@ -676,6 +712,8 @@ export type Database = {
 				Args: { p_end_date?: string; p_start_date?: string };
 				Returns: {
 					date: string;
+					gross: number;
+					net: number;
 					revenue: number;
 				}[];
 			};
@@ -780,6 +818,14 @@ export type Database = {
 				};
 				Returns: string;
 			};
+			get_cleaner_pay_config: {
+				Args: never;
+				Returns: {
+					hourly_rate: number;
+					target_times: Json;
+					updated_at: string;
+				}[];
+			};
 			get_or_create_notification_preferences: { Args: never; Returns: string };
 			host_cancel_cleaning: {
 				Args: { p_cleaning_id: string };
@@ -807,6 +853,10 @@ export type Database = {
 			};
 			soft_delete_property: {
 				Args: { p_property_id: string };
+				Returns: undefined;
+			};
+			update_cleaner_pay_config: {
+				Args: { p_hourly_rate: number; p_target_times: Json };
 				Returns: undefined;
 			};
 			update_cleaning_request: {

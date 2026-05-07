@@ -31,6 +31,7 @@ interface CleaningEvidenceFormProps {
 	cleaningId: string;
 	cleanerId: string;
 	onSubmit: (values: EvidenceFormValues, files: File[]) => Promise<void>;
+	onCancel?: () => void;
 }
 
 const FileSvgDraw = ({ accept }: { accept?: Record<string, string[]> }) => {
@@ -66,7 +67,7 @@ const FileSvgDraw = ({ accept }: { accept?: Record<string, string[]> }) => {
 	);
 };
 
-export function CleaningEvidenceForm({ onSubmit }: CleaningEvidenceFormProps) {
+export function CleaningEvidenceForm({ onSubmit, onCancel }: CleaningEvidenceFormProps) {
 	const [files, setFiles] = useState<File[] | null>([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -101,7 +102,7 @@ export function CleaningEvidenceForm({ onSubmit }: CleaningEvidenceFormProps) {
 				e.stopPropagation();
 				form.handleSubmit(handleFormSubmit)(e);
 			}}
-			className="space-y-6">
+			className="space-y-4">
 			<FieldGroup>
 				<Field>
 					<FieldLabel>Any broken or damaged items?</FieldLabel>
@@ -168,12 +169,22 @@ export function CleaningEvidenceForm({ onSubmit }: CleaningEvidenceFormProps) {
 				</Field>
 			</FieldGroup>
 
-			<div className="pt-4 border-t border-border">
+			<div className="pt-2 border-t border-border flex gap-3">
+				{onCancel && (
+					<Button
+						type="button"
+						variant="outline"
+						className="flex-1"
+						onClick={onCancel}
+						disabled={isSubmitting || form.formState.isSubmitting}>
+						Back
+					</Button>
+				)}
 				<Button
 					type="submit"
-					className="w-full"
+					className="flex-1"
 					disabled={isSubmitting || form.formState.isSubmitting}>
-					{isSubmitting ? 'Uploading Evidence...' : 'Complete Cleaning & Clock Out'}
+					{isSubmitting ? 'Uploading Evidence...' : 'Complete Cleaning'}
 				</Button>
 			</div>
 		</form>

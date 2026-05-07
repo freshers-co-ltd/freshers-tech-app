@@ -97,9 +97,13 @@ export function AdminAnalyticsPage() {
 	};
 
 	const lineChartConfig = {
-		revenue: {
-			label: 'Revenue',
+		gross: {
+			label: 'Gross Revenue',
 			color: 'var(--color-chart-2)',
+		},
+		net: {
+			label: 'Net Revenue',
+			color: 'var(--color-chart-3)',
 		},
 	};
 
@@ -121,27 +125,7 @@ export function AdminAnalyticsPage() {
 
 	const revenueData = last6Months.map((month) => {
 		const found = monthlyStats.find((m) => m.month === month);
-		console.log(
-			'DEBUG revenue: found',
-			found,
-			'revenue value',
-			found?.revenue,
-			'type',
-			typeof found?.revenue,
-		);
-		let revenue = 0;
-		if (found?.revenue !== undefined && found?.revenue !== null) {
-			if (typeof found.revenue === 'number') {
-				revenue = found.revenue;
-			} else if (typeof found.revenue === 'object') {
-				const vals = Object.values(found.revenue);
-				const numVal = vals.find((v) => typeof v === 'number');
-				if (numVal !== undefined) {
-					revenue = numVal as number;
-				}
-			}
-		}
-		return { date: month, revenue };
+		return { date: month, gross: found?.gross ?? 0, net: found?.net ?? 0 };
 	});
 
 	const userGrowthData = last6Months.map((month) => {

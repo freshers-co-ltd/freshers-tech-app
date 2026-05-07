@@ -13,6 +13,7 @@ export interface AdminCleaning {
 	status: CleaningStatus;
 	scheduled_start: string;
 	service_cost: number;
+	cleaner_pay: number | null;
 	instructions: string | null;
 	stocks_included: boolean;
 	clock_in_time: string | null;

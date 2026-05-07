@@ -79,6 +79,7 @@ export function AdminCleanerDetailPage() {
 		status: c.status,
 		scheduled_start: c.scheduled_start,
 		service_cost: c.service_cost,
+		cleaner_pay: c.cleaner_pay,
 		cleaner_id: cleaner.id,
 		cleaner_name: cleaner.full_name,
 		host_id: c.host_id,
@@ -137,6 +138,7 @@ export function AdminCleanerDetailPage() {
 						<CleaningsTable
 							data={tableData}
 							excludeCleaner={true}
+							hideHostCost={true}
 							emptyMessage="No cleanings assigned"
 							onRefresh={fetchCleanerDetail}
 							onView={(id) => modal.openView(id)}

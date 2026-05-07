@@ -1,6 +1,6 @@
 'use client';
 
-import { ListTodo, Search } from 'lucide-react';
+import { ListTodo, PoundSterling, Search } from 'lucide-react';
 import { useState } from 'react';
 import { CleaningsTable } from '@/components/CleaningsTable';
 import { CleaningViewDialog } from '@/components/CleaningViewDialog';
@@ -15,6 +15,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { DICT } from '@/dictionary';
+import { CleanerPayConfigDialog } from '@/features/admin/components/CleanerPayConfigDialog';
 import { StandardTasksDialog } from '@/features/admin/components/StandardTasksDialog';
 import { useAdminCleanings } from '@/features/admin/useAdminCleanings';
 import { useResourceModals } from '@/hooks/useResourceModals';
@@ -41,6 +42,7 @@ export function AdminCleaningsPage() {
 
 	const modal = useResourceModals({ resourceName: 'cleaning' });
 	const [isStandardTasksOpen, setIsStandardTasksOpen] = useState(false);
+	const [isPayConfigOpen, setIsPayConfigOpen] = useState(false);
 
 	const dict = DICT.ADMIN.CLEANINGS;
 
@@ -65,6 +67,10 @@ export function AdminCleaningsPage() {
 				<Button variant="outline" onClick={() => setIsStandardTasksOpen(true)}>
 					<ListTodo className="size-4 mr-1" />
 					Standard Tasks
+				</Button>
+				<Button variant="outline" onClick={() => setIsPayConfigOpen(true)}>
+					<PoundSterling className="size-4 mr-1" />
+					Pay Rates
 				</Button>
 			</header>
 			<Card className="mb-4 py-1">
@@ -160,6 +166,7 @@ export function AdminCleaningsPage() {
 			/>
 
 			<StandardTasksDialog open={isStandardTasksOpen} onOpenChange={setIsStandardTasksOpen} />
+			<CleanerPayConfigDialog open={isPayConfigOpen} onOpenChange={setIsPayConfigOpen} />
 		</main>
 	);
 }

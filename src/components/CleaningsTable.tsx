@@ -19,6 +19,7 @@ export interface CleaningData {
 	status: CleaningStatus;
 	scheduled_start: string;
 	service_cost: number;
+	cleaner_pay: number | null | undefined;
 	cleaner_id: string | null | undefined;
 	cleaner_name: string | null | undefined;
 	host_id: string;
@@ -34,6 +35,8 @@ export interface CleaningsTableProps {
 	data: CleaningData[];
 	excludeHost?: boolean;
 	excludeCleaner?: boolean;
+	hideHostCost?: boolean;
+	hideCleanerPay?: boolean;
 	emptyMessage?: string;
 	onRefresh?: () => void;
 	onView?: (id: string) => void;
@@ -51,6 +54,8 @@ export function CleaningsTable({
 	data,
 	excludeHost,
 	excludeCleaner,
+	hideHostCost,
+	hideCleanerPay,
 	emptyMessage = 'No cleaning requests found',
 	onRefresh,
 	onView,
@@ -196,72 +201,89 @@ export function CleaningsTable({
 			});
 		}
 
-		cols.push(
-			{
-				key: 'status',
-				label: 'Status',
-				sortable: true,
-				render: (item) => <EntityBadge variant={{ type: 'cleaning', value: item.status }} />,
-			},
-			{
+		cols.push({
+			key: 'status',
+			label: 'Status',
+			sortable: true,
+			render: (item) => <EntityBadge variant={{ type: 'cleaning', value: item.status }} />,
+		});
+
+		if (!hideHostCost) {
+			cols.push({
 				key: 'service_cost',
-				label: 'Cost',
+				label: 'Host Cost',
 				sortable: true,
 				render: (item) => <span className="font-medium">£{item.service_cost}</span>,
-			},
-			{
-				key: 'actions',
-				label: 'Actions',
-				sortable: false,
-				render: (item) => (
-					<div className="flex items-center justify-end gap-1">
+			});
+		}
+
+		if (!hideCleanerPay) {
+			cols.push({
+				key: 'cleaner_pay',
+				label: 'Cleaner Pay',
+				sortable: true,
+				render: (item) => <span className="font-medium">£{item.cleaner_pay ?? '0.00'}</span>,
+			});
+		}
+
+		cols.push({
+			key: 'actions',
+			label: 'Actions',
+			sortable: false,
+			render: (item) => (
+				<div className="flex items-center justify-end gap-1">
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button variant="secondary" size="icon-sm" onClick={() => onView?.(item.id)}>
+								<Eye className="size-4" />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>
+							<p>{DICT.COMMON.ACTIONS.VIEW_DETAILS}</p>
+						</TooltipContent>
+					</Tooltip>
+					{!item.cleaner_name && (
 						<Tooltip>
 							<TooltipTrigger asChild>
-								<Button variant="secondary" size="icon-sm" onClick={() => onView?.(item.id)}>
-									<Eye className="size-4" />
+								<Button variant="secondary" size="icon-sm" onClick={() => openAssignModal(item.id)}>
+									<UserPlus className="size-4" />
 								</Button>
 							</TooltipTrigger>
 							<TooltipContent>
-								<p>{DICT.COMMON.ACTIONS.VIEW_DETAILS}</p>
+								<p>{DICT.COMMON.ACTIONS.ASSIGN_CLEANER}</p>
 							</TooltipContent>
 						</Tooltip>
-						{!item.cleaner_name && (
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<Button
-										variant="secondary"
-										size="icon-sm"
-										onClick={() => openAssignModal(item.id)}>
-										<UserPlus className="size-4" />
-									</Button>
-								</TooltipTrigger>
-								<TooltipContent>
-									<p>{DICT.COMMON.ACTIONS.ASSIGN_CLEANER}</p>
-								</TooltipContent>
-							</Tooltip>
-						)}
-						{item.cleaner_name && !isDisabled(item) && (
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<Button
-										variant="secondary"
-										size="icon-sm"
-										onClick={() => handleReassignCleaner(item.id, item.cleaner_id)}>
-										<ArrowUpDown className="size-4" />
-									</Button>
-								</TooltipTrigger>
-								<TooltipContent>
-									<p>{DICT.COMMON.ACTIONS.REASSIGN}</p>
-								</TooltipContent>
-							</Tooltip>
-						)}
-					</div>
-				),
-			},
-		);
+					)}
+					{item.cleaner_name && !isDisabled(item) && (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									variant="secondary"
+									size="icon-sm"
+									onClick={() => handleReassignCleaner(item.id, item.cleaner_id)}>
+									<ArrowUpDown className="size-4" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p>{DICT.COMMON.ACTIONS.REASSIGN}</p>
+							</TooltipContent>
+						</Tooltip>
+					)}
+				</div>
+			),
+		});
 
 		return cols;
-	}, [excludeHost, excludeCleaner, openAssignModal, handleReassignCleaner, onView, isDisabled]);
+	}, [
+		excludeHost,
+		excludeCleaner,
+		openAssignModal,
+		handleReassignCleaner,
+		onView,
+		isDisabled,
+		hideCleanerPay,
+		hideHostCost,
+	]);
 
 	const renderMobileHeader = useCallback(
 		(cleaning: CleaningData) => (

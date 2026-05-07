@@ -177,13 +177,14 @@ BEGIN
             ) AS props
         ),
         (
-            SELECT jsonb_agg(row ORDER BY created_at DESC)
+            SELECT jsonb_agg(row)
             FROM (
                 SELECT
                     c.id,
                     c.status,
                     c.scheduled_start,
                     c.service_cost,
+                    c.cleaner_pay,
                     c.cleaner_id,
                     c.property_id,
                     c.created_at,
@@ -253,13 +254,14 @@ BEGIN
             ELSE 'More than a year ago'
         END AS last_sign_in_text,
         (
-            SELECT jsonb_agg(row ORDER BY scheduled_start DESC)
+            SELECT jsonb_agg(row)
             FROM (
                 SELECT 
                     c.id,
                     c.status,
                     c.scheduled_start,
                     c.service_cost,
+                    c.cleaner_pay,
                     c.host_id,
                     c.property_id,
                     c.clock_in_time,
@@ -316,6 +318,7 @@ OR REPLACE FUNCTION public.admin_get_all_cleanings (
     status TEXT,
     scheduled_start TIMESTAMP WITH TIME ZONE,
     service_cost NUMERIC,
+    cleaner_pay NUMERIC,
     instructions TEXT,
     stocks_included BOOLEAN,
     clock_in_time TIMESTAMP WITH TIME ZONE,
@@ -335,7 +338,7 @@ BEGIN
     RETURN QUERY
     SELECT 
         c.id, c.host_id, c.property_id, c.cleaner_id, c.status::TEXT,
-        c.scheduled_start, c.service_cost, c.instructions, c.stocks_included,
+        c.scheduled_start, c.service_cost, c.cleaner_pay, c.instructions, c.stocks_included,
         c.clock_in_time, c.clock_out_time, c.created_at, c.updated_at, c.deleted_at,
         hp.full_name, cp.full_name, pr.address_line_1, pr.postcode, pr.town_city
     FROM public.cleanings c
@@ -392,7 +395,10 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = p_cleaner_id AND role = 'cleaner') THEN
         RAISE EXCEPTION 'Invalid cleaner ID';
     END IF;
-    UPDATE public.cleanings SET cleaner_id = p_cleaner_id, updated_at = now() WHERE id = p_cleaning_id;
+
+    UPDATE public.cleanings 
+    SET cleaner_id = p_cleaner_id, updated_at = now() 
+    WHERE id = p_cleaning_id;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -711,7 +717,44 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-GRANT
-EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.set_cleaner_pay_on_cleaning_insert()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_property_type TEXT;
+    v_bedrooms INT;
+    v_hourly_rate NUMERIC;
+    v_target_times JSONB;
+    v_target_hours NUMERIC;
+BEGIN
+    SELECT p.type, p.bedrooms INTO v_property_type, v_bedrooms
+    FROM public.properties p WHERE p.id = NEW.property_id;
+
+    SELECT c.hourly_rate, c.target_times INTO v_hourly_rate, v_target_times
+    FROM cleaner_pay_config c WHERE c.id = 1;
+
+    IF v_property_type = 'studio' THEN
+        v_target_hours := (v_target_times->>'studio')::NUMERIC;
+    ELSE
+        v_target_hours := (v_target_times->>CONCAT(v_bedrooms, '_bed'))::NUMERIC;
+        IF v_target_hours IS NULL THEN
+            SELECT (v_target_times->>key)::NUMERIC INTO v_target_hours
+            FROM jsonb_object_keys(v_target_times) AS key
+            WHERE key ~ '^[0-9]+_bed$'
+            ORDER BY LENGTH(key) DESC, key DESC
+            LIMIT 1;
+        END IF;
+    END IF;
+
+    NEW.cleaner_pay := v_hourly_rate * COALESCE(v_target_hours, 0);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_set_cleaner_pay_on_cleaning_insert
+    BEFORE INSERT ON public.cleanings
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_cleaner_pay_on_cleaning_insert();
 
 COMMIT;
