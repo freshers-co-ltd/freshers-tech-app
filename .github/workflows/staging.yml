@@ -9,6 +9,9 @@ jobs:
   deploy-and-audit:
     runs-on: ubuntu-latest
     environment: Staging
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Wait for CI Validation
         uses: lewagon/wait-on-check-action@v1.3.4
@@ -58,6 +61,7 @@ jobs:
       
       - name: Post Preview URL to PR
         if: github.event_name == 'pull_request'
+        continue-on-error: true
         uses: mshick/add-pr-comment@v3
         with:
           message-id: vercel-deploy-status 

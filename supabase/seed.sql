@@ -882,32 +882,32 @@ VALUES
 
 -- 4. PUBLIC PROFILES
 INSERT INTO
-    public.profiles (id, email, ROLE, full_name, is_verified)
+    public.profiles (id, email, ROLE, full_name, is_verified, base_price_per_cleaning)
 VALUES
-    ('00000000-0000-0000-0000-000000000001', 'admin@test.com', 'admin', 'Steve Admin', TRUE),
-    ('00000000-0000-0000-0000-000000000002', 'host@test.com', 'host', 'John Host', TRUE),
-    ('00000000-0000-0000-0000-000000000003', 'cleaner@test.com', 'cleaner', 'Mark Cleaner', TRUE),
-    ('00000000-0000-0000-0000-000000000004', 'sarah@test.com', 'host', 'Sarah Smith', TRUE),
-    ('00000000-0000-0000-0000-000000000005', 'emily@test.com', 'cleaner', 'Emily Johnson', TRUE),
-    ('00000000-0000-0000-0000-000000000006', 'david@test.com', 'host', 'David Brown', TRUE),
-    ('00000000-0000-0000-0000-000000000007', 'lisa@test.com', 'cleaner', 'Lisa Williams', TRUE),
-    ('00000000-0000-0000-0000-000000000008', 'james@test.com', 'host', 'James Wilson', TRUE),
-    ('00000000-0000-0000-0000-000000000009', 'jessica@test.com', 'cleaner', 'Jessica Taylor', TRUE),
-    ('00000000-0000-0000-0000-000000000010', 'michael@test.com', 'host', 'Michael Davis', TRUE),
-    ('00000000-0000-0000-0000-000000000011', 'amanda@test.com', 'cleaner', 'Amanda Martinez', TRUE),
-    ('00000000-0000-0000-0000-000000000012', 'robert@test.com', 'host', 'Robert Anderson', TRUE),
-    ('00000000-0000-0000-0000-000000000013', 'rachel@test.com', 'cleaner', 'Rachel White', TRUE),
-    ('00000000-0000-0000-0000-000000000014', 'chris@test.com', 'host', 'Chris Thompson', TRUE),
-    ('00000000-0000-0000-0000-000000000015', 'sophie@test.com', 'cleaner', 'Sophie Garcia', TRUE),
-    ('00000000-0000-0000-0000-000000000016', 'daniel@test.com', 'host', 'Daniel Lee', TRUE),
-    ('00000000-0000-0000-0000-000000000017', 'natalie@test.com', 'cleaner', 'Natalie Clark', TRUE),
-    ('00000000-0000-0000-0000-000000000018', 'paul@test.com', 'host', 'Paul Harris', TRUE),
-    ('00000000-0000-0000-0000-000000000019', 'ashley@test.com', 'cleaner', 'Ashley Robinson', TRUE),
-    ('00000000-0000-0000-0000-000000000020', 'kevin@test.com', 'host', 'Kevin Lewis', TRUE),
-    ('00000000-0000-0000-0000-000000000021', 'bruce@test.com', 'admin', 'Bruce Green', TRUE),
-    ('00000000-0000-0000-0000-000000000022', 'linda@test.com', 'admin', 'Linda Smith', TRUE),
-    ('00000000-0000-0000-0000-000000000023', 'marta@test.com', 'admin', 'Marta Hansen', TRUE),
-    ('00000000-0000-0000-0000-000000000024', 'joe@test.com', 'admin', 'Joe Stu', TRUE);
+    ('00000000-0000-0000-0000-000000000001', 'admin@test.com', 'admin', 'Steve Admin', TRUE, NULL),
+    ('00000000-0000-0000-0000-000000000002', 'host@test.com', 'host', 'John Host', TRUE, 70.00),
+    ('00000000-0000-0000-0000-000000000003', 'cleaner@test.com', 'cleaner', 'Mark Cleaner', TRUE, NULL),
+    ('00000000-0000-0000-0000-000000000004', 'sarah@test.com', 'host', 'Sarah Smith', TRUE, 90.00),
+    ('00000000-0000-0000-0000-000000000005', 'emily@test.com', 'cleaner', 'Emily Johnson', TRUE, NULL),
+    ('00000000-0000-0000-0000-000000000006', 'david@test.com', 'host', 'David Brown', TRUE, 85.00),
+    ('00000000-0000-0000-0000-000000000007', 'lisa@test.com', 'cleaner', 'Lisa Williams', TRUE, NULL),
+    ('00000000-0000-0000-0000-000000000008', 'james@test.com', 'host', 'James Wilson', TRUE, 75.00),
+    ('00000000-0000-0000-0000-000000000009', 'jessica@test.com', 'cleaner', 'Jessica Taylor', TRUE, NULL),
+    ('00000000-0000-0000-0000-000000000010', 'michael@test.com', 'host', 'Michael Davis', TRUE, 100.00),
+    ('00000000-0000-0000-0000-000000000011', 'amanda@test.com', 'cleaner', 'Amanda Martinez', TRUE, NULL),
+    ('00000000-0000-0000-0000-000000000012', 'robert@test.com', 'host', 'Robert Anderson', TRUE, 95.00),
+    ('00000000-0000-0000-0000-000000000013', 'rachel@test.com', 'cleaner', 'Rachel White', TRUE, NULL),
+    ('00000000-0000-0000-0000-000000000014', 'chris@test.com', 'host', 'Chris Thompson', TRUE, 70.00),
+    ('00000000-0000-0000-0000-000000000015', 'sophie@test.com', 'cleaner', 'Sophie Garcia', TRUE, NULL),
+    ('00000000-0000-0000-0000-000000000016', 'daniel@test.com', 'host', 'Daniel Lee', TRUE, 80.00),
+    ('00000000-0000-0000-0000-000000000017', 'natalie@test.com', 'cleaner', 'Natalie Clark', TRUE, NULL),
+    ('00000000-0000-0000-0000-000000000018', 'paul@test.com', 'host', 'Paul Harris', TRUE, 75.00),
+    ('00000000-0000-0000-0000-000000000019', 'ashley@test.com', 'cleaner', 'Ashley Robinson', TRUE, NULL),
+    ('00000000-0000-0000-0000-000000000020', 'kevin@test.com', 'host', 'Kevin Lewis', TRUE, 85.00),
+    ('00000000-0000-0000-0000-000000000021', 'bruce@test.com', 'admin', 'Bruce Green', TRUE, NULL),
+    ('00000000-0000-0000-0000-000000000022', 'linda@test.com', 'admin', 'Linda Smith', TRUE, NULL),
+    ('00000000-0000-0000-0000-000000000023', 'marta@test.com', 'admin', 'Marta Hansen', TRUE, NULL),
+    ('00000000-0000-0000-0000-000000000024', 'joe@test.com', 'admin', 'Joe Stu', TRUE, NULL);
 
 SET
     session_replication_role = 'origin';
@@ -1241,7 +1241,6 @@ INSERT INTO
         cleaner_id,
         status,
         scheduled_start,
-        service_cost,
         instructions,
         clock_in_time,
         clock_out_time
@@ -1255,7 +1254,6 @@ VALUES
         '00000000-0000-0000-0000-000000000003',
         'completed',
         NOW() - INTERVAL '165 days',
-        45.00,
         'Standard clean before move-in.',
         NOW() - INTERVAL '165 days' + INTERVAL '10 hours',
         NOW() - INTERVAL '165 days' + INTERVAL '12 hours'
@@ -1267,7 +1265,6 @@ VALUES
         '00000000-0000-0000-0000-000000000005',
         'completed',
         NOW() - INTERVAL '160 days',
-        40.00,
         'Please focus on kitchen.',
         NOW() - INTERVAL '160 days' + INTERVAL '9 hours',
         NOW() - INTERVAL '160 days' + INTERVAL '11 hours'
@@ -1279,7 +1276,6 @@ VALUES
         '00000000-0000-0000-0000-000000000003',
         'completed',
         NOW() - INTERVAL '155 days',
-        60.00,
         'Check-out clean needed.',
         NOW() - INTERVAL '155 days' + INTERVAL '8 hours',
         NOW() - INTERVAL '155 days' + INTERVAL '11 hours'
@@ -1291,7 +1287,6 @@ VALUES
         '00000000-0000-0000-0000-000000000007',
         'completed',
         NOW() - INTERVAL '150 days',
-        35.00,
         'Quick turn-around clean.',
         NOW() - INTERVAL '150 days' + INTERVAL '14 hours',
         NOW() - INTERVAL '150 days' + INTERVAL '16 hours'
@@ -1304,7 +1299,6 @@ VALUES
         '00000000-0000-0000-0000-000000000009',
         'completed',
         NOW() - INTERVAL '120 days',
-        55.00,
         'Deep clean required before event.',
         NOW() - INTERVAL '120 days' + INTERVAL '9 hours',
         NOW() - INTERVAL '120 days' + INTERVAL '13 hours'
@@ -1316,7 +1310,6 @@ VALUES
         '00000000-0000-0000-0000-000000000005',
         'completed',
         NOW() - INTERVAL '110 days',
-        50.00,
         'Regular weekly clean.',
         NOW() - INTERVAL '110 days' + INTERVAL '10 hours',
         NOW() - INTERVAL '110 days' + INTERVAL '12 hours'
@@ -1328,7 +1321,6 @@ VALUES
         '00000000-0000-0000-0000-000000000011',
         'completed',
         NOW() - INTERVAL '100 days',
-        40.00,
         'Studio apartment, quick clean.',
         NOW() - INTERVAL '100 days' + INTERVAL '11 hours',
         NOW() - INTERVAL '100 days' + INTERVAL '13 hours'
@@ -1340,7 +1332,6 @@ VALUES
         '00000000-0000-0000-0000-000000000007',
         'completed',
         NOW() - INTERVAL '95 days',
-        45.00,
         'Balcony needs attention too.',
         NOW() - INTERVAL '95 days' + INTERVAL '9 hours',
         NOW() - INTERVAL '95 days' + INTERVAL '12 hours'
@@ -1352,7 +1343,6 @@ VALUES
         '00000000-0000-0000-0000-000000000013',
         'completed',
         NOW() - INTERVAL '90 days',
-        35.00,
         'Small flat, regular clean.',
         NOW() - INTERVAL '90 days' + INTERVAL '10 hours',
         NOW() - INTERVAL '90 days' + INTERVAL '12 hours'
@@ -1364,7 +1354,6 @@ VALUES
         '00000000-0000-0000-0000-000000000015',
         'completed',
         NOW() - INTERVAL '105 days',
-        30.00,
         'Studio clean.',
         NOW() - INTERVAL '105 days' + INTERVAL '14 hours',
         NOW() - INTERVAL '105 days' + INTERVAL '16 hours'
@@ -1377,7 +1366,6 @@ VALUES
         '00000000-0000-0000-0000-000000000019',
         'completed',
         NOW() - INTERVAL '85 days',
-        45.00,
         'Pre-tenancy clean.',
         NOW() - INTERVAL '85 days' + INTERVAL '9 hours',
         NOW() - INTERVAL '85 days' + INTERVAL '12 hours'
@@ -1389,7 +1377,6 @@ VALUES
         '00000000-0000-0000-0000-000000000011',
         'completed',
         NOW() - INTERVAL '80 days',
-        40.00,
         'Sea view apartment.',
         NOW() - INTERVAL '80 days' + INTERVAL '10 hours',
         NOW() - INTERVAL '80 days' + INTERVAL '12 hours'
@@ -1402,7 +1389,6 @@ VALUES
         '00000000-0000-0000-0000-000000000003',
         'completed',
         NOW() - INTERVAL '28 days',
-        45.00,
         'Monthly deep clean.',
         NOW() - INTERVAL '28 days' + INTERVAL '9 hours',
         NOW() - INTERVAL '28 days' + INTERVAL '13 hours'
@@ -1414,7 +1400,6 @@ VALUES
         '00000000-0000-0000-0000-000000000005',
         'completed',
         NOW() - INTERVAL '25 days',
-        40.00,
         'Post-guest clean.',
         NOW() - INTERVAL '25 days' + INTERVAL '11 hours',
         NOW() - INTERVAL '25 days' + INTERVAL '14 hours'
@@ -1426,7 +1411,6 @@ VALUES
         '00000000-0000-0000-0000-000000000007',
         'completed',
         NOW() - INTERVAL '22 days',
-        35.00,
         'Seaside cottage refresh.',
         NOW() - INTERVAL '22 days' + INTERVAL '10 hours',
         NOW() - INTERVAL '22 days' + INTERVAL '12 hours'
@@ -1438,7 +1422,6 @@ VALUES
         '00000000-0000-0000-0000-000000000009',
         'completed',
         NOW() - INTERVAL '18 days',
-        70.00,
         'Large house deep clean.',
         NOW() - INTERVAL '18 days' + INTERVAL '8 hours',
         NOW() - INTERVAL '18 days' + INTERVAL '14 hours'
@@ -1450,7 +1433,6 @@ VALUES
         '00000000-0000-0000-0000-000000000011',
         'completed',
         NOW() - INTERVAL '15 days',
-        55.00,
         'Beach house clean before guests.',
         NOW() - INTERVAL '15 days' + INTERVAL '9 hours',
         NOW() - INTERVAL '15 days' + INTERVAL '12 hours'
@@ -1462,7 +1444,6 @@ VALUES
         '00000000-0000-0000-0000-000000000013',
         'completed',
         NOW() - INTERVAL '12 days',
-        50.00,
         'Weekly clean.',
         NOW() - INTERVAL '12 days' + INTERVAL '10 hours',
         NOW() - INTERVAL '12 days' + INTERVAL '13 hours'
@@ -1474,7 +1455,6 @@ VALUES
         '00000000-0000-0000-0000-000000000015',
         'completed',
         NOW() - INTERVAL '10 days',
-        75.00,
         'Month-end deep clean.',
         NOW() - INTERVAL '10 days' + INTERVAL '8 hours',
         NOW() - INTERVAL '10 days' + INTERVAL '13 hours'
@@ -1486,7 +1466,6 @@ VALUES
         '00000000-0000-0000-0000-000000000019',
         'completed',
         NOW() - INTERVAL '8 days',
-        55.00,
         'Standard weekly service.',
         NOW() - INTERVAL '8 days' + INTERVAL '10 hours',
         NOW() - INTERVAL '8 days' + INTERVAL '13 hours'
@@ -1498,7 +1477,6 @@ VALUES
         '00000000-0000-0000-0000-000000000011',
         'completed',
         NOW() - INTERVAL '5 days',
-        50.00,
         'Coastal way regular clean.',
         NOW() - INTERVAL '5 days' + INTERVAL '11 hours',
         NOW() - INTERVAL '5 days' + INTERVAL '14 hours'
@@ -1510,7 +1488,6 @@ VALUES
         '00000000-0000-0000-0000-000000000013',
         'completed',
         NOW() - INTERVAL '3 days',
-        60.00,
         'Meadow drive clean.',
         NOW() - INTERVAL '3 days' + INTERVAL '9 hours',
         NOW() - INTERVAL '3 days' + INTERVAL '12 hours'
@@ -1523,7 +1500,6 @@ VALUES
         '00000000-0000-0000-0000-000000000003',
         'completed',
         NOW() - INTERVAL '1 day',
-        60.00,
         'Check-out clean for new tenant.',
         NOW() - INTERVAL '1 day' + INTERVAL '9 hours',
         NOW() - INTERVAL '1 day' + INTERVAL '12 hours'
@@ -1535,7 +1511,6 @@ VALUES
         '00000000-0000-0000-0000-000000000005',
         'completed',
         NOW() - INTERVAL '2 days',
-        55.00,
         'Monthly service clean.',
         NOW() - INTERVAL '2 days' + INTERVAL '10 hours',
         NOW() - INTERVAL '2 days' + INTERVAL '13 hours'
@@ -1547,7 +1522,6 @@ VALUES
         '00000000-0000-0000-0000-000000000007',
         'completed',
         NOW() - INTERVAL '12 hours',
-        35.00,
         'Regular fortnightly clean.',
         NOW() - INTERVAL '12 hours' + INTERVAL '14 hours',
         NOW() - INTERVAL '12 hours' + INTERVAL '16 hours'
@@ -1560,7 +1534,6 @@ VALUES
         '00000000-0000-0000-0000-000000000009',
         'in_progress',
         NOW() - INTERVAL '2 hours',
-        50.00,
         'Marina view weekly clean.',
         NOW() - INTERVAL '2 hours',
         NULL
@@ -1572,7 +1545,6 @@ VALUES
         '00000000-0000-0000-0000-000000000011',
         'in_progress',
         NOW() - INTERVAL '1 hour',
-        40.00,
         'Central flat in progress.',
         NOW() - INTERVAL '1 hour',
         NULL
@@ -1585,7 +1557,6 @@ VALUES
         '00000000-0000-0000-0000-000000000013',
         'confirmed',
         NOW() + INTERVAL '1 day',
-        45.00,
         'Tomorrow confirmed.',
         NULL,
         NULL
@@ -1597,7 +1568,6 @@ VALUES
         '00000000-0000-0000-0000-000000000015',
         'confirmed',
         NOW() + INTERVAL '2 days',
-        35.00,
         'West end flat future.',
         NULL,
         NULL
@@ -1609,7 +1579,6 @@ VALUES
         '00000000-0000-0000-0000-000000000019',
         'confirmed',
         NOW() + INTERVAL '3 days',
-        30.00,
         'Studio scheduled.',
         NULL,
         NULL
@@ -1622,7 +1591,6 @@ VALUES
         NULL,
         'requested',
         NOW() + INTERVAL '4 days',
-        45.00,
         'Looking for cleaner.',
         NULL,
         NULL
@@ -1634,7 +1602,6 @@ VALUES
         NULL,
         'requested',
         NOW() + INTERVAL '5 days',
-        40.00,
         'Seaview tower needed.',
         NULL,
         NULL
@@ -1646,7 +1613,6 @@ VALUES
         NULL,
         'requested',
         NOW() + INTERVAL '6 days',
-        45.00,
         'Key under blue pot.',
         NULL,
         NULL
@@ -1658,7 +1624,6 @@ VALUES
         NULL,
         'requested',
         NOW() + INTERVAL '7 days',
-        40.00,
         'Need cleaner assignment.',
         NULL,
         NULL
@@ -1670,7 +1635,6 @@ VALUES
         NULL,
         'requested',
         NOW() + INTERVAL '8 days',
-        35.00,
         'Beach cottage next week.',
         NULL,
         NULL
@@ -1682,7 +1646,6 @@ VALUES
         NULL,
         'requested',
         NOW() + INTERVAL '9 days',
-        70.00,
         'Large house clean.',
         NULL,
         NULL
@@ -1695,7 +1658,6 @@ VALUES
         '00000000-0000-0000-0000-000000000011',
         'cancelled',
         NOW() - INTERVAL '60 days',
-        55.00,
         'Was booked but cancelled.',
         NULL,
         NULL
@@ -1707,7 +1669,6 @@ VALUES
         '00000000-0000-0000-0000-000000000013',
         'cancelled',
         NOW() - INTERVAL '100 days',
-        50.00,
         'Guests cancelled.',
         NULL,
         NULL
@@ -1719,7 +1680,6 @@ VALUES
         '00000000-0000-0000-0000-000000000015',
         'cancelled',
         NOW() - INTERVAL '130 days',
-        35.00,
         'Booking cancelled by host.',
         NULL,
         NULL
@@ -1732,7 +1692,6 @@ VALUES
         '00000000-0000-0000-0000-000000000019',
         'confirmed',
         NOW() + INTERVAL '10 days',
-        50.00,
         'Coastal way confirmed.',
         NULL,
         NULL
@@ -1744,7 +1703,6 @@ VALUES
         '00000000-0000-0000-0000-000000000011',
         'confirmed',
         NOW() + INTERVAL '11 days',
-        60.00,
         'Meadow drive booked.',
         NULL,
         NULL
@@ -1756,7 +1714,6 @@ VALUES
         '00000000-0000-0000-0000-000000000003',
         'confirmed',
         NOW() + INTERVAL '12 days',
-        60.00,
         'Ocean view confirmed.',
         NULL,
         NULL
@@ -1768,7 +1725,6 @@ VALUES
         '00000000-0000-0000-0000-000000000005',
         'confirmed',
         NOW() + INTERVAL '13 days',
-        55.00,
         'Garden lane confirmed.',
         NULL,
         NULL
@@ -1780,7 +1736,6 @@ VALUES
         '00000000-0000-0000-0000-000000000007',
         'confirmed',
         NOW() + INTERVAL '14 days',
-        35.00,
         'High street scheduled.',
         NULL,
         NULL
@@ -1793,7 +1748,6 @@ VALUES
         NULL,
         'requested',
         NOW() + INTERVAL '2 days',
-        45.00,
         'Key is under the blue pot.',
         NULL,
         NULL
@@ -1805,7 +1759,6 @@ VALUES
         '00000000-0000-0000-0000-000000000003',
         'confirmed',
         NOW() + INTERVAL '1 day',
-        30.00,
         'Please focus on the balcony.',
         NULL,
         NULL
@@ -1817,7 +1770,6 @@ VALUES
         '00000000-0000-0000-0000-000000000003',
         'in_progress',
         NOW() - INTERVAL '1 hour',
-        45.00,
         'Standard clean plus oven.',
         NOW() - INTERVAL '45 minutes',
         NULL
@@ -1829,7 +1781,6 @@ VALUES
         '00000000-0000-0000-0000-000000000003',
         'completed',
         NOW() - INTERVAL '1 day',
-        60.00,
         'Check-out clean.',
         NOW() - INTERVAL '26 hours',
         NOW() - INTERVAL '23 hours'

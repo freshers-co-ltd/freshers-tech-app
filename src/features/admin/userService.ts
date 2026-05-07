@@ -18,14 +18,12 @@ export type AdminUser = {
 	last_sign_in_at: string | null;
 	last_seen_at: string | null;
 	is_online: boolean;
-	last_sign_in_text: string | null;
-	total_properties: number;
-	total_cleanings: number;
-	completed_cleanings: number;
-	active_bookings: number;
+	base_price_per_cleaning: number | null;
+	last_sign_in_text?: string | null;
 };
 
 export interface AdminHostDetail extends AdminUser {
+	base_price_per_cleaning: number | null;
 	properties: Property[];
 	cleanings: {
 		id: string;
@@ -148,6 +146,19 @@ export const userService = {
 		}
 
 		return { data: data[0] as unknown as AdminHostDetail, error: null };
+	},
+
+	async updateHostBasePrice(hostId: string, basePrice: number): Promise<ActionResult<void>> {
+		const { error } = await supabase.rpc('admin_update_host_base_price', {
+			p_host_id: hostId,
+			p_base_price: basePrice,
+		});
+
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+
+		return { data: undefined, error: null };
 	},
 
 	async getCleanerDetail(cleanerId: string): Promise<ActionResult<AdminCleanerDetail>> {

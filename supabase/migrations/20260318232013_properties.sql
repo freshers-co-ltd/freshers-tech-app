@@ -180,3 +180,7 @@ $$ LANGUAGE plpgsql;
 
 GRANT
 EXECUTE ON FUNCTION public.soft_delete_property TO authenticated;
+
+ALTER TABLE public.profiles ADD COLUMN base_price_per_cleaning NUMERIC;
+
+COMMIT;

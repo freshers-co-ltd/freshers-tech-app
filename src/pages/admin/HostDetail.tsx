@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import { FormContainer } from '@/components/ui/form-container';
 import { DICT } from '@/dictionary';
+import { HostBasePriceDialog } from '@/features/admin/components/HostBasePriceDialog';
 import { type AdminHostDetail, userService } from '@/features/admin/userService';
 import { cleaningService } from '@/features/cleanings/cleaningService';
 import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
@@ -40,6 +41,7 @@ export function AdminHostDetailPage() {
 	const [host, setHost] = useState<AdminHostDetail | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+	const [isBasePriceDialogOpen, setIsBasePriceDialogOpen] = useState(false);
 	const [propertiesSortField, setPropertiesSortField] = useState<string>('address_line_1');
 	const [propertiesSortDirection, setPropertiesSortDirection] = useState<'asc' | 'desc'>('desc');
 
@@ -129,7 +131,6 @@ export function AdminHostDetailPage() {
 	const handleCreateCleaning = async (values: CleaningFormValues) => {
 		const result = await cleaningService.createCleaningRequest({
 			property_id: values.property_id,
-			service_cost: 0,
 			custom_tasks: values.custom_tasks?.map((t) => t.description) || [],
 			instructions: values.instructions || '',
 			scheduled_start: values.scheduled_start.toISOString(),
@@ -210,6 +211,7 @@ export function AdminHostDetailPage() {
 			onResetPassword={handleResetPassword}
 			onBan={handleBan}
 			onUnban={handleUnban}
+			onEditBasePrice={() => setIsBasePriceDialogOpen(true)}
 			stats={statsConfig}
 			sections={[
 				{
@@ -289,6 +291,14 @@ export function AdminHostDetailPage() {
 					) : null}
 				</DialogContent>
 			</Dialog>
+
+			<HostBasePriceDialog
+				open={isBasePriceDialogOpen}
+				onOpenChange={setIsBasePriceDialogOpen}
+				hostId={id || ''}
+				currentPrice={host?.base_price_per_cleaning ?? null}
+				onSuccess={fetchHostDetail}
+			/>
 		</UserDetailLayout>
 	);
 }

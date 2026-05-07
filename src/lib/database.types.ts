@@ -41,18 +41,21 @@ export type Database = {
 			};
 			cleaner_pay_config: {
 				Row: {
+					host_multipliers: Json;
 					hourly_rate: number;
 					id: number;
 					target_times: Json;
 					updated_at: string | null;
 				};
 				Insert: {
+					host_multipliers?: Json;
 					hourly_rate?: number;
 					id?: number;
 					target_times?: Json;
 					updated_at?: string | null;
 				};
 				Update: {
+					host_multipliers?: Json;
 					hourly_rate?: number;
 					id?: number;
 					target_times?: Json;
@@ -352,6 +355,7 @@ export type Database = {
 			profiles: {
 				Row: {
 					avatar_url: string | null;
+					base_price_per_cleaning: number | null;
 					email: string | null;
 					full_name: string | null;
 					id: string;
@@ -362,6 +366,7 @@ export type Database = {
 				};
 				Insert: {
 					avatar_url?: string | null;
+					base_price_per_cleaning?: number | null;
 					email?: string | null;
 					full_name?: string | null;
 					id: string;
@@ -372,6 +377,7 @@ export type Database = {
 				};
 				Update: {
 					avatar_url?: string | null;
+					base_price_per_cleaning?: number | null;
 					email?: string | null;
 					full_name?: string | null;
 					id?: string;
@@ -525,7 +531,6 @@ export type Database = {
 					p_instructions?: string;
 					p_property_id: string;
 					p_scheduled_start: string;
-					p_service_cost: number;
 					p_stocks_included?: boolean;
 				};
 				Returns: string;
@@ -551,6 +556,7 @@ export type Database = {
 				Returns: {
 					cleaner_id: string;
 					cleaner_name: string;
+					cleaner_pay: number;
 					clock_in_time: string;
 					clock_out_time: string;
 					created_at: string;
@@ -650,6 +656,7 @@ export type Database = {
 				Returns: {
 					avatar_url: string;
 					banned_until: string;
+					base_price_per_cleaning: number;
 					cleaning_stats: Json;
 					cleanings: Json;
 					created_at: string;
@@ -792,6 +799,10 @@ export type Database = {
 				Args: { p_cleaning_id: string };
 				Returns: undefined;
 			};
+			admin_update_host_base_price: {
+				Args: { p_base_price: number; p_host_id: string };
+				Returns: undefined;
+			};
 			admin_update_standard_tasks: {
 				Args: { p_tasks: Json; p_tasks_to_delete: string[] };
 				Returns: undefined;
@@ -802,7 +813,6 @@ export type Database = {
 					p_instructions: string;
 					p_property_id: string;
 					p_scheduled_start: string;
-					p_service_cost: number;
 					p_stocks_included?: boolean;
 				};
 				Returns: string;
@@ -821,6 +831,7 @@ export type Database = {
 			get_cleaner_pay_config: {
 				Args: never;
 				Returns: {
+					host_multipliers: Json;
 					hourly_rate: number;
 					target_times: Json;
 					updated_at: string;
@@ -856,7 +867,11 @@ export type Database = {
 				Returns: undefined;
 			};
 			update_cleaner_pay_config: {
-				Args: { p_hourly_rate: number; p_target_times: Json };
+				Args: {
+					p_host_multipliers: Json;
+					p_hourly_rate: number;
+					p_target_times: Json;
+				};
 				Returns: undefined;
 			};
 			update_cleaning_request: {

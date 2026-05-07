@@ -1,6 +1,6 @@
 'use client';
 
-import { ListTodo, PoundSterling, Search } from 'lucide-react';
+import { ListTodo, PoundSterling, Search, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { CleaningsTable } from '@/components/CleaningsTable';
 import { CleaningViewDialog } from '@/components/CleaningViewDialog';
@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select';
 import { DICT } from '@/dictionary';
 import { CleanerPayConfigDialog } from '@/features/admin/components/CleanerPayConfigDialog';
+import { HostPricingConfigDialog } from '@/features/admin/components/HostPricingConfigDialog';
 import { StandardTasksDialog } from '@/features/admin/components/StandardTasksDialog';
 import { useAdminCleanings } from '@/features/admin/useAdminCleanings';
 import { useResourceModals } from '@/hooks/useResourceModals';
@@ -43,6 +44,7 @@ export function AdminCleaningsPage() {
 	const modal = useResourceModals({ resourceName: 'cleaning' });
 	const [isStandardTasksOpen, setIsStandardTasksOpen] = useState(false);
 	const [isPayConfigOpen, setIsPayConfigOpen] = useState(false);
+	const [isHostPricingOpen, setIsHostPricingOpen] = useState(false);
 
 	const dict = DICT.ADMIN.CLEANINGS;
 
@@ -64,14 +66,20 @@ export function AdminCleaningsPage() {
 						{dict.TITLE}
 					</h1>
 				</div>
-				<Button variant="outline" onClick={() => setIsStandardTasksOpen(true)}>
-					<ListTodo className="size-4 mr-1" />
-					Standard Tasks
-				</Button>
-				<Button variant="outline" onClick={() => setIsPayConfigOpen(true)}>
-					<PoundSterling className="size-4 mr-1" />
-					Pay Rates
-				</Button>
+				<div className="space-y-3 md:space-x-3 flex flex-col md:flex-row">
+					<Button variant="outline" onClick={() => setIsStandardTasksOpen(true)}>
+						<ListTodo className="size-4 mr-1" />
+						Standard Tasks
+					</Button>
+					<Button variant="outline" onClick={() => setIsPayConfigOpen(true)}>
+						<PoundSterling className="size-4 mr-1" />
+						Pay Rates
+					</Button>
+					<Button variant="outline" onClick={() => setIsHostPricingOpen(true)}>
+						<Settings className="size-4 mr-1" />
+						Property Multipliers
+					</Button>
+				</div>
 			</header>
 			<Card className="mb-4 py-1">
 				<div className="p-3 flex flex-wrap gap-4">
@@ -167,6 +175,7 @@ export function AdminCleaningsPage() {
 
 			<StandardTasksDialog open={isStandardTasksOpen} onOpenChange={setIsStandardTasksOpen} />
 			<CleanerPayConfigDialog open={isPayConfigOpen} onOpenChange={setIsPayConfigOpen} />
+			<HostPricingConfigDialog open={isHostPricingOpen} onOpenChange={setIsHostPricingOpen} />
 		</main>
 	);
 }

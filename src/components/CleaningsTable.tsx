@@ -213,7 +213,7 @@ export function CleaningsTable({
 				key: 'service_cost',
 				label: 'Host Cost',
 				sortable: true,
-				render: (item) => <span className="font-medium">£{item.service_cost}</span>,
+				render: (item) => <span>£{item.service_cost.toFixed(2)}</span>,
 			});
 		}
 
@@ -222,7 +222,7 @@ export function CleaningsTable({
 				key: 'cleaner_pay',
 				label: 'Cleaner Pay',
 				sortable: true,
-				render: (item) => <span className="font-medium">£{item.cleaner_pay ?? '0.00'}</span>,
+				render: (item) => <span>£{item.cleaner_pay?.toFixed(2) ?? '0.00'}</span>,
 			});
 		}
 

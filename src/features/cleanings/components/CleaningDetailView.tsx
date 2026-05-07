@@ -32,6 +32,7 @@ import { CleaningTaskList } from '@/features/cleanings/components/CleaningTaskLi
 import { useCleanerCleanings } from '@/features/cleanings/useCleanerCleanings';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { mediaService } from '@/lib/mediaService';
+import { formatDate } from '@/lib/utils';
 
 interface CleaningTask {
 	id: string;
@@ -204,23 +205,6 @@ export function CleaningDetailView({
 		}
 	};
 
-	const scheduledDate = new Date(cleaning.scheduled_start);
-	const formattedTime = scheduledDate.toLocaleTimeString(undefined, {
-		hour: '2-digit',
-		minute: '2-digit',
-	});
-	const longDate = scheduledDate.toLocaleDateString(undefined, {
-		weekday: 'short',
-		year: 'numeric',
-		month: 'short',
-		day: 'numeric',
-	});
-	const shortDate = scheduledDate.toLocaleDateString('en-GB', {
-		day: '2-digit',
-		month: '2-digit',
-		year: '2-digit',
-	});
-
 	return (
 		<Dialog open={open} onOpenChange={handleDialogChange}>
 			<DialogContent className="max-w-2xl! w-screen sm:w-full h-[95svh] flex flex-col p-0 overflow-hidden">
@@ -270,9 +254,8 @@ export function CleaningDetailView({
 												<p className="text-[10px] text-muted-foreground uppercase font-bold">
 													Scheduled
 												</p>
-												<span className="sm:hidden">{shortDate}</span>
-												<span className="hidden sm:inline">{longDate}</span>
-												<span> at {formattedTime}</span>
+												<span>{formatDate(cleaning.scheduled_start)}</span>
+												<span> at {formatDate(cleaning.scheduled_start, { variant: 'time' })}</span>
 											</div>
 										</div>
 
@@ -287,7 +270,7 @@ export function CleaningDetailView({
 															</p>
 															<p>
 																{DICT.FORMAT.CURRENCY}
-																{cleaning.service_cost}
+																{cleaning.service_cost.toFixed(2)}
 															</p>
 														</div>
 														<div>
@@ -303,11 +286,11 @@ export function CleaningDetailView({
 												) : isHost ? (
 													<div>
 														<p className="text-[10px] text-muted-foreground uppercase font-bold">
-															Host Cost
+															Cost
 														</p>
 														<p>
 															{DICT.FORMAT.CURRENCY}
-															{cleaning.service_cost}
+															{cleaning.service_cost.toFixed(2)}
 														</p>
 													</div>
 												) : (

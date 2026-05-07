@@ -2,13 +2,10 @@
 
 import { useCallback, useMemo } from 'react';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
-import { calculateServiceCost } from '@/features/cleanings/cleaningService';
 import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
-import { useProperties } from '@/features/properties/PropertyContext';
 import { useResourceModals } from '@/hooks/useResourceModals';
 
 export function useHostCleanings() {
-	const { properties } = useProperties();
 	const { cleanings, upsertCleaning, deleteCleaning, isLoading } = useCleanings();
 	const modal = useResourceModals({ resourceName: 'cleaning' });
 
@@ -22,18 +19,12 @@ export function useHostCleanings() {
 
 	const handleUpsert = useCallback(
 		async (data: CleaningFormValues) => {
-			const property = properties.find((p) => p.id === data.property_id);
-			const serviceCost = property
-				? calculateServiceCost(property.bedrooms, property.type, false)
-				: 0;
-
 			const payload = {
 				...(editingCleaning ? { id: editingCleaning.id } : {}),
 				property_id: data.property_id,
 				scheduled_start: new Date(data.scheduled_start).toISOString(),
 				instructions: data.instructions ?? '',
 				custom_tasks: data.custom_tasks.map((t) => t.description),
-				service_cost: serviceCost,
 			};
 
 			const result = await upsertCleaning(payload);
@@ -41,7 +32,7 @@ export function useHostCleanings() {
 				modal.handleClose();
 			}
 		},
-		[editingCleaning, upsertCleaning, modal, properties],
+		[editingCleaning, upsertCleaning, modal],
 	);
 
 	const handleDelete = useCallback(async () => {

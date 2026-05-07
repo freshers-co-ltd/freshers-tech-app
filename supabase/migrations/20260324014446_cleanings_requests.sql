@@ -411,7 +411,6 @@ CREATE POLICY "Authorised users can delete cleaning evidence" ON public.evidence
 CREATE
 OR REPLACE FUNCTION public.create_cleaning_request (
     p_property_id UUID,
-    p_service_cost NUMERIC,
     p_custom_tasks TEXT[],
     p_instructions TEXT,
     p_scheduled_start TIMESTAMPTZ,
@@ -421,12 +420,19 @@ SET
     search_path = public AS $$
 DECLARE
     v_cleaning_id UUID;
+    v_host_id UUID;
+    v_property_type TEXT;
+    v_bedrooms INT;
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM public.properties WHERE id = p_property_id AND host_id = (SELECT auth.uid()) AND deleted_at IS NULL) THEN
         RAISE EXCEPTION 'Unauthorised' USING ERRCODE = 'P0001';
     END IF;
-    INSERT INTO public.cleanings (property_id, host_id, service_cost, scheduled_start, status, instructions, stocks_included) 
-    VALUES (p_property_id, (SELECT auth.uid()), p_service_cost, p_scheduled_start, 'requested', p_instructions, p_stocks_included)
+    
+    SELECT p.host_id, p.type, p.bedrooms INTO v_host_id, v_property_type, v_bedrooms
+    FROM public.properties p WHERE p.id = p_property_id;
+    
+    INSERT INTO public.cleanings (property_id, host_id, scheduled_start, status, instructions, stocks_included) 
+    VALUES (p_property_id, v_host_id, p_scheduled_start, 'requested', p_instructions, p_stocks_included)
     RETURNING id INTO v_cleaning_id;
     INSERT INTO public.cleaning_tasks (cleaning_id, description, is_custom, is_completed)
     SELECT v_cleaning_id, description, false, false FROM standard_tasks WHERE is_active = true;

@@ -19,7 +19,7 @@ export function CleanerDashboardPage() {
 			label: 'Assigned Cleanings',
 			value: isLoading ? '-' : assignedCleanings,
 			icon: BrushCleaning,
-			iconColor: 'text-primary',
+			iconColor: 'text-blue-600',
 		},
 		{
 			label: 'Active Cleanings',
@@ -31,7 +31,7 @@ export function CleanerDashboardPage() {
 			label: 'Completed Cleanings',
 			value: isLoading ? '-' : completedCleanings,
 			icon: Sparkles,
-			iconColor: 'text-success',
+			iconColor: 'text-yellow-400',
 		},
 	];
 

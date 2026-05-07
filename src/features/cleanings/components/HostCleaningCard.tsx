@@ -9,6 +9,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { DICT } from '@/dictionary';
 import { type CleaningRequest, STATUS_GROUPS } from '@/features/cleanings/cleaningService';
 import { mediaService } from '@/lib/mediaService';
+import { formatDate } from '@/lib/utils';
 
 interface HostCleaningCardProps {
 	cleaning: CleaningRequest;
@@ -103,9 +104,7 @@ export const HostCleaningCard = memo(
 								<Calendar className="size-3" />
 								Scheduled Date
 							</div>
-							<p className="text-sm font-medium">
-								{format(new Date(cleaning.scheduled_start), 'MMM d, yyyy')}
-							</p>
+							<p className="text-sm font-medium">{formatDate(cleaning.scheduled_start)}</p>
 						</div>
 						<div className="space-y-1">
 							<div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase">
@@ -114,7 +113,7 @@ export const HostCleaningCard = memo(
 							</div>
 							<p className="text-sm font-bold text-primary">
 								{DICT.FORMAT.CURRENCY}
-								{cleaning.service_cost}
+								{cleaning.service_cost.toFixed(2)}
 							</p>
 						</div>
 					</div>

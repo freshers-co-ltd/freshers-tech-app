@@ -20,6 +20,7 @@ describe('Authentication Routing', () => {
 	it('blocks authenticated users from public routes', () => {
 		vi.mocked(useAuth).mockReturnValue({
 			user: { id: '123' },
+			profile: { role: 'host' },
 			loading: false,
 		} as Partial<AuthContextType> as AuthContextType);
 

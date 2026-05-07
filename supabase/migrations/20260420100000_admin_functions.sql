@@ -107,6 +107,7 @@ OR REPLACE FUNCTION public.admin_get_host_detail (
     created_at TIMESTAMP WITH TIME ZONE,
     last_sign_in_at TIMESTAMP WITH TIME ZONE,
     last_sign_in_text TEXT,
+    base_price_per_cleaning NUMERIC,
     properties JSONB,
     cleanings JSONB,
     cleaning_stats JSONB
@@ -135,6 +136,7 @@ BEGIN
             WHEN au.last_sign_in_at > NOW() - INTERVAL '1 year' THEN 'Past year'
             ELSE 'More than a year ago'
         END AS last_sign_in_text,
+        p.base_price_per_cleaning,
         (
             SELECT jsonb_agg(row ORDER BY
                 CASE WHEN p_properties_sort_direction = 'asc' THEN
@@ -253,6 +255,7 @@ BEGIN
             WHEN au.last_sign_in_at > NOW() - INTERVAL '1 year' THEN 'Past year'
             ELSE 'More than a year ago'
         END AS last_sign_in_text,
+        p.base_price_per_cleaning,
         (
             SELECT jsonb_agg(row)
             FROM (
@@ -407,7 +410,6 @@ OR REPLACE FUNCTION public.admin_create_cleaning_for_host (
     p_host_id UUID,
     p_property_id UUID,
     p_scheduled_start TIMESTAMPTZ,
-    p_service_cost NUMERIC,
     p_instructions TEXT DEFAULT NULL,
     p_stocks_included BOOLEAN DEFAULT FALSE,
     p_custom_tasks TEXT[] DEFAULT '{}'
@@ -415,12 +417,18 @@ OR REPLACE FUNCTION public.admin_create_cleaning_for_host (
 SET
     search_path = public AS $$
 DECLARE v_cleaning_id UUID;
+    v_property_type TEXT;
+    v_bedrooms INT;
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM public.properties WHERE id = p_property_id AND host_id = p_host_id AND deleted_at IS NULL) THEN
         RAISE EXCEPTION 'Ownership mismatch';
     END IF;
-    INSERT INTO public.cleanings (host_id, property_id, scheduled_start, status, service_cost, instructions, stocks_included)
-    VALUES (p_host_id, p_property_id, p_scheduled_start, 'requested', p_service_cost, p_instructions, p_stocks_included)
+    
+    SELECT p.type, p.bedrooms INTO v_property_type, v_bedrooms
+    FROM public.properties p WHERE p.id = p_property_id;
+    
+    INSERT INTO public.cleanings (host_id, property_id, scheduled_start, status, instructions, stocks_included)
+    VALUES (p_host_id, p_property_id, p_scheduled_start, 'requested', p_instructions, p_stocks_included)
     RETURNING id INTO v_cleaning_id;
     INSERT INTO public.cleaning_tasks (cleaning_id, description, is_custom)
     SELECT v_cleaning_id, description, false FROM public.standard_tasks WHERE is_active = true;
@@ -747,7 +755,7 @@ BEGIN
         END IF;
     END IF;
 
-    NEW.cleaner_pay := v_hourly_rate * COALESCE(v_target_hours, 0);
+    NEW.cleaner_pay := ROUND(v_hourly_rate * COALESCE(v_target_hours, 0), 2);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -756,5 +764,60 @@ CREATE TRIGGER trigger_set_cleaner_pay_on_cleaning_insert
     BEFORE INSERT ON public.cleanings
     FOR EACH ROW
     EXECUTE FUNCTION public.set_cleaner_pay_on_cleaning_insert();
+
+CREATE OR REPLACE FUNCTION public.admin_update_host_base_price(
+    p_host_id UUID,
+    p_base_price NUMERIC
+) RETURNS VOID SECURITY DEFINER
+SET search_path = public AS $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin') THEN
+        RAISE EXCEPTION 'Unauthorized';
+    END IF;
+    
+    IF p_base_price IS NULL OR p_base_price <= 0 THEN
+        RAISE EXCEPTION 'Base price must be greater than 0';
+    END IF;
+    
+    UPDATE profiles SET base_price_per_cleaning = p_base_price WHERE id = p_host_id;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.set_service_cost_on_cleaning_insert()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_property_type TEXT;
+    v_bedrooms INT;
+    v_base_price NUMERIC;
+    v_host_multipliers JSONB;
+    v_property_key TEXT;
+    v_multiplier NUMERIC;
+BEGIN
+    SELECT p.type, p.bedrooms INTO v_property_type, v_bedrooms
+    FROM public.properties p WHERE p.id = NEW.property_id;
+
+    SELECT pr.base_price_per_cleaning INTO v_base_price 
+    FROM public.profiles pr WHERE pr.id = NEW.host_id;
+
+    SELECT c.host_multipliers INTO v_host_multipliers 
+    FROM cleaner_pay_config c WHERE c.id = 1;
+
+    IF v_property_type = 'studio' THEN
+        v_property_key := 'studio';
+    ELSE
+        v_property_key := v_bedrooms || '_bed';
+    END IF;
+
+    v_multiplier := COALESCE((v_host_multipliers->>v_property_key)::NUMERIC, 1);
+    NEW.service_cost := ROUND(v_base_price * v_multiplier, 2);
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_set_service_cost_on_cleaning_insert
+    BEFORE INSERT ON public.cleanings
+    FOR EACH ROW
+    EXECUTE FUNCTION public.set_service_cost_on_cleaning_insert();
 
 COMMIT;

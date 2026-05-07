@@ -138,7 +138,7 @@ export function HostCleaningDetailView({
 								</p>
 								<p className="text-sm font-bold text-primary">
 									{DICT.FORMAT.CURRENCY}
-									{cleaning.service_cost}
+									{cleaning.service_cost.toFixed(2)}
 								</p>
 							</div>
 						</div>

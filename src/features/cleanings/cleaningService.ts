@@ -62,7 +62,6 @@ export interface CleaningRequest extends CleaningDetails {
 
 export interface CreateCleaningRequestPayload {
 	property_id: string;
-	service_cost: number;
 	custom_tasks: string[];
 	instructions: string;
 	scheduled_start: string;
@@ -214,7 +213,6 @@ export const cleaningService = {
 	): Promise<ActionResult<CleaningRequest>> {
 		const { data: id, error } = await supabase.rpc('create_cleaning_request', {
 			p_property_id: payload.property_id,
-			p_service_cost: payload.service_cost,
 			p_custom_tasks: payload.custom_tasks,
 			p_instructions: payload.instructions,
 			p_scheduled_start: payload.scheduled_start,
@@ -415,6 +413,7 @@ export const cleaningService = {
 		const { error } = await supabase.rpc('update_cleaner_pay_config', {
 			p_hourly_rate: config.hourly_rate,
 			p_target_times: config.target_times,
+			p_host_multipliers: config.host_multipliers,
 		});
 		if (error) {
 			return { data: null, error: mapDatabaseError(error) };
@@ -468,6 +467,13 @@ export const calculateServiceCost = (
 export interface CleanerPayConfig {
 	hourly_rate: number;
 	target_times: {
+		studio: number;
+		'1_bed': number;
+		'2_bed': number;
+		'3_bed': number;
+		'4_bed': number;
+	};
+	host_multipliers: {
 		studio: number;
 		'1_bed': number;
 		'2_bed': number;
