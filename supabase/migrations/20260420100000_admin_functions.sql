@@ -770,18 +770,66 @@ CREATE OR REPLACE FUNCTION public.admin_update_host_base_price(
     p_base_price NUMERIC
 ) RETURNS VOID SECURITY DEFINER
 SET search_path = public AS $$
+DECLARE
+    v_current_base_price NUMERIC;
+    v_host_multipliers JSONB;
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin') THEN
         RAISE EXCEPTION 'Unauthorized';
     END IF;
-    
+
     IF p_base_price IS NULL OR p_base_price <= 0 THEN
         RAISE EXCEPTION 'Base price must be greater than 0';
     END IF;
-    
+
+    SELECT base_price_per_cleaning INTO v_current_base_price FROM profiles WHERE id = p_host_id;
+
     UPDATE profiles SET base_price_per_cleaning = p_base_price WHERE id = p_host_id;
+
+    IF v_current_base_price IS NULL THEN
+        SELECT c.host_multipliers INTO v_host_multipliers FROM cleaner_pay_config c WHERE c.id = 1;
+
+        UPDATE cleanings c
+        SET service_cost = public.calculate_service_cost(
+            (SELECT p.bedrooms::INTEGER FROM properties p WHERE p.id = c.property_id),
+            (SELECT p.type FROM properties p WHERE p.id = c.property_id),
+            c.stocks_included,
+            p_base_price,
+            v_host_multipliers
+        )
+        WHERE c.host_id = p_host_id
+          AND c.service_cost IS NULL
+          AND c.deleted_at IS NULL;
+    END IF;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.calculate_service_cost(
+    p_bedrooms INTEGER,
+    p_property_type TEXT,
+    p_stocks_included BOOLEAN,
+    p_base_price NUMERIC,
+    p_host_multipliers JSONB DEFAULT NULL
+) RETURNS NUMERIC LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public AS $$
+DECLARE
+    v_multiplier NUMERIC;
+    v_property_key TEXT;
+BEGIN
+    IF p_base_price IS NULL THEN
+        RETURN NULL;
+    END IF;
+
+    IF p_property_type = 'studio' THEN
+        v_property_key := 'studio';
+    ELSE
+        v_property_key := p_bedrooms || '_bed';
+    END IF;
+
+    v_multiplier := COALESCE((p_host_multipliers->>v_property_key)::NUMERIC, 1);
+    RETURN ROUND(p_base_price * v_multiplier, 2);
+END;
+$$;
 
 CREATE OR REPLACE FUNCTION public.set_service_cost_on_cleaning_insert()
 RETURNS TRIGGER AS $$
@@ -790,8 +838,6 @@ DECLARE
     v_bedrooms INT;
     v_base_price NUMERIC;
     v_host_multipliers JSONB;
-    v_property_key TEXT;
-    v_multiplier NUMERIC;
 BEGIN
     SELECT p.type, p.bedrooms INTO v_property_type, v_bedrooms
     FROM public.properties p WHERE p.id = NEW.property_id;
@@ -802,14 +848,13 @@ BEGIN
     SELECT c.host_multipliers INTO v_host_multipliers 
     FROM cleaner_pay_config c WHERE c.id = 1;
 
-    IF v_property_type = 'studio' THEN
-        v_property_key := 'studio';
-    ELSE
-        v_property_key := v_bedrooms || '_bed';
-    END IF;
-
-    v_multiplier := COALESCE((v_host_multipliers->>v_property_key)::NUMERIC, 1);
-    NEW.service_cost := ROUND(v_base_price * v_multiplier, 2);
+    NEW.service_cost := public.calculate_service_cost(
+        v_bedrooms,
+        v_property_type,
+        NEW.stocks_included,
+        v_base_price,
+        v_host_multipliers
+    );
 
     RETURN NEW;
 END;

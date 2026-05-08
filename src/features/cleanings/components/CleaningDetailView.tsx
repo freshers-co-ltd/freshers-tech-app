@@ -268,10 +268,14 @@ export function CleaningDetailView({
 															<p className="text-[10px] text-muted-foreground uppercase font-bold">
 																Host Cost
 															</p>
-															<p>
-																{DICT.FORMAT.CURRENCY}
-																{cleaning.service_cost.toFixed(2)}
-															</p>
+															{cleaning.service_cost === null ? (
+																<p className="text-muted-foreground">Not set</p>
+															) : (
+																<p>
+																	{DICT.FORMAT.CURRENCY}
+																	{cleaning.service_cost.toFixed(2)}
+																</p>
+															)}
 														</div>
 														<div>
 															<p className="text-[10px] text-muted-foreground uppercase font-bold">
@@ -288,10 +292,14 @@ export function CleaningDetailView({
 														<p className="text-[10px] text-muted-foreground uppercase font-bold">
 															Cost
 														</p>
-														<p>
-															{DICT.FORMAT.CURRENCY}
-															{cleaning.service_cost.toFixed(2)}
-														</p>
+														{cleaning.service_cost === null ? (
+															<p className="text-muted-foreground">Not set</p>
+														) : (
+															<p>
+																{DICT.FORMAT.CURRENCY}
+																{cleaning.service_cost.toFixed(2)}
+															</p>
+														)}
 													</div>
 												) : (
 													<div>

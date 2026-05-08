@@ -1,6 +1,6 @@
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import { Select as SelectPrimitive } from 'radix-ui';
-import type * as React from 'react';
+import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 function Select({ ...props }: React.ComponentProps<typeof SelectPrimitive.Root>) {
@@ -51,8 +51,11 @@ function SelectContent({
 	children,
 	position = 'popper', // MUST be 'popper' to enable offsets
 	align = 'start', // Aligns left edge of dropdown to left edge of trigger
+	emptyMessage,
 	...props
-}: React.ComponentProps<typeof SelectPrimitive.Content>) {
+}: React.ComponentProps<typeof SelectPrimitive.Content> & { emptyMessage?: string }) {
+	const hasChildren = React.Children.count(children) > 0;
+
 	return (
 		<SelectPrimitive.Portal>
 			<SelectPrimitive.Content
@@ -74,7 +77,13 @@ function SelectContent({
 						'data-[position=popper]:h-(--radix-select-trigger-height) data-[position=popper]:w-full data-[position=popper]:min-w-(--radix-select-trigger-width)',
 						position === 'popper' && '',
 					)}>
-					{children}
+					{hasChildren ? (
+						children
+					) : (
+						<div className="py-6 text-center text-sm text-muted-foreground">
+							{emptyMessage || 'Nothing available to select'}
+						</div>
+					)}
 				</SelectPrimitive.Viewport>
 				<SelectScrollDownButton />
 			</SelectPrimitive.Content>

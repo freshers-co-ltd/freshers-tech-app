@@ -214,6 +214,20 @@ export const DICT = {
 			SUCCESS_TOAST: 'Password reset successfully',
 			TITLE: 'Reset password',
 		},
+		SET_PASSWORD: {
+			DASHBOARD_BUTTON: 'Go to Dashboard',
+			MESSAGE: 'Create a password to access your account.',
+			SUCCESS_MESSAGE: 'Your account has been created. Redirecting to your dashboard...',
+			SUCCESS_TITLE: 'Account Created!',
+			SUBMIT_BUTTON: 'Create password',
+			SUBMITTING_BUTTON: 'Creating...',
+			SUCCESS_TOAST: 'Password created successfully',
+			TITLE: 'Create Password',
+			ERROR_TITLE: 'Invalid or Expired Link',
+			ERROR_MESSAGE:
+				'This invitation link is invalid or has expired. Please contact your administrator for a new invitation.',
+			LOGIN_BUTTON: 'Go to Login',
+		},
 	},
 	DASHBOARD: {
 		TITLE: 'Welcome back',
@@ -239,7 +253,7 @@ export const DICT = {
 		NOT_FOUND: 'Property not found.',
 		EMPTY: { MESSAGE: 'Get started by adding your first property.', TITLE: 'No properties found' },
 		PLACEHOLDER_IMAGE: 'Placeholder',
-		TYPES: { APARTMENT: 'Apartment', HOUSE: 'House', OTHER: 'Other' },
+		TYPES: { APARTMENT: 'Apartment', HOUSE: 'House', STUDIO: 'Studio' },
 		CREATE: {
 			MESSAGE: 'Enter details about your property to save them',
 			TITLE: 'Save new property',
@@ -281,8 +295,8 @@ export const DICT = {
 			LABELS: {
 				COST: 'Cost',
 				CUSTOM_TASKS: 'Additional Tasks',
-				INSTRUCTIONS: 'Special Instructions',
-				NEW_PROPERTY: 'New Property',
+				INSTRUCTIONS: 'Instructions',
+				NEW_PROPERTY: 'Create New Property',
 				SCHEDULED_DATE: 'Scheduled Date',
 				SCHEDULED_TIME: 'Scheduled Time',
 				SELECT_PROPERTY: 'Select Property',

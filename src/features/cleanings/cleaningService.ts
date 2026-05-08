@@ -422,47 +422,31 @@ export const cleaningService = {
 	},
 };
 
-/**
- * Calculates the service cost based on property specifications and stock requirements.
- */
-export const calculateServiceCost = (
+export async function calculateServiceCost(
 	bedrooms: number,
-	type: string,
-	includeStocks: boolean,
-): number => {
-	if (includeStocks) {
-		if (type.toLowerCase() === 'studio') {
-			return 60;
-		}
-		if (bedrooms <= 1) {
-			return 80;
-		}
-		if (bedrooms === 2) {
-			return 100;
-		}
-		if (bedrooms === 3) {
-			return 130;
-		}
-		if (bedrooms >= 4) {
-			return 150;
-		}
+	propertyType: string,
+	stocksIncluded: boolean,
+	basePrice: number | null,
+	hostMultipliers: Record<string, number> | null,
+): Promise<number | null> {
+	if (basePrice === null) {
+		return null;
 	}
 
-	if (bedrooms <= 1) {
-		return 70;
-	}
-	if (bedrooms === 2) {
-		return 90;
-	}
-	if (bedrooms === 3) {
-		return 120;
-	}
-	if (bedrooms >= 4) {
-		return 140;
+	const { data, error } = await supabase.rpc('calculate_service_cost', {
+		p_bedrooms: bedrooms,
+		p_property_type: propertyType,
+		p_stocks_included: stocksIncluded,
+		p_base_price: basePrice,
+		p_host_multipliers: hostMultipliers,
+	});
+
+	if (error) {
+		return null;
 	}
 
-	return 0;
-};
+	return data;
+}
 
 export interface CleanerPayConfig {
 	hourly_rate: number;

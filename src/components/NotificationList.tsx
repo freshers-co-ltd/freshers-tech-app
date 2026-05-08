@@ -80,34 +80,24 @@ export function NotificationList({ maxItems }: NotificationListProps) {
 					type="button"
 					key={notification.id}
 					className={cn(
-						'w-full text-left py-1 px-2 mb-1 rounded-lg cursor-pointer bg-primary/2 hover:bg-primary/10 transition-colors',
+						'w-full text-left py-1 px-2 rounded-lg cursor-pointer mb-1 last:mb-0 bg-primary/2 hover:bg-primary/10 transition-colors',
 						!notification.is_read && 'bg-primary/5',
 					)}
 					onClick={() => handleClick(notification)}>
-					<div className="flex items-start gap-3 overflow-hidden">
-						<div className="mt-0.5 shrink-0">{getNotificationIcon(notification.type)}</div>
-						<div className="flex-1 min-w-0 flex flex-col">
-							<div className="flex justify-between items-start gap-2">
-								<p
-									className={cn(
-										'text-sm truncate leading-snug',
-										!notification.is_read && 'font-semibold',
-									)}>
-									{notification.title}
-								</p>
-								{!notification.is_read && (
-									<div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
-								)}
-							</div>
-							<p className="text-xs text-muted-foreground whitespace-normal break-words">
-								{notification.message}
+					<div className="flex flex-col overflow-hidden">
+						<div className="flex w-full gap-2 mb-0.5">
+							<div className="mt-0.5 shrink-0">{getNotificationIcon(notification.type)}</div>
+							<p className="text-sm font-medium leading-snug truncate self-end flex-1 min-w-0">
+								{notification.title}
 							</p>
-							<div className="flex justify-end mt-1">
-								<p className="text-[10px] text-muted-foreground whitespace-nowrap">
-									{formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-								</p>
-							</div>
+							{!notification.is_read && (
+								<div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0 justify-self-end" />
+							)}
 						</div>
+						<p className="text-xs whitespace-normal wrap-break-word">{notification.message}</p>
+						<p className="self-end text-[10px] text-muted-foreground">
+							{formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+						</p>
 					</div>
 				</button>
 			))}

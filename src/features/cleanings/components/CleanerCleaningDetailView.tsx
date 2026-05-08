@@ -397,7 +397,7 @@ export function CleanerCleaningDetailView({
 								className="w-full h-12 text-base font-bold"
 								onClick={onClockIn}
 								disabled={isProcessing || isGeoLoading}>
-								<Play className="mr-2 size-5 fill-current" />
+								<Play className="mr-1 size-5 fill-current" />
 								{isProcessing ? 'Verifying Location...' : 'Clock In'}
 							</Button>
 						)}
@@ -406,7 +406,7 @@ export function CleanerCleaningDetailView({
 								className="w-full h-12 text-base font-bold"
 								disabled={!allTasksCompleted}
 								onClick={() => setShowEvidenceForm(true)}>
-								<SquareCheckBig className="mr-2 size-5" />
+								<SquareCheckBig className="mr-1 size-5" />
 								{allTasksCompleted ? 'Finish & Submit Report' : 'Complete All Tasks to Finish'}
 							</Button>
 						)}

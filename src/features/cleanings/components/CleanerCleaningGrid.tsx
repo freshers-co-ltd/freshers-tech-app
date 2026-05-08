@@ -95,7 +95,7 @@ export function CleanerCleaningGrid({ onView }: CleanerCleaningGridProps) {
 								<SelectValue placeholder="Status" />
 							</div>
 						</SelectTrigger>
-						<SelectContent align="end">
+						<SelectContent align="end" emptyMessage="No statuses available">
 							<SelectItem value="all">All Statuses</SelectItem>
 							{(STATUS_GROUPS.CLEANER_VIEW as CleaningStatus[]).map((status) => {
 								const displayLabel = status === CLEANING_STATUS.CONFIRMED ? 'assigned' : status;

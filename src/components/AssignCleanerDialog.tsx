@@ -55,7 +55,7 @@ export function AssignCleanerDialog({
 						<SelectTrigger>
 							<SelectValue placeholder={DICT.COMMON.DIALOGS.ASSIGN_CLEANER.SELECT} />
 						</SelectTrigger>
-						<SelectContent>
+						<SelectContent emptyMessage="No available cleaners">
 							{availableCleaners.map((cleaner) => (
 								<SelectItem key={cleaner.id} value={cleaner.id}>
 									{cleaner.full_name || 'Unknown'}

@@ -12,6 +12,7 @@ import { AppLayout } from '@/layouts/AppLayout';
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPassword';
 import { LoginPage } from '@/pages/auth/Login';
+import { SetPasswordPage } from '@/pages/auth/SetPassword';
 import { SignupPage } from '@/pages/auth/Signup';
 import { ErrorPage } from '@/pages/Error';
 import type { UserRole } from './features/auth/authService';
@@ -152,6 +153,7 @@ const routesConfig: RouteObject[] = [
 							{ path: 'login', element: <LoginPage /> },
 							{ path: 'signup', element: <SignupPage /> },
 							{ path: 'forgot-password', element: <ForgotPasswordPage /> },
+							{ path: 'set-password', element: <SetPasswordPage /> },
 						],
 					},
 				],

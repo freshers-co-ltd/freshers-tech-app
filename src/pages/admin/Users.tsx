@@ -168,7 +168,7 @@ export function AdminUsersPage() {
 							</SelectContent>
 						</Select>
 						<Button className="h-8" onClick={() => setIsInviteModalOpen(true)}>
-							<Plus className="size-4 mr-2" />
+							<Plus className="size-4 mr-1" />
 							<span className="sm:hidden">Invite</span>
 							<span className="hidden sm:inline">Invite User</span>
 						</Button>

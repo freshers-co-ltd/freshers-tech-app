@@ -51,7 +51,7 @@ export function CleaningActionButtons({
 						className="w-full h-12 text-base font-bold"
 						onClick={onClockIn}
 						disabled={isClockInDisabled}>
-						<Play className="mr-2 size-5 fill-current" />
+						<Play className="mr-1 size-5 fill-current" />
 						Clock In
 					</Button>
 				)}
@@ -76,7 +76,7 @@ export function CleaningActionButtons({
 							variant="outline"
 							className="flex-1"
 							onClick={() => cleaningId && onEdit?.(cleaningId)}>
-							<Pencil className="mr-2 size-4" />
+							<Pencil className="mr-1 size-4" />
 							{DICT.COMMON.ACTIONS.EDIT}
 						</Button>
 					)}
@@ -85,7 +85,7 @@ export function CleaningActionButtons({
 							variant="destructive"
 							className="flex-1"
 							onClick={() => cleaningId && onDelete?.(cleaningId)}>
-							<Trash2 className="mr-2 size-4" />
+							<Trash2 className="mr-1 size-4" />
 							{status === CLEANING_STATUS.CONFIRMED
 								? DICT.COMMON.ACTIONS.CANCEL_CLEANING
 								: DICT.COMMON.ACTIONS.DELETE}

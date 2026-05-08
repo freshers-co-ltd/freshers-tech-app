@@ -20,11 +20,9 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { DICT } from '@/dictionary';
-import {
-	type CleaningRequest,
-	calculateServiceCost,
-	STATUS_GROUPS,
-} from '@/features/cleanings/cleaningService';
+import { cleaningService } from '@/features/admin/cleaningService';
+import { useAuth } from '@/features/auth/AuthContext';
+import { type CleaningRequest, STATUS_GROUPS } from '@/features/cleanings/cleaningService';
 import { PropertyForm } from '@/features/properties/components/PropertyForm';
 import { useProperties } from '@/features/properties/PropertyContext';
 import type { Property, PropertyInsert } from '@/features/properties/propertyService';
@@ -80,8 +78,14 @@ export function CleaningForm({
 		disableCreateProperty ? 'select' : 'select',
 	);
 	const [standardTasks, setStandardTasks] = useState<{ id: string; description: string }[]>([]);
+	const [standardTasksLoading, setStandardTasksLoading] = useState(false);
+	const [standardTasksError, setStandardTasksError] = useState<string | null>(null);
 	const { properties: contextProperties, upsertProperty } = useProperties();
 	const navigate = useNavigate();
+	const { user } = useAuth();
+	const [hostBasePrice, setHostBasePrice] = useState<number | null>(null);
+	const [hostMultipliers, setHostMultipliers] = useState<Record<string, number> | null>(null);
+	const [priceLoading, setPriceLoading] = useState(false);
 
 	const displayedProperties = availableProperties || contextProperties;
 
@@ -142,13 +146,16 @@ export function CleaningForm({
 	useEffect(() => {
 		let isMounted = true;
 		async function fetchStandardTasks() {
-			const { data } = await supabase
-				.from('standard_tasks')
-				.select('id, description')
-				.eq('is_active', true);
-
-			if (data && isMounted) {
-				setStandardTasks(data);
+			setStandardTasksLoading(true);
+			setStandardTasksError(null);
+			const result = await cleaningService.getStandardTasks();
+			if (isMounted) {
+				if (result.error) {
+					setStandardTasksError(result.error);
+				} else {
+					setStandardTasks(result.data || []);
+				}
+				setStandardTasksLoading(false);
 			}
 		}
 		fetchStandardTasks();
@@ -158,17 +165,77 @@ export function CleaningForm({
 		};
 	}, []);
 
+	useEffect(() => {
+		if (!user?.id) {
+			return;
+		}
+
+		const isMounted = true;
+		async function fetchHostPricing() {
+			if (!user) {
+				return;
+			}
+
+			const { data: profile } = await supabase
+				.from('profiles')
+				.select('base_price_per_cleaning')
+				.eq('id', user.id)
+				.single();
+
+			const { data: config } = await supabase.rpc('get_cleaner_pay_config');
+
+			if (isMounted) {
+				setHostBasePrice(profile?.base_price_per_cleaning ?? null);
+				setHostMultipliers(
+					config && Array.isArray(config) && config[0]?.host_multipliers
+						? (config[0].host_multipliers as Record<string, number>)
+						: null,
+				);
+			}
+		}
+		fetchHostPricing();
+	}, [user]);
+
 	const selectedProperty = useMemo(
 		() => displayedProperties.find((p) => p.id === selectedPropertyId),
 		[displayedProperties, selectedPropertyId],
 	);
 
-	const calculatedPrice = useMemo(() => {
-		if (!selectedProperty) {
-			return 0;
+	const [calculatedPrice, setCalculatedPrice] = useState<number | null>(null);
+
+	useEffect(() => {
+		if (!selectedProperty || hostBasePrice === null) {
+			setCalculatedPrice(null);
+			return;
 		}
-		return calculateServiceCost(selectedProperty.bedrooms, selectedProperty.type, stocksIncluded);
-	}, [selectedProperty, stocksIncluded]);
+
+		let isMounted = true;
+		setPriceLoading(true);
+
+		async function calcPrice() {
+			if (hostBasePrice === null || !selectedProperty) {
+				return;
+			}
+
+			const { data } = await supabase.rpc('calculate_service_cost', {
+				p_bedrooms: selectedProperty.bedrooms,
+				p_property_type: selectedProperty.type,
+				p_stocks_included: stocksIncluded,
+				p_base_price: hostBasePrice,
+				p_host_multipliers: hostMultipliers,
+			});
+
+			if (isMounted) {
+				setCalculatedPrice(data);
+				setPriceLoading(false);
+			}
+		}
+		calcPrice();
+
+		return () => {
+			isMounted = false;
+		};
+	}, [selectedProperty, stocksIncluded, hostBasePrice, hostMultipliers]);
 
 	const handlePropertySubmit = async (propertyData: PropertyInsert): Promise<void> => {
 		const result = await upsertProperty(propertyData);
@@ -219,6 +286,7 @@ export function CleaningForm({
 										{dict.LABELS.NEW_PROPERTY}
 									</Button>
 								)}
+								<p className="text-center font-medium">OR</p>
 								<Field>
 									<Controller
 										control={control}
@@ -261,14 +329,24 @@ export function CleaningForm({
 								<div className="space-y-2">
 									<FieldLabel>Standard Tasks</FieldLabel>
 									<div className="grid grid-cols-1 gap-2">
-										{standardTasks.map((task) => (
-											<div
-												key={task.id}
-												className="flex items-center gap-2 px-2 py-1 rounded-lg border bg-muted text-sm">
-												<CheckCircle2 className="size-4 text-green-600 shrink-0" />
-												<span className="text-muted-foreground">{task.description}</span>
-											</div>
-										))}
+										{standardTasksLoading ? (
+											<p className="text-muted-foreground text-sm py-2">Loading tasks...</p>
+										) : standardTasksError ? (
+											<p className="text-destructive text-sm py-2">Failed to load tasks</p>
+										) : standardTasks.length === 0 ? (
+											<p className="text-muted-foreground text-sm py-2">
+												No standard tasks available
+											</p>
+										) : (
+											standardTasks.map((task) => (
+												<div
+													key={task.id}
+													className="flex items-center gap-2 px-2 py-1 rounded-lg border bg-muted text-sm">
+													<CheckCircle2 className="size-4 text-green-600 shrink-0" />
+													<span className="text-muted-foreground">{task.description}</span>
+												</div>
+											))
+										)}
 									</div>
 								</div>
 
@@ -281,6 +359,7 @@ export function CleaningForm({
 													<Input
 														{...register(`custom_tasks.${index}.description` as const)}
 														placeholder={dict.PLACEHOLDERS.TASK}
+														onBlur={() => trigger(`custom_tasks.${index}.description`)}
 													/>
 													{errors.custom_tasks?.[index]?.description && (
 														<FieldError>
@@ -298,7 +377,7 @@ export function CleaningForm({
 											size="sm"
 											className="w-full border-dashed"
 											onClick={() => append({ description: '' })}>
-											<Plus className="mr-2 size-4" /> {dict.BUTTONS.ADD_TASK}
+											<Plus className="mr-1 size-4" /> {dict.BUTTONS.ADD_TASK}
 										</Button>
 										{errors.custom_tasks?.root?.message && (
 											<FieldError>{errors.custom_tasks.root.message}</FieldError>
@@ -373,10 +452,16 @@ export function CleaningForm({
 									<p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
 										{dict.LABELS.COST}
 									</p>
-									<p className="text-2xl font-black text-primary">
-										{DICT.FORMAT.CURRENCY}
-										{calculatedPrice.toFixed(2)}
-									</p>
+									{hostBasePrice === null ? (
+										<p className="text-lg font-medium text-muted-foreground">Not set</p>
+									) : priceLoading ? (
+										<p className="text-2xl font-black text-primary">...</p>
+									) : (
+										<p className="text-2xl font-black text-primary">
+											{DICT.FORMAT.CURRENCY}
+											{calculatedPrice?.toFixed(2) ?? '0.00'}
+										</p>
+									)}
 								</div>
 							</FieldGroup>
 

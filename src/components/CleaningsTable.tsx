@@ -213,7 +213,12 @@ export function CleaningsTable({
 				key: 'service_cost',
 				label: 'Host Cost',
 				sortable: true,
-				render: (item) => <span>£{item.service_cost.toFixed(2)}</span>,
+				render: (item) =>
+					item.service_cost === null ? (
+						<span className="text-muted-foreground">Not set</span>
+					) : (
+						<span>£{item.service_cost.toFixed(2)}</span>
+					),
 			});
 		}
 

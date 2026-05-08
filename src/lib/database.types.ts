@@ -166,7 +166,7 @@ export type Database = {
 					instructions: string | null;
 					property_id: string;
 					scheduled_start: string;
-					service_cost: number;
+					service_cost: number | null;
 					status: Database['public']['Enums']['cleaning_status'];
 					stocks_included: boolean;
 					updated_at: string;
@@ -183,7 +183,7 @@ export type Database = {
 					instructions?: string | null;
 					property_id: string;
 					scheduled_start: string;
-					service_cost: number;
+					service_cost?: number | null;
 					status?: Database['public']['Enums']['cleaning_status'];
 					stocks_included?: boolean;
 					updated_at?: string;
@@ -200,7 +200,7 @@ export type Database = {
 					instructions?: string | null;
 					property_id?: string;
 					scheduled_start?: string;
-					service_cost?: number;
+					service_cost?: number | null;
 					status?: Database['public']['Enums']['cleaning_status'];
 					stocks_included?: boolean;
 					updated_at?: string;
@@ -807,6 +807,16 @@ export type Database = {
 				Args: { p_tasks: Json; p_tasks_to_delete: string[] };
 				Returns: undefined;
 			};
+			calculate_service_cost: {
+				Args: {
+					p_base_price: number;
+					p_bedrooms: number;
+					p_host_multipliers?: Json;
+					p_property_type: string;
+					p_stocks_included: boolean;
+				};
+				Returns: number;
+			};
 			create_cleaning_request: {
 				Args: {
 					p_custom_tasks: string[];
@@ -1185,6 +1195,7 @@ export type Database = {
 					id: string;
 					in_progress_size: number;
 					key: string;
+					metadata: Json | null;
 					owner_id: string | null;
 					upload_signature: string;
 					user_metadata: Json | null;
@@ -1196,6 +1207,7 @@ export type Database = {
 					id: string;
 					in_progress_size?: number;
 					key: string;
+					metadata?: Json | null;
 					owner_id?: string | null;
 					upload_signature: string;
 					user_metadata?: Json | null;
@@ -1207,6 +1219,7 @@ export type Database = {
 					id?: string;
 					in_progress_size?: number;
 					key?: string;
+					metadata?: Json | null;
 					owner_id?: string | null;
 					upload_signature?: string;
 					user_metadata?: Json | null;
@@ -1325,6 +1338,14 @@ export type Database = {
 			[_ in never]: never;
 		};
 		Functions: {
+			allow_any_operation: {
+				Args: { expected_operations: string[] };
+				Returns: boolean;
+			};
+			allow_only_operation: {
+				Args: { expected_operation: string };
+				Returns: boolean;
+			};
 			can_insert_object: {
 				Args: { bucketid: string; metadata: Json; name: string; owner: string };
 				Returns: undefined;

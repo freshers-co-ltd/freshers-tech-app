@@ -111,10 +111,14 @@ export const HostCleaningCard = memo(
 								<Banknote className="size-3" />
 								Cost
 							</div>
-							<p className="text-sm font-bold text-primary">
-								{DICT.FORMAT.CURRENCY}
-								{cleaning.service_cost.toFixed(2)}
-							</p>
+							{cleaning.service_cost === null ? (
+								<p className="text-sm font-medium text-muted-foreground">Not set</p>
+							) : (
+								<p className="text-sm font-bold text-primary">
+									{DICT.FORMAT.CURRENCY}
+									{cleaning.service_cost.toFixed(2)}
+								</p>
+							)}
 						</div>
 					</div>
 				</CardContent>

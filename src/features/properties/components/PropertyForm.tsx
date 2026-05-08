@@ -31,7 +31,7 @@ import {
 import { mediaService } from '@/lib/mediaService';
 
 const POSTCODE_REGEX = /^[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}$/i;
-const MAX_FILE_SIZE = 2 * 1024 * 1024;
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 const propertySchema = z.object({
 	address_line_1: z.string().min(1, DICT.COMMON.VALIDATION.ADDRESS_REQUIRED),
@@ -246,9 +246,11 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 							<SelectValue />
 						</SelectTrigger>
 						<SelectContent>
-							<SelectItem value="apartment">{DICT.PROPERTIES.TYPES.APARTMENT}</SelectItem>
-							<SelectItem value="house">{DICT.PROPERTIES.TYPES.HOUSE}</SelectItem>
-							<SelectItem value="other">{DICT.PROPERTIES.TYPES.OTHER}</SelectItem>
+							{propertyTypeValues.map((type) => (
+								<SelectItem key={type} value={type}>
+									{DICT.PROPERTIES.TYPES[type.toUpperCase() as 'APARTMENT' | 'HOUSE' | 'STUDIO']}
+								</SelectItem>
+							))}
 						</SelectContent>
 					</Select>
 				</Field>

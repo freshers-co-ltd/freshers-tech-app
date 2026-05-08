@@ -136,10 +136,14 @@ export function HostCleaningDetailView({
 								<p className="text-xs text-muted-foreground uppercase font-bold tracking-tight">
 									Total Cost
 								</p>
-								<p className="text-sm font-bold text-primary">
-									{DICT.FORMAT.CURRENCY}
-									{cleaning.service_cost.toFixed(2)}
-								</p>
+								{cleaning.service_cost === null ? (
+									<p className="text-sm font-medium text-muted-foreground">Not set</p>
+								) : (
+									<p className="text-sm font-bold text-primary">
+										{DICT.FORMAT.CURRENCY}
+										{cleaning.service_cost.toFixed(2)}
+									</p>
+								)}
 							</div>
 						</div>
 					</div>
@@ -186,7 +190,7 @@ export function HostCleaningDetailView({
 						<div className="space-y-3">
 							<h4 className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2 tracking-wider">
 								<Info className="size-4 text-primary" />
-								Special Instructions
+								DICT.CLEANING.FORM.LABELS.INSTRUCTIONS
 							</h4>
 							<div className="py-2 px-3 rounded-md border bg-muted/10">
 								<p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
@@ -242,7 +246,7 @@ export function HostCleaningDetailView({
 				<div className="p-3 border-t bg-background shrink-0">
 					{hasEvidence && (
 						<Button className="w-full" onClick={() => setIsReportOpen(true)}>
-							<FileImage className="mr-2 size-4" /> View Review Form and Evidence
+							<FileImage className="mr-1 size-4" /> View Review Form and Evidence
 						</Button>
 					)}
 
@@ -254,7 +258,7 @@ export function HostCleaningDetailView({
 									className="flex-1"
 									disabled={!canEdit}
 									onClick={() => onEdit(cleaning.id)}>
-									<Pencil className="mr-2 size-4" /> {DICT.COMMON.ACTIONS.EDIT}
+									<Pencil className="mr-1 size-4" /> {DICT.COMMON.ACTIONS.EDIT}
 								</Button>
 							)}
 							{canCancel && (
@@ -262,7 +266,7 @@ export function HostCleaningDetailView({
 									variant="destructive"
 									className="flex-1 "
 									onClick={() => onDelete(cleaning.id)}>
-									<Trash2 className="mr-2 size-4" />{' '}
+									<Trash2 className="mr-1 size-4" />{' '}
 									{cleaning.status === 'confirmed'
 										? DICT.COMMON.ACTIONS.CANCEL_CLEANING
 										: DICT.COMMON.ACTIONS.DELETE}

@@ -85,7 +85,7 @@ export function PersonalInfoForm() {
 				/>
 			</div>
 			<Button className="font-medium" disabled={form.formState.isSubmitting}>
-				{form.formState.isSubmitting && <Loader2 className="mr-2 size-4 animate-spin" />}
+				{form.formState.isSubmitting && <Loader2 className="mr-1 size-4 animate-spin" />}
 				{dict.LABELS.SAVE_CHANGES}
 			</Button>
 		</form>

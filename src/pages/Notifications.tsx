@@ -28,7 +28,7 @@ export function NotificationsPage() {
 				<h1 className="text-3xl font-bold uppercase text-center md:text-left">{dict.PAGE.TITLE}</h1>
 				{notifications.some((n) => !n.is_read) && (
 					<Button variant="outline" size="sm" onClick={() => markAllAsRead()}>
-						<CheckCheck className="size-4 mr-2" />
+						<CheckCheck className="size-4 mr-1" />
 						{dict.PAGE.READ_BUTTON}
 					</Button>
 				)}

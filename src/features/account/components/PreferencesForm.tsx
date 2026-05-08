@@ -25,8 +25,10 @@ export function NotificationPreferencesForm() {
 				<div className="flex gap-4">
 					<Bell className="size-5 text-muted-foreground mt-0.5" />
 					<div className="space-y-0.5">
-						<p className="text-sm font-medium">{dict.PREFERENCES.TITLE}</p>
-						<p className="text-xs text-muted-foreground">{dict.PREFERENCES.SUBTITLE}</p>
+						<p className="text-sm font-medium">{dict.PREFERENCES.NOTIFICATIONS.TITLE}</p>
+						<p className="text-xs text-muted-foreground">
+							{dict.PREFERENCES.NOTIFICATIONS.SUBTITLE}
+						</p>
 					</div>
 				</div>
 				<Switch checked={preferences.enabled ?? true} onCheckedChange={handleEnabledChange} />

@@ -34,7 +34,7 @@ export function AccountPage() {
 							<Button
 								variant="ghost"
 								className="justify-start font-medium text-muted-foreground w-full">
-								<User className="mr-2 size-4" />
+								<User className="mr-1 size-4" />
 								{dict.PERSONAL.TITLE}
 							</Button>
 						</a>
@@ -42,7 +42,7 @@ export function AccountPage() {
 							<Button
 								variant="ghost"
 								className="justify-start font-medium text-muted-foreground w-full">
-								<Shield className="mr-2 size-4" />
+								<Shield className="mr-1 size-4" />
 								{dict.SECURITY.TITLE}
 							</Button>
 						</a>
@@ -50,7 +50,7 @@ export function AccountPage() {
 							<Button
 								variant="ghost"
 								className="justify-start font-medium text-muted-foreground w-full">
-								<Settings className="mr-2 size-4" />
+								<Settings className="mr-1 size-4" />
 								{dict.PREFERENCES.TITLE}
 							</Button>
 						</a>
@@ -58,7 +58,7 @@ export function AccountPage() {
 							<Button
 								variant="ghost"
 								className="justify-start font-medium text-muted-foreground w-full">
-								<Send className="mr-2 size-4" />
+								<Send className="mr-1 size-4" />
 								{dict.CONTACT.TITLE}
 							</Button>
 						</a>
@@ -141,7 +141,7 @@ export function AccountPage() {
 							variant="destructive"
 							className="w-full sm:w-fit font-medium"
 							onClick={() => signOut()}>
-							<LogOut className="mr-2 size-4" />
+							<LogOut className="mr-1 size-4" />
 							{dict.LABELS.SIGN_OUT}
 						</Button>
 					</div>
