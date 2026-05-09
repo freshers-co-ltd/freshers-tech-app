@@ -23,7 +23,7 @@ function StatLabel({ className, ...props }: React.ComponentProps<'div'>) {
 	return (
 		<div
 			data-slot="stat-label"
-			className={cn('font-medium text-muted-foreground text-sm', className)}
+			className={cn('font-medium text-muted-foreground text-sm capitalize', className)}
 			{...props}
 		/>
 	);

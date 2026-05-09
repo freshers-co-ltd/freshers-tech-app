@@ -15,7 +15,7 @@ import {
 	type CleaningStatus,
 	STATUS_GROUPS,
 } from '@/features/cleanings/cleaningService';
-import { CleanerCleaningCard } from '@/features/cleanings/components/CleanerCleaningCard';
+import { CleaningCard } from '@/features/cleanings/components/CleaningCard';
 import { useCleanerCleanings } from '@/features/cleanings/useCleanerCleanings';
 
 interface CleanerCleaningGridProps {
@@ -131,7 +131,12 @@ export function CleanerCleaningGrid({ onView }: CleanerCleaningGridProps) {
 			) : (
 				<div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
 					{filteredCleanings.map((cleaning) => (
-						<CleanerCleaningCard key={cleaning.id} cleaning={cleaning} onView={onView} />
+						<CleaningCard
+							key={cleaning.id}
+							cleaning={cleaning}
+							userRole="cleaner"
+							onView={onView}
+						/>
 					))}
 				</div>
 			)}

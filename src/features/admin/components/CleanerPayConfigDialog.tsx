@@ -1,6 +1,6 @@
 'use client';
 
-import { DollarSign, Loader2 } from 'lucide-react';
+import { Banknote, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -113,7 +113,7 @@ export function CleanerPayConfigDialog({ open, onOpenChange }: CleanerPayConfigD
 					<div className="space-y-2">
 						<Label htmlFor="hourlyRate">Hourly Rate (£)</Label>
 						<div className="flex items-center gap-2">
-							<DollarSign className="size-4 text-muted-foreground" />
+							<Banknote className="size-4 text-muted-foreground" />
 							<Input
 								id="hourlyRate"
 								type="number"

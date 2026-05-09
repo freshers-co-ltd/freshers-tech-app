@@ -255,7 +255,6 @@ BEGIN
             WHEN au.last_sign_in_at > NOW() - INTERVAL '1 year' THEN 'Past year'
             ELSE 'More than a year ago'
         END AS last_sign_in_text,
-        p.base_price_per_cleaning,
         (
             SELECT jsonb_agg(row)
             FROM (

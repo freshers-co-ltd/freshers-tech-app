@@ -80,14 +80,14 @@ export function NotificationList({ maxItems }: NotificationListProps) {
 					type="button"
 					key={notification.id}
 					className={cn(
-						'w-full text-left py-1 px-2 rounded-lg cursor-pointer mb-1 last:mb-0 bg-primary/2 hover:bg-primary/10 transition-colors',
+						'w-full text-left py-1.5 px-2.5 rounded-lg cursor-pointer mb-1 last:mb-0 bg-primary/2 hover:bg-primary/10 transition-colors',
 						!notification.is_read && 'bg-primary/5',
 					)}
 					onClick={() => handleClick(notification)}>
 					<div className="flex flex-col overflow-hidden">
 						<div className="flex w-full gap-2 mb-0.5">
 							<div className="mt-0.5 shrink-0">{getNotificationIcon(notification.type)}</div>
-							<p className="text-sm font-medium leading-snug truncate self-end flex-1 min-w-0">
+							<p className="text-sm font-semibold leading-snug truncate self-end flex-1 min-w-0">
 								{notification.title}
 							</p>
 							{!notification.is_read && (

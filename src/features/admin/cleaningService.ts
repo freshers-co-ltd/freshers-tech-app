@@ -116,7 +116,6 @@ export const cleaningService = {
 		hostId: string,
 		propertyId: string,
 		scheduledStart: string,
-		serviceCost: number,
 		options?: {
 			instructions?: string;
 			stocksIncluded?: boolean;
@@ -127,7 +126,6 @@ export const cleaningService = {
 			p_host_id: hostId,
 			p_property_id: propertyId,
 			p_scheduled_start: scheduledStart,
-			p_service_cost: serviceCost,
 			p_instructions: (options?.instructions ?? null) as string,
 			p_stocks_included: options?.stocksIncluded ?? false,
 			p_custom_tasks: options?.customTasks ?? [],

@@ -1,39 +1,40 @@
 'use client';
 
-import { BrushCleaning, Clock, Sparkles } from 'lucide-react';
-import { useCleanings } from '@/features/cleanings/CleaningContext';
-import { CLEANING_STATUS } from '@/features/cleanings/cleaningService';
+import { Banknote, BrushCleaning, Clock, Sparkles } from 'lucide-react';
+import { DICT } from '@/dictionary';
+import { useCleanerDashboardStats } from '@/hooks/useCleanerDashboardStats';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 
 export function CleanerDashboardPage() {
-	const { cleanings, isLoading } = useCleanings();
+	const { stats, isLoading } = useCleanerDashboardStats();
+	const dict = DICT.DASHBOARD.CLEANER;
 
-	const assignedCleanings = cleanings.filter(
-		(c) => c.status === CLEANING_STATUS.CONFIRMED || c.status === CLEANING_STATUS.IN_PROGRESS,
-	).length;
-	const activeCleanings = cleanings.filter((c) => c.status === CLEANING_STATUS.IN_PROGRESS).length;
-	const completedCleanings = cleanings.filter((c) => c.status === CLEANING_STATUS.COMPLETED).length;
-
-	const stats = [
+	const statsConfig = [
 		{
-			label: 'Assigned Cleanings',
-			value: isLoading ? '-' : assignedCleanings,
+			label: dict.STATS.ASSIGNED,
+			value: isLoading ? '-' : stats.assigned,
+			icon: Clock,
+			iconColor: 'text-purple-600',
+		},
+		{
+			label: dict.STATS.ACTIVE,
+			value: isLoading ? '-' : stats.active,
 			icon: BrushCleaning,
 			iconColor: 'text-blue-600',
 		},
 		{
-			label: 'Active Cleanings',
-			value: isLoading ? '-' : activeCleanings,
-			icon: Clock,
-			iconColor: 'text-warning',
-		},
-		{
-			label: 'Completed Cleanings',
-			value: isLoading ? '-' : completedCleanings,
+			label: dict.STATS.COMPLETED,
+			value: isLoading ? '-' : stats.completed,
 			icon: Sparkles,
 			iconColor: 'text-yellow-400',
 		},
+		{
+			label: dict.STATS.TOTAL_EARNINGS,
+			value: isLoading ? '-' : `£${stats.totalEarnings.toFixed(2)}`,
+			icon: Banknote,
+			iconColor: 'text-green-600',
+		},
 	];
 
-	return <DashboardLayout stats={stats} />;
+	return <DashboardLayout stats={statsConfig} />;
 }

@@ -109,9 +109,13 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 		}
 
 		const isCleaner = profile.role === 'cleaner';
-		if (!isCleaner) {
+		const isHost = profile.role === 'host';
+
+		if (!isCleaner && !isHost) {
 			return;
 		}
+
+		const filter = isCleaner ? `cleaner_id=eq.${user.id}` : `host_id=eq.${user.id}`;
 
 		const newChannel = supabase
 			.channel('cleanings-realtime')
@@ -121,7 +125,7 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 					event: '*',
 					schema: 'public',
 					table: 'cleanings',
-					filter: `cleaner_id=eq.${user.id}`,
+					filter,
 				},
 				() => {
 					fetchCleanings();

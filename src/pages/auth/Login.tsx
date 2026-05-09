@@ -17,6 +17,7 @@ export function LoginPage() {
 		if (reason === 'inactivity') {
 			toast.warning('You have been logged out due to inactivity.', {
 				id: 'inactivity-toast',
+				duration: Infinity,
 			});
 
 			navigate(location.pathname, {

@@ -1,8 +1,7 @@
 'use client';
 
-import { ListTodo, PoundSterling, Search, Settings } from 'lucide-react';
+import { Banknote, ListTodo, Search, Settings } from 'lucide-react';
 import { useState } from 'react';
-import { CleaningsTable } from '@/components/CleaningsTable';
 import { CleaningViewDialog } from '@/components/CleaningViewDialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -16,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import { DICT } from '@/dictionary';
 import { CleanerPayConfigDialog } from '@/features/admin/components/CleanerPayConfigDialog';
+import { CleaningsTable } from '@/features/admin/components/CleaningsTable';
 import { HostPricingConfigDialog } from '@/features/admin/components/HostPricingConfigDialog';
 import { StandardTasksDialog } from '@/features/admin/components/StandardTasksDialog';
 import { useAdminCleanings } from '@/features/admin/useAdminCleanings';
@@ -72,7 +72,7 @@ export function AdminCleaningsPage() {
 						Standard Tasks
 					</Button>
 					<Button variant="outline" onClick={() => setIsPayConfigOpen(true)}>
-						<PoundSterling className="size-4 mr-1" />
+						<Banknote className="size-4 mr-1" />
 						Pay Rates
 					</Button>
 					<Button variant="outline" onClick={() => setIsHostPricingOpen(true)}>

@@ -1,9 +1,9 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -32,34 +32,45 @@ type SetPasswordFormValues = z.infer<typeof setPasswordSchema>;
 
 export function SetPasswordForm({ className, ...props }: React.ComponentProps<'form'>) {
 	const navigate = useNavigate();
-	const [searchParams] = useSearchParams();
 	const [isSuccess, setIsSuccess] = useState(false);
 	const [isProcessing, setIsProcessing] = useState(false);
-
-	const token = useMemo(() => {
-		return searchParams.get('token') || window.location.hash.split('token=')[1]?.split('&')[0];
-	}, [searchParams]);
+	const [isAuthenticated, setIsAuthenticated] = useState(false);
+	const [authError, setAuthError] = useState(false);
 
 	const form = useForm<SetPasswordFormValues>({
 		resolver: zodResolver(setPasswordSchema),
 		defaultValues: { password: '', confirmPassword: '' },
 	});
 
+	useEffect(() => {
+		const handleAuth = async () => {
+			const hash = window.location.hash.substring(1);
+			const params = new URLSearchParams(hash);
+			const accessToken = params.get('access_token');
+			const refreshToken = params.get('refresh_token');
+
+			if (accessToken && refreshToken) {
+				const { error } = await supabase.auth.setSession({
+					access_token: accessToken,
+					refresh_token: refreshToken,
+				});
+
+				if (error) {
+					setAuthError(true);
+					toast.error(DICT.ERRORS.AUTH.LINK_EXPIRED);
+				} else {
+					setIsAuthenticated(true);
+				}
+			} else {
+				setAuthError(true);
+			}
+		};
+
+		handleAuth();
+	}, []);
+
 	const onSubmit = async (data: SetPasswordFormValues) => {
-		if (!token) {
-			toast.error(DICT.ERRORS.AUTH.LINK_EXPIRED);
-			return;
-		}
-
 		setIsProcessing(true);
-
-		const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(token);
-
-		if (exchangeError) {
-			setIsProcessing(false);
-			toast.error(DICT.ERRORS.AUTH.LINK_EXPIRED);
-			return;
-		}
 
 		const { error } = await authService.updatePassword(data.password);
 
@@ -86,7 +97,7 @@ export function SetPasswordForm({ className, ...props }: React.ComponentProps<'f
 		);
 	}
 
-	if (!token) {
+	if (authError) {
 		return (
 			<div className="text-center space-y-4">
 				<h1 className="text-xl font-bold">{DICT.AUTH.SET_PASSWORD.ERROR_TITLE}</h1>
@@ -94,6 +105,15 @@ export function SetPasswordForm({ className, ...props }: React.ComponentProps<'f
 				<Button variant="default" onClick={() => navigate('/login')}>
 					{DICT.AUTH.SET_PASSWORD.LOGIN_BUTTON}
 				</Button>
+			</div>
+		);
+	}
+
+	if (!isAuthenticated && !authError) {
+		return (
+			<div className="text-center space-y-4">
+				<h1 className="text-xl font-bold">{DICT.COMMON.LOADING.TITLE}</h1>
+				<p className="text-muted-foreground">{DICT.COMMON.LOADING.MESSAGE}</p>
 			</div>
 		);
 	}

@@ -43,15 +43,10 @@ export function EntityBadge({ variant, className, customLabel }: EntityBadgeProp
 				: USER_STATUS_STYLES[variant.value];
 
 	const label =
-		customLabel ||
-		(variant.type === 'cleaning'
-			? variant.value.toUpperCase().replace('_', ' ')
-			: variant.type === 'role'
-				? variant.value.toUpperCase()
-				: variant.value.toUpperCase());
+		customLabel || (variant.type === 'cleaning' ? variant.value.replace('_', ' ') : variant.value);
 
 	return (
-		<Badge variant="outline" className={`${style} ${className || ''}`}>
+		<Badge variant="outline" className={`uppercase ${style} ${className || ''}`}>
 			{label}
 		</Badge>
 	);

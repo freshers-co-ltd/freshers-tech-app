@@ -5,7 +5,6 @@ import { Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog';
-import { UserCard } from '@/components/UserCard';
 import { Card } from '@/components/ui/card';
 import {
 	Dialog,
@@ -16,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Stat, StatIndicator, StatLabel, StatValue } from '@/components/ui/stat';
 import { DICT } from '@/dictionary';
+import { UserCard } from '@/features/admin/components/UserCard';
 import type { AdminUser } from '@/features/admin/userService';
 import type { CleaningRequest } from '@/features/cleanings/cleaningService';
 import { cleaningService } from '@/features/cleanings/cleaningService';
@@ -164,7 +164,7 @@ export function UserDetailLayout({
 
 	return (
 		<main className="max-width-container py-8">
-			<div className="flex flex-col sm:flex-row gap-4 mb-6">
+			<div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mb-6">
 				<Card className="flex-1 p-0 overflow-hidden">
 					<UserCard
 						user={user}
@@ -175,7 +175,7 @@ export function UserDetailLayout({
 					/>
 				</Card>
 
-				<div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+				<div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
 					{stats?.map((stat) => (
 						<Stat key={stat.id || stat.label}>
 							{stat.icon && (

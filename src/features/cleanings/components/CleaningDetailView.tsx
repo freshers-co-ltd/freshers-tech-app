@@ -1,16 +1,6 @@
 'use client';
 
-import {
-	AlertCircle,
-	Bath,
-	Bed,
-	Clock,
-	HandCoins,
-	Info,
-	MapPin,
-	Package,
-	User,
-} from 'lucide-react';
+import { AlertCircle, Banknote, Bath, Bed, Clock, Info, MapPin, Package, User } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { EntityBadge } from '@/components/EntityBadge';
@@ -260,7 +250,7 @@ export function CleaningDetailView({
 										</div>
 
 										<div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 min-w-0">
-											<HandCoins className="size-5 text-primary shrink-0" />
+											<Banknote className="size-5 text-primary shrink-0" />
 											<div className="min-w-0 flex gap-4">
 												{isAdmin ? (
 													<>

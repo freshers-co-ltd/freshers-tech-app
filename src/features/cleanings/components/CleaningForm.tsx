@@ -286,39 +286,43 @@ export function CleaningForm({
 										{dict.LABELS.NEW_PROPERTY}
 									</Button>
 								)}
-								<p className="text-center font-medium">OR</p>
-								<Field>
-									<Controller
-										control={control}
-										name="property_id"
-										render={({ field }) => (
-											<Select onValueChange={field.onChange} value={field.value}>
-												<SelectTrigger>
-													<SelectValue placeholder={dict.LABELS.SELECT_PROPERTY} />
-												</SelectTrigger>
-												<SelectContent>
-													{displayedProperties.map((p) => (
-														<SelectItem key={p.id} value={p.id}>
-															{p.address_line_1}, {p.postcode}
-														</SelectItem>
-													))}
-												</SelectContent>
-											</Select>
-										)}
-									/>
-									{errors.property_id && <FieldError>{errors.property_id.message}</FieldError>}
-								</Field>
+								{displayedProperties.length > 0 && (
+									<>
+										<p className="text-center font-medium">OR</p>
+										<Field>
+											<Controller
+												control={control}
+												name="property_id"
+												render={({ field }) => (
+													<Select onValueChange={field.onChange} value={field.value}>
+														<SelectTrigger>
+															<SelectValue placeholder={dict.LABELS.SELECT_PROPERTY} />
+														</SelectTrigger>
+														<SelectContent>
+															{displayedProperties.map((p) => (
+																<SelectItem key={p.id} value={p.id}>
+																	{p.address_line_1}, {p.postcode}
+																</SelectItem>
+															))}
+														</SelectContent>
+													</Select>
+												)}
+											/>
+											{errors.property_id && <FieldError>{errors.property_id.message}</FieldError>}
+										</Field>
 
-								<Button
-									className="w-full"
-									onClick={async () => {
-										const isValid = await trigger('property_id');
-										if (isValid) {
-											setStep(2);
-										}
-									}}>
-									{dict.BUTTONS.NEXT_DETAILS}
-								</Button>
+										<Button
+											className="w-full"
+											onClick={async () => {
+												const isValid = await trigger('property_id');
+												if (isValid) {
+													setStep(2);
+												}
+											}}>
+											{dict.BUTTONS.NEXT_DETAILS}
+										</Button>
+									</>
+								)}
 							</div>
 						</FieldGroup>
 					)}

@@ -1,58 +1,47 @@
-import { Calendar, ClipboardList, Home, ShieldCheck, Zap } from 'lucide-react';
+'use client';
+
+import { BrushCleaning, Calendar, ClipboardList, Home, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { DICT } from '@/dictionary';
-import { useCleanings } from '@/features/cleanings/CleaningContext';
-import { CLEANING_STATUS } from '@/features/cleanings/cleaningService';
-import { useProperties } from '@/features/properties/PropertyContext';
+import { useHostDashboardStats } from '@/hooks/useHostDashboardStats';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 
 export function HostDashboardPage() {
-	const { properties, isLoading: propertiesLoading } = useProperties();
-	const { cleanings, isLoading: cleaningsLoading } = useCleanings();
+	const { stats, isLoading } = useHostDashboardStats();
+	const dict = DICT.DASHBOARD.HOST;
 	const navigate = useNavigate();
 
-	const dict = DICT.DASHBOARD.HOST;
-
-	const upcomingCleanings = cleanings.filter(
-		(c) => c.status === CLEANING_STATUS.CONFIRMED && new Date(c.scheduled_start) > new Date(),
-	).length;
-	const requestedCleanings = cleanings.filter((c) => c.status === CLEANING_STATUS.REQUESTED).length;
-	const inProgressCleanings = cleanings.filter(
-		(c) => c.status === CLEANING_STATUS.IN_PROGRESS,
-	).length;
-	const totalProperties = properties.length;
-
-	const stats = [
+	const statsConfig = [
 		{
 			label: dict.STATS.CONFIRMED,
-			value: cleaningsLoading ? '-' : upcomingCleanings,
+			value: isLoading ? '-' : stats.upcoming,
 			icon: Calendar,
-			iconColor: 'text-destructive',
+			iconColor: 'text-green-600',
 		},
 
 		{
 			label: dict.STATS.IN_PROGRESS,
-			value: cleaningsLoading ? '-' : inProgressCleanings,
-			icon: ShieldCheck,
-			iconColor: 'text-success',
+			value: isLoading ? '-' : stats.inProgress,
+			icon: BrushCleaning,
+			iconColor: 'text-blue-600',
 		},
 		{
 			label: dict.STATS.REQUESTED,
-			value: cleaningsLoading ? '-' : requestedCleanings,
+			value: isLoading ? '-' : stats.requested,
 			icon: ClipboardList,
-			iconColor: 'text-warning',
+			iconColor: 'text-yellow-400',
 		},
 		{
 			label: dict.STATS.PROPERTIES,
-			value: propertiesLoading ? '-' : totalProperties,
+			value: isLoading ? '-' : stats.totalProperties,
 			icon: Home,
-			iconColor: 'text-primary',
+			iconColor: 'text-purple-600',
 		},
 	];
 
 	return (
 		<DashboardLayout
-			stats={stats}
+			stats={statsConfig}
 			cta={{
 				title: dict.CTA_CARD.TITLE,
 				message: dict.CTA_CARD.MESSAGE,

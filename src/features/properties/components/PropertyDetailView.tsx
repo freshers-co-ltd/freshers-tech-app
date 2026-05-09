@@ -114,13 +114,13 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 							{isHost && (
 								<div className="flex flex-col gap-2">
 									<Button onClick={() => onEdit(property.id)} className="w-full">
-										<Pencil className="mr-2 size-4" /> {DICT.COMMON.ACTIONS.EDIT}
+										<Pencil className="mr-1 size-4" /> {DICT.COMMON.ACTIONS.EDIT}
 									</Button>
 									<Button
 										variant="destructive"
 										onClick={() => onDelete(property.id)}
 										className="w-full">
-										<Trash2 className="mr-2 size-4" /> {DICT.COMMON.ACTIONS.DELETE}
+										<Trash2 className="mr-1 size-4" /> {DICT.COMMON.ACTIONS.DELETE}
 									</Button>
 								</div>
 							)}

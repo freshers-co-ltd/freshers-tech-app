@@ -125,7 +125,7 @@ export function PropertiesTable({
 					<p className="font-medium truncate">{property.address_line_1}</p>
 					<p className="text-sm text-muted-foreground">
 						{property.postcode}
-						{property.town_city ? ` · ${property.town_city}` : ''}
+						{property.town_city ? `, ${property.town_city}` : ''}
 					</p>
 				</div>
 

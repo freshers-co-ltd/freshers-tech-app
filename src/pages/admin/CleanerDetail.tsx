@@ -4,7 +4,7 @@ import { BrushCleaning, ClipboardList, Clock, Sparkles } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { CleaningsTable } from '@/components/CleaningsTable';
+import { CleaningsTable } from '@/features/admin/components/CleaningsTable';
 import { type AdminCleanerDetail, userService } from '@/features/admin/userService';
 import { useResourceModals } from '@/hooks/useResourceModals';
 import { UserDetailLayout } from '@/layouts/UserDetailLayout';

@@ -1,6 +1,6 @@
 'use client';
 
-import { Calendar, Clock, HandCoins, KeyRound, Mail, ShieldBan, ShieldCheck } from 'lucide-react';
+import { Banknote, Calendar, Clock, KeyRound, Mail, ShieldBan, ShieldCheck } from 'lucide-react';
 import { EntityBadge } from '@/components/EntityBadge';
 import { Button } from '@/components/ui/button';
 import type { UserRole } from '@/features/auth/authService';
@@ -79,7 +79,7 @@ export function UserCard({
 				</p>
 				{isHost && (
 					<p className="text-sm text-muted-foreground flex items-center gap-2">
-						<HandCoins className="size-4 shrink-0" />
+						<Banknote className="size-4 shrink-0" />
 						<span>Base cleaning price: £{user.base_price_per_cleaning?.toFixed(2) ?? '0.00'}</span>
 					</p>
 				)}
@@ -88,7 +88,7 @@ export function UserCard({
 			<div className="flex flex-col md:flex-row gap-2 md:ml-1">
 				{isHost && onEditBasePrice && (
 					<Button variant="outline" size="sm" onClick={onEditBasePrice}>
-						<HandCoins className="size-4 mr-1" />
+						<Banknote className="size-4 mr-1" />
 						Edit Price
 					</Button>
 				)}

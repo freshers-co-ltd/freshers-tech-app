@@ -1,7 +1,7 @@
 'use client';
 
 import { format, subMonths } from 'date-fns';
-import { CalendarX, Clock, PoundSterling, Sparkles } from 'lucide-react';
+import { Banknote, CalendarX, Clock, Sparkles } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { Loading } from '@/components/Loading';
@@ -183,7 +183,7 @@ export function AdminAnalyticsPage() {
 
 						<Stat>
 							<StatIndicator variant="icon" className="text-success">
-								<PoundSterling />
+								<Banknote />
 							</StatIndicator>
 							<StatValue>
 								{revenueMetrics?.revenue_current

@@ -66,6 +66,10 @@ export function SignupPage() {
 								</button>
 							))}
 						</div>
+
+						<Button variant="outline" className="mt-6" onClick={() => window.history.back()}>
+							<ChevronLeft className="mr-1 size-4" /> {DICT.AUTH.SIGNUP.BACK_BUTTON}
+						</Button>
 					</div>
 				</div>
 			) : (

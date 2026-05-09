@@ -1,60 +1,45 @@
 'use client';
 
 import { BrushCleaning, Clock, Home, Sparkles } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { analyticsService, type PlatformStats } from '@/features/admin/analyticsService';
+import { DICT } from '@/dictionary';
+import { useAdminDashboardStats } from '@/hooks/useAdminDashboardStats';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { formatHours } from '@/lib/utils';
 
 export function AdminDashboardPage() {
-	const [platformStats, setPlatformStats] = useState<PlatformStats | null>(null);
-	const [loading, setLoading] = useState(true);
+	const { stats, isLoading } = useAdminDashboardStats();
+	const dict = DICT.DASHBOARD.ADMIN;
 
-	useEffect(() => {
-		const fetchData = async () => {
-			setLoading(true);
-			const [platformStatsResult] = await Promise.all([analyticsService.getPlatformStats()]);
-
-			if (!platformStatsResult.error) {
-				setPlatformStats(platformStatsResult.data ?? null);
-			}
-
-			setLoading(false);
-		};
-		fetchData();
-	}, []);
-
-	const stats = [
+	const statsConfig = [
 		{
-			label: 'Completed Cleanings This Month',
-			value: loading ? '-' : platformStats?.completed_cleanings_mtd?.toString() || '0',
+			label: dict.STATS.COMPLETED_THIS_MONTH,
+			value: isLoading ? '-' : stats?.completedCleaningsMtd?.toString() || '0',
 			icon: Sparkles,
 			iconColor: 'text-yellow-400',
 		},
 		{
-			label: 'Cleanings In Progress',
-			value: loading ? '-' : platformStats?.cleanings_in_progress?.toString() || '0',
+			label: dict.STATS.IN_PROGRESS,
+			value: isLoading ? '-' : stats?.cleaningsInProgress?.toString() || '0',
 			icon: BrushCleaning,
 			iconColor: 'text-blue-600',
 		},
-
 		{
-			label: 'Average Completion Time',
-			value: loading
+			label: dict.STATS.AVG_COMPLETION_TIME,
+			value: isLoading
 				? '-'
-				: platformStats?.avg_completion_hours
-					? formatHours(platformStats.avg_completion_hours)
+				: stats?.avgCompletionHours
+					? formatHours(stats.avgCompletionHours)
 					: '0 hours',
 			icon: Clock,
 			iconColor: 'text-orange-500',
 		},
 		{
-			label: 'Total Properties',
-			value: loading ? '-' : platformStats?.total_properties?.toString() || '0',
+			label: dict.STATS.TOTAL_PROPERTIES,
+			value: isLoading ? '-' : stats?.totalProperties?.toString() || '0',
 			icon: Home,
 			iconColor: 'text-purple-600',
 		},
 	];
 
-	return <DashboardLayout stats={stats} />;
+	return <DashboardLayout stats={statsConfig} />;
 }

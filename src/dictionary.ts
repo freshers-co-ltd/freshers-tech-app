@@ -160,13 +160,14 @@ export const DICT = {
 			SUBMIT_BUTTON: 'Log in',
 			SUBMITTING_BUTTON: 'Logging in...',
 			SUCCESS_TOAST: 'Login successful',
-			TITLE: 'Login to your account',
+			TITLE: 'Log in to your account',
 		},
 		SIGNUP: {
 			CALL_TO_ACTION: 'Register as a host',
 			HAVE_ACCOUNT_LABEL: 'Already have an account?',
 			LOGIN_LINK: 'Log in',
 			MESSAGE: "Select how you'll be using our platform.",
+			BACK_BUTTON: 'Back to login',
 			ROLES: {
 				BACK_BUTTON: 'Back to selection',
 				CLEANER: {
@@ -234,15 +235,31 @@ export const DICT = {
 		HOST: {
 			STATS: {
 				CONFIRMED: 'Upcoming cleanings',
-				IN_PROGRESS: 'In Progress',
+				IN_PROGRESS: 'Cleanings in progress',
+				REQUESTED: 'Waiting for confirmation',
 				PROPERTIES: 'Total properties',
-				REQUESTED: 'Waiting confirmation',
 			},
 			CTA_CARD: {
 				BUTTON: 'Book Now',
 				MESSAGE:
 					'Need your property cleaned? Submit your request here and our team will handle the rest once your booking is confirmed.',
 				TITLE: 'Request a cleaning',
+			},
+		},
+		CLEANER: {
+			STATS: {
+				ASSIGNED: 'Assigned Cleanings',
+				ACTIVE: 'Active Cleanings',
+				COMPLETED: 'Completed Cleanings',
+				TOTAL_EARNINGS: 'Total Earnings',
+			},
+		},
+		ADMIN: {
+			STATS: {
+				COMPLETED_THIS_MONTH: 'Completed Cleanings This Month',
+				IN_PROGRESS: 'Cleanings In Progress',
+				AVG_COMPLETION_TIME: 'Average Completion Time',
+				TOTAL_PROPERTIES: 'Total Properties',
 			},
 		},
 	},

@@ -3,13 +3,13 @@
 import { ArrowUpDown, Eye, UserPlus } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { AssignCleanerDialog } from '@/components/AssignCleanerDialog';
 import { DataTable } from '@/components/DataTable';
 import { EntityBadge } from '@/components/EntityBadge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DICT } from '@/dictionary';
 import { cleaningService as adminCleaningService } from '@/features/admin/cleaningService';
+import { AssignCleanerDialog } from '@/features/admin/components/AssignCleanerDialog';
 import type { CleaningStatus } from '@/features/cleanings/cleaningService';
 import { supabase } from '@/lib/supabaseClient';
 import { formatDate } from '@/lib/utils';
@@ -297,7 +297,7 @@ export function CleaningsTable({
 					<p className="font-medium truncate">{cleaning.property_address || 'Unknown Property'}</p>
 					<p className="text-sm text-muted-foreground">
 						{cleaning.property_postcode}
-						{cleaning.property_town_city ? ` · ${cleaning.property_town_city}` : ''}
+						{cleaning.property_town_city ? `,  ${cleaning.property_town_city}` : ''}
 					</p>
 					<p className="text-sm text-muted-foreground mt-1">
 						{formatDate(cleaning.scheduled_start)} at{' '}

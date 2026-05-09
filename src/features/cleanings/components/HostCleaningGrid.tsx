@@ -13,8 +13,8 @@ import {
 import { DICT } from '@/dictionary';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
 import { STATUS_GROUPS } from '@/features/cleanings/cleaningService';
+import { CleaningCard } from '@/features/cleanings/components/CleaningCard';
 import { CleaningGridSkeleton } from '@/features/cleanings/components/CleaningGridSkeleton';
-import { HostCleaningCard } from '@/features/cleanings/components/HostCleaningCard';
 
 interface HostCleaningGridProps {
 	onView: (id: string) => void;
@@ -112,9 +112,10 @@ export function HostCleaningGrid({ onView, onEdit, onDelete }: HostCleaningGridP
 			) : (
 				<div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
 					{filteredCleanings.map((cleaning) => (
-						<HostCleaningCard
+						<CleaningCard
 							key={cleaning.id}
 							cleaning={cleaning}
+							userRole="host"
 							onView={onView}
 							onEdit={onEdit}
 							onDelete={onDelete}

@@ -44,9 +44,12 @@ const adminClient = createClient(supabaseUrl, serviceRoleKey)
 		console.log('[DEBUG] Invite Input:', { email, role, full_name });
 		console.log('[DEBUG] Using service role key:', serviceRoleKey ? 'yes' : 'no');
 
+		const origin = req.headers.get('origin') || new URL(req.url).origin;
+		const redirectTo = `${origin}/set-password`;
+
 		const { data, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
 			data: { role, full_name },
-			redirectTo: `${new URL(req.url).origin}/set-password`
+			redirectTo,
 		})
 
 		console.log('[DEBUG] Invite Result:', JSON.stringify(data));

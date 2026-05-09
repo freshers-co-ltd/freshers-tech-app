@@ -35,6 +35,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 	const lastUserId = useRef<string | null>(null);
 	const abortControllerRef = useRef<AbortController | null>(null);
+	const profileChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
 	const fetchProfile = useCallback(
 		async (
@@ -188,6 +189,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			subscription.unsubscribe();
 		};
 	}, [handleAuthStateChange]);
+
+	useEffect(() => {
+		if (!user) {
+			if (profileChannelRef.current) {
+				supabase.removeChannel(profileChannelRef.current);
+				profileChannelRef.current = null;
+			}
+			return;
+		}
+
+		if (profileChannelRef.current) {
+			return;
+		}
+
+		const newChannel = supabase
+			.channel('profile-realtime')
+			.on(
+				'postgres_changes',
+				{
+					event: 'UPDATE',
+					schema: 'public',
+					table: 'profiles',
+					filter: `id=eq.${user.id}`,
+				},
+				async () => {
+					const data = await fetchProfile(user.id);
+					if (data) {
+						setProfile(data);
+					}
+				},
+			)
+			.subscribe();
+
+		profileChannelRef.current = newChannel;
+
+		return () => {
+			if (profileChannelRef.current) {
+				supabase.removeChannel(profileChannelRef.current);
+				profileChannelRef.current = null;
+			}
+		};
+	}, [user, fetchProfile]);
 
 	const refreshProfile = useCallback(async () => {
 		if (user) {

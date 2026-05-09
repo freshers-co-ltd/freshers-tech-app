@@ -11,8 +11,6 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { CleaningsTable } from '@/components/CleaningsTable';
-import { PropertiesTable } from '@/components/PropertiesTable';
 import { Button } from '@/components/ui/button';
 import {
 	Dialog,
@@ -23,9 +21,11 @@ import {
 } from '@/components/ui/dialog';
 import { FormContainer } from '@/components/ui/form-container';
 import { DICT } from '@/dictionary';
+import { cleaningService as adminCleaningService } from '@/features/admin/cleaningService';
+import { CleaningsTable } from '@/features/admin/components/CleaningsTable';
 import { HostBasePriceDialog } from '@/features/admin/components/HostBasePriceDialog';
+import { PropertiesTable } from '@/features/admin/components/PropertiesTable';
 import { type AdminHostDetail, userService } from '@/features/admin/userService';
-import { cleaningService } from '@/features/cleanings/cleaningService';
 import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
 import { CleaningForm } from '@/features/cleanings/components/CleaningForm';
 import { PropertyDetailView } from '@/features/properties/components/PropertyDetailView';
@@ -129,12 +129,19 @@ export function AdminHostDetailPage() {
 	};
 
 	const handleCreateCleaning = async (values: CleaningFormValues) => {
-		const result = await cleaningService.createCleaningRequest({
-			property_id: values.property_id,
-			custom_tasks: values.custom_tasks?.map((t) => t.description) || [],
-			instructions: values.instructions || '',
-			scheduled_start: values.scheduled_start.toISOString(),
-		});
+		if (!id) {
+			return;
+		}
+		const result = await adminCleaningService.createCleaningForHost(
+			id,
+			values.property_id,
+			values.scheduled_start.toISOString(),
+			{
+				instructions: values.instructions || undefined,
+				stocksIncluded: values.stocks_included,
+				customTasks: values.custom_tasks?.map((t) => t.description) || [],
+			},
+		);
 		if (result.error) {
 			toast.error(result.error);
 		} else {
@@ -175,28 +182,28 @@ export function AdminHostDetailPage() {
 	const statsConfig = [
 		{
 			id: 'total-requested',
-			label: 'Total Cleanings Requested',
+			label: 'Total cleanings requested',
 			value: stats?.total || 0,
 			icon: ClipboardList,
 			iconColor: 'text-purple-600',
 		},
 		{
 			id: 'requested',
-			label: 'Requested Cleanings',
+			label: 'Requested cleanings',
 			value: stats?.requested || 0,
 			icon: CalendarClock,
 			iconColor: 'text-yellow-600',
 		},
 		{
 			id: 'pending',
-			label: 'Pending Requested Cleanings',
+			label: 'Pending confirmed cleanings',
 			value: stats?.confirmed || 0,
 			icon: BadgeCheck,
 			iconColor: 'text-green-600',
 		},
 		{
 			id: 'in-progress',
-			label: 'Cleanings in Progress',
+			label: 'Cleanings in progress',
 			value: stats?.in_progress || 0,
 			icon: BrushCleaning,
 			iconColor: 'text-blue-600',
