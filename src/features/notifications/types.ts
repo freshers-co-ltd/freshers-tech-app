@@ -11,6 +11,17 @@ export type NotificationInsert = Database['public']['Tables']['notifications']['
 export type NotificationPreferences =
 	Database['public']['Tables']['notification_preferences']['Row'];
 
+export type PushSubscriptionData = Database['public']['Tables']['push_subscriptions']['Row'];
+
+export interface PushSubscriptionJSON {
+	endpoint: string;
+	expirationTime: number | null;
+	keys: {
+		p256dh: string;
+		auth: string;
+	};
+}
+
 export interface NotificationData {
 	cleaning_id?: string;
 	property_id?: string;

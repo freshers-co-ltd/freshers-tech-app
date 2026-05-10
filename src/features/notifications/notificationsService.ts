@@ -193,7 +193,7 @@ export const notificationsService = {
 
 	async updatePreferences(
 		userId: string,
-		preferences: Partial<Pick<NotificationPreferences, 'enabled'>>,
+		preferences: Partial<Pick<NotificationPreferences, 'enabled' | 'push_enabled'>>,
 	): Promise<{ success: boolean; error: string | null }> {
 		const { error } = await supabase
 			.from('notification_preferences')

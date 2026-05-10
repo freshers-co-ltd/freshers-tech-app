@@ -1,11 +1,14 @@
 import type { LucideIcon } from 'lucide-react';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import type { ComponentProps } from 'react';
+import { useEffect, useState } from 'react';
 import { CtaCard } from '@/components/CtaCard';
 import { NotificationsCard } from '@/components/NotificationsCard';
 import { Stat, StatIndicator, StatLabel, StatTrend, StatValue } from '@/components/ui/stat';
 import { DICT } from '@/dictionary';
 import { useAuth } from '@/features/auth/AuthContext';
+import { PushOnboardingModal } from '@/features/notifications/components/PushOnboardingModal';
+import { useNotifications } from '@/features/notifications/useNotifications';
 
 interface StatItem {
 	label: string;
@@ -34,10 +37,20 @@ interface DashboardLayoutProps extends ComponentProps<'main'> {
 export function DashboardLayout({ stats, cta, className, ...props }: DashboardLayoutProps) {
 	const dict = DICT.DASHBOARD;
 	const { profile } = useAuth();
+	const { preferences } = useNotifications();
 	const firstName = profile?.full_name?.split(' ')[0] || profile?.role;
+
+	const [showOnboarding, setShowOnboarding] = useState(false);
+
+	useEffect(() => {
+		if (preferences && preferences.push_enabled === null) {
+			setShowOnboarding(true);
+		}
+	}, [preferences]);
 
 	return (
 		<main className={`max-width-container p-2 md:p-8 ${className ?? ''}`.trim()} {...props}>
+			<PushOnboardingModal isOpen={showOnboarding} onOpenChange={setShowOnboarding} />
 			<header className="mb-6">
 				<div className="space-y-1">
 					<h1 className="text-3xl font-bold uppercase">{`${dict.TITLE}, ${firstName}`}</h1>

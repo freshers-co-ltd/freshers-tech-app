@@ -419,6 +419,10 @@ DECLARE v_cleaning_id UUID;
     v_property_type TEXT;
     v_bedrooms INT;
 BEGIN
+    IF NOT EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin') THEN
+        RAISE EXCEPTION 'Unauthorized' USING ERRCODE = 'P0001';
+    END IF;
+
     IF NOT EXISTS (SELECT 1 FROM public.properties WHERE id = p_property_id AND host_id = p_host_id AND deleted_at IS NULL) THEN
         RAISE EXCEPTION 'Ownership mismatch';
     END IF;
@@ -724,10 +728,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated;
+GRANT
+EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated;
 
-CREATE OR REPLACE FUNCTION public.set_cleaner_pay_on_cleaning_insert()
-RETURNS TRIGGER AS $$
+CREATE
+OR REPLACE FUNCTION public.set_cleaner_pay_on_cleaning_insert () RETURNS TRIGGER AS $$
 DECLARE
     v_property_type TEXT;
     v_bedrooms INT;
@@ -759,16 +764,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trigger_set_cleaner_pay_on_cleaning_insert
-    BEFORE INSERT ON public.cleanings
-    FOR EACH ROW
-    EXECUTE FUNCTION public.set_cleaner_pay_on_cleaning_insert();
+CREATE TRIGGER trigger_set_cleaner_pay_on_cleaning_insert BEFORE INSERT ON public.cleanings FOR EACH ROW
+EXECUTE FUNCTION public.set_cleaner_pay_on_cleaning_insert ();
 
-CREATE OR REPLACE FUNCTION public.admin_update_host_base_price(
-    p_host_id UUID,
-    p_base_price NUMERIC
-) RETURNS VOID SECURITY DEFINER
-SET search_path = public AS $$
+CREATE
+OR REPLACE FUNCTION public.admin_update_host_base_price (p_host_id UUID, p_base_price NUMERIC) RETURNS VOID SECURITY DEFINER
+SET
+    search_path = public AS $$
 DECLARE
     v_current_base_price NUMERIC;
     v_host_multipliers JSONB;
@@ -791,7 +793,7 @@ BEGIN
         UPDATE cleanings c
         SET service_cost = public.calculate_service_cost(
             (SELECT p.bedrooms::INTEGER FROM properties p WHERE p.id = c.property_id),
-            (SELECT p.type FROM properties p WHERE p.id = c.property_id),
+            (SELECT p.type::TEXT FROM properties p WHERE p.id = c.property_id),
             c.stocks_included,
             p_base_price,
             v_host_multipliers
@@ -803,14 +805,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.calculate_service_cost(
+CREATE
+OR REPLACE FUNCTION public.calculate_service_cost (
     p_bedrooms INTEGER,
     p_property_type TEXT,
     p_stocks_included BOOLEAN,
     p_base_price NUMERIC,
     p_host_multipliers JSONB DEFAULT NULL
 ) RETURNS NUMERIC LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public AS $$
+SET
+    search_path = public AS $$
 DECLARE
     v_multiplier NUMERIC;
     v_property_key TEXT;
@@ -830,8 +834,8 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.set_service_cost_on_cleaning_insert()
-RETURNS TRIGGER AS $$
+CREATE
+OR REPLACE FUNCTION public.set_service_cost_on_cleaning_insert () RETURNS TRIGGER AS $$
 DECLARE
     v_property_type TEXT;
     v_bedrooms INT;
@@ -859,9 +863,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trigger_set_service_cost_on_cleaning_insert
-    BEFORE INSERT ON public.cleanings
-    FOR EACH ROW
-    EXECUTE FUNCTION public.set_service_cost_on_cleaning_insert();
+CREATE TRIGGER trigger_set_service_cost_on_cleaning_insert BEFORE INSERT ON public.cleanings FOR EACH ROW
+EXECUTE FUNCTION public.set_service_cost_on_cleaning_insert ();
 
 COMMIT;

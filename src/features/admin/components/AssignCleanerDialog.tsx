@@ -43,6 +43,9 @@ export function AssignCleanerDialog({
 		onOpenChange(false);
 	};
 
+	const currentCleaner = availableCleaners.find((c) => c.id === selectedCleanerId);
+	const displayValue = currentCleaner?.full_name || '';
+
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent>
@@ -52,8 +55,12 @@ export function AssignCleanerDialog({
 				</DialogHeader>
 				<div className="space-y-4">
 					<Select value={selectedCleanerId} onValueChange={onSelectCleaner}>
-						<SelectTrigger>
-							<SelectValue placeholder={DICT.COMMON.DIALOGS.ASSIGN_CLEANER.SELECT} />
+						<SelectTrigger className="w-full">
+							<SelectValue
+								placeholder={DICT.COMMON.DIALOGS.ASSIGN_CLEANER.SELECT}
+								className={displayValue ? 'text-foreground' : ''}>
+								{displayValue || DICT.COMMON.DIALOGS.ASSIGN_CLEANER.SELECT}
+							</SelectValue>
 						</SelectTrigger>
 						<SelectContent emptyMessage="No available cleaners">
 							{availableCleaners.map((cleaner) => (

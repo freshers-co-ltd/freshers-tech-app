@@ -58,3 +58,12 @@ createRoot(rootElement).render(
 		</QueryClientProvider>
 	</StrictMode>,
 );
+
+// setTimeout(() => {
+// 	toast.success('Success toast');
+// 	toast.warning('Warning toast');
+// 	toast.loading('Default toast');
+// 	toast.info('Short toast', { duration: 2000 });
+// 	toast.info('Long toast', { duration: 10000 });
+// 	toast.error('Error toast', { duration: Infinity });
+// }, 100);

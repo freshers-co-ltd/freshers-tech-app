@@ -279,16 +279,18 @@ export function CleaningForm({
 						<FieldGroup>
 							<div className="space-y-4">
 								{!disableCreateProperty && (
-									<Button
-										variant="secondary"
-										className="w-full"
-										onClick={() => setEntryMode('create')}>
-										{dict.LABELS.NEW_PROPERTY}
-									</Button>
+									<>
+										<Button
+											variant="secondary"
+											className="w-full"
+											onClick={() => setEntryMode('create')}>
+											{dict.LABELS.NEW_PROPERTY}
+										</Button>
+										<p className="text-center font-medium">OR</p>
+									</>
 								)}
 								{displayedProperties.length > 0 && (
 									<>
-										<p className="text-center font-medium">OR</p>
 										<Field>
 											<Controller
 												control={control}

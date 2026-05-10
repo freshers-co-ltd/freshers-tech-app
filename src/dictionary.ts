@@ -240,7 +240,7 @@ export const DICT = {
 				PROPERTIES: 'Total properties',
 			},
 			CTA_CARD: {
-				BUTTON: 'Book Now',
+				BUTTON: 'Request Now',
 				MESSAGE:
 					'Need your property cleaned? Submit your request here and our team will handle the rest once your booking is confirmed.',
 				TITLE: 'Request a cleaning',
@@ -353,7 +353,11 @@ export const DICT = {
 		PREFERENCES: {
 			TITLE: 'Preferences',
 			SUBTITLE: 'Control how the application behaves and notifies you.',
-			NOTIFICATIONS: { TITLE: 'Notifications', SUBTITLE: 'Receive in-app notifications.' },
+			PUSH_NOTIFICATIONS: {
+				TITLE: 'Push Notifications',
+				SUBTITLE: 'Receive notifications even when the app is closed.',
+				NOT_SUPPORTED: 'Push notifications are not supported in your browser.',
+			},
 		},
 		CONTACT: {
 			TITLE: 'Contact',
@@ -376,6 +380,11 @@ export const DICT = {
 			EMAIL_PENDING: 'Check your new email for a confirmation link.',
 			NOTIFICATIONS_DISABLED: 'Notifications disabled.',
 			NOTIFICATIONS_ENABLED: 'Notifications enabled.',
+			NOTIFICATIONS_DENIED:
+				'Push notifications were denied. Please enable them in your browser settings.',
+			NOTIFICATIONS_BLOCKED:
+				'Push notifications are blocked. Please enable them in your browser settings.',
+			NOTIFICATIONS_SETUP_FAILED: 'Failed to set up push notifications. Please try again.',
 			PASSWORD_INCORRECT: 'The current password is incorrect.',
 			PASSWORD_SUCCESS: 'Password updated successfully.',
 			UPDATE_SUCCESS: 'Profile updated successfully.',
@@ -491,6 +500,18 @@ export const DICT = {
 		EMPTY: 'No notifications at this time.',
 		EMPTY_MESSAGE: 'No notifications at this time.',
 		LOADING: 'Loading notifications...',
+		ONBOARDING: {
+			TITLE: 'Enable Push Notifications',
+			DESCRIPTION:
+				'Never miss important updates! Enable push notifications to receive alerts even when the app is closed.',
+			FEATURE_1: 'Receive instant alerts for cleaning updates, assignments, and confirmations',
+			FEATURE_2: 'Get notified about upcoming cleanings even when the app is in the background',
+			FEATURE_3: 'Control your preferences anytime in your account settings',
+			ENABLE_BUTTON: 'Enable Notifications',
+			SKIP_BUTTON: 'Not Now',
+			ENABLING: 'Enabling...',
+			ERROR_SUBSCRIBE_FAILED: 'Failed to set up push notifications. Please try again.',
+		},
 	},
 	FORMAT: { CURRENCY: '£' },
 	ERRORS: {

@@ -12,11 +12,12 @@ export interface NotificationContextType {
 	isLoading: boolean;
 	isConnected: boolean;
 	preferences: NotificationPreferences | null;
+	pushEnabled: boolean | null;
 	fetchNotifications: () => Promise<void>;
 	fetchUnreadCount: () => Promise<void>;
 	fetchPreferences: () => Promise<void>;
 	updatePreferences: (
-		preferences: Partial<Pick<NotificationPreferences, 'enabled'>>,
+		preferences: Partial<Pick<NotificationPreferences, 'enabled' | 'push_enabled'>>,
 	) => Promise<void>;
 	markAsRead: (id: string) => Promise<void>;
 	markAllAsRead: () => Promise<void>;
@@ -81,7 +82,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 	}, [user]);
 
 	const updatePreferences = useCallback(
-		async (prefs: Partial<Pick<NotificationPreferences, 'enabled'>>) => {
+		async (prefs: Partial<Pick<NotificationPreferences, 'enabled' | 'push_enabled'>>) => {
 			if (!user) {
 				return;
 			}
@@ -93,6 +94,22 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 		},
 		[user],
 	);
+
+	const pushEnabled = preferences?.push_enabled ?? null;
+
+	const updateBadge = useCallback((count: number) => {
+		if ('setAppBadge' in navigator) {
+			if (count > 0) {
+				navigator.setAppBadge(count).catch((err) => {
+					console.error('[Badge] Error setting badge:', err);
+				});
+			} else {
+				navigator.clearAppBadge().catch((err) => {
+					console.error('[Badge] Error clearing badge:', err);
+				});
+			}
+		}
+	}, []);
 
 	const markAsRead = useCallback(async (id: string) => {
 		const { success } = await notificationsService.markAsRead(id);
@@ -181,6 +198,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 		};
 	}, [user, fetchNotifications, fetchUnreadCount, fetchPreferences, subscribe, unsubscribe]);
 
+	useEffect(() => {
+		updateBadge(unreadCount);
+	}, [unreadCount, updateBadge]);
+
+	useEffect(() => {
+		return () => {
+			updateBadge(0);
+		};
+	}, [updateBadge]);
+
 	return (
 		<NotificationContext.Provider
 			value={{
@@ -189,6 +216,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 				isLoading,
 				isConnected,
 				preferences,
+				pushEnabled,
 				fetchNotifications,
 				fetchUnreadCount,
 				fetchPreferences,

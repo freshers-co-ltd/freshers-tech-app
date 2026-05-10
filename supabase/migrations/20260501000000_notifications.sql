@@ -233,6 +233,7 @@ CREATE TABLE
     public.notification_preferences (
         user_id UUID PRIMARY KEY REFERENCES auth.users (id) ON DELETE CASCADE,
         enabled BOOLEAN DEFAULT TRUE,
+        push_enabled BOOLEAN DEFAULT NULL,
         created_at TIMESTAMPTZ DEFAULT NOW(),
         updated_at TIMESTAMPTZ DEFAULT NOW()
     );
@@ -531,5 +532,24 @@ ADD TABLE public.notifications;
 
 ALTER PUBLICATION supabase_realtime
 ADD TABLE public.notification_preferences;
+
+CREATE TABLE public.push_subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    subscription JSONB NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (user_id)
+);
+
+ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users manage own push subscriptions"
+    ON public.push_subscriptions
+    FOR ALL
+    USING (user_id = auth.uid());
+
+ALTER PUBLICATION supabase_realtime
+ADD TABLE public.push_subscriptions;
 
 COMMIT;
