@@ -54,7 +54,6 @@ The following variables and secrets must be added to both environments.
 - `SUPABASE_PROJECT_ID`: Found in the Supabase project settings under **General > Project ID**.
 - `VITE_SUPABASE_ANON_KEY`: Found in the Supabase project settings under **API Keys > Publishable Key**.
 - `VITE_SUPABASE_URL`: Found in the Supabase project settings under **Data API > API URL**.
-- `VITE_VAPID_PUBLIC_KEY`: Run `npx web-push generate-vapid-keys` in the CLI.
 
 **Secrets**:
 - `INTERNAL_API_SECRET`: Run `openssl rand -base64 32` in the CLI.
@@ -113,6 +112,12 @@ Go to **Authentication > URL Configuration** and add the following:
 - Vercel production URL to **Site URL**.
 - Vercel preview URL with wildcards to **Redirect URLs**.
 
+### 2.3 Edge Functions
+
+Go to **Edge Functions > Secrets** and add the following:
+
+- `VAPID_PRIVATE_KEY`: Run `npx web-push generate-vapid-keys` in the CLI.
+
 ## 3. Vercel Setup
 
 All the following settings will be found in the Vercel project's **Settings** page.
@@ -133,6 +138,7 @@ Go to **Environment Variables** and add the following to both **Preview** and **
 
 - `VITE_SUPABASE_ANON_KEY`: Found in the Supabase project settings under **API Keys > Publishable Key**.
 - `VITE_SUPABASE_URL`: Found in the Supabase project settings under **Data API > API URL**.
+- `VITE_VAPID_PUBLIC_KEY`: Run `npx web-push generate-vapid-keys` in the CLI.
 
 ### 3.4 Git
 

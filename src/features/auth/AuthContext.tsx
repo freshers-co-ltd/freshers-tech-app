@@ -10,7 +10,9 @@ import {
 	useRef,
 	useState,
 } from 'react';
+import { debugLog } from '@/debug/debugLog';
 import type { Profile, UserRole } from '@/features/auth/authService';
+import { useVisibilityReconnect } from '@/hooks/useVisibilityReconnect';
 import { initAuthSync } from '@/lib/authSync';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -190,12 +192,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		};
 	}, [handleAuthStateChange]);
 
-	useEffect(() => {
+	const cleanupProfileChannel = useCallback(() => {
+		if (profileChannelRef.current) {
+			supabase.removeChannel(profileChannelRef.current);
+			debugLog.addLog({
+				type: 'realtime',
+				message: 'Channel removed',
+				data: { channel: 'profile-realtime' },
+			});
+			profileChannelRef.current = null;
+		}
+	}, []);
+
+	const setupProfileChannel = useCallback(() => {
 		if (!user) {
-			if (profileChannelRef.current) {
-				supabase.removeChannel(profileChannelRef.current);
-				profileChannelRef.current = null;
-			}
 			return;
 		}
 
@@ -214,23 +224,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 					filter: `id=eq.${user.id}`,
 				},
 				async () => {
+					debugLog.addLog({
+						type: 'realtime',
+						message: 'Profile update received via realtime',
+						data: {},
+					});
 					const data = await fetchProfile(user.id);
 					if (data) {
 						setProfile(data);
 					}
 				},
 			)
-			.subscribe();
+			.subscribe((status: string, err?: unknown) => {
+				debugLog.addLog({
+					type: 'realtime',
+					message: `Profile channel status: ${status}`,
+					data: { status },
+				});
+				if (err) {
+					debugLog.addLog({
+						type: 'error',
+						message: 'Profile channel error',
+						data: { error: String(err) },
+					});
+				}
+			});
 
 		profileChannelRef.current = newChannel;
+	}, [user, fetchProfile]);
+
+	useEffect(() => {
+		if (!user) {
+			cleanupProfileChannel();
+			return;
+		}
+
+		setupProfileChannel();
 
 		return () => {
-			if (profileChannelRef.current) {
-				supabase.removeChannel(profileChannelRef.current);
-				profileChannelRef.current = null;
-			}
+			cleanupProfileChannel();
 		};
-	}, [user, fetchProfile]);
+	}, [user, setupProfileChannel, cleanupProfileChannel]);
 
 	const refreshProfile = useCallback(async () => {
 		if (user) {
@@ -253,6 +287,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			sessionStorage.clear();
 		}
 	}, []);
+
+	useVisibilityReconnect({
+		enabled: !!user,
+		onVisible: async () => {
+			await refreshProfile();
+			if (!profileChannelRef.current || profileChannelRef.current.state !== 'joined') {
+				setupProfileChannel();
+			}
+		},
+	});
 
 	return (
 		<AuthContext.Provider

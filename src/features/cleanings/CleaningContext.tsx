@@ -10,6 +10,7 @@ import {
 	useState,
 } from 'react';
 import { toast } from 'sonner';
+import { debugLog } from '@/debug/debugLog';
 import { useAuth } from '@/features/auth/AuthContext';
 import {
 	type CleaningRequest,
@@ -22,6 +23,7 @@ import {
 	type TaskUpdate,
 	type UpdateCleaningRequestPayload,
 } from '@/features/cleanings/cleaningService';
+import { useVisibilityReconnect } from '@/hooks/useVisibilityReconnect';
 import { supabase } from '@/lib/supabaseClient';
 
 interface CleaningContextType {
@@ -95,12 +97,20 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 		};
 	}, [user, profile, fetchCleanings]);
 
-	useEffect(() => {
+	const cleanupChannel = useCallback(() => {
+		if (cleaningChannelRef.current) {
+			supabase.removeChannel(cleaningChannelRef.current);
+			debugLog.addLog({
+				type: 'realtime',
+				message: 'Channel removed',
+				data: { channel: 'cleanings-realtime' },
+			});
+			cleaningChannelRef.current = null;
+		}
+	}, []);
+
+	const setupChannel = useCallback(() => {
 		if (!user || !profile) {
-			if (cleaningChannelRef.current) {
-				supabase.removeChannel(cleaningChannelRef.current);
-				cleaningChannelRef.current = null;
-			}
 			return;
 		}
 
@@ -128,20 +138,44 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 					filter,
 				},
 				() => {
+					debugLog.addLog({
+						type: 'realtime',
+						message: 'Cleaning update received via realtime',
+						data: {},
+					});
 					fetchCleanings();
 				},
 			)
-			.subscribe();
+			.subscribe((status: string, err?: unknown) => {
+				debugLog.addLog({
+					type: 'realtime',
+					message: `Cleanings channel status: ${status}`,
+					data: { status },
+				});
+				if (err) {
+					debugLog.addLog({
+						type: 'error',
+						message: 'Cleanings channel error',
+						data: { error: String(err) },
+					});
+				}
+			});
 
 		cleaningChannelRef.current = newChannel;
+	}, [user, profile, fetchCleanings]);
+
+	useEffect(() => {
+		if (!user || !profile) {
+			cleanupChannel();
+			return;
+		}
+
+		setupChannel();
 
 		return () => {
-			if (cleaningChannelRef.current) {
-				supabase.removeChannel(cleaningChannelRef.current);
-				cleaningChannelRef.current = null;
-			}
+			cleanupChannel();
 		};
-	}, [user, profile, fetchCleanings]);
+	}, [user, profile, setupChannel, cleanupChannel]);
 
 	const upsertCleaning = async (
 		payload: CreateCleaningRequestPayload | (UpdateCleaningRequestPayload & { id: string }),
@@ -345,6 +379,17 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 		}
 		return { success: true };
 	};
+
+	useVisibilityReconnect({
+		enabled: !!user && !!profile,
+		onVisible: async () => {
+			await fetchCleanings();
+			if (!cleaningChannelRef.current || cleaningChannelRef.current.state !== 'joined') {
+				cleanupChannel();
+				setupChannel();
+			}
+		},
+	});
 
 	return (
 		<CleaningContext.Provider
