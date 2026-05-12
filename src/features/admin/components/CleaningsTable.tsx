@@ -64,7 +64,7 @@ export function CleaningsTable({
 	pageSize = 20,
 	onPageChange,
 	loading = false,
-	sortField,
+	sortField = 'date',
 	sortDirection = 'desc',
 	onSort,
 }: CleaningsTableProps) {

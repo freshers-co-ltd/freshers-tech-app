@@ -10,17 +10,6 @@ precacheAndRoute(self.__WB_MANIFEST);
 self.skipWaiting();
 clientsClaim();
 
-function sendDebugLog(type: string, message: string, data?: unknown) {
-	self.clients.matchAll({ type: 'window' }).then((clients) => {
-		clients.forEach((client) => {
-			client.postMessage({
-				type: 'DEBUG_LOG',
-				payload: { type, message, data },
-			});
-		});
-	});
-}
-
 interface PushNotificationData {
 	title: string;
 	body?: string;
@@ -35,11 +24,6 @@ self.addEventListener('push', async (event: PushEvent) => {
 	console.log('[SW] Notification permission:', Notification.permission);
 	console.log('[SW] Registration:', self.registration);
 
-	sendDebugLog('push', 'Push event received', {
-		permission: Notification.permission,
-		hasData: !!event.data,
-	});
-
 	let data: PushNotificationData;
 
 	try {
@@ -49,17 +33,12 @@ self.addEventListener('push', async (event: PushEvent) => {
 			title: 'Cleaner Hire',
 			body: 'You have a new notification',
 		};
-		sendDebugLog('push', 'Push payload parsed', {
-			title: data.title,
-			body: data.body,
-		});
 	} catch (e) {
 		console.log('[SW] Failed to parse push data:', e);
 		data = {
 			title: 'Cleaner Hire',
 			body: 'You have a new notification',
 		};
-		sendDebugLog('error', 'Push payload parse failed', { error: String(e) });
 	}
 
 	console.log('[SW] Parsed notification data:', data);
@@ -79,25 +58,21 @@ self.addEventListener('push', async (event: PushEvent) => {
 			try {
 				const result = await self.registration.showNotification(data.title, options);
 				console.log('[SW] Notification shown successfully:', result);
-				sendDebugLog('notification', 'Notification shown', { title: data.title });
 
 				const unreadCount = data.data?.unreadCount as number | undefined;
 				if (unreadCount !== undefined && unreadCount > 0) {
 					if ('setAppBadge' in navigator) {
 						console.log('[SW] Setting badge count:', unreadCount);
 						await navigator.setAppBadge(unreadCount);
-						sendDebugLog('notification', 'Badge set', { count: unreadCount });
 					}
 				} else {
 					if ('setAppBadge' in navigator) {
 						console.log('[SW] Clearing badge');
 						await navigator.clearAppBadge();
-						sendDebugLog('notification', 'Badge cleared', {});
 					}
 				}
 			} catch (err) {
 				console.error('[SW] Failed to show notification:', err);
-				sendDebugLog('error', 'Notification failed to show', { error: String(err) });
 			}
 		})(),
 	);
@@ -106,8 +81,6 @@ self.addEventListener('push', async (event: PushEvent) => {
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
 	const notificationData = event.notification.data as { link?: string } | undefined;
 	const link = notificationData?.link;
-
-	sendDebugLog('notification', 'Notification clicked', { link });
 
 	if (!link) {
 		return;
@@ -144,8 +117,6 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
 self.addEventListener('pushsubscriptionchange', (event: PushSubscriptionChangeEvent) => {
 	console.log('[SW] Push subscription changed:', event);
 
-	sendDebugLog('subscription', 'Push subscription changed', { type: event.type });
-
 	event.waitUntil(
 		(async () => {
 			try {
@@ -161,13 +132,11 @@ self.addEventListener('pushsubscriptionchange', (event: PushSubscriptionChangeEv
 					client.postMessage({
 						type: 'PUSH_SUBSCRIPTION_EXPIRED',
 					});
-					sendDebugLog('subscription', 'Notified client about subscription expiration', {});
 				}
 
 				console.log('[SW] Notified clients about subscription expiration');
 			} catch (err) {
 				console.error('[SW] Error handling subscription change:', err);
-				sendDebugLog('error', 'Push subscription change handler failed', { error: String(err) });
 			}
 		})(),
 	);

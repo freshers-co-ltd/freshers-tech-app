@@ -28,9 +28,15 @@ interface UseAdminUsersResult {
 	setSortField: (field: SortField) => void;
 	handleSort: (field: SortField) => void;
 	handleInvite: (email: string, role: UserRole, fullName: string) => Promise<boolean>;
-	handleResetPassword: (userId: string) => Promise<boolean>;
-	handleBan: (userId: string) => Promise<boolean>;
-	handleUnban: (userId: string) => Promise<boolean>;
+	handleResetPassword: (
+		userId: string,
+		onRefetch?: () => Promise<void>,
+	) => Promise<{ error: string | null }>;
+	handleBan: (userId: string, onRefetch?: () => Promise<void>) => Promise<{ error: string | null }>;
+	handleUnban: (
+		userId: string,
+		onRefetch?: () => Promise<void>,
+	) => Promise<{ error: string | null }>;
 	refresh: () => Promise<void>;
 }
 
@@ -126,40 +132,38 @@ export function useAdminUsers(): UseAdminUsersResult {
 		[fetchUsers],
 	);
 
-	const handleResetPassword = useCallback(async (userId: string): Promise<boolean> => {
-		const result = await userService.resetPassword(userId);
-		if (result.error) {
-			toast.error(result.error);
-			return false;
-		}
-		toast.success('Password reset email sent');
-		return true;
-	}, []);
+	const handleResetPassword = useCallback(
+		async (userId: string, onRefetch?: () => Promise<void>): Promise<{ error: string | null }> => {
+			const result = await userService.resetPassword(userId);
+			if (result.error) {
+				return { error: result.error };
+			}
+			await onRefetch?.();
+			return { error: null };
+		},
+		[],
+	);
 
 	const handleBan = useCallback(
-		async (userId: string): Promise<boolean> => {
+		async (userId: string, onRefetch?: () => Promise<void>): Promise<{ error: string | null }> => {
 			const result = await userService.banUser(userId);
 			if (result.error) {
-				toast.error(result.error);
-				return false;
+				return { error: result.error };
 			}
-			toast.success('User banned');
-			await fetchUsers();
-			return true;
+			await (onRefetch ?? fetchUsers)();
+			return { error: null };
 		},
 		[fetchUsers],
 	);
 
 	const handleUnban = useCallback(
-		async (userId: string): Promise<boolean> => {
+		async (userId: string, onRefetch?: () => Promise<void>): Promise<{ error: string | null }> => {
 			const result = await userService.unbanUser(userId);
 			if (result.error) {
-				toast.error(result.error);
-				return false;
+				return { error: result.error };
 			}
-			toast.success('User unbanned');
-			await fetchUsers();
-			return true;
+			await (onRefetch ?? fetchUsers)();
+			return { error: null };
 		},
 		[fetchUsers],
 	);

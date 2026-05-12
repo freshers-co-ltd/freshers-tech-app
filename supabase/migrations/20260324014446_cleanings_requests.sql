@@ -485,6 +485,12 @@ BEGIN
         NEW.status := 'confirmed';
     END IF;
     IF OLD.clock_in_time IS NULL AND NEW.clock_in_time IS NOT NULL THEN
+        IF NEW.clock_in_time::DATE != NEW.scheduled_start::DATE THEN
+            RAISE EXCEPTION 'Cannot clock in: must be on the same day as the scheduled cleaning.';
+        END IF;
+        IF NEW.clock_in_time < NEW.scheduled_start - INTERVAL '10 minutes' THEN
+            RAISE EXCEPTION 'Cannot clock in: can only clock in up to 10 minutes before the scheduled start time.';
+        END IF;
         NEW.status := 'in_progress';
     END IF;
     IF OLD.clock_out_time IS NULL AND NEW.clock_out_time IS NOT NULL THEN

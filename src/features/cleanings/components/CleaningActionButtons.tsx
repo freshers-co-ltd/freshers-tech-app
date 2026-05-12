@@ -1,6 +1,6 @@
 'use client';
 
-import { Pencil, Play, Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DICT } from '@/dictionary';
 import type { UserRole } from '@/features/auth/authService';
@@ -47,17 +47,13 @@ export function CleaningActionButtons({
 		return (
 			<div className="p-4 border-t bg-background shrink-0">
 				{isConfirmed && (
-					<Button
-						className="w-full h-12 text-base font-bold"
-						onClick={onClockIn}
-						disabled={isClockInDisabled}>
-						<Play className="mr-1 size-5 fill-current" />
+					<Button className="w-full  font-bold" onClick={onClockIn} disabled={isClockInDisabled}>
 						Clock In
 					</Button>
 				)}
 				{isInProgress && (
 					<Button
-						className="w-full"
+						className="w-full font-bold"
 						disabled={!allTasksCompleted || isFinishDisabled}
 						onClick={onFinish}>
 						{allTasksCompleted ? 'Finish & Submit Report' : 'Complete All Tasks to Finish'}
@@ -69,7 +65,7 @@ export function CleaningActionButtons({
 
 	if (isHost && (canEdit || canCancel)) {
 		return (
-			<div className="p-3 border-t bg-background shrink-0">
+			<div className="p-3 border-t shrink-0">
 				<div className="flex flex-col sm:flex-row gap-3">
 					{canEdit && (
 						<Button

@@ -10,7 +10,6 @@ import {
 	useRef,
 	useState,
 } from 'react';
-import { debugLog } from '@/debug/debugLog';
 import type { Profile, UserRole } from '@/features/auth/authService';
 import { useVisibilityReconnect } from '@/hooks/useVisibilityReconnect';
 import { initAuthSync } from '@/lib/authSync';
@@ -195,11 +194,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const cleanupProfileChannel = useCallback(() => {
 		if (profileChannelRef.current) {
 			supabase.removeChannel(profileChannelRef.current);
-			debugLog.addLog({
-				type: 'realtime',
-				message: 'Channel removed',
-				data: { channel: 'profile-realtime' },
-			});
 			profileChannelRef.current = null;
 		}
 	}, []);
@@ -224,11 +218,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 					filter: `id=eq.${user.id}`,
 				},
 				async () => {
-					debugLog.addLog({
-						type: 'realtime',
-						message: 'Profile update received via realtime',
-						data: {},
-					});
 					const data = await fetchProfile(user.id);
 					if (data) {
 						setProfile(data);
@@ -236,17 +225,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 				},
 			)
 			.subscribe((status: string, err?: unknown) => {
-				debugLog.addLog({
-					type: 'realtime',
-					message: `Profile channel status: ${status}`,
-					data: { status },
-				});
 				if (err) {
-					debugLog.addLog({
-						type: 'error',
-						message: 'Profile channel error',
-						data: { error: String(err) },
-					});
+					console.error('[Auth] Profile channel error', { status, error: err });
 				}
 			});
 

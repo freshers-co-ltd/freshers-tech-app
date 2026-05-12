@@ -42,7 +42,6 @@ jobs:
           npx supabase link --project-ref "${{ vars.SUPABASE_PROJECT_ID }}" --password "${{ secrets.SUPABASE_DB_PASSWORD }}"
           npx supabase db push
 
-
       - name: Vercel Staging Deploy
         id: deploy
         shell: bash
@@ -58,7 +57,11 @@ jobs:
           
           echo "### Staging Deployment Successful!" >> $GITHUB_STEP_SUMMARY
           echo "Preview URL: $DEPLOY_URL" >> $GITHUB_STEP_SUMMARY
-      
+
+      - name: Get Timestamp
+        id: timestamp
+        run: echo "formatted_date=$(date +'%d/%m/%y at %H:%M')" >> $GITHUB_OUTPUT
+
       - name: Post Preview URL to PR
         if: github.event_name == 'pull_request'
         continue-on-error: true
@@ -68,4 +71,5 @@ jobs:
           message: |
             ### Staging Deployment Ready!
             **Preview URL**: ${{ steps.deploy.outputs.url }}
-            _Last updated at: ${{ github.event.pull_request.updated_at }}_
+            _Last updated at: ${{ steps.timestamp.outputs.formatted_date }}_
+            

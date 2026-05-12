@@ -1,7 +1,6 @@
 'use client';
 
 import { createContext, type ReactNode, useCallback, useEffect, useState } from 'react';
-import { debugLog } from '@/debug/debugLog';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useVisibilityReconnect } from '@/hooks/useVisibilityReconnect';
 import { supabase } from '@/lib/supabaseClient';
@@ -104,30 +103,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 			if (count > 0) {
 				navigator
 					.setAppBadge(count)
-					.then(() => {
-						debugLog.addLog({ type: 'notification', message: 'App badge set', data: { count } });
-					})
+					.then(() => {})
 					.catch((err) => {
 						console.error('[Badge] Error setting badge:', err);
-						debugLog.addLog({
-							type: 'error',
-							message: 'Badge set failed',
-							data: { error: String(err), count },
-						});
 					});
 			} else {
 				navigator
 					.clearAppBadge()
-					.then(() => {
-						debugLog.addLog({ type: 'notification', message: 'App badge cleared', data: {} });
-					})
+					.then(() => {})
 					.catch((err) => {
 						console.error('[Badge] Error clearing badge:', err);
-						debugLog.addLog({
-							type: 'error',
-							message: 'Badge clear failed',
-							data: { error: String(err) },
-						});
 					});
 			}
 		}
@@ -170,11 +155,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 				},
 				(payload: { new: Notification }) => {
 					const newNotification = payload.new;
-					debugLog.addLog({
-						type: 'realtime',
-						message: 'Notification INSERT received',
-						data: { id: newNotification.id, type: newNotification.type },
-					});
 					setNotifications((prev) => [newNotification, ...prev]);
 					setUnreadCount((prev) => prev + 1);
 				},
@@ -189,11 +169,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 				},
 				(payload: { new: Notification }) => {
 					const updatedNotification = payload.new;
-					debugLog.addLog({
-						type: 'realtime',
-						message: 'Notification UPDATE received',
-						data: { id: updatedNotification.id, is_read: updatedNotification.is_read },
-					});
 					setNotifications((prev) =>
 						prev.map((n) => (n.id === updatedNotification.id ? updatedNotification : n)),
 					);
@@ -203,17 +178,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 				},
 			)
 			.subscribe((status: string, err?: unknown) => {
-				debugLog.addLog({
-					type: 'realtime',
-					message: `Notifications channel status: ${status}`,
-					data: { status },
-				});
 				if (err) {
-					debugLog.addLog({
-						type: 'error',
-						message: 'Notifications channel error',
-						data: { error: String(err) },
-					});
 				}
 				setIsConnected(status === 'SUBSCRIBED');
 			});
@@ -224,11 +189,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 	const unsubscribe = useCallback(() => {
 		if (channel) {
 			supabase.removeChannel(channel);
-			debugLog.addLog({
-				type: 'realtime',
-				message: 'Channel removed',
-				data: { channel: 'notifications' },
-			});
 			setChannel(null);
 			setIsConnected(false);
 		}

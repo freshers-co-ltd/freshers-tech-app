@@ -10,7 +10,6 @@ import {
 	useState,
 } from 'react';
 import { toast } from 'sonner';
-import { debugLog } from '@/debug/debugLog';
 import { useAuth } from '@/features/auth/AuthContext';
 import {
 	type CleaningRequest,
@@ -100,11 +99,6 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 	const cleanupChannel = useCallback(() => {
 		if (cleaningChannelRef.current) {
 			supabase.removeChannel(cleaningChannelRef.current);
-			debugLog.addLog({
-				type: 'realtime',
-				message: 'Channel removed',
-				data: { channel: 'cleanings-realtime' },
-			});
 			cleaningChannelRef.current = null;
 		}
 	}, []);
@@ -138,26 +132,12 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 					filter,
 				},
 				() => {
-					debugLog.addLog({
-						type: 'realtime',
-						message: 'Cleaning update received via realtime',
-						data: {},
-					});
 					fetchCleanings();
 				},
 			)
 			.subscribe((status: string, err?: unknown) => {
-				debugLog.addLog({
-					type: 'realtime',
-					message: `Cleanings channel status: ${status}`,
-					data: { status },
-				});
 				if (err) {
-					debugLog.addLog({
-						type: 'error',
-						message: 'Cleanings channel error',
-						data: { error: String(err) },
-					});
+					console.error('[Cleanings] Channel error', { status, error: err });
 				}
 			});
 

@@ -107,6 +107,8 @@ OR REPLACE FUNCTION public.admin_get_host_detail (
     created_at TIMESTAMP WITH TIME ZONE,
     last_sign_in_at TIMESTAMP WITH TIME ZONE,
     last_sign_in_text TEXT,
+    is_online BOOLEAN,
+    last_seen_at TIMESTAMP WITH TIME ZONE,
     base_price_per_cleaning NUMERIC,
     properties JSONB,
     cleanings JSONB,
@@ -136,6 +138,8 @@ BEGIN
             WHEN au.last_sign_in_at > NOW() - INTERVAL '1 year' THEN 'Past year'
             ELSE 'More than a year ago'
         END AS last_sign_in_text,
+        p.last_seen_at IS NOT NULL AND p.last_seen_at > now() - interval '5 minutes' as is_online,
+        p.last_seen_at,
         p.base_price_per_cleaning,
         (
             SELECT jsonb_agg(row ORDER BY
@@ -228,6 +232,8 @@ OR REPLACE FUNCTION public.admin_get_cleaner_detail (p_cleaner_id UUID) RETURNS 
     created_at TIMESTAMP WITH TIME ZONE,
     last_sign_in_at TIMESTAMP WITH TIME ZONE,
     last_sign_in_text TEXT,
+    is_online BOOLEAN,
+    last_seen_at TIMESTAMP WITH TIME ZONE,
     assigned_cleanings JSONB,
     cleaner_stats JSONB
 ) SECURITY DEFINER
@@ -255,6 +261,8 @@ BEGIN
             WHEN au.last_sign_in_at > NOW() - INTERVAL '1 year' THEN 'Past year'
             ELSE 'More than a year ago'
         END AS last_sign_in_text,
+        p.last_seen_at IS NOT NULL AND p.last_seen_at > now() - interval '5 minutes' as is_online,
+        p.last_seen_at,
         (
             SELECT jsonb_agg(row)
             FROM (

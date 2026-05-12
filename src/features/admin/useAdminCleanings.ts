@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
 	type AdminCleaning,
@@ -9,6 +9,7 @@ import {
 	cleaningService,
 } from '@/features/admin/cleaningService';
 import { type AvailableCleaner, userService } from '@/features/admin/userService';
+import { supabase } from '@/lib/supabaseClient';
 
 interface UseAdminCleaningsResult {
 	cleanings: AdminCleaning[];
@@ -48,7 +49,7 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 	const [searchQuery, setSearchQuery] = useState('');
 	const [cleanerFilter, setCleanerFilter] = useState<string>('all');
 	const [page, setPage] = useState(1);
-	const [sortField, setSortField] = useState<string>('');
+	const [sortField, setSortField] = useState<string>('date');
 	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 	const limit = 20;
 
@@ -105,6 +106,47 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 	useEffect(() => {
 		fetchAvailableCleaners();
 	}, [fetchAvailableCleaners]);
+
+	const cleaningChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
+	const cleanupChannel = useCallback(() => {
+		if (cleaningChannelRef.current) {
+			supabase.removeChannel(cleaningChannelRef.current);
+			cleaningChannelRef.current = null;
+		}
+	}, []);
+
+	const setupChannel = useCallback(() => {
+		if (cleaningChannelRef.current) {
+			return;
+		}
+
+		const newChannel = supabase
+			.channel('admin-cleanings-realtime')
+			.on(
+				'postgres_changes',
+				{
+					event: '*',
+					schema: 'public',
+					table: 'cleanings',
+				},
+				() => {
+					fetchCleanings();
+				},
+			)
+			.subscribe();
+
+		cleaningChannelRef.current = newChannel;
+	}, [fetchCleanings]);
+
+	useEffect(() => {
+		cleanupChannel();
+		setupChannel();
+
+		return () => {
+			cleanupChannel();
+		};
+	}, [setupChannel, cleanupChannel]);
 
 	const handleAssignCleaner = useCallback(async (): Promise<boolean> => {
 		if (!selectedCleaning || !selectedCleaner) {

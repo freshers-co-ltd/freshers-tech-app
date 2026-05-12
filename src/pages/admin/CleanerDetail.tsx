@@ -1,13 +1,15 @@
 'use client';
 
 import { BrushCleaning, ClipboardList, Clock, Sparkles } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { CleaningsTable } from '@/features/admin/components/CleaningsTable';
+import { useAdminUsers } from '@/features/admin/useAdminUsers';
 import { type AdminCleanerDetail, userService } from '@/features/admin/userService';
 import { useResourceModals } from '@/hooks/useResourceModals';
 import { UserDetailLayout } from '@/layouts/UserDetailLayout';
+import { supabase } from '@/lib/supabaseClient';
 import { formatHours } from '@/lib/utils';
 
 export function AdminCleanerDetailPage() {
@@ -17,6 +19,8 @@ export function AdminCleanerDetailPage() {
 	const [loading, setLoading] = useState(true);
 
 	const modal = useResourceModals({ resourceName: 'cleaning' });
+
+	const { handleResetPassword, handleBan, handleUnban } = useAdminUsers();
 
 	const fetchCleanerDetail = useCallback(async () => {
 		if (!id) {
@@ -37,35 +41,58 @@ export function AdminCleanerDetailPage() {
 		fetchCleanerDetail();
 	}, [fetchCleanerDetail]);
 
-	const handleResetPassword = async () => {
-		if (!cleaner) {
-			return { error: 'No user loaded' };
-		}
-		const result = await userService.resetPassword(cleaner.id);
-		return result;
-	};
+	const cleaningChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-	const handleBan = async () => {
-		if (!cleaner) {
-			return { error: 'No user loaded' };
+	useEffect(() => {
+		if (!id) {
+			return;
 		}
-		const result = await userService.banUser(cleaner.id);
-		if (!result.error) {
-			fetchCleanerDetail();
-		}
-		return result;
-	};
 
-	const handleUnban = async () => {
+		const channel = supabase
+			.channel(`admin-cleaner-cleanings-${id}`)
+			.on(
+				'postgres_changes',
+				{
+					event: '*',
+					schema: 'public',
+					table: 'cleanings',
+				},
+				() => {
+					fetchCleanerDetail();
+				},
+			)
+			.subscribe();
+
+		cleaningChannelRef.current = channel;
+
+		return () => {
+			if (cleaningChannelRef.current) {
+				supabase.removeChannel(cleaningChannelRef.current);
+				cleaningChannelRef.current = null;
+			}
+		};
+	}, [id, fetchCleanerDetail]);
+
+	const onResetPassword = useCallback(async () => {
 		if (!cleaner) {
 			return { error: 'No user loaded' };
 		}
-		const result = await userService.unbanUser(cleaner.id);
-		if (!result.error) {
-			fetchCleanerDetail();
+		return handleResetPassword(cleaner.id, fetchCleanerDetail);
+	}, [cleaner, handleResetPassword, fetchCleanerDetail]);
+
+	const onBan = useCallback(async () => {
+		if (!cleaner) {
+			return { error: 'No user loaded' };
 		}
-		return result;
-	};
+		return handleBan(cleaner.id, fetchCleanerDetail);
+	}, [cleaner, handleBan, fetchCleanerDetail]);
+
+	const onUnban = useCallback(async () => {
+		if (!cleaner) {
+			return { error: 'No user loaded' };
+		}
+		return handleUnban(cleaner.id, fetchCleanerDetail);
+	}, [cleaner, handleUnban, fetchCleanerDetail]);
 
 	if (!cleaner) {
 		return null;
@@ -127,9 +154,9 @@ export function AdminCleanerDetailPage() {
 			user={cleaner}
 			userRole="cleaner"
 			isLoading={loading}
-			onResetPassword={handleResetPassword}
-			onBan={handleBan}
-			onUnban={handleUnban}
+			onResetPassword={onResetPassword}
+			onBan={onBan}
+			onUnban={onUnban}
 			stats={statsConfig}
 			sections={[
 				{

@@ -645,7 +645,9 @@ export type Database = {
 					email: string;
 					full_name: string;
 					id: string;
+					is_online: boolean;
 					is_verified: boolean;
+					last_seen_at: string;
 					last_sign_in_at: string;
 					last_sign_in_text: string;
 					role: string;
@@ -690,7 +692,9 @@ export type Database = {
 					email: string;
 					full_name: string;
 					id: string;
+					is_online: boolean;
 					is_verified: boolean;
+					last_seen_at: string;
 					last_sign_in_at: string;
 					last_sign_in_text: string;
 					properties: Json;

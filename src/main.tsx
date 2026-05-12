@@ -6,7 +6,6 @@ import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { Toaster } from '@/components/Toast';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { DebugPanel, DebugSWListener } from '@/debug';
 import { AuthProvider } from '@/features/auth/AuthContext';
 import { CleaningProvider } from '@/features/cleanings/CleaningContext';
 import { NotificationProvider } from '@/features/notifications/NotificationContext';
@@ -47,12 +46,10 @@ createRoot(rootElement).render(
 					<PropertyProvider>
 						<CleaningProvider>
 							<TooltipProvider>
-								<DebugSWListener />
 								<NuqsAdapter>
 									<RouterProvider router={router} />
 								</NuqsAdapter>
 								<Toaster />
-								<DebugPanel />
 							</TooltipProvider>
 						</CleaningProvider>
 					</PropertyProvider>

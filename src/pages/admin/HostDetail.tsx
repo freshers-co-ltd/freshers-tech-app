@@ -8,7 +8,7 @@ import {
 	Loader2,
 	Plus,
 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ import { cleaningService as adminCleaningService } from '@/features/admin/cleani
 import { CleaningsTable } from '@/features/admin/components/CleaningsTable';
 import { HostBasePriceDialog } from '@/features/admin/components/HostBasePriceDialog';
 import { PropertiesTable } from '@/features/admin/components/PropertiesTable';
+import { useAdminUsers } from '@/features/admin/useAdminUsers';
 import { type AdminHostDetail, userService } from '@/features/admin/userService';
 import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
 import { CleaningForm } from '@/features/cleanings/components/CleaningForm';
@@ -47,6 +48,8 @@ export function AdminHostDetailPage() {
 
 	const propertyModal = useResourceModals({ resourceName: 'property' });
 	const cleaningModal = useResourceModals({ resourceName: 'cleaning' });
+
+	const { handleResetPassword, handleBan, handleUnban } = useAdminUsers();
 
 	const [viewingProperty, setViewingProperty] = useState<Property | null>(null);
 	const [viewingPropertyLoading, setViewingPropertyLoading] = useState(false);
@@ -98,35 +101,59 @@ export function AdminHostDetailPage() {
 		fetchHostDetail();
 	}, [fetchHostDetail]);
 
-	const handleResetPassword = async () => {
-		if (!host) {
-			return { error: 'No user loaded' };
-		}
-		const result = await userService.resetPassword(host.id);
-		return result;
-	};
+	const cleaningChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-	const handleBan = async () => {
-		if (!host) {
-			return { error: 'No user loaded' };
+	useEffect(() => {
+		if (!id) {
+			return;
 		}
-		const result = await userService.banUser(host.id);
-		if (!result.error) {
-			fetchHostDetail();
-		}
-		return result;
-	};
 
-	const handleUnban = async () => {
+		const channel = supabase
+			.channel(`admin-host-cleanings-${id}`)
+			.on(
+				'postgres_changes',
+				{
+					event: '*',
+					schema: 'public',
+					table: 'cleanings',
+					filter: `host_id=eq.${id}`,
+				},
+				() => {
+					fetchHostDetail();
+				},
+			)
+			.subscribe();
+
+		cleaningChannelRef.current = channel;
+
+		return () => {
+			if (cleaningChannelRef.current) {
+				supabase.removeChannel(cleaningChannelRef.current);
+				cleaningChannelRef.current = null;
+			}
+		};
+	}, [id, fetchHostDetail]);
+
+	const onResetPassword = useCallback(async () => {
 		if (!host) {
 			return { error: 'No user loaded' };
 		}
-		const result = await userService.unbanUser(host.id);
-		if (!result.error) {
-			fetchHostDetail();
+		return handleResetPassword(host.id, fetchHostDetail);
+	}, [host, handleResetPassword, fetchHostDetail]);
+
+	const onBan = useCallback(async () => {
+		if (!host) {
+			return { error: 'No user loaded' };
 		}
-		return result;
-	};
+		return handleBan(host.id, fetchHostDetail);
+	}, [host, handleBan, fetchHostDetail]);
+
+	const onUnban = useCallback(async () => {
+		if (!host) {
+			return { error: 'No user loaded' };
+		}
+		return handleUnban(host.id, fetchHostDetail);
+	}, [host, handleUnban, fetchHostDetail]);
 
 	const handleCreateCleaning = async (values: CleaningFormValues) => {
 		if (!id) {
@@ -189,7 +216,7 @@ export function AdminHostDetailPage() {
 		},
 		{
 			id: 'requested',
-			label: 'Requested cleanings',
+			label: 'Pending requested cleanings',
 			value: stats?.requested || 0,
 			icon: CalendarClock,
 			iconColor: 'text-yellow-600',
@@ -215,9 +242,9 @@ export function AdminHostDetailPage() {
 			user={host}
 			userRole="host"
 			isLoading={loading}
-			onResetPassword={handleResetPassword}
-			onBan={handleBan}
-			onUnban={handleUnban}
+			onResetPassword={onResetPassword}
+			onBan={onBan}
+			onUnban={onUnban}
 			onEditBasePrice={() => setIsBasePriceDialogOpen(true)}
 			stats={statsConfig}
 			sections={[

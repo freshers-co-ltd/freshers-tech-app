@@ -65,7 +65,7 @@ export function NotificationPreferencesForm() {
 					toast.error(dict.TOASTS.NOTIFICATIONS_BLOCKED);
 				}
 			} else {
-				await unsubscribe(user.id);
+				await unsubscribe();
 				await updatePreferences({ push_enabled: false });
 				toast.success(dict.TOASTS.NOTIFICATIONS_DISABLED);
 			}

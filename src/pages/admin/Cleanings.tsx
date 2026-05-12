@@ -39,6 +39,7 @@ export function AdminCleaningsPage() {
 		setPage,
 		setSortField,
 		setSortDirection,
+		refresh,
 	} = useAdminCleanings();
 
 	const modal = useResourceModals({ resourceName: 'cleaning' });
@@ -164,6 +165,7 @@ export function AdminCleaningsPage() {
 					}
 					setPage(1);
 				}}
+				onRefresh={refresh}
 				onView={(id) => modal.openView(id)}
 			/>
 

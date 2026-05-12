@@ -130,6 +130,11 @@ export function CleaningDetailView({
 		[evidence],
 	);
 
+	const scheduledStart = new Date(cleaning.scheduled_start);
+	const now = new Date();
+	const minClockInTime = new Date(scheduledStart.getTime() - 10 * 60_000);
+	const canClockIn = now.toDateString() === scheduledStart.toDateString() && now >= minClockInTime;
+
 	const onClockIn = async () => {
 		if (!cleaning.property?.postcode) {
 			return;
@@ -451,7 +456,7 @@ export function CleaningDetailView({
 						onEdit={onEdit}
 						onDelete={onDelete}
 						cleaningId={cleaning.id}
-						isClockInDisabled={isProcessing || isGeoLoading}
+						isClockInDisabled={!canClockIn || isProcessing || isGeoLoading}
 						isFinishDisabled={isProcessing}
 					/>
 				)}

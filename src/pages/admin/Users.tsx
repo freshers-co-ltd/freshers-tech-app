@@ -2,6 +2,7 @@
 
 import { ClockFading, Plus, Search, ShieldBan, User, Users } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,6 +15,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { Stat, StatIndicator, StatLabel, StatValue } from '@/components/ui/stat';
+import { DICT } from '@/dictionary';
 import { InviteUserDialog } from '@/features/admin/components/InviteUserDialog';
 import { UsersTable } from '@/features/admin/components/UsersTable';
 import { useAdminUsers } from '@/features/admin/useAdminUsers';
@@ -59,7 +61,12 @@ export function AdminUsersPage() {
 
 	const handleResetPasswordConfirm = async () => {
 		if (selectedUserId) {
-			await handleResetPassword(selectedUserId);
+			const result = await handleResetPassword(selectedUserId);
+			if (result.error) {
+				toast.error(result.error);
+			} else {
+				toast.success(DICT.ADMIN.USERS.TOASTS.PASSWORD_RESET_SENT);
+			}
 			setSelectedUserId(null);
 			setSelectedUserName('');
 		}
@@ -81,7 +88,12 @@ export function AdminUsersPage() {
 
 	const handleBanConfirm = async () => {
 		if (selectedUserId) {
-			await handleBan(selectedUserId);
+			const result = await handleBan(selectedUserId);
+			if (result.error) {
+				toast.error(result.error);
+			} else {
+				toast.success(DICT.ADMIN.USERS.TOASTS.USER_BANNED);
+			}
 			setSelectedUserId(null);
 			setSelectedUserName('');
 		}
@@ -89,7 +101,12 @@ export function AdminUsersPage() {
 
 	const handleUnbanConfirm = async () => {
 		if (selectedUserId) {
-			await handleUnban(selectedUserId);
+			const result = await handleUnban(selectedUserId);
+			if (result.error) {
+				toast.error(result.error);
+			} else {
+				toast.success(DICT.ADMIN.USERS.TOASTS.USER_UNBANNED);
+			}
 			setSelectedUserId(null);
 			setSelectedUserName('');
 		}

@@ -71,7 +71,7 @@ export const PropertyCard = memo(({ property, onDelete, onEdit, onView }: Proper
 				<div className="flex items-center justify-between border-t pt-4">
 					<div className="space-y-1">
 						<div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase">
-							<InfoIcon className="size-3 mt-0.5" />
+							<InfoIcon className="size-3 mt-px" />
 							Details
 						</div>
 						<div className="flex items-center gap-4 text-sm">
