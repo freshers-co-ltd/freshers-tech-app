@@ -3,6 +3,7 @@
 import { Bath, Bed, MapPin, Maximize2, Pencil, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { FullscreenImageCarousel } from '@/components/FullscreenImageCarousel';
+import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { Button } from '@/components/ui/button';
 import {
 	DialogContent,
@@ -68,7 +69,11 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 
 						<div className="flex flex-col lg:flex-row gap-4 overflow-hidden">
 							<div className="relative aspect-video lg:flex-1 bg-muted rounded-lg overflow-hidden shrink-0 lg:shrink">
-								<img src={activeImage} className="size-full object-contain" alt="Property" />
+								<ImageWithFallback
+									src={activeImage}
+									className="size-full object-contain"
+									alt="Property"
+								/>
 								<Button
 									size="icon"
 									variant="secondary"
@@ -89,7 +94,11 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 												className={`p-0 size-16 lg:w-full shrink-0 overflow-hidden transition-all ${
 													activeImage === url ? 'ring-2 ring-primary border-primary' : 'opacity-70'
 												}`}>
-												<img src={url} className="size-full object-cover" alt="Thumbnail" />
+												<ImageWithFallback
+													src={url}
+													className="size-full object-cover"
+													alt="Thumbnail"
+												/>
 											</Button>
 										))}
 									</div>
@@ -135,7 +144,6 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 				open={isFullScreen}
 				onOpenChange={setIsFullScreen}
 				alt="Property"
-				placeholderSrc="/placeholder-property.jpg"
 			/>
 		</DialogContent>
 	);

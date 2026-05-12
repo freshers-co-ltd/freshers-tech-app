@@ -47,7 +47,7 @@ export function CleaningActionButtons({
 		return (
 			<div className="p-4 border-t bg-background shrink-0">
 				{isConfirmed && (
-					<Button className="w-full  font-bold" onClick={onClockIn} disabled={isClockInDisabled}>
+					<Button className="w-full font-bold" onClick={onClockIn} disabled={isClockInDisabled}>
 						Clock In
 					</Button>
 				)}

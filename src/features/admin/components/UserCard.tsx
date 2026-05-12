@@ -2,6 +2,7 @@
 
 import { Banknote, Calendar, Clock, KeyRound, Mail, ShieldBan, ShieldCheck } from 'lucide-react';
 import { EntityBadge } from '@/components/EntityBadge';
+import { UserAvatar } from '@/components/UserAvatar';
 import { Button } from '@/components/ui/button';
 import type { UserRole } from '@/features/auth/authService';
 import { formatDate } from '@/lib/utils';
@@ -37,15 +38,7 @@ export function UserCard({
 	return (
 		<div className="w-full p-4 space-y-4">
 			<div className="flex items-center gap-3">
-				<div className="size-14 sm:size-16 rounded-full bg-muted flex items-center justify-center shrink-0">
-					{user.avatar_url ? (
-						<img src={user.avatar_url} alt="" className="size-full rounded-full object-cover" />
-					) : (
-						<span className="text-lg font-medium">
-							{user.full_name?.charAt(0).toUpperCase() || '?'}
-						</span>
-					)}
-				</div>
+				<UserAvatar src={user.avatar_url} fallbackName={user.full_name} size="lg" />
 				<div>
 					<p className="font-bold text-xl">{user.full_name || 'Unknown'}</p>
 					<div className="flex gap-2 flex-wrap items-center">

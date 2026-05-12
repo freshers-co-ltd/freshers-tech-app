@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { EntityBadge } from '@/components/EntityBadge';
 import { FullscreenImageCarousel } from '@/components/FullscreenImageCarousel';
+import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -413,7 +414,7 @@ export function CleaningDetailView({
 																		setIsFullScreen(true);
 																	}}>
 																	{item.type === 'image' ? (
-																		<img
+																		<ImageWithFallback
 																			src={mediaService.getMediaUrl(
 																				item.media_url,
 																				'cleaning-media',

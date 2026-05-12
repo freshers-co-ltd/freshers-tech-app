@@ -1,10 +1,11 @@
 'use client';
 
-import { Eye, KeyRound, ShieldBan, ShieldCheck, User } from 'lucide-react';
+import { Eye, KeyRound, ShieldBan, ShieldCheck } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DataTable } from '@/components/DataTable';
 import { EntityBadge } from '@/components/EntityBadge';
+import { UserAvatar } from '@/components/UserAvatar';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { AdminUser } from '@/features/admin/userService';
@@ -60,13 +61,7 @@ export function UsersTable({
 				sortable: true,
 				render: (user) => (
 					<div className="flex items-center gap-2">
-						<div className="size-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-							{user.avatar_url ? (
-								<img src={user.avatar_url} alt="" className="size-8 rounded-full object-cover" />
-							) : (
-								<User className="size-4 text-muted-foreground" />
-							)}
-						</div>
+						<UserAvatar src={user.avatar_url} fallbackName={user.full_name} size="sm" />
 						<span className="font-medium text-sm truncate">{user.full_name || 'Unknown'}</span>
 					</div>
 				),
@@ -185,13 +180,7 @@ export function UsersTable({
 		(user: AdminUser) => (
 			<div className="flex items-start justify-between gap-2">
 				<div className="flex items-center gap-2 min-w-0">
-					<div className="size-10 rounded-full bg-muted flex items-center justify-center shrink-0">
-						{user.avatar_url ? (
-							<img src={user.avatar_url} alt="" className="size-10 rounded-full object-cover" />
-						) : (
-							<User className="size-5 text-muted-foreground" />
-						)}
-					</div>
+					<UserAvatar src={user.avatar_url} fallbackName={user.full_name} size="md" />
 
 					<div className="min-w-0">
 						<p className="font-medium truncate">{user.full_name || 'Unknown'}</p>

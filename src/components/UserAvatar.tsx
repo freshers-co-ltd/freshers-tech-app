@@ -1,0 +1,36 @@
+'use client';
+
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
+
+interface UserAvatarProps {
+	src?: string | null;
+	fallbackName?: string | null;
+	size?: 'sm' | 'md' | 'lg';
+	className?: string;
+}
+
+const sizeClasses = {
+	sm: 'size-8',
+	md: 'size-10',
+	lg: 'size-14 sm:size-16',
+};
+
+const fontSizeClasses = {
+	sm: 'text-xs',
+	md: 'text-base',
+	lg: 'text-2xl',
+};
+
+export function UserAvatar({ src, fallbackName, size = 'md', className }: UserAvatarProps) {
+	const initial = fallbackName?.charAt(0).toUpperCase() || '?';
+
+	return (
+		<Avatar className={cn(sizeClasses[size], className)}>
+			<AvatarImage src={src || undefined} className="object-cover" />
+			<AvatarFallback className={cn(fontSizeClasses[size], 'font-medium bg-muted')}>
+				{initial}
+			</AvatarFallback>
+		</Avatar>
+	);
+}

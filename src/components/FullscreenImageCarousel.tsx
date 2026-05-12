@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useMemo } from 'react';
+import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { Button } from '@/components/ui/button';
 import {
 	Dialog,
@@ -27,7 +28,7 @@ export function FullscreenImageCarousel({
 	open,
 	onOpenChange,
 	alt = 'Image',
-	placeholderSrc = '/placeholder-property.jpg',
+	placeholderSrc = '/placeholder-image.webp',
 }: FullscreenImageCarouselProps) {
 	const imageList = useMemo(() => {
 		return images.length > 0 ? images : [''];
@@ -88,13 +89,11 @@ export function FullscreenImageCarousel({
 				)}
 
 				<div className="relative flex-col-center size-full">
-					<img
+					<ImageWithFallback
 						src={imageList[currentIndex]}
 						className="relative z-10 object-contain w-full max-h-[85dvh] select-none"
 						alt={`${alt} ${currentIndex + 1}`}
-						onError={(e) => {
-							(e.target as HTMLImageElement).src = placeholderSrc;
-						}}
+						fallbackSrc={placeholderSrc}
 					/>
 				</div>
 			</DialogContent>

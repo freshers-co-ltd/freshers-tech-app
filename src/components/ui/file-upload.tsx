@@ -18,6 +18,7 @@ import {
 	useDropzone,
 } from 'react-dropzone';
 import { toast } from 'sonner';
+import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { mediaService } from '@/lib/mediaService';
 import { cn } from '@/lib/utils';
 import { Button } from './button';
@@ -286,7 +287,7 @@ export const FileUploaderContent = forwardRef<HTMLDivElement, React.HTMLAttribut
 						<div
 							key={firstExistingImage}
 							className="relative p-0 overflow-hidden border rounded-md size-20">
-							<img
+							<ImageWithFallback
 								src={mediaService.getMediaUrl(firstExistingImage, bucket || 'property-media')}
 								alt="Current"
 								className="object-cover size-20"

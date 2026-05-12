@@ -2,6 +2,7 @@
 
 import { Bath, Bed, Home, InfoIcon, Pencil, Trash2 } from 'lucide-react';
 import { memo, useMemo } from 'react';
+import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Property } from '@/features/properties/propertyService';
@@ -29,7 +30,11 @@ export const PropertyCard = memo(({ property, onDelete, onEdit, onView }: Proper
 			onClick={() => onView(property.id)}>
 			<div className="relative w-full h-48 overflow-hidden bg-muted">
 				{imageUrl ? (
-					<img src={imageUrl} alt={property.address_line_1} className="object-cover size-full" />
+					<ImageWithFallback
+						src={imageUrl}
+						alt={property.address_line_1}
+						className="object-cover size-full"
+					/>
 				) : (
 					<div className="flex items-center justify-center h-full text-muted-foreground/40">
 						<Home className="size-8" />
