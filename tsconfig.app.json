@@ -6,7 +6,7 @@
 		"lib": ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
 		"module": "ESNext",
 		"moduleResolution": "bundler",
-		"types": ["vite/client", "vitest/globals", "@testing-library/jest-dom"],
+		"types": ["vite/client", "vitest/globals", "@testing-library/jest-dom", "node"],
 		"skipLibCheck": true,
 		"allowImportingTsExtensions": true,
 		"verbatimModuleSyntax": true,

@@ -1,10 +1,21 @@
 'use client';
 
-import { AlertCircle, Banknote, Bath, Bed, Clock, Info, MapPin, Package, User } from 'lucide-react';
+import {
+	AlertCircle,
+	Banknote,
+	Bath,
+	Bed,
+	Clock,
+	Info,
+	MapPin,
+	Package,
+	Play,
+	User,
+} from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { EntityBadge } from '@/components/EntityBadge';
-import { FullscreenImageCarousel } from '@/components/FullscreenImageCarousel';
+import { FullscreenMediaCarousel } from '@/components/FullscreenMediaCarousel';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -60,6 +71,7 @@ export function CleaningDetailView({
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [showEvidenceForm, setShowEvidenceForm] = useState(false);
 	const [isFullScreen, setIsFullScreen] = useState(false);
+	const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
 	const [localTasks, setLocalTasks] = useState<CleaningTask[]>(cleaning.tasks || []);
 
 	const tasksRef = useRef<CleaningTask[]>(cleaning.tasks || []);
@@ -126,8 +138,12 @@ export function CleaningDetailView({
 		[tasks],
 	);
 
-	const evidenceUrls = useMemo(
-		() => evidence.map((item) => mediaService.getMediaUrl(item.media_url, 'cleaning-media')),
+	const evidenceMedia = useMemo(
+		() =>
+			evidence.map((item) => ({
+				url: mediaService.getMediaUrl(item.media_url, 'cleaning-media'),
+				type: item.type,
+			})),
 		[evidence],
 	);
 
@@ -398,19 +414,20 @@ export function CleaningDetailView({
 												</div>
 											)}
 
-											{evidenceUrls.length > 0 && (
+											{evidenceMedia.length > 0 && (
 												<div className="space-y-3 w-full min-w-0 overflow-hidden">
 													<h4 className="text-xs font-bold uppercase text-muted-foreground tracking-wider">
 														Cleaning Evidence
 													</h4>
-													<ScrollArea className="w-full">
+													<ScrollArea className="w-full pb-2">
 														<div className="flex gap-2 p-1 min-w-0">
-															{evidence.map((item) => (
+															{evidence.map((item, index) => (
 																<Button
 																	key={item.id}
 																	variant="outline"
 																	className="p-0 size-40 shrink-0 overflow-hidden border rounded-md"
 																	onClick={() => {
+																		setSelectedMediaIndex(index);
 																		setIsFullScreen(true);
 																	}}>
 																	{item.type === 'image' ? (
@@ -423,14 +440,22 @@ export function CleaningDetailView({
 																			alt="Evidence"
 																		/>
 																	) : (
-																		<video
-																			src={mediaService.getMediaUrl(
-																				item.media_url,
-																				'cleaning-media',
-																			)}
-																			className="size-full object-cover">
-																			<track kind="captions" />
-																		</video>
+																		<div className="relative size-full">
+																			<video
+																				src={mediaService.getMediaUrl(
+																					item.media_url,
+																					'cleaning-media',
+																				)}
+																				className="size-full object-cover"
+																				preload="metadata">
+																				<track kind="captions" />
+																			</video>
+																			<div className="absolute inset-0 flex items-center justify-center bg-black/30">
+																				<div className="flex size-10 items-center justify-center rounded-full bg-white/80 shadow-md">
+																					<Play className="size-5 fill-primary text-primary ml-0.5" />
+																				</div>
+																			</div>
+																		</div>
 																	)}
 																</Button>
 															))}
@@ -462,9 +487,9 @@ export function CleaningDetailView({
 					/>
 				)}
 
-				<FullscreenImageCarousel
-					images={evidenceUrls}
-					initialImage={evidenceUrls[0]}
+				<FullscreenMediaCarousel
+					media={evidenceMedia}
+					initialMedia={evidenceMedia[selectedMediaIndex]?.url}
 					open={isFullScreen}
 					onOpenChange={setIsFullScreen}
 					alt="Evidence"

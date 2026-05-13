@@ -2,7 +2,7 @@
 
 import { Bath, Bed, MapPin, Maximize2, Pencil, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { FullscreenImageCarousel } from '@/components/FullscreenImageCarousel';
+import { FullscreenMediaCarousel } from '@/components/FullscreenMediaCarousel';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { Button } from '@/components/ui/button';
 import {
@@ -138,12 +138,13 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 				</ScrollArea>
 			</div>
 
-			<FullscreenImageCarousel
-				images={allImages}
-				initialImage={activeImage}
+			<FullscreenMediaCarousel
+				media={allImages.map((url) => ({ url, type: 'image' as const }))}
+				initialMedia={activeImage}
 				open={isFullScreen}
 				onOpenChange={setIsFullScreen}
 				alt="Property"
+				placeholderSrc="/placeholder-property.jpg"
 			/>
 		</DialogContent>
 	);

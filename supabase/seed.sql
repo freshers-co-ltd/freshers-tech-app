@@ -1868,6 +1868,18 @@ VALUES
         'dddddddd-dddd-dddd-dddd-dddddddddddd/cleaning-5.jpg',
         'image'
     ),
+    (
+        'dddddddd-dddd-dddd-dddd-dddddddddddd',
+        '00000000-0000-0000-0000-000000000003',
+        'dddddddd-dddd-dddd-dddd-dddddddddddd/video-low.mp4',
+        'video'
+    ),
+    (
+        'dddddddd-dddd-dddd-dddd-dddddddddddd',
+        '00000000-0000-0000-0000-000000000003',
+        'dddddddd-dddd-dddd-dddd-dddddddddddd/video-high.mp4',
+        'video'
+    ),
     -- More evidence for other completed cleanings
     (
         'c0000000-0000-0000-0000-000000000001',
