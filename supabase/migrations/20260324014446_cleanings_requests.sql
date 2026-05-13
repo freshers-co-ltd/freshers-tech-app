@@ -10,21 +10,56 @@ CREATE TABLE
         created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
     );
 
-INSERT INTO
-    public.standard_tasks (description)
-VALUES
-    ('Vacuum all carpets'),
-    ('Mop hard floors'),
-    ('Clean bathroom surfaces'),
-    ('Change bed linens'),
-    ('Dust all surfaces'),
-    ('Clean kitchen appliances'),
-    ('Wipe down countertops'),
-    ('Clean mirrors and glass'),
-    ('Empty trash bins'),
-    ('Clean toilet and sanitize'),
-    ON CONFLICT (description)
-DO NOTHING;
+DO $$
+BEGIN
+INSERT INTO public.standard_tasks (description) VALUES ('Vacuum all carpets');
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
+DO $$
+BEGIN
+INSERT INTO public.standard_tasks (description) VALUES ('Mop hard floors');
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
+DO $$
+BEGIN
+INSERT INTO public.standard_tasks (description) VALUES ('Clean bathroom surfaces');
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
+DO $$
+BEGIN
+INSERT INTO public.standard_tasks (description) VALUES ('Change bed linens');
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
+DO $$
+BEGIN
+INSERT INTO public.standard_tasks (description) VALUES ('Dust all surfaces');
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
+DO $$
+BEGIN
+INSERT INTO public.standard_tasks (description) VALUES ('Clean kitchen appliances');
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
+DO $$
+BEGIN
+INSERT INTO public.standard_tasks (description) VALUES ('Wipe down countertops');
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
+DO $$
+BEGIN
+INSERT INTO public.standard_tasks (description) VALUES ('Clean mirrors and glass');
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
+DO $$
+BEGIN
+INSERT INTO public.standard_tasks (description) VALUES ('Empty trash bins');
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
+DO $$
+BEGIN
+INSERT INTO public.standard_tasks (description) VALUES ('Clean toilet and sanitize');
+EXCEPTION WHEN unique_violation THEN NULL;
+END $$;
 
 ALTER TABLE public.standard_tasks ENABLE ROW LEVEL SECURITY;
 
@@ -439,8 +474,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+REVOKE EXECUTE ON FUNCTION public.create_cleaning_request FROM PUBLIC, anon;
 GRANT
-EXECUTE ON FUNCTION public.create_cleaning_request TO authenticated;
+    EXECUTE ON FUNCTION public.create_cleaning_request TO authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.update_cleaning_request (
@@ -468,8 +504,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+REVOKE EXECUTE ON FUNCTION public.update_cleaning_request FROM PUBLIC, anon;
 GRANT
-EXECUTE ON FUNCTION public.update_cleaning_request TO authenticated;
+    EXECUTE ON FUNCTION public.update_cleaning_request TO authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.handle_cleaning_status_transitions () RETURNS TRIGGER SECURITY DEFINER
@@ -498,6 +535,8 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER on_cleaning_timestamp_update BEFORE
 UPDATE ON public.cleanings FOR EACH ROW
 EXECUTE FUNCTION public.handle_cleaning_status_transitions ();
+
+REVOKE EXECUTE ON FUNCTION public.handle_cleaning_status_transitions() FROM PUBLIC, anon, authenticated;
 
 CREATE POLICY "Cleaners can upload evidence to assigned cleaning folders" ON STORAGE.objects FOR INSERT TO authenticated
 WITH
@@ -738,6 +777,8 @@ AFTER
 UPDATE OF deleted_at ON public.properties FOR EACH ROW
 EXECUTE FUNCTION public.handle_soft_cascade_delete ();
 
+REVOKE EXECUTE ON FUNCTION public.handle_soft_cascade_delete() FROM PUBLIC, anon, authenticated;
+
 CREATE
 OR REPLACE FUNCTION public.enforce_cleaning_immutability () RETURNS TRIGGER SECURITY DEFINER
 SET
@@ -776,6 +817,8 @@ CREATE TRIGGER trigger_cleaning_immutability BEFORE
 UPDATE ON public.cleanings FOR EACH ROW
 EXECUTE FUNCTION public.enforce_cleaning_immutability ();
 
+REVOKE EXECUTE ON FUNCTION public.enforce_cleaning_immutability() FROM PUBLIC, anon, authenticated;
+
 CREATE
 OR REPLACE FUNCTION public.enforce_cleaning_tasks_immutability () RETURNS TRIGGER SECURITY DEFINER
 SET
@@ -807,6 +850,8 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_cleaning_tasks_immutability BEFORE
 UPDATE ON public.cleaning_tasks FOR EACH ROW
 EXECUTE FUNCTION public.enforce_cleaning_tasks_immutability ();
+
+REVOKE EXECUTE ON FUNCTION public.enforce_cleaning_tasks_immutability() FROM PUBLIC, anon, authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.enforce_evidence_media_immutability () RETURNS TRIGGER SECURITY DEFINER
@@ -842,6 +887,8 @@ CREATE TRIGGER trigger_evidence_media_immutability BEFORE
 UPDATE ON public.evidence_media FOR EACH ROW
 EXECUTE FUNCTION public.enforce_evidence_media_immutability ();
 
+REVOKE EXECUTE ON FUNCTION public.enforce_evidence_media_immutability() FROM PUBLIC, anon, authenticated;
+
 CREATE
 OR REPLACE FUNCTION public.enforce_cleaning_reports_immutability () RETURNS TRIGGER SECURITY DEFINER
 SET
@@ -873,6 +920,8 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_cleaning_reports_immutability BEFORE
 UPDATE ON public.cleaning_reports FOR EACH ROW
 EXECUTE FUNCTION public.enforce_cleaning_reports_immutability ();
+
+REVOKE EXECUTE ON FUNCTION public.enforce_cleaning_reports_immutability() FROM PUBLIC, anon, authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.soft_delete_cleaning (p_cleaning_id UUID) RETURNS VOID SECURITY DEFINER
@@ -907,8 +956,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+REVOKE EXECUTE ON FUNCTION public.soft_delete_cleaning FROM PUBLIC, anon;
 GRANT
-EXECUTE ON FUNCTION public.soft_delete_cleaning TO authenticated;
+    EXECUTE ON FUNCTION public.soft_delete_cleaning TO authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.host_cancel_cleaning (p_cleaning_id UUID) RETURNS VOID SECURITY DEFINER
@@ -936,8 +986,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+REVOKE EXECUTE ON FUNCTION public.host_cancel_cleaning FROM PUBLIC, anon;
 GRANT
-EXECUTE ON FUNCTION public.host_cancel_cleaning TO authenticated;
+    EXECUTE ON FUNCTION public.host_cancel_cleaning TO authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.soft_delete_cleaning_task (p_task_id UUID) RETURNS VOID SECURITY DEFINER
@@ -958,8 +1009,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+REVOKE EXECUTE ON FUNCTION public.soft_delete_cleaning_task FROM PUBLIC, anon;
 GRANT
-EXECUTE ON FUNCTION public.soft_delete_cleaning_task TO authenticated;
+    EXECUTE ON FUNCTION public.soft_delete_cleaning_task TO authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.soft_delete_evidence_media (p_evidence_id UUID) RETURNS VOID SECURITY DEFINER
@@ -979,8 +1031,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+REVOKE EXECUTE ON FUNCTION public.soft_delete_evidence_media FROM PUBLIC, anon;
 GRANT
-EXECUTE ON FUNCTION public.soft_delete_evidence_media TO authenticated;
+    EXECUTE ON FUNCTION public.soft_delete_evidence_media TO authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.soft_delete_cleaning_report (p_report_id UUID) RETURNS VOID SECURITY DEFINER
@@ -1000,5 +1053,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+REVOKE EXECUTE ON FUNCTION public.soft_delete_cleaning_report FROM PUBLIC, anon;
 GRANT
-EXECUTE ON FUNCTION public.soft_delete_cleaning_report TO authenticated;
+    EXECUTE ON FUNCTION public.soft_delete_cleaning_report TO authenticated;

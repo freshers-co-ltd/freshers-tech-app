@@ -70,6 +70,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+REVOKE EXECUTE ON FUNCTION public.log_admin_action() FROM PUBLIC, anon, authenticated;
+
 CREATE TRIGGER audit_profiles_trigger
 AFTER INSERT
 OR
@@ -118,3 +120,5 @@ OR
 UPDATE
 OR DELETE ON public.cleaning_reports FOR EACH ROW
 EXECUTE FUNCTION public.log_admin_action ();
+
+REVOKE SELECT ON TABLE public.audit_logs FROM authenticated;

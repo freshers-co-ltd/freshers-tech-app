@@ -158,6 +158,8 @@ CREATE TRIGGER trigger_property_immutability BEFORE
 UPDATE ON public.properties FOR EACH ROW
 EXECUTE FUNCTION public.enforce_property_immutability ();
 
+REVOKE EXECUTE ON FUNCTION public.enforce_property_immutability() FROM PUBLIC, anon, authenticated;
+
 CREATE
 OR REPLACE FUNCTION public.soft_delete_property (p_property_id UUID) RETURNS VOID SECURITY DEFINER
 SET
@@ -178,8 +180,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+REVOKE EXECUTE ON FUNCTION public.soft_delete_property(uuid) FROM PUBLIC, anon;
 GRANT
-EXECUTE ON FUNCTION public.soft_delete_property TO authenticated;
+    EXECUTE ON FUNCTION public.soft_delete_property (p_property_id UUID) TO authenticated;
 
 ALTER TABLE public.profiles ADD COLUMN base_price_per_cleaning NUMERIC;
 

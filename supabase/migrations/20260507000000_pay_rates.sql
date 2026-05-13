@@ -49,3 +49,16 @@ BEGIN
   WHERE id = 1;
 END;
 $$;
+
+REVOKE EXECUTE ON FUNCTION public.get_cleaner_pay_config() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_cleaner_pay_config() TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.update_cleaner_pay_config FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.update_cleaner_pay_config TO authenticated;
+
+REVOKE SELECT ON ALL TABLES IN SCHEMA public FROM anon;
+
+REVOKE SELECT ON TABLE public.cleaner_pay_config FROM authenticated;
+
+COMMENT ON TABLE public.audit_logs IS '@omit';
+COMMENT ON TABLE public.cleaner_pay_config IS '@omit';

@@ -481,7 +481,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE
-OR REPLACE FUNCTION public.admin_get_standard_tasks () RETURNS TABLE (id UUID, description TEXT, is_active BOOLEAN, created_at TIMESTAMP WITH TIME ZONE) SECURITY DEFINER AS $$
+OR REPLACE FUNCTION public.admin_get_standard_tasks () RETURNS TABLE (id UUID, description TEXT, is_active BOOLEAN, created_at TIMESTAMP WITH TIME ZONE) SECURITY DEFINER
+SET search_path = public AS $$
 BEGIN
     RETURN QUERY SELECT st.id, st.description, st.is_active, st.created_at FROM public.standard_tasks st ORDER BY st.created_at;
 END;
@@ -612,6 +613,10 @@ SELECT
     ) AS low_supplies_mtd,
     NOW() AS calculated_at;
 
+COMMENT ON VIEW public.platform_stats IS '@omit';
+
+ALTER VIEW public.platform_stats SET (security_invoker = true);
+
 CREATE
 OR REPLACE FUNCTION public.admin_get_audit_logs (
     p_target_table TEXT DEFAULT NULL,
@@ -630,7 +635,8 @@ OR REPLACE FUNCTION public.admin_get_audit_logs (
     new_data JSONB,
     created_at TIMESTAMP WITH TIME ZONE,
     actor_name TEXT
-) SECURITY DEFINER AS $$
+) SECURITY DEFINER
+SET search_path = public AS $$
 BEGIN
     RETURN QUERY SELECT al.id, al.actor_id, al.target_id, al.target_table, al.action_type, al.old_data, al.new_data, al.created_at, COALESCE(p.full_name, 'System')
     FROM public.audit_logs al LEFT JOIN public.profiles p ON al.actor_id = p.id
@@ -648,7 +654,8 @@ OR REPLACE FUNCTION public.admin_get_cleanings_count (
     p_cleaner_id UUID DEFAULT NULL,
     p_host_id UUID DEFAULT NULL,
     p_search TEXT DEFAULT NULL
-) RETURNS INT LANGUAGE plpgsql SECURITY DEFINER AS $$
+) RETURNS INT LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public AS $$
 BEGIN
     RETURN (SELECT count(*)::INT FROM public.cleanings c
     LEFT JOIN public.profiles hp ON c.host_id = hp.id
@@ -736,11 +743,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-GRANT
-EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated;
-
 CREATE
-OR REPLACE FUNCTION public.set_cleaner_pay_on_cleaning_insert () RETURNS TRIGGER AS $$
+OR REPLACE FUNCTION public.set_cleaner_pay_on_cleaning_insert () RETURNS TRIGGER
+SET search_path = public AS $$
 DECLARE
     v_property_type TEXT;
     v_bedrooms INT;
@@ -774,6 +779,8 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_set_cleaner_pay_on_cleaning_insert BEFORE INSERT ON public.cleanings FOR EACH ROW
 EXECUTE FUNCTION public.set_cleaner_pay_on_cleaning_insert ();
+
+REVOKE EXECUTE ON FUNCTION public.set_cleaner_pay_on_cleaning_insert() FROM PUBLIC, anon, authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.admin_update_host_base_price (p_host_id UUID, p_base_price NUMERIC) RETURNS VOID SECURITY DEFINER
@@ -843,7 +850,8 @@ END;
 $$;
 
 CREATE
-OR REPLACE FUNCTION public.set_service_cost_on_cleaning_insert () RETURNS TRIGGER AS $$
+OR REPLACE FUNCTION public.set_service_cost_on_cleaning_insert () RETURNS TRIGGER
+SET search_path = public AS $$
 DECLARE
     v_property_type TEXT;
     v_bedrooms INT;
@@ -873,5 +881,61 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_set_service_cost_on_cleaning_insert BEFORE INSERT ON public.cleanings FOR EACH ROW
 EXECUTE FUNCTION public.set_service_cost_on_cleaning_insert ();
+
+REVOKE EXECUTE ON FUNCTION public.set_service_cost_on_cleaning_insert() FROM PUBLIC, anon, authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_get_users FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_get_users TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.update_user_presence() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.update_user_presence() TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_get_host_detail FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_get_host_detail TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_get_cleaner_detail FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_get_cleaner_detail TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_get_all_cleanings FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_get_all_cleanings TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_unassign_cleaner(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_unassign_cleaner(uuid) TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_assign_cleaner(uuid, uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_assign_cleaner(uuid, uuid) TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_create_cleaning_for_host FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_create_cleaning_for_host TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_update_standard_tasks(jsonb, uuid[]) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_update_standard_tasks(jsonb, uuid[]) TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_get_standard_tasks() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_get_standard_tasks() TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_get_available_cleaners() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_get_available_cleaners() TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_get_audit_logs FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_get_audit_logs TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_get_cleanings_count FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_get_cleanings_count TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_get_users_count FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_get_users_count TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_get_user_stats() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_get_user_stats() TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_ban_user(uuid, boolean) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_ban_user(uuid, boolean) TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_update_host_base_price(uuid, numeric) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_update_host_base_price(uuid, numeric) TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.calculate_service_cost FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.calculate_service_cost TO authenticated;
 
 COMMIT;

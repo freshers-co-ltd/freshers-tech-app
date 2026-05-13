@@ -271,3 +271,30 @@ END;
 $$ LANGUAGE plpgsql;
 
 COMMIT;
+
+REVOKE EXECUTE ON FUNCTION public.admin_get_revenue_metrics FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_get_revenue_metrics TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_get_monthly_stats FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_get_monthly_stats TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_get_user_growth_by_month FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_get_user_growth_by_month TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_get_active_cleanings() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_get_active_cleanings() TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_get_cleanings_over_time FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_get_cleanings_over_time TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_get_revenue_over_time FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_get_revenue_over_time TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_get_user_growth FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_get_user_growth TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_get_cleaning_status_breakdown FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_get_cleaning_status_breakdown TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.admin_get_platform_stats_trend FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_get_platform_stats_trend TO authenticated;

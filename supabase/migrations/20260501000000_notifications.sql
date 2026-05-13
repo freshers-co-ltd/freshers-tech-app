@@ -18,6 +18,7 @@ CREATE OR REPLACE FUNCTION public.notify_cleaning_reminders()
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
     rec RECORD;
@@ -67,6 +68,7 @@ CREATE OR REPLACE FUNCTION public.notify_cleaning_starting_soon()
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
     rec RECORD;
@@ -115,6 +117,7 @@ CREATE OR REPLACE FUNCTION public.notify_missed_clockin()
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
     rec RECORD;
@@ -250,7 +253,8 @@ WITH
     CHECK (user_id = auth.uid ());
 
 CREATE
-OR REPLACE FUNCTION public.get_or_create_notification_preferences () RETURNS UUID LANGUAGE plpgsql SECURITY DEFINER AS $$
+OR REPLACE FUNCTION public.get_or_create_notification_preferences () RETURNS UUID LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public AS $$
 DECLARE
     v_user_id UUID;
     v_pref_id UUID;
@@ -270,8 +274,8 @@ BEGIN
 END;
 $$;
 
-GRANT
-EXECUTE ON FUNCTION public.get_or_create_notification_preferences () TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.get_or_create_notification_preferences() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_or_create_notification_preferences() TO authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.create_notification_for_user (
@@ -281,7 +285,8 @@ OR REPLACE FUNCTION public.create_notification_for_user (
     p_message TEXT,
     p_data JSONB DEFAULT '{}',
     p_link TEXT DEFAULT NULL
-) RETURNS UUID LANGUAGE plpgsql SECURITY DEFINER AS $$
+) RETURNS UUID LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public AS $$
 DECLARE
     v_notification_id UUID;
 BEGIN
@@ -293,8 +298,8 @@ BEGIN
 END;
 $$;
 
-GRANT
-EXECUTE ON FUNCTION public.create_notification_for_user TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.create_notification_for_user FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.create_notification_for_user TO authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.handle_cleaning_notifications () RETURNS TRIGGER SECURITY DEFINER
@@ -501,11 +506,22 @@ OR
 UPDATE ON public.cleanings FOR EACH ROW
 EXECUTE FUNCTION public.handle_cleaning_notifications ();
 
+REVOKE EXECUTE ON FUNCTION public.handle_cleaning_notifications() FROM PUBLIC, anon, authenticated;
+
 SELECT cron.schedule('cleaning-reminder-check', '0 * * * *', 'SELECT public.notify_cleaning_reminders()');
 
 SELECT cron.schedule('cleaning-starting-soon-check', '*/5 * * * *', 'SELECT public.notify_cleaning_starting_soon()');
 
 SELECT cron.schedule('cleaning-missed-clockin-check', '*/10 * * * *', 'SELECT public.notify_missed_clockin()');
+
+REVOKE EXECUTE ON FUNCTION public.notify_cleaning_reminders() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.notify_cleaning_reminders() TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.notify_cleaning_starting_soon() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.notify_cleaning_starting_soon() TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.notify_missed_clockin() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.notify_missed_clockin() TO authenticated;
 
 BEGIN;
 
@@ -550,5 +566,7 @@ CREATE POLICY "Users manage own push subscriptions"
 
 ALTER PUBLICATION supabase_realtime
 ADD TABLE public.push_subscriptions;
+
+COMMENT ON TABLE public.push_subscriptions IS '@omit';
 
 COMMIT;
