@@ -450,8 +450,8 @@ export function CleaningDetailView({
 																				preload="metadata">
 																				<track kind="captions" />
 																			</video>
-																			<div className="absolute inset-0 flex items-center justify-center bg-black/30">
-																				<div className="flex size-10 items-center justify-center rounded-full bg-white/80 shadow-md">
+																			<div className="absolute inset-0 flex items-center justify-center">
+																				<div className="flex size-10 items-center justify-center rounded-full bg-white/70 shadow-md">
 																					<Play className="size-5 fill-primary text-primary ml-0.5" />
 																				</div>
 																			</div>

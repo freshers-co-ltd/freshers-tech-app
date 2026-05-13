@@ -1,8 +1,9 @@
 'use client';
 
-import { ChevronLeft, ChevronRight, Loader2, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
+import { Loading } from '@/components/Loading';
 import { Button } from '@/components/ui/button';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import {
@@ -148,9 +149,7 @@ export function AuditLogDialog({ open, onOpenChange }: AuditLogDialogProps) {
 
 				<div className="flex-1 overflow-y-auto p-4">
 					{loading ? (
-						<div className="flex items-center justify-center py-12">
-							<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-						</div>
+						<Loading />
 					) : logs.length === 0 ? (
 						<p className="text-center text-muted-foreground py-12">No activity recorded</p>
 					) : (

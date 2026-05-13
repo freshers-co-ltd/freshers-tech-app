@@ -22,13 +22,8 @@ VALUES
     ('Wipe down countertops'),
     ('Clean mirrors and glass'),
     ('Empty trash bins'),
-    ('Replace towels'),
     ('Clean toilet and sanitize'),
-    ('Wash dishes or load dishwasher'),
-    ('Sweep and mop entrance'),
-    ('Clean window sills'),
-    ('Launder and fold clothes')
-ON CONFLICT (description)
+    ON CONFLICT (description)
 DO NOTHING;
 
 ALTER TABLE public.standard_tasks ENABLE ROW LEVEL SECURITY;

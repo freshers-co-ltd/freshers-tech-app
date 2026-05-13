@@ -1,5 +1,5 @@
-import { Loader2 } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { Loading } from '@/components/Loading';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -18,7 +18,6 @@ interface ManagementLayoutProps {
 	title: string;
 	headerActions: ReactNode;
 	isLoading: boolean;
-	loadingMessage: string;
 	hasResources: boolean;
 	emptyState: ReactNode;
 	grid: ReactNode;
@@ -40,7 +39,6 @@ export function ManagementLayout({
 	title,
 	headerActions,
 	isLoading,
-	loadingMessage,
 	hasResources,
 	emptyState,
 	grid,
@@ -67,16 +65,7 @@ export function ManagementLayout({
 			</header>
 
 			<section className="mt-12">
-				{isLoading ? (
-					<div className="flex flex-col items-center justify-center min-h-100 space-y-4">
-						<Loader2 className="size-8 animate-spin text-primary" />
-						<p className="text-muted-foreground animate-pulse">{loadingMessage}</p>
-					</div>
-				) : hasResources ? (
-					grid
-				) : (
-					emptyState
-				)}
+				{isLoading ? <Loading /> : hasResources ? grid : emptyState}
 			</section>
 
 			<Dialog open={isViewOpen} onOpenChange={(open) => !open && onClose()}>

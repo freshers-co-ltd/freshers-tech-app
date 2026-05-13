@@ -10,8 +10,9 @@ import {
 	useReactTable,
 	type VisibilityState,
 } from '@tanstack/react-table';
-import { ArrowDown, ArrowUp, Loader2 } from 'lucide-react';
+import { ArrowDown, ArrowUp } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { Loading } from '@/components/Loading';
 import { SortIcon } from '@/components/SortIcon';
 import { Button } from '@/components/ui/button';
 import { Card, CardFooter } from '@/components/ui/card';
@@ -126,11 +127,7 @@ export function DataTable<T>({
 	});
 
 	if (loading) {
-		return (
-			<Card className="p-12 text-center">
-				<Loader2 className="size-8 animate-spin text-muted-foreground mx-auto" />
-			</Card>
-		);
+		return <Loading />;
 	}
 
 	if (data.length === 0) {

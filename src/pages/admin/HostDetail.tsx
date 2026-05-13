@@ -1,16 +1,10 @@
 'use client';
 
-import {
-	BadgeCheck,
-	BrushCleaning,
-	CalendarClock,
-	ClipboardList,
-	Loader2,
-	Plus,
-} from 'lucide-react';
+import { BadgeCheck, BrushCleaning, CalendarClock, ClipboardList, Plus } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Loading } from '@/components/Loading';
 import { Button } from '@/components/ui/button';
 import {
 	Dialog,
@@ -317,9 +311,7 @@ export function AdminHostDetailPage() {
 						<DialogDescription>View complete property information</DialogDescription>
 					</DialogHeader>
 					{viewingPropertyLoading ? (
-						<div className="flex items-center justify-center py-8">
-							<Loader2 className="size-6 animate-spin text-muted-foreground" />
-						</div>
+						<Loading />
 					) : viewingProperty ? (
 						<PropertyDetailView property={viewingProperty} onEdit={() => {}} onDelete={() => {}} />
 					) : null}

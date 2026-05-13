@@ -16,7 +16,6 @@ export function CleanerCleaningsPage() {
 			title={DICT.CLEANINGS.TITLE}
 			headerActions={null}
 			isLoading={isLoading}
-			loadingMessage="Fetching assigned cleanings..."
 			hasResources={cleanings.length > 0}
 			emptyState={
 				<div className="flex flex-col items-center justify-center min-h-100 border-2 border-dashed rounded-xl p-8 text-center">

@@ -82,7 +82,7 @@ export function FullscreenMediaCarousel({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="min-w-full max-w-screen h-dvh p-0 bg-background border-none flex flex-col items-center justify-start overflow-hidden rounded-none shadow-none [&>button]:hidden">
+			<DialogContent className="min-w-full max-w-screen h-dvh p-0 bg-background border-none flex flex-col items-center justify-center overflow-hidden rounded-none shadow-none [&>button]:hidden">
 				<DialogHeader className="hidden">
 					<DialogTitle className="sr-only">Fullscreen view</DialogTitle>
 					<DialogDescription className="sr-only">
@@ -114,19 +114,19 @@ export function FullscreenMediaCarousel({
 					</div>
 				)}
 
-				<div className="w-full h-full flex items-center justify-center">
+				<div className="flex-1 w-full h-full flex items-center justify-center">
 					{safeMedia[currentIndex]?.type === 'video' ? (
-						<MediaPlayer key={currentIndex} className="w-full h-full">
+						<MediaPlayer key={currentIndex} className="w-full max-h-full">
 							<MediaPlayerVideo>
 								<source src={safeMedia[currentIndex]?.url} type="video/mp4" />
 							</MediaPlayerVideo>
 							<MediaPlayerLoading />
 							<MediaPlayerError />
 							<MediaPlayerVolumeIndicator />
-							<MediaPlayerControls className="flex-col items-start gap-2.5">
+							<MediaPlayerControls className="flex-col items-start">
 								<MediaPlayerControlsOverlay />
 								<MediaPlayerSeek />
-								<div className="flex w-full items-center gap-2 px-4 pb-4">
+								<div className="flex w-full items-center">
 									<div className="flex flex-1 items-center gap-2">
 										<MediaPlayerPlay />
 										<MediaPlayerSeekBackward />

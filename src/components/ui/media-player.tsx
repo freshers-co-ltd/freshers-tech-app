@@ -854,7 +854,7 @@ function MediaPlayerControls(props: DivProps) {
 			data-visible={controlsVisible ? '' : undefined}
 			dir={context.dir}
 			className={cn(
-				'pointer-events-none absolute right-0 bottom-0 left-0 z-50 flex items-center gap-2 in-[:fullscreen]:px-6 px-4 in-[:fullscreen]:py-4 py-3 opacity-0 transition-opacity duration-200 data-visible:pointer-events-auto data-visible:opacity-100',
+				'pointer-events-none absolute right-0 bottom-0 left-0 z-50 flex items-center gap-2 in-[:fullscreen]:px-4 px-2 in-[:fullscreen]:py-4 py-3 opacity-0 transition-opacity duration-200 data-visible:pointer-events-auto data-visible:opacity-100',
 				className,
 			)}
 			{...controlsProps}

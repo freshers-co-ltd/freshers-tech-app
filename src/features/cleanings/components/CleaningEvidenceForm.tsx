@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -14,8 +14,7 @@ import {
 } from '@/components/ui/file-upload';
 import { Textarea } from '@/components/ui/textarea';
 import { DICT } from '@/dictionary';
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+import { DEFAULT_FILE_SIZE_LIMIT, getBucketConfig, mimeTypesToAccept } from '@/lib/mediaService';
 
 const evidenceSchema = z.object({
 	broken_items_report: z.string().optional(),
@@ -70,6 +69,28 @@ const FileSvgDraw = ({ accept }: { accept?: Record<string, string[]> }) => {
 export function CleaningEvidenceForm({ onSubmit, onCancel }: CleaningEvidenceFormProps) {
 	const [files, setFiles] = useState<File[] | null>([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [bucketConfig, setBucketConfig] = useState({
+		maxSize: DEFAULT_FILE_SIZE_LIMIT,
+		accept: {
+			'image/*': ['.jpg', '.jpeg', '.png'],
+			'video/*': ['.mp4', '.mov'],
+		} as Record<string, string[]>,
+	});
+
+	const fetchBucketConfig = useCallback(async () => {
+		const config = await getBucketConfig('cleaning-media');
+		setBucketConfig({
+			maxSize: config.fileSizeLimit,
+			accept:
+				config.allowedMimeTypes.length > 0
+					? mimeTypesToAccept(config.allowedMimeTypes)
+					: { 'image/*': ['.jpg', '.jpeg', '.png'], 'video/*': ['.mp4', '.mov'] },
+		});
+	}, []);
+
+	useEffect(() => {
+		fetchBucketConfig();
+	}, [fetchBucketConfig]);
 
 	const form = useForm<EvidenceFormValues>({
 		resolver: zodResolver(evidenceSchema),
@@ -127,20 +148,12 @@ export function CleaningEvidenceForm({ onSubmit, onCancel }: CleaningEvidenceFor
 						onValueChange={onFilesChange}
 						dropzoneOptions={{
 							maxFiles: 10,
-							maxSize: MAX_FILE_SIZE,
-							accept: {
-								'image/*': ['.jpg', '.jpeg', '.png'],
-								'video/*': ['.mp4', '.mov'],
-							},
+							maxSize: bucketConfig.maxSize,
+							accept: bucketConfig.accept,
 						}}
 						className="file-dropzone">
 						<FileInput className="flex-col-center w-full pt-3 pb-4">
-							<FileSvgDraw
-								accept={{
-									'image/*': ['.jpg', '.jpeg', '.png'],
-									'video/*': ['.mp4', '.mov'],
-								}}
-							/>
+							<FileSvgDraw accept={bucketConfig.accept} />
 						</FileInput>
 						<FileUploaderContent className="flex flex-row flex-wrap items-center gap-2 mt-2">
 							{files?.map((file, i) => (

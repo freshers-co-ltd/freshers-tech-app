@@ -31,7 +31,6 @@ export function HostCleaningsPage() {
 				</Button>
 			}
 			isLoading={isLoading}
-			loadingMessage="Fetching scheduled cleanings..."
 			hasResources={cleanings.length > 0}
 			emptyState={
 				<div className="flex flex-col items-center justify-center min-h-100 border-2 border-dashed rounded-xl p-8 text-center">

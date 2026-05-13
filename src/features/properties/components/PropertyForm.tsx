@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -28,10 +28,14 @@ import {
 	type PropertyInsert,
 	propertyTypeValues,
 } from '@/features/properties/propertyService';
-import { mediaService } from '@/lib/mediaService';
+import {
+	DEFAULT_FILE_SIZE_LIMIT,
+	getBucketConfig,
+	mediaService,
+	mimeTypesToAccept,
+} from '@/lib/mediaService';
 
 const POSTCODE_REGEX = /^[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}$/i;
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 const propertySchema = z.object({
 	address_line_1: z.string().min(1, DICT.COMMON.VALIDATION.ADDRESS_REQUIRED),
@@ -83,6 +87,26 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 	const [extraImagesPaths, setExtraImagesPaths] = useState<string[]>(
 		initialData?.extra_images_urls || [],
 	);
+
+	const [bucketConfig, setBucketConfig] = useState({
+		maxSize: DEFAULT_FILE_SIZE_LIMIT,
+		accept: { 'image/*': ['.jpg', '.jpeg', '.png'] } as Record<string, string[]>,
+	});
+
+	const fetchBucketConfig = useCallback(async () => {
+		const config = await getBucketConfig('property-media');
+		setBucketConfig({
+			maxSize: config.fileSizeLimit,
+			accept:
+				config.allowedMimeTypes.length > 0
+					? mimeTypesToAccept(config.allowedMimeTypes)
+					: { 'image/*': ['.jpg', '.jpeg', '.png'] },
+		});
+	}, []);
+
+	useEffect(() => {
+		fetchBucketConfig();
+	}, [fetchBucketConfig]);
 
 	const form = useForm<PropertyFormInput, undefined, PropertyFormValues>({
 		resolver: zodResolver(propertySchema),
@@ -290,13 +314,13 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 						onRemoveExisting={() => setMainImage(null)}
 						dropzoneOptions={{
 							maxFiles: 1,
-							maxSize: MAX_FILE_SIZE,
-							accept: { 'image/*': ['.jpg', '.jpeg', '.png'] },
+							maxSize: bucketConfig.maxSize,
+							accept: bucketConfig.accept,
 						}}
 						orientation="horizontal"
 						className="file-dropzone">
 						<FileInput className="flex-col-center w-full pt-3 pb-4">
-							<FileSvgDraw accept={{ 'image/*': ['.jpg', '.jpeg', '.png'] }} />
+							<FileSvgDraw accept={bucketConfig.accept} />
 						</FileInput>
 						<FileUploaderContent className="flex flex-wrap gap-2 mt-2 w-full">
 							{mainImage?.map((file, i) => (
@@ -330,13 +354,13 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 						onRemoveExisting={removeExistingImage}
 						dropzoneOptions={{
 							maxFiles: 10,
-							maxSize: MAX_FILE_SIZE,
-							accept: { 'image/*': ['.jpg', '.jpeg', '.png'] },
+							maxSize: bucketConfig.maxSize,
+							accept: bucketConfig.accept,
 						}}
 						orientation="horizontal"
 						className="file-dropzone">
 						<FileInput className="flex-col-center w-full pt-3 pb-4">
-							<FileSvgDraw accept={{ 'image/*': ['.jpg', '.jpeg', '.png'] }} />
+							<FileSvgDraw accept={bucketConfig.accept} />
 							{remainingSlots <= 0 && (
 								<p className="mt-2 text-xs font-medium text-center text-destructive">
 									{DICT.COMMON.IMAGES.LIMIT_REACHED}

@@ -1,7 +1,7 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { Loading } from '@/components/Loading';
 import {
 	Dialog,
 	DialogContent,
@@ -51,9 +51,7 @@ export function CleaningViewDialog({ open, viewId, onClose }: CleaningViewDialog
 					<DialogDescription>View complete cleaning information</DialogDescription>
 				</DialogHeader>
 				{viewingLoading ? (
-					<div className="flex items-center justify-center py-8">
-						<Loader2 className="size-6 animate-spin text-muted-foreground" />
-					</div>
+					<Loading />
 				) : viewingCleaning ? (
 					<CleaningDetailView
 						cleaning={viewingCleaning}

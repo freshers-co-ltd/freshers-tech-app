@@ -3,6 +3,7 @@
 import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { Loading } from '@/components/Loading';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -143,9 +144,7 @@ export function StandardTasksDialog({ open, onOpenChange }: StandardTasksDialogP
 				</DialogHeader>
 
 				{loading ? (
-					<div className="flex items-center justify-center py-8">
-						<Loader2 className="size-6 animate-spin text-muted-foreground" />
-					</div>
+					<Loading />
 				) : (
 					<div className="flex-1 min-h-0 flex flex-col pb-2 gap-4 overflow-hidden">
 						<ScrollArea className="flex-1 min-h-0 px-2">

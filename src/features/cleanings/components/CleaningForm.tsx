@@ -85,7 +85,6 @@ export function CleaningForm({
 	const { user } = useAuth();
 	const [hostBasePrice, setHostBasePrice] = useState<number | null>(null);
 	const [hostMultipliers, setHostMultipliers] = useState<Record<string, number> | null>(null);
-	const [priceLoading, setPriceLoading] = useState(false);
 
 	const displayedProperties = availableProperties || contextProperties;
 
@@ -210,7 +209,6 @@ export function CleaningForm({
 		}
 
 		let isMounted = true;
-		setPriceLoading(true);
 
 		async function calcPrice() {
 			if (hostBasePrice === null || !selectedProperty) {
@@ -227,7 +225,6 @@ export function CleaningForm({
 
 			if (isMounted) {
 				setCalculatedPrice(data);
-				setPriceLoading(false);
 			}
 		}
 		calcPrice();
@@ -334,7 +331,7 @@ export function CleaningForm({
 							<div className="space-y-4">
 								<div className="space-y-2">
 									<FieldLabel>Standard Tasks</FieldLabel>
-									<div className="grid grid-cols-1 gap-2">
+									<div className="grid grid-cols-1 gap-1">
 										{standardTasksLoading ? (
 											<p className="text-muted-foreground text-sm py-2">Loading tasks...</p>
 										) : standardTasksError ? (
@@ -347,9 +344,8 @@ export function CleaningForm({
 											standardTasks.map((task) => (
 												<div
 													key={task.id}
-													className="flex items-center gap-2 px-2 py-1 rounded-lg border bg-muted text-sm">
-													<CheckCircle2 className="size-4 text-green-600 shrink-0" />
-													<span className="text-muted-foreground">{task.description}</span>
+													className="flex items-center px-2 py-1 rounded-lg border bg-muted text-sm">
+													<span>{task.description}</span>
 												</div>
 											))
 										)}
@@ -460,8 +456,6 @@ export function CleaningForm({
 									</p>
 									{hostBasePrice === null ? (
 										<p className="text-lg font-medium text-muted-foreground">Not set</p>
-									) : priceLoading ? (
-										<p className="text-2xl font-black text-primary">...</p>
 									) : (
 										<p className="text-2xl font-black text-primary">
 											{DICT.FORMAT.CURRENCY}

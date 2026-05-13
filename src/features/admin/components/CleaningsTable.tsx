@@ -343,7 +343,7 @@ export function CleaningsTable({
 									variant="secondary"
 									size="sm"
 									className="h-8 w-8 p-0"
-									onClick={() => openAssignModal(cleaning.id)}>
+									onClick={() => openAssignModal(cleaning.id, cleaning.cleaner_id)}>
 									<ArrowUpDown className="size-4" />
 								</Button>
 							</TooltipTrigger>

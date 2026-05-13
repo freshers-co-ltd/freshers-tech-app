@@ -1,10 +1,10 @@
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
-import { Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog';
+import { Loading } from '@/components/Loading';
 import { Card } from '@/components/ui/card';
 import {
 	Dialog,
@@ -151,9 +151,7 @@ export function UserDetailLayout({
 						</h1>
 					</div>
 				</header>
-				<div className="flex items-center justify-center p-12">
-					<Loader2 className="size-8 animate-spin text-muted-foreground" />
-				</div>
+				<Loading />
 			</main>
 		);
 	}
@@ -209,9 +207,7 @@ export function UserDetailLayout({
 						<DialogDescription>View complete cleaning information</DialogDescription>
 					</DialogHeader>
 					{viewingCleaningLoading ? (
-						<div className="flex items-center justify-center py-8">
-							<Loader2 className="size-6 animate-spin text-muted-foreground" />
-						</div>
+						<Loading />
 					) : viewingCleaning ? (
 						<CleaningDetailView
 							cleaning={viewingCleaning}

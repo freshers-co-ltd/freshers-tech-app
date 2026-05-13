@@ -3,6 +3,7 @@
 import { Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { Loading } from '@/components/Loading';
 import { Button } from '@/components/ui/button';
 import {
 	Dialog,
@@ -79,11 +80,7 @@ export function HostPricingConfigDialog({ open, onOpenChange }: HostPricingConfi
 					<DialogHeader>
 						<DialogTitle>Property Price Multipliers</DialogTitle>
 					</DialogHeader>
-					{loading && (
-						<div className="flex items-center justify-center py-8">
-							<Loader2 className="size-6 animate-spin text-muted-foreground" />
-						</div>
-					)}
+					{loading && <Loading />}
 				</DialogContent>
 			</Dialog>
 		);
