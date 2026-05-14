@@ -22,6 +22,11 @@ interface DiffEntry {
 	newValue: string;
 }
 
+function isIsoDateString(value: string): boolean {
+	const isoDateRegex = /^\d{4}-\d{2}-\d{2}(T|\s)\d{2}:\d{2}:\d{2}/;
+	return isoDateRegex.test(value);
+}
+
 function formatValue(value: unknown): string {
 	if (value === null) {
 		return 'null';
@@ -36,6 +41,9 @@ function formatValue(value: unknown): string {
 		return value.toString();
 	}
 	if (typeof value === 'string') {
+		if (isIsoDateString(value)) {
+			return formatDate(value, { variant: 'datetime' });
+		}
 		if (value.length > 50) {
 			return `${value.slice(0, 50)}...`;
 		}
@@ -131,39 +139,41 @@ export function AuditLogEntryComponent({ log }: AuditLogEntryProps) {
 					</Button>
 				</div>
 			</div>
-			<div className="text-sm text-muted-foreground px-4 pb-3">{formatDate(log.created_at)}</div>
+			<div className="text-sm text-muted-foreground px-4 pb-3">
+				{formatDate(log.created_at, { variant: 'datetime' })}
+			</div>
 			{isExpanded && changeCount > 0 && (
 				<div className="border-t px-4 py-3 bg-muted/30">
 					<div className="overflow-x-auto md:table md:w-full md:text-sm">
+						<thead className="hidden md:table-header-group">
+							<tr className="text-left text-muted-foreground">
+								<th className="pb-2 font-medium">Field</th>
+								<th className="pb-2 font-medium">Old Value</th>
+								<th className="pb-2 font-medium">New Value</th>
+							</tr>
+						</thead>
 						<tbody className="block md:table-row-group">
 							{diffs.map((diff) => (
-								<div
+								<tr
 									key={diff.field}
 									className="block md:table-row border-b border-muted pb-4 mb-4 last:mb-0 md:pb-0 md:mb-0 md:border-0">
-									<div className="hidden md:table-header-group">
-										<tr className="text-left text-muted-foreground">
-											<th className="pb-2 font-medium">Field</th>
-											<th className="pb-2 font-medium">Old Value</th>
-											<th className="pb-2 font-medium">New Value</th>
-										</tr>
-									</div>
-									<div className="block md:table-cell py-2 md:py-2">
+									<td className="block md:table-cell py-2 md:py-2">
 										<div className="md:hidden text-xs text-muted-foreground mb-1">Field</div>
 										<div className="font-mono text-xs text-foreground">{diff.field}</div>
-									</div>
-									<div className="block md:table-cell py-2 md:py-2">
+									</td>
+									<td className="block md:table-cell py-2 md:py-2">
 										<div className="md:hidden text-xs text-muted-foreground mb-1">Old Value</div>
 										<div className="font-mono text-xs text-muted-foreground whitespace-nowrap">
 											{diff.oldValue}
 										</div>
-									</div>
-									<div className="block md:table-cell py-2 md:py-2">
+									</td>
+									<td className="block md:table-cell py-2 md:py-2">
 										<div className="md:hidden text-xs text-muted-foreground mb-1">New Value</div>
 										<div className="font-mono text-xs text-foreground whitespace-nowrap">
 											{diff.newValue}
 										</div>
-									</div>
-								</div>
+									</td>
+								</tr>
 							))}
 						</tbody>
 					</div>

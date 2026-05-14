@@ -1,7 +1,7 @@
 'use client';
 
 import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, ChevronDownIcon, Clock } from 'lucide-react';
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -13,7 +13,7 @@ import {
 	DrawerTrigger,
 } from '@/components/ui/drawer';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
 interface DateTimePickerProps {
@@ -34,6 +34,131 @@ function useIsMobile() {
 	return isMobile;
 }
 
+function TimePicker({ value, onChange }: { value: Date; onChange: (date: Date) => void }) {
+	const [open, setOpen] = React.useState(false);
+	const currentHours = value?.getHours() ?? 0;
+	const [hour, setHour] = React.useState(() => (currentHours % 12 || 12).toString());
+	const [minute, setMinute] = React.useState(() => {
+		const m = value?.getMinutes() ?? 0;
+		return Math.round(m / 5) * 5;
+	});
+	const [period, setPeriod] = React.useState<'AM' | 'PM'>(() => (currentHours < 12 ? 'AM' : 'PM'));
+
+	React.useEffect(() => {
+		if (open && value) {
+			const h = value.getHours();
+			setHour((h % 12 || 12).toString());
+			setMinute(Math.round(value.getMinutes() / 5) * 5);
+			setPeriod(h < 12 ? 'AM' : 'PM');
+		}
+	}, [open, value]);
+
+	const handleTimeSelect = (type: 'hour' | 'minute' | 'period', val: string) => {
+		if (!value) {
+			return;
+		}
+
+		const newDate = new Date(value);
+
+		if (type === 'hour') {
+			const h = parseInt(val, 10);
+			if (period === 'PM' && h !== 12) {
+				newDate.setHours(h + 12);
+			} else if (period === 'AM' && h === 12) {
+				newDate.setHours(0);
+			} else {
+				newDate.setHours(h);
+			}
+		} else if (type === 'minute') {
+			newDate.setMinutes(parseInt(val, 10));
+		} else if (type === 'period') {
+			const currentHours = newDate.getHours();
+			if (val === 'PM' && currentHours < 12) {
+				newDate.setHours(currentHours + 12);
+			} else if (val === 'AM' && currentHours >= 12) {
+				newDate.setHours(currentHours - 12);
+			}
+		}
+
+		onChange(newDate);
+	};
+
+	const displayTime = value ? format(value, 'hh:mm aa') : 'Select time';
+
+	const hours = Array.from({ length: 12 }, (_, i) => (i + 1).toString());
+	const minutes = Array.from({ length: 12 }, (_, i) => (i * 5).toString().padStart(2, '0'));
+	const periods: ('AM' | 'PM')[] = ['AM', 'PM'];
+
+	return (
+		<Popover open={open} onOpenChange={setOpen}>
+			<PopoverTrigger asChild>
+				<Button variant="outline" className="flex items-center text-sm w-full justify-between">
+					<div className="flex items-center font-normal gap-2">
+						<Clock className="size-4" />
+						<span>{displayTime}</span>
+					</div>
+					<ChevronDownIcon className="size-4 opacity-50" />
+				</Button>
+			</PopoverTrigger>
+			<PopoverContent className="w-auto p-0" side="top">
+				<div className="flex h-48 gap-2 p-2 overflow-y-auto">
+					<ScrollArea className="w-12">
+						<div className="flex flex-col">
+							{hours.map((h) => (
+								<Button
+									key={h}
+									variant={hour === h ? 'default' : 'ghost'}
+									size="icon-sm"
+									className="justify-center mx-2"
+									onClick={() => {
+										setHour(h);
+										handleTimeSelect('hour', h);
+									}}>
+									{h}
+								</Button>
+							))}
+						</div>
+					</ScrollArea>
+					<ScrollArea className="w-12">
+						<div className="flex flex-col">
+							{minutes.map((m) => (
+								<Button
+									key={m}
+									variant={minute === parseInt(m, 10) ? 'default' : 'ghost'}
+									size="icon-sm"
+									className="justify-center mx-2"
+									onClick={() => {
+										setMinute(parseInt(m, 10));
+										handleTimeSelect('minute', m);
+									}}>
+									{m}
+								</Button>
+							))}
+						</div>
+					</ScrollArea>
+					<ScrollArea className="w-12">
+						<div className="flex flex-col">
+							{periods.map((p) => (
+								<Button
+									key={p}
+									variant={period === p ? 'default' : 'ghost'}
+									size="icon-sm"
+									className="justify-center  mx-2"
+									onClick={() => {
+										setPeriod(p);
+										handleTimeSelect('period', p);
+									}}>
+									{p}
+								</Button>
+							))}
+						</div>
+					</ScrollArea>
+				</div>
+			</PopoverContent>
+		</Popover>
+	);
+}
+
 export function DateTimePicker({ value, onChange, error }: DateTimePickerProps) {
 	const [isOpen, setIsOpen] = React.useState(false);
 	const isMobile = useIsMobile();
@@ -48,27 +173,7 @@ export function DateTimePicker({ value, onChange, error }: DateTimePickerProps) 
 		}
 	};
 
-	const handleTimeChange = (type: 'hour' | 'minute' | 'ampm', val: string) => {
-		const currentDate = value || new Date();
-		const newDate = new Date(currentDate);
-
-		if (type === 'hour') {
-			const hour = Number.parseInt(val, 10);
-			newDate.setHours(
-				newDate.getHours() >= 12 ? (hour === 12 ? 12 : hour + 12) : hour === 12 ? 0 : hour,
-			);
-		} else if (type === 'minute') {
-			newDate.setMinutes(Number.parseInt(val, 10));
-		} else if (type === 'ampm') {
-			const hours = newDate.getHours();
-			if (val === 'AM' && hours >= 12) {
-				newDate.setHours(hours - 12);
-			} else if (val === 'PM' && hours < 12) {
-				newDate.setHours(hours + 12);
-			}
-		}
-		onChange(newDate);
-	};
+	const displayValue = value ? format(value, 'dd/MM/yyyy hh:mm aa') : 'Select date and time';
 
 	const TriggerButton = (
 		<Button
@@ -79,75 +184,23 @@ export function DateTimePicker({ value, onChange, error }: DateTimePickerProps) 
 				error && 'border-destructive',
 			)}>
 			<CalendarIcon className="mr-2 h-4 w-4" />
-			{value ? format(value, 'MM/dd/yyyy hh:mm aa') : <span>Select date and time</span>}
+			<span>{displayValue}</span>
 		</Button>
 	);
 
 	const PickerContent = (
-		<div className="flex flex-col sm:flex-row h-full sm:h-auto overflow-y-auto">
-			<div className="flex justify-center items-center sm:p-0 w-full overflow-hidden">
+		<div className="flex flex-col p-3 gap-3">
+			<div className="flex items-center justify-center">
 				<Calendar
 					mode="single"
 					selected={value}
 					onSelect={handleDateSelect}
 					disabled={(date) => date < new Date()}
-					autoFocus
-					className={cn('p-3 sm:p-3', isMobile && 'scale-125 my-8')}
+					fixedWeeks
+					className="w-full"
 				/>
 			</div>
-			<div className="flex flex-col sm:flex-row sm:h-80 divide-y sm:divide-y-0 sm:divide-x border-t sm:border-t-0">
-				<ScrollArea className="w-full sm:w-auto">
-					<div className="flex sm:flex-col p-2">
-						{Array.from({ length: 12 }, (_, i) => i + 1).map((hour) => (
-							<Button
-								key={hour}
-								size="icon"
-								variant={value && value.getHours() % 12 === hour % 12 ? 'default' : 'ghost'}
-								className="sm:w-full shrink-0 aspect-square size-7"
-								onClick={() => handleTimeChange('hour', hour.toString())}>
-								{hour}
-							</Button>
-						))}
-					</div>
-					<ScrollBar orientation="horizontal" className="sm:hidden" />
-				</ScrollArea>
-				<ScrollArea className="w-full sm:w-auto">
-					<div className="flex sm:flex-col p-2">
-						{Array.from({ length: 12 }, (_, i) => i * 5).map((minute) => (
-							<Button
-								key={minute}
-								size="icon"
-								variant={value && value.getMinutes() === minute ? 'default' : 'ghost'}
-								className="sm:w-full shrink-0 aspect-square size-7"
-								onClick={() => handleTimeChange('minute', minute.toString())}>
-								{minute.toString().padStart(2, '0')}
-							</Button>
-						))}
-					</div>
-					<ScrollBar orientation="horizontal" className="sm:hidden" />
-				</ScrollArea>
-				<ScrollArea className="w-full sm:w-auto">
-					<div className="flex sm:flex-col p-2">
-						{['AM', 'PM'].map((ampm) => (
-							<Button
-								key={ampm}
-								size="icon"
-								variant={
-									value &&
-									((ampm === 'AM' && value.getHours() < 12) ||
-										(ampm === 'PM' && value.getHours() >= 12))
-										? 'default'
-										: 'ghost'
-								}
-								className="sm:w-full shrink-0 aspect-square size-7 text-xs"
-								onClick={() => handleTimeChange('ampm', ampm)}>
-								{ampm}
-							</Button>
-						))}
-					</div>
-					<ScrollBar orientation="horizontal" className="sm:hidden" />
-				</ScrollArea>
-			</div>
+			<TimePicker value={value || new Date()} onChange={onChange} />
 		</div>
 	);
 
@@ -159,7 +212,7 @@ export function DateTimePicker({ value, onChange, error }: DateTimePickerProps) 
 					<DrawerHeader className="sr-only">
 						<DrawerTitle>Select Date and Time</DrawerTitle>
 					</DrawerHeader>
-					<div className="w-full pb-2">{PickerContent}</div>
+					{PickerContent}
 				</DrawerContent>
 			</Drawer>
 		);
@@ -168,9 +221,7 @@ export function DateTimePicker({ value, onChange, error }: DateTimePickerProps) 
 	return (
 		<Popover open={isOpen} onOpenChange={setIsOpen}>
 			<PopoverTrigger asChild>{TriggerButton}</PopoverTrigger>
-			<PopoverContent className="w-auto p-0" align="start">
-				{PickerContent}
-			</PopoverContent>
+			<PopoverContent className="w-auto p-0">{PickerContent}</PopoverContent>
 		</Popover>
 	);
 }

@@ -144,7 +144,6 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 				open={isFullScreen}
 				onOpenChange={setIsFullScreen}
 				alt="Property"
-				placeholderSrc="/placeholder-property.jpg"
 			/>
 		</DialogContent>
 	);
