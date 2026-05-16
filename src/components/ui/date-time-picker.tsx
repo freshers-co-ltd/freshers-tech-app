@@ -208,11 +208,11 @@ export function DateTimePicker({ value, onChange, error }: DateTimePickerProps) 
 		return (
 			<Drawer open={isOpen} onOpenChange={setIsOpen}>
 				<DrawerTrigger asChild>{TriggerButton}</DrawerTrigger>
-				<DrawerContent className="p-0 max-h-[90vh]">
+				<DrawerContent className="p-0 max-h-[90dvh]">
 					<DrawerHeader className="sr-only">
 						<DrawerTitle>Select Date and Time</DrawerTitle>
 					</DrawerHeader>
-					{PickerContent}
+					<div className="w-full pb-2">{PickerContent}</div>
 				</DrawerContent>
 			</Drawer>
 		);

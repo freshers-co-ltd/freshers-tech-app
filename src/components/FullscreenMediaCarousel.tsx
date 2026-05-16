@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
 	Dialog,
@@ -27,6 +27,7 @@ import {
 	MediaPlayerVolumeIndicator,
 } from '@/components/ui/media-player';
 import { useCarousel } from '@/hooks/useCarousel';
+import { ImageWithFallback } from './ImageWithFallback';
 
 interface MediaItem {
 	url: string;
@@ -39,7 +40,6 @@ interface FullscreenMediaCarouselProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	alt?: string;
-	placeholderSrc?: string;
 }
 
 export function FullscreenMediaCarousel({
@@ -48,7 +48,6 @@ export function FullscreenMediaCarousel({
 	open,
 	onOpenChange,
 	alt = 'Image',
-	placeholderSrc = '/placeholder-property.jpg',
 }: FullscreenMediaCarouselProps) {
 	const urls = useMemo(() => media.map((m) => m.url), [media]);
 	const safeMedia = useMemo(
@@ -56,17 +55,51 @@ export function FullscreenMediaCarousel({
 		[media],
 	);
 
+	const [videoErrors, setVideoErrors] = useState<Set<number>>(new Set());
+
 	const { currentIndex, nextImage, prevImage, setActiveImage } = useCarousel({
 		images: urls,
 		initialImage: initialMedia || safeMedia[0]?.url,
 		isKeyboardEnabled: open,
 	});
 
+	const currentVideoHasErrored = videoErrors.has(currentIndex);
+
 	useEffect(() => {
 		if (initialMedia) {
 			setActiveImage(initialMedia);
 		}
 	}, [initialMedia, setActiveImage]);
+
+	useEffect(() => {
+		if (!open) {
+			return;
+		}
+
+		const originalMeta = document.querySelector('meta[name="theme-color"]');
+		const originalColor = originalMeta ? originalMeta.getAttribute('content') : null;
+
+		let meta = originalMeta;
+		if (!meta) {
+			meta = document.createElement('meta');
+			meta.setAttribute('name', 'theme-color');
+			document.head.appendChild(meta);
+		}
+
+		meta.setAttribute('content', '#000000');
+		document.documentElement.style.backgroundColor = '#000000';
+		document.body.style.backgroundColor = '#000000';
+
+		return () => {
+			if (originalColor) {
+				meta?.setAttribute('content', originalColor);
+			} else {
+				meta?.remove();
+			}
+			document.documentElement.style.backgroundColor = '';
+			document.body.style.backgroundColor = '';
+		};
+	}, [open]);
 
 	const handleClose = () => onOpenChange(false);
 
@@ -82,7 +115,7 @@ export function FullscreenMediaCarousel({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="min-w-full max-w-screen h-dvh p-0 bg-background border-none flex flex-col items-center justify-center overflow-hidden rounded-none shadow-none [&>button]:hidden">
+			<DialogContent className="min-w-full max-w-screen h-dvh p-0 bg-foreground border-none flex flex-col items-center justify-center overflow-hidden rounded-none shadow-none [&>button]:hidden">
 				<DialogHeader className="hidden">
 					<DialogTitle className="sr-only">Fullscreen view</DialogTitle>
 					<DialogDescription className="sr-only">
@@ -101,7 +134,7 @@ export function FullscreenMediaCarousel({
 				</div>
 
 				{safeMedia.length > 1 && (
-					<div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 p-1.5 rounded-full shadow-md bg-background/50 backdrop-blur-md">
+					<div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 p-1 rounded-full shadow-md bg-background/50 backdrop-blur-md">
 						<Button variant="link" size="icon" className="text-foreground" onClick={handlePrev}>
 							<ChevronLeft className="size-5" />
 						</Button>
@@ -115,9 +148,14 @@ export function FullscreenMediaCarousel({
 				)}
 
 				<div className="flex-1 w-full h-full flex items-center justify-center">
-					{safeMedia[currentIndex]?.type === 'video' ? (
-						<MediaPlayer key={currentIndex} className="w-full max-h-full">
-							<MediaPlayerVideo>
+					{safeMedia[currentIndex]?.type === 'video' && !currentVideoHasErrored ? (
+						<MediaPlayer
+							key={currentIndex}
+							className="w-full max-h-full"
+							onMediaError={() => {
+								setVideoErrors((prev) => new Set(prev).add(currentIndex));
+							}}>
+							<MediaPlayerVideo className="bg-foreground">
 								<source src={safeMedia[currentIndex]?.url} type="video/mp4" />
 							</MediaPlayerVideo>
 							<MediaPlayerLoading />
@@ -141,13 +179,10 @@ export function FullscreenMediaCarousel({
 							</MediaPlayerControls>
 						</MediaPlayer>
 					) : (
-						<img
+						<ImageWithFallback
 							src={safeMedia[currentIndex]?.url ?? ''}
 							className="w-full h-full object-contain select-none"
 							alt={`${alt} ${currentIndex + 1}`}
-							onError={(e) => {
-								(e.target as HTMLImageElement).src = placeholderSrc;
-							}}
 						/>
 					)}
 				</div>

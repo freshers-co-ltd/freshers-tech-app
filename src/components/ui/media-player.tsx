@@ -775,6 +775,38 @@ function MediaPlayerVideo(props: MediaPlayerVideoProps) {
 	const mediaRefCallback = useMediaRef();
 	const composedRef = useComposedRefs(ref, context.mediaRef, mediaRefCallback);
 
+	React.useEffect(() => {
+		const video = context.mediaRef.current;
+		if (!video) {
+			return;
+		}
+
+		const cleanUpControls = () => {
+			video.controls = false;
+			video.removeAttribute('controls');
+		};
+
+		const onPresentationModeChanged = () => {
+			if ('webkitPresentationMode' in video && video.webkitPresentationMode !== 'fullscreen') {
+				cleanUpControls();
+			}
+		};
+
+		const onFullscreenChange = () => {
+			if (!document.fullscreenElement) {
+				cleanUpControls();
+			}
+		};
+
+		video.addEventListener('webkitpresentationmodechanged', onPresentationModeChanged);
+		document.addEventListener('fullscreenchange', onFullscreenChange);
+
+		return () => {
+			video.removeEventListener('webkitpresentationmodechanged', onPresentationModeChanged);
+			document.removeEventListener('fullscreenchange', onFullscreenChange);
+		};
+	}, [context.mediaRef]);
+
 	const onPlayToggle = React.useCallback(
 		(event: React.MouseEvent<HTMLVideoElement>) => {
 			props.onClick?.(event);
@@ -803,6 +835,7 @@ function MediaPlayerVideo(props: MediaPlayerVideoProps) {
 		<VideoPrimitive
 			aria-describedby={context.descriptionId}
 			aria-labelledby={context.labelId}
+			controls={false}
 			data-slot="media-player-video"
 			{...videoProps}
 			id={context.mediaId}

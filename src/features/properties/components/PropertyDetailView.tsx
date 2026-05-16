@@ -40,7 +40,7 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 		images,
 		initialImage: property.main_image_url
 			? mediaService.getMediaUrl(property.main_image_url || null, 'property-media')
-			: '',
+			: 'public/placeholder-image.webp',
 		isKeyboardEnabled: isFullScreen,
 	});
 

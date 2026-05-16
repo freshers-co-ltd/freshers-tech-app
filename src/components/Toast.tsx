@@ -1,4 +1,5 @@
 import { AlertCircle, AlertTriangle, CheckCircle2, Info, Loader2 } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 import type { ExternalToast } from 'sonner';
 import { Toaster as SonnerToaster, toast as sonnerToast } from 'sonner';
 
@@ -85,7 +86,7 @@ export const Toaster = () => {
 	return (
 		<>
 			<style>{`
-				[data-sonner-toast]:not([data-type="loading"])::before {
+				[data-sonner-toast]:not([data-type="loading"]):not([style*="--toast-duration: Infinityms"])::before {
 					content: '';
 					position: absolute;
 					top: 0;
@@ -149,3 +150,24 @@ export const Toaster = () => {
 		</>
 	);
 };
+
+export function ToastDebugger() {
+	const hasFired = useRef(false);
+
+	useEffect(() => {
+		if (hasFired.current) {
+			return;
+		}
+		hasFired.current = true;
+		const options = { duration: Infinity };
+
+		toast.success('Success: Operation completed', { duration: 5000 });
+		toast.success('Success: Operation completed', options);
+		toast.error('Error: Something went wrong', options);
+		toast.info('Info: System update available', options);
+		toast.warning('Warning: Storage almost full', options);
+		toast.loading('Loading: Synchronizing data...', options);
+	}, []);
+
+	return null;
+}

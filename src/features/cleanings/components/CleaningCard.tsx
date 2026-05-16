@@ -3,6 +3,7 @@
 import { Banknote, Calendar, MapPin, Pencil, Trash2 } from 'lucide-react';
 import { memo, useMemo } from 'react';
 import { EntityBadge } from '@/components/EntityBadge';
+import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DICT } from '@/dictionary';
@@ -64,7 +65,7 @@ export const CleaningCard = memo(
 				}}>
 				<div className="relative w-full h-48 overflow-hidden bg-muted">
 					{imageUrl ? (
-						<img
+						<ImageWithFallback
 							src={imageUrl}
 							alt={cleaning.property?.address_line_1}
 							className="object-cover size-full"
