@@ -22,10 +22,7 @@ export function CleanerCleaningsPage() {
 					<div className="bg-muted rounded-full p-4 mb-4">
 						<CalendarX className="size-8 text-muted-foreground" />
 					</div>
-					<h3 className="text-lg font-semibold">No jobs assigned</h3>
-					<p className="text-muted-foreground mb-6">
-						You don't have any cleaning jobs assigned to you yet.
-					</p>
+					<h3 className="text-lg font-semibold">{DICT.CLEANINGS.EMPTY.MESSAGE_CLEANER}</h3>
 				</div>
 			}
 			grid={<CleanerCleaningGrid onView={modal.openView} />}

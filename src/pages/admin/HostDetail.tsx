@@ -3,8 +3,8 @@
 import { BadgeCheck, BrushCleaning, CalendarClock, ClipboardList, Plus } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { toast } from 'sonner';
 import { Loading } from '@/components/Loading';
+import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import {
 	Dialog,
@@ -30,7 +30,6 @@ import { UserDetailLayout } from '@/layouts/UserDetailLayout';
 import { supabase } from '@/lib/supabaseClient';
 
 export function AdminHostDetailPage() {
-	const dict = DICT.ADMIN.USERS;
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
 	const [host, setHost] = useState<AdminHostDetail | null>(null);
@@ -166,7 +165,7 @@ export function AdminHostDetailPage() {
 		if (result.error) {
 			toast.error(result.error);
 		} else {
-			toast.success(dict.TOASTS.CLEANING_CREATED);
+			toast.success(DICT.CLEANINGS.CREATE.TOAST_SUCCESS);
 			setIsCreateModalOpen(false);
 			fetchHostDetail();
 		}

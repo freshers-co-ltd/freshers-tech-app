@@ -13,10 +13,10 @@ import {
 	User,
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { toast } from 'sonner';
 import { EntityBadge } from '@/components/EntityBadge';
 import { FullscreenMediaCarousel } from '@/components/FullscreenMediaCarousel';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
+import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -284,7 +284,7 @@ export function CleaningDetailView({
 																<p className="text-muted-foreground">Not set</p>
 															) : (
 																<p>
-																	{DICT.FORMAT.CURRENCY}
+																	{DICT.COMMON.CURRENCY}
 																	{cleaning.service_cost.toFixed(2)}
 																</p>
 															)}
@@ -294,7 +294,7 @@ export function CleaningDetailView({
 																Cleaner Pay
 															</p>
 															<p>
-																{DICT.FORMAT.CURRENCY}
+																{DICT.COMMON.CURRENCY}
 																{cleaning.cleaner_pay?.toFixed(2) ?? '0.00'}
 															</p>
 														</div>
@@ -308,7 +308,7 @@ export function CleaningDetailView({
 															<p className="text-muted-foreground">Not set</p>
 														) : (
 															<p>
-																{DICT.FORMAT.CURRENCY}
+																{DICT.COMMON.CURRENCY}
 																{cleaning.service_cost.toFixed(2)}
 															</p>
 														)}
@@ -319,7 +319,7 @@ export function CleaningDetailView({
 															Earnings
 														</p>
 														<p>
-															{DICT.FORMAT.CURRENCY}
+															{DICT.COMMON.CURRENCY}
 															{cleaning.cleaner_pay?.toFixed(2) ?? '0.00'}
 														</p>
 													</div>

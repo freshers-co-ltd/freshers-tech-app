@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { toast } from 'sonner';
 import cleanersImg from '@/assets/images/cleaners.jpg';
 import logoImg from '@/assets/images/logo.png';
+import { toast } from '@/components/Toast';
 import { FormContainer } from '@/components/ui/form-container';
+import { DICT } from '@/dictionary';
 import { LoginForm } from '@/features/auth/components/LoginForm';
 
 export function LoginPage() {
@@ -15,7 +16,7 @@ export function LoginPage() {
 		const reason = searchParams.get('reason');
 
 		if (reason === 'inactivity') {
-			toast.warning('You have been logged out due to inactivity.', {
+			toast.warning(DICT.AUTH.LOGIN.TOAST_INACTIVITY, {
 				id: 'inactivity-toast',
 				duration: Infinity,
 			});
@@ -32,7 +33,7 @@ export function LoginPage() {
 			<div className="relative flex-col-center p-4 md:p-8">
 				<img
 					src={logoImg}
-					alt="Logo"
+					alt={DICT.AUTH.LOGIN.ALT_LOGO}
 					className="w-full max-w-104 relative right-2.5 object-contain mb-5 shrink-0"
 				/>
 
@@ -44,7 +45,7 @@ export function LoginPage() {
 			<div className="relative hidden h-full bg-muted lg:block">
 				<img
 					src={cleanersImg}
-					alt="Cleaners ready to work"
+					alt={DICT.AUTH.LOGIN.ALT_IMAGE}
 					className="absolute inset-0 size-full object-cover"
 				/>
 			</div>

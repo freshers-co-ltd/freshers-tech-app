@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/components/Toast';
 import { analyticsService } from '@/features/admin/analyticsService';
 import { type AdminUser, type UserFilters, userService } from '@/features/admin/userService';
 import type { UserRole } from '@/features/auth/authService';

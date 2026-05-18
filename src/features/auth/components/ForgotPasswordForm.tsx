@@ -4,8 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import * as z from 'zod';
+import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import {
 	Field,
@@ -43,16 +43,16 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
 		}
 
 		setIsSent(true);
-		toast.success(DICT.AUTH.FORGOT_PASSWORD.SUCCESS_TOAST, { duration: 3000 });
+		toast.success(DICT.AUTH.FORGOT_PASSWORD.TOAST_SUCCESS, { duration: 3000 });
 	};
 
 	if (isSent) {
 		return (
 			<div className="text-center space-y-4">
-				<h1 className="text-xl font-bold capitalize">{DICT.AUTH.FORGOT_PASSWORD.SENT_TITLE}</h1>
-				<p className="text-muted-foreground mb-8">{DICT.AUTH.FORGOT_PASSWORD.SENT_MESSAGE}</p>
+				<h1 className="text-xl font-bold capitalize">{DICT.AUTH.FORGOT_PASSWORD.TITLE_SUCCESS}</h1>
+				<p className="text-muted-foreground mb-8">{DICT.AUTH.FORGOT_PASSWORD.MESSAGE_SUCCESS}</p>
 				<Button variant="default" onClick={() => navigate('/login')}>
-					{DICT.AUTH.FORGOT_PASSWORD.BACK_BUTTON}
+					{DICT.AUTH.FORGOT_PASSWORD.BUTTON_BACK}
 				</Button>
 			</div>
 		);
@@ -91,8 +91,8 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
 				<Field>
 					<Button type="submit" disabled={form.formState.isSubmitting}>
 						{form.formState.isSubmitting
-							? DICT.AUTH.FORGOT_PASSWORD.SUBMITTING
-							: DICT.AUTH.FORGOT_PASSWORD.SUBMIT}
+							? DICT.AUTH.FORGOT_PASSWORD.BUTTON_SUBMITTING
+							: DICT.AUTH.FORGOT_PASSWORD.BUTTON_SUBMIT}
 					</Button>
 				</Field>
 
@@ -100,9 +100,9 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
 
 				<Field>
 					<FieldDescription className="text-center">
-						{DICT.AUTH.FORGOT_PASSWORD.REMEMBER_LINK}{' '}
+						{DICT.AUTH.FORGOT_PASSWORD.LINK_REMEMBER}{' '}
 						<Link to="/login" className="underline underline-offset-4">
-							{DICT.AUTH.LOGIN.SUBMIT_BUTTON}
+							{DICT.AUTH.LOGIN.BUTTON_SUBMIT}
 						</Link>
 					</FieldDescription>
 				</Field>

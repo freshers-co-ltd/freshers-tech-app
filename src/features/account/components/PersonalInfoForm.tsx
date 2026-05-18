@@ -3,8 +3,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 import * as z from 'zod';
+import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -20,7 +20,8 @@ const personalSchema = z.object({
 type PersonalFormValues = z.infer<typeof personalSchema>;
 
 export function PersonalInfoForm() {
-	const dict = DICT.ACCOUNT;
+	const dict = DICT.ACCOUNT.PERSONAL;
+	const dictCommon = DICT.COMMON;
 	const { user, profile, refreshProfile } = useAuth();
 
 	const form = useForm<PersonalFormValues>({
@@ -41,7 +42,7 @@ export function PersonalInfoForm() {
 				toast.error(emailErr);
 				return;
 			}
-			toast.info(dict.TOASTS.EMAIL_PENDING);
+			toast.info(dict.TOAST_EMAIL);
 		}
 		const { error } = await authService.updateProfile(user.id, {
 			full_name: values.full_name,
@@ -49,7 +50,7 @@ export function PersonalInfoForm() {
 		if (error) {
 			toast.error(error);
 		} else {
-			toast.success(dict.TOASTS.UPDATE_SUCCESS);
+			toast.success(dict.TOAST_SUCCESS);
 			await refreshProfile();
 		}
 	};
@@ -63,7 +64,7 @@ export function PersonalInfoForm() {
 					render={({ field, fieldState }) => (
 						<Field className="space-y-1.5">
 							<FieldLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-								{dict.LABELS.FULL_NAME}
+								{dictCommon.LABELS.NAME}
 							</FieldLabel>
 							<Input {...field} aria-invalid={!!fieldState.error} />
 							{fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
@@ -76,7 +77,7 @@ export function PersonalInfoForm() {
 					render={({ field, fieldState }) => (
 						<Field className="space-y-1.5">
 							<FieldLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-								{dict.LABELS.EMAIL}
+								{dictCommon.LABELS.EMAIL}
 							</FieldLabel>
 							<Input {...field} type="email" aria-invalid={!!fieldState.error} />
 							{fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
@@ -86,7 +87,7 @@ export function PersonalInfoForm() {
 			</div>
 			<Button className="font-medium" disabled={form.formState.isSubmitting}>
 				{form.formState.isSubmitting && <Loader2 className="mr-1 size-4 animate-spin" />}
-				{dict.LABELS.SAVE_CHANGES}
+				{dict.BUTTON_SUBMIT}
 			</Button>
 		</form>
 	);

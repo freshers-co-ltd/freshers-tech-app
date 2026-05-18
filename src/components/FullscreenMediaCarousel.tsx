@@ -115,7 +115,7 @@ export function FullscreenMediaCarousel({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="min-w-full max-w-screen h-dvh p-0 bg-foreground border-none flex flex-col items-center justify-center overflow-hidden rounded-none shadow-none [&>button]:hidden">
+			<DialogContent className="min-w-full max-w-screen h-dvh p-0 bg-black border-none flex flex-col items-center justify-center overflow-hidden rounded-none shadow-none [&>button]:hidden">
 				<DialogHeader className="hidden">
 					<DialogTitle className="sr-only">Fullscreen view</DialogTitle>
 					<DialogDescription className="sr-only">
@@ -155,7 +155,7 @@ export function FullscreenMediaCarousel({
 							onMediaError={() => {
 								setVideoErrors((prev) => new Set(prev).add(currentIndex));
 							}}>
-							<MediaPlayerVideo className="bg-foreground">
+							<MediaPlayerVideo className="bg-black">
 								<source src={safeMedia[currentIndex]?.url} type="video/mp4" />
 							</MediaPlayerVideo>
 							<MediaPlayerLoading />

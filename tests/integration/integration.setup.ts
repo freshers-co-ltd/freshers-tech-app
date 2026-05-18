@@ -33,7 +33,7 @@ vi.mock('@/lib/supabaseClient', () => ({
 	},
 }));
 
-vi.mock('sonner', () => ({
+vi.mock('@/components/Toast', () => ({
 	toast: {
 		error: vi.fn(),
 		success: vi.fn(),

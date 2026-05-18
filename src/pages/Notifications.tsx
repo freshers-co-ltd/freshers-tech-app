@@ -29,7 +29,7 @@ export function NotificationsPage() {
 				{notifications.some((n) => !n.is_read) && (
 					<Button variant="outline" size="sm" onClick={() => markAllAsRead()}>
 						<CheckCheck className="size-4 mr-1" />
-						{dict.PAGE.READ_BUTTON}
+						{dict.PAGE.BUTTON_READ}
 					</Button>
 				)}
 			</div>
@@ -37,7 +37,7 @@ export function NotificationsPage() {
 			{notifications.length === 0 ? (
 				<Card className="p-8 text-center">
 					<Bell className="size-12 text-muted-foreground mx-auto mb-4" />
-					<p className="text-muted-foreground">{dict.EMPTY_MESSAGE}</p>
+					<p className="text-muted-foreground">{dict.EMPTY}</p>
 				</Card>
 			) : (
 				<Card className="p-4 md:p-6">

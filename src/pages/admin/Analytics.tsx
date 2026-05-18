@@ -188,7 +188,7 @@ export function AdminAnalyticsPage() {
 							<StatValue>
 								{revenueMetrics?.revenue_current
 									? formatCurrency(revenueMetrics.revenue_current)
-									: `${DICT.FORMAT.CURRENCY}0`}
+									: `${DICT.COMMON.CURRENCY}0`}
 							</StatValue>
 							<StatLabel>{dict.PLATFORM.TOTAL_EARNINGS}</StatLabel>
 						</Stat>

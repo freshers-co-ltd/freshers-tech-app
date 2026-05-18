@@ -2,9 +2,9 @@
 
 import { ArrowUpDown, Eye, UserPlus } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { toast } from 'sonner';
 import { DataTable } from '@/components/DataTable';
 import { EntityBadge } from '@/components/EntityBadge';
+import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DICT } from '@/dictionary';
@@ -196,7 +196,7 @@ export function CleaningsTable({
 				sortable: true,
 				render: (item) =>
 					item.cleaner_name || (
-						<span className="text-muted-foreground">{DICT.ADMIN.DASHBOARD.UNASSIGNED}</span>
+						<span className="text-muted-foreground">{DICT.CLEANINGS.UNASSIGNED}</span>
 					),
 			});
 		}

@@ -1,6 +1,6 @@
 import { Camera, Loader2, X } from 'lucide-react';
 import { type ChangeEvent, useCallback, useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/components/Toast';
 import { UserAvatar } from '@/components/UserAvatar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/AuthContext';

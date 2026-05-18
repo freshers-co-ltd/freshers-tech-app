@@ -3,7 +3,7 @@
 import { BrushCleaning, ClipboardList, Clock, Sparkles } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { toast } from 'sonner';
+import { toast } from '@/components/Toast';
 import { CleaningsTable } from '@/features/admin/components/CleaningsTable';
 import { useAdminUsers } from '@/features/admin/useAdminUsers';
 import { type AdminCleanerDetail, userService } from '@/features/admin/userService';

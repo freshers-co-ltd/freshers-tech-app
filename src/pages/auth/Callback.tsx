@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { toast } from 'sonner';
 import { Loading } from '@/components/Loading';
+import { toast } from '@/components/Toast';
 import { DICT } from '@/dictionary';
 import { supabase } from '@/lib/supabaseClient';
 

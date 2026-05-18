@@ -4,8 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import * as z from 'zod';
+import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -81,9 +81,9 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 
 			if (needsConfirmation) {
 				setStep('verify');
-				toast.success(DICT.AUTH.SIGNUP.CONFIRMATION_TOAST, { duration: 3000 });
+				toast.success(DICT.AUTH.SIGNUP.VERIFICATION.TOAST_SUCCESS, { duration: 3000 });
 			} else if (user) {
-				toast.success(DICT.AUTH.SIGNUP.SUCCESS_TOAST, { duration: 3000 });
+				toast.success(DICT.AUTH.SIGNUP.TOAST_SUCCESS, { duration: 3000 });
 				navigate('/dashboard');
 			}
 		} catch (err) {
@@ -104,7 +104,7 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 			return;
 		}
 
-		toast.success(DICT.AUTH.SIGNUP.SUCCESS_TOAST);
+		toast.success(DICT.AUTH.SIGNUP.TOAST_SUCCESS, { duration: 3000 });
 		navigate('/dashboard');
 	};
 
@@ -118,7 +118,7 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 			toast.error(error);
 		} else {
 			setResendCooldown(60);
-			toast.success('New verification code sent.');
+			toast.success(DICT.AUTH.SIGNUP.VERIFICATION.TOAST_NEW_CODE, { duration: 3000 });
 		}
 	};
 
@@ -126,9 +126,9 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 		return (
 			<div className="space-y-6 duration-300 animate-in fade-in slide-in-from-right-4">
 				<div className="space-y-2 text-center">
-					<h1 className="text-2xl font-bold">Verify your email</h1>
+					<h1 className="text-2xl font-bold">{DICT.AUTH.SIGNUP.VERIFICATION.TITLE}</h1>
 					<p className="text-sm text-muted-foreground">
-						Enter the 6-digit code sent to <br />
+						{DICT.AUTH.SIGNUP.VERIFICATION.MESSAGE} <br />
 						<span className="font-semibold text-foreground">{form.getValues('email')}</span>
 					</p>
 				</div>
@@ -178,7 +178,9 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 					/>
 
 					<Button type="submit" className="w-full" disabled={otpForm.formState.isSubmitting}>
-						{otpForm.formState.isSubmitting ? 'Verifying...' : 'Verify Account'}
+						{otpForm.formState.isSubmitting
+							? DICT.AUTH.SIGNUP.VERIFICATION.BUTTON_SUBMITTING
+							: DICT.AUTH.SIGNUP.VERIFICATION.BUTTON_SUBMIT}
 					</Button>
 				</form>
 
@@ -188,15 +190,20 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 						size="sm"
 						onClick={handleResendCode}
 						disabled={resendCooldown > 0}>
-						{resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : 'Resend code'}
+						{resendCooldown > 0
+							? `${DICT.AUTH.SIGNUP.VERIFICATION.BUTTON_RESEND_WAIT} ${resendCooldown}s`
+							: DICT.AUTH.SIGNUP.VERIFICATION.BUTTON_RESEND}
 					</Button>
-					<Button
-						variant="link"
-						size="sm"
-						onClick={() => setStep('signup')}
-						className="text-muted-foreground">
-						Entered wrong email? Change it
-					</Button>
+					<div className="text-center text-sm text-muted-foreground">
+						<span>{DICT.AUTH.SIGNUP.VERIFICATION.LABEL_WRONG_EMAIL}</span>
+						<Button
+							variant="link"
+							size="sm"
+							onClick={() => setStep('signup')}
+							className="p-1 text-muted-foreground underline font-normal hover:text-primary hover:scale-100">
+							{DICT.AUTH.SIGNUP.VERIFICATION.LINK_CHANGE_EMAIL}
+						</Button>
+					</div>
 				</div>
 			</div>
 		);
@@ -213,7 +220,7 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 					name="name"
 					render={({ field, fieldState }) => (
 						<Field>
-							<FieldLabel htmlFor="name">{DICT.COMMON.LABELS.FULL_NAME}</FieldLabel>
+							<FieldLabel htmlFor="name">{DICT.COMMON.LABELS.NAME}</FieldLabel>
 							<Input
 								{...field}
 								id="name"
@@ -273,7 +280,9 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 					name="confirmPassword"
 					render={({ field, fieldState }) => (
 						<Field>
-							<FieldLabel htmlFor="confirm-password">{DICT.FORMS.CONFIRM_PASSWORD}</FieldLabel>
+							<FieldLabel htmlFor="confirm-password">
+								{DICT.COMMON.LABELS.CONFIRM_PASSWORD}
+							</FieldLabel>
 							<PasswordInput
 								{...field}
 								id="confirm-password"
@@ -288,15 +297,15 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 				<div className="flex flex-col gap-4 mt-2">
 					<Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
 						{form.formState.isSubmitting
-							? DICT.AUTH.SIGNUP.SUBMITTING_BUTTON
-							: DICT.AUTH.SIGNUP.SUBMIT_BUTTON}
+							? DICT.AUTH.SIGNUP.BUTTON_SUBMITTING
+							: DICT.AUTH.SIGNUP.BUTTON_SUBMIT}
 					</Button>
 					<FieldDescription className="text-center">
-						{DICT.AUTH.SIGNUP.HAVE_ACCOUNT_LABEL}{' '}
+						{DICT.AUTH.SIGNUP.LABEL_HAVE_ACCOUNT}{' '}
 						<Link
 							to="/"
 							className="underline transition-colors underline-offset-4 decoration-muted-foreground hover:text-primary">
-							{DICT.AUTH.SIGNUP.LOGIN_LINK}
+							{DICT.AUTH.SIGNUP.LINK_LOGIN}
 						</Link>
 					</FieldDescription>
 				</div>

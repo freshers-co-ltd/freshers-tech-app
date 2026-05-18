@@ -4,8 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import * as z from 'zod';
+import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { PasswordInput } from '@/components/ui/password-input';
@@ -46,16 +46,16 @@ export function ResetPasswordForm({ className, ...props }: React.ComponentProps<
 		}
 
 		setIsSuccess(true);
-		toast.success(DICT.AUTH.RESET_PASSWORD.SUCCESS_TOAST, { duration: 3000 });
+		toast.success(DICT.AUTH.RESET_PASSWORD.TOAST_SUCCESS, { duration: 3000 });
 	};
 
 	if (isSuccess) {
 		return (
 			<div className="text-center space-y-4">
-				<h1 className="text-xl font-bold">{DICT.AUTH.RESET_PASSWORD.SUCCESS_TITLE}</h1>
-				<p className="text-muted-foreground mb-8">{DICT.AUTH.RESET_PASSWORD.SUCCESS_MESSAGE}</p>
+				<h1 className="text-xl font-bold">{DICT.AUTH.RESET_PASSWORD.TITLE_SUCCESS}</h1>
+				<p className="text-muted-foreground mb-8">{DICT.AUTH.RESET_PASSWORD.MESSAGE_SUCCESS}</p>
 				<Button variant="default" onClick={() => navigate('/dashboard')}>
-					{DICT.AUTH.RESET_PASSWORD.DASHBOARD_BUTTON}
+					{DICT.AUTH.RESET_PASSWORD.BUTTON_DASHBOARD}
 				</Button>
 			</div>
 		);
@@ -75,40 +75,40 @@ export function ResetPasswordForm({ className, ...props }: React.ComponentProps<
 					control={form.control}
 					render={({ field, fieldState }) => (
 						<Field>
-							{' '}
-							<FieldLabel htmlFor="password"> {DICT.COMMON.LABELS.NEW_PASSWORD} </FieldLabel>{' '}
+							<FieldLabel htmlFor="password"> {DICT.COMMON.LABELS.NEW_PASSWORD} </FieldLabel>
 							<PasswordInput
 								{...field}
 								id="password"
 								autoComplete="new-password"
 								placeholder={DICT.COMMON.PLACEHOLDERS.PASSWORD}
 								error={!!fieldState.error}
-							/>{' '}
-							{fieldState.error && <FieldError errors={[fieldState.error]} />}{' '}
+							/>
+							{fieldState.error && <FieldError errors={[fieldState.error]} />}
 						</Field>
 					)}
-				/>{' '}
+				/>
 				<Controller
 					name="confirmPassword"
 					control={form.control}
 					render={({ field, fieldState }) => (
 						<Field>
-							{' '}
-							<FieldLabel htmlFor="confirmPassword"> {DICT.FORMS.CONFIRM_PASSWORD} </FieldLabel>{' '}
+							<FieldLabel htmlFor="confirmPassword">
+								{DICT.COMMON.LABELS.CONFIRM_PASSWORD}
+							</FieldLabel>
 							<PasswordInput
 								{...field}
 								id="confirmPassword"
 								placeholder={DICT.COMMON.PLACEHOLDERS.PASSWORD}
 								error={!!fieldState.error}
-							/>{' '}
-							{fieldState.error && <FieldError errors={[fieldState.error]} />}{' '}
+							/>
+							{fieldState.error && <FieldError errors={[fieldState.error]} />}
 						</Field>
 					)}
 				/>
 				<Button type="submit" disabled={form.formState.isSubmitting}>
 					{form.formState.isSubmitting
-						? DICT.AUTH.RESET_PASSWORD.SUBMITTING_BUTTON
-						: DICT.AUTH.RESET_PASSWORD.SUBMIT_BUTTON}
+						? DICT.AUTH.RESET_PASSWORD.BUTTON_SUBMITTING
+						: DICT.AUTH.RESET_PASSWORD.BUTTON_SUBMIT}
 				</Button>
 			</FieldGroup>
 		</form>

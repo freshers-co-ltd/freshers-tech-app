@@ -17,8 +17,8 @@ import {
 	type FileRejection,
 	useDropzone,
 } from 'react-dropzone';
-import { toast } from 'sonner';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
+import { toast } from '@/components/Toast';
 import { mediaService } from '@/lib/mediaService';
 import { cn } from '@/lib/utils';
 import { Button } from './button';

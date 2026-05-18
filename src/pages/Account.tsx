@@ -142,7 +142,7 @@ export function AccountPage() {
 							className="w-full sm:w-fit font-medium"
 							onClick={() => signOut()}>
 							<LogOut className="mr-1 size-4" />
-							{dict.LABELS.SIGN_OUT}
+							{dict.BUTTON_SIGN_OUT}
 						</Button>
 					</div>
 				</main>

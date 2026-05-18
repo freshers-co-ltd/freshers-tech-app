@@ -2,7 +2,7 @@
 
 import { Bell, BellOff } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/components/Toast';
 import { Switch } from '@/components/ui/switch';
 import { DICT } from '@/dictionary';
 import { useAuth } from '@/features/auth/AuthContext';
@@ -21,7 +21,7 @@ export function NotificationPreferencesForm() {
 		hasSubscription,
 	} = usePushNotifications();
 	const [isLoading, setIsLoading] = useState(false);
-	const dict = DICT.ACCOUNT;
+	const dict = DICT.ACCOUNT.PREFERENCES;
 
 	if (!preferences) {
 		return <div className="text-sm text-muted-foreground">Loading preferences...</div>;
@@ -40,34 +40,34 @@ export function NotificationPreferencesForm() {
 					if (!subExists) {
 						const { success } = await subscribe(user.id);
 						if (!success) {
-							toast.error(dict.TOASTS.NOTIFICATIONS_SETUP_FAILED);
+							toast.error(dict.TOAST_ERROR);
 							setIsLoading(false);
 							return;
 						}
 					}
 					await updatePreferences({ push_enabled: true });
-					toast.success(dict.TOASTS.NOTIFICATIONS_ENABLED);
+					toast.success(dict.TOAST_ENABLED);
 				} else if (permissionState === 'default') {
 					const permission = await requestPermission();
 					if (permission === 'granted') {
 						const { success } = await subscribe(user.id);
 						if (!success) {
-							toast.error(dict.TOASTS.NOTIFICATIONS_SETUP_FAILED);
+							toast.error(dict.TOAST_ERROR);
 							setIsLoading(false);
 							return;
 						}
 						await updatePreferences({ push_enabled: true });
-						toast.success(dict.TOASTS.NOTIFICATIONS_ENABLED);
+						toast.success(dict.TOAST_ENABLED);
 					} else {
-						toast.error(dict.TOASTS.NOTIFICATIONS_DENIED);
+						toast.error(dict.TOAST_DENIED);
 					}
 				} else {
-					toast.error(dict.TOASTS.NOTIFICATIONS_BLOCKED);
+					toast.error(dict.TOAST_BLOCKED);
 				}
 			} else {
 				await unsubscribe();
 				await updatePreferences({ push_enabled: false });
-				toast.success(dict.TOASTS.NOTIFICATIONS_DISABLED);
+				toast.success(dict.TOAST_DISABLED);
 			}
 		} finally {
 			setIsLoading(false);
@@ -88,10 +88,8 @@ export function NotificationPreferencesForm() {
 							<BellOff className="size-5 text-muted-foreground mt-0.5" />
 						)}
 						<div className="space-y-0.5">
-							<p className="text-sm font-medium">{dict.PREFERENCES.PUSH_NOTIFICATIONS.TITLE}</p>
-							<p className="text-xs text-muted-foreground">
-								{dict.PREFERENCES.PUSH_NOTIFICATIONS.SUBTITLE}
-							</p>
+							<p className="text-sm font-medium">{dict.PUSH_NOTIFICATIONS.TITLE}</p>
+							<p className="text-xs text-muted-foreground">{dict.PUSH_NOTIFICATIONS.SUBTITLE}</p>
 						</div>
 					</div>
 					<Switch
@@ -104,7 +102,7 @@ export function NotificationPreferencesForm() {
 
 			{!isSupported && (
 				<div className="rounded-lg border p-4 text-sm text-muted-foreground">
-					{dict.PREFERENCES.PUSH_NOTIFICATIONS.NOT_SUPPORTED}
+					{dict.PUSH_NOTIFICATIONS.NOT_SUPPORTED}
 				</div>
 			)}
 		</div>

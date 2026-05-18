@@ -144,7 +144,7 @@ export const CleaningCard = memo(
 									<p className="text-sm font-medium text-muted-foreground">Not set</p>
 								) : (
 									<p className="text-sm font-medium">
-										{DICT.FORMAT.CURRENCY}
+										{DICT.COMMON.CURRENCY}
 										{cleaning.service_cost.toFixed(2)}
 									</p>
 								)}
@@ -158,7 +158,7 @@ export const CleaningCard = memo(
 									Earnings
 								</div>
 								<p className="text-sm font-medium">
-									{DICT.FORMAT.CURRENCY}
+									{DICT.COMMON.CURRENCY}
 									{cleaning.cleaner_pay?.toFixed(2) ?? '0.00'}
 								</p>
 							</div>

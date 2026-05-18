@@ -34,63 +34,70 @@ function useIsMobile() {
 	return isMobile;
 }
 
+const roundUpTo5Minutes = (date: Date | null | undefined): Date => {
+	const target = date ? new Date(date) : new Date();
+	const minutes = target.getMinutes();
+	const roundedMinutes = Math.ceil(minutes / 5) * 5;
+
+	target.setMinutes(roundedMinutes);
+	target.setSeconds(0);
+	target.setMilliseconds(0);
+	return target;
+};
+
 function TimePicker({ value, onChange }: { value: Date; onChange: (date: Date) => void }) {
 	const [open, setOpen] = React.useState(false);
-	const currentHours = value?.getHours() ?? 0;
+
+	const roundedValue = React.useMemo(() => (value ? roundUpTo5Minutes(value) : undefined), [value]);
+
+	const currentHours = roundedValue?.getHours() ?? 0;
 	const [hour, setHour] = React.useState(() => (currentHours % 12 || 12).toString());
-	const [minute, setMinute] = React.useState(() => {
-		const m = value?.getMinutes() ?? 0;
-		return Math.round(m / 5) * 5;
-	});
+	const [minute, setMinute] = React.useState(() => roundedValue?.getMinutes() ?? 0);
 	const [period, setPeriod] = React.useState<'AM' | 'PM'>(() => (currentHours < 12 ? 'AM' : 'PM'));
 
 	React.useEffect(() => {
-		if (open && value) {
-			const h = value.getHours();
+		if (open && roundedValue) {
+			const h = roundedValue.getHours();
 			setHour((h % 12 || 12).toString());
-			setMinute(Math.round(value.getMinutes() / 5) * 5);
+			setMinute(roundedValue.getMinutes());
 			setPeriod(h < 12 ? 'AM' : 'PM');
 		}
-	}, [open, value]);
+	}, [open, roundedValue]);
 
 	const handleTimeSelect = (type: 'hour' | 'minute' | 'period', val: string) => {
-		if (!value) {
-			return;
-		}
-
-		const newDate = new Date(value);
+		const baseDate = roundedValue ? new Date(roundedValue) : roundUpTo5Minutes(new Date());
 
 		if (type === 'hour') {
 			const h = parseInt(val, 10);
 			if (period === 'PM' && h !== 12) {
-				newDate.setHours(h + 12);
+				baseDate.setHours(h + 12);
 			} else if (period === 'AM' && h === 12) {
-				newDate.setHours(0);
+				baseDate.setHours(0);
 			} else {
-				newDate.setHours(h);
+				baseDate.setHours(h);
 			}
 		} else if (type === 'minute') {
-			newDate.setMinutes(parseInt(val, 10));
+			baseDate.setMinutes(parseInt(val, 10));
 		} else if (type === 'period') {
-			const currentHours = newDate.getHours();
+			const currentHours = baseDate.getHours();
 			if (val === 'PM' && currentHours < 12) {
-				newDate.setHours(currentHours + 12);
+				baseDate.setHours(currentHours + 12);
 			} else if (val === 'AM' && currentHours >= 12) {
-				newDate.setHours(currentHours - 12);
+				baseDate.setHours(currentHours - 12);
 			}
 		}
 
-		onChange(newDate);
+		onChange(baseDate);
 	};
 
-	const displayTime = value ? format(value, 'hh:mm aa') : 'Select time';
+	const displayTime = roundedValue ? format(roundedValue, 'hh:mm aa') : 'Select time';
 
 	const hours = Array.from({ length: 12 }, (_, i) => (i + 1).toString());
 	const minutes = Array.from({ length: 12 }, (_, i) => (i * 5).toString().padStart(2, '0'));
 	const periods: ('AM' | 'PM')[] = ['AM', 'PM'];
 
 	return (
-		<Popover open={open} onOpenChange={setOpen}>
+		<Popover open={open} onOpenChange={setOpen} modal={true}>
 			<PopoverTrigger asChild>
 				<Button variant="outline" className="flex items-center text-sm w-full justify-between">
 					<div className="flex items-center font-normal gap-2">
@@ -128,7 +135,8 @@ function TimePicker({ value, onChange }: { value: Date; onChange: (date: Date) =
 									size="icon-sm"
 									className="justify-center mx-2"
 									onClick={() => {
-										setMinute(parseInt(m, 10));
+										const numMin = parseInt(m, 10);
+										setMinute(numMin);
 										handleTimeSelect('minute', m);
 									}}>
 									{m}
@@ -143,7 +151,7 @@ function TimePicker({ value, onChange }: { value: Date; onChange: (date: Date) =
 									key={p}
 									variant={period === p ? 'default' : 'ghost'}
 									size="icon-sm"
-									className="justify-center  mx-2"
+									className="justify-center mx-2"
 									onClick={() => {
 										setPeriod(p);
 										handleTimeSelect('period', p);
@@ -190,14 +198,14 @@ export function DateTimePicker({ value, onChange, error }: DateTimePickerProps) 
 
 	const PickerContent = (
 		<div className="flex flex-col p-3 gap-3">
-			<div className="flex items-center justify-center">
+			<div className="flex items-center justify-center [&>div]:flex-1 [&>div]:w-full [&_table]:w-full">
 				<Calendar
 					mode="single"
 					selected={value}
 					onSelect={handleDateSelect}
 					disabled={(date) => date < new Date()}
 					fixedWeeks
-					className="w-full"
+					className="p-0"
 				/>
 			</div>
 			<TimePicker value={value || new Date()} onChange={onChange} />

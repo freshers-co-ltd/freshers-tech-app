@@ -4,8 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import * as z from 'zod';
+import { Loading } from '@/components/Loading';
+import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { PasswordInput } from '@/components/ui/password-input';
@@ -82,16 +83,16 @@ export function SetPasswordForm({ className, ...props }: React.ComponentProps<'f
 		}
 
 		setIsSuccess(true);
-		toast.success(DICT.AUTH.SET_PASSWORD.SUCCESS_TOAST, { duration: 3000 });
+		toast.success(DICT.AUTH.SET_PASSWORD.TOAST_SUCCESS, { duration: 3000 });
 	};
 
 	if (isSuccess) {
 		return (
 			<div className="text-center space-y-4">
-				<h1 className="text-xl font-bold">{DICT.AUTH.SET_PASSWORD.SUCCESS_TITLE}</h1>
-				<p className="text-muted-foreground mb-8">{DICT.AUTH.SET_PASSWORD.SUCCESS_MESSAGE}</p>
+				<h1 className="text-xl font-bold">{DICT.AUTH.SET_PASSWORD.TITLE_SUCCESS}</h1>
+				<p className="text-muted-foreground mb-8">{DICT.AUTH.SET_PASSWORD.MESSAGE_SUCCESS}</p>
 				<Button variant="default" onClick={() => navigate('/dashboard')}>
-					{DICT.AUTH.SET_PASSWORD.DASHBOARD_BUTTON}
+					{DICT.AUTH.SET_PASSWORD.BUTTON_DASHBOARD}
 				</Button>
 			</div>
 		);
@@ -100,22 +101,17 @@ export function SetPasswordForm({ className, ...props }: React.ComponentProps<'f
 	if (authError) {
 		return (
 			<div className="text-center space-y-4">
-				<h1 className="text-xl font-bold">{DICT.AUTH.SET_PASSWORD.ERROR_TITLE}</h1>
-				<p className="text-muted-foreground mb-8">{DICT.AUTH.SET_PASSWORD.ERROR_MESSAGE}</p>
+				<h1 className="text-xl font-bold">{DICT.AUTH.SET_PASSWORD.TITLE_ERROR}</h1>
+				<p className="text-muted-foreground mb-8">{DICT.AUTH.SET_PASSWORD.MESSAGE_ERROR}</p>
 				<Button variant="default" onClick={() => navigate('/login')}>
-					{DICT.AUTH.SET_PASSWORD.LOGIN_BUTTON}
+					{DICT.AUTH.SET_PASSWORD.BUTTON_LOGIN}
 				</Button>
 			</div>
 		);
 	}
 
 	if (!isAuthenticated && !authError) {
-		return (
-			<div className="text-center space-y-4">
-				<h1 className="text-xl font-bold">{DICT.COMMON.LOADING.TITLE}</h1>
-				<p className="text-muted-foreground">{DICT.COMMON.LOADING.MESSAGE}</p>
-			</div>
-		);
+		return <Loading />;
 	}
 
 	return (
@@ -149,7 +145,10 @@ export function SetPasswordForm({ className, ...props }: React.ComponentProps<'f
 					control={form.control}
 					render={({ field, fieldState }) => (
 						<Field>
-							<FieldLabel htmlFor="confirmPassword"> {DICT.FORMS.CONFIRM_PASSWORD} </FieldLabel>
+							<FieldLabel htmlFor="confirmPassword">
+								{' '}
+								{DICT.COMMON.LABELS.CONFIRM_PASSWORD}{' '}
+							</FieldLabel>
 							<PasswordInput
 								{...field}
 								id="confirmPassword"
@@ -162,8 +161,8 @@ export function SetPasswordForm({ className, ...props }: React.ComponentProps<'f
 				/>
 				<Button type="submit" disabled={form.formState.isSubmitting || isProcessing}>
 					{isProcessing || form.formState.isSubmitting
-						? DICT.AUTH.SET_PASSWORD.SUBMITTING_BUTTON
-						: DICT.AUTH.SET_PASSWORD.SUBMIT_BUTTON}
+						? DICT.AUTH.SET_PASSWORD.BUTTON_SUBMITTING
+						: DICT.AUTH.SET_PASSWORD.BUTTON_SUBMIT}
 				</Button>
 			</FieldGroup>
 		</form>

@@ -37,8 +37,7 @@ export function HostCleaningsPage() {
 					<div className="bg-muted rounded-full p-4 mb-4">
 						<CalendarX className="size-8 text-muted-foreground" />
 					</div>
-					<h3 className="text-lg font-semibold">{DICT.CLEANINGS.EMPTY.TITLE}</h3>
-					<p className="text-muted-foreground mb-6">{DICT.CLEANINGS.EMPTY.MESSAGE}</p>
+					<h3 className="text-lg font-semibold">{DICT.CLEANINGS.EMPTY.MESSAGE_HOST}</h3>
 				</div>
 			}
 			grid={

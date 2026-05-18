@@ -2,20 +2,15 @@
 
 import type { LucideIcon } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'sonner';
-import { ConfirmActionDialog } from '@/components/ConfirmActionDialog';
 import { Loading } from '@/components/Loading';
+import { toast } from '@/components/Toast';
 import { Card } from '@/components/ui/card';
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Stat, StatIndicator, StatLabel, StatValue } from '@/components/ui/stat';
 import { DICT } from '@/dictionary';
+import { AdminActionDialogs } from '@/features/admin/components/AdminActionDialogs';
 import { UserCard } from '@/features/admin/components/UserCard';
+import { useAdminActionDialogs } from '@/features/admin/useAdminActionDialogs';
 import type { AdminUser } from '@/features/admin/userService';
 import type { CleaningRequest } from '@/features/cleanings/cleaningService';
 import { cleaningService } from '@/features/cleanings/cleaningService';
@@ -68,7 +63,7 @@ export function UserDetailLayout({
 	const cleaningModal = useResourceModals({ resourceName: 'cleaning' });
 	const [viewingCleaning, setViewingCleaning] = useState<CleaningRequest | null>(null);
 	const [viewingCleaningLoading, setViewingCleaningLoading] = useState(false);
-	const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
+	const dialogs = useAdminActionDialogs();
 
 	const fetchViewingCleaning = useCallback(async () => {
 		if (!cleaningModal.viewId) {
@@ -84,19 +79,55 @@ export function UserDetailLayout({
 
 	useEffect(() => {
 		if (cleaningModal.isViewOpen && cleaningModal.viewId) {
-			fetchViewingCleaning();
-		} else {
 			setViewingCleaning(null);
+			fetchViewingCleaning();
 		}
 	}, [cleaningModal.isViewOpen, cleaningModal.viewId, fetchViewingCleaning]);
 
 	const isCleaner = userRole === 'cleaner';
 
-	const handleResetPasswordClick = async () => {
-		if (!onResetPassword) {
+	const handleResetPasswordClick = () => {
+		if (onResetPassword) {
+			dialogs.openResetPassword(user.id, user.full_name || '');
+		}
+	};
+
+	const handleBan = () => {
+		if (onBan) {
+			dialogs.openBan(user.id, user.full_name || '');
+		}
+	};
+
+	const handleUnban = () => {
+		if (onUnban) {
+			dialogs.openUnban(user.id, user.full_name || '');
+		}
+	};
+
+	const handleBanConfirm = async () => {
+		if (!onBan) {
 			return;
 		}
-		setResetPasswordDialogOpen(true);
+		const result = await onBan();
+		if (result?.error) {
+			toast.error(result.error || dict.BAN_USER.TOAST_ERROR);
+		} else {
+			toast.success(dict.BAN_USER.TOAST_SUCCESS);
+		}
+		dialogs.close();
+	};
+
+	const handleUnbanConfirm = async () => {
+		if (!onUnban) {
+			return;
+		}
+		const result = await onUnban();
+		if (result?.error) {
+			toast.error(result.error || dict.UNBAN_USER.TOAST_ERROR);
+		} else {
+			toast.success(dict.UNBAN_USER.TOAST_SUCCESS);
+		}
+		dialogs.close();
 	};
 
 	const handleResetPasswordConfirm = async () => {
@@ -105,40 +136,11 @@ export function UserDetailLayout({
 		}
 		const result = await onResetPassword();
 		if (result?.error) {
-			toast.error(result.error);
+			toast.error(result.error || dict.PASSWORD_RESET.TOAST_ERROR);
 		} else {
-			toast.success(dict.TOASTS.PASSWORD_RESET_SENT);
+			toast.success(dict.PASSWORD_RESET.TOAST_SUCCESS);
 		}
-	};
-
-	const handleBan = async () => {
-		if (!onBan) {
-			return;
-		}
-		if (!window.confirm(dict.TOASTS.BAN_CONFIRM)) {
-			return;
-		}
-		const result = await onBan();
-		if (result?.error) {
-			toast.error(result.error);
-		} else {
-			toast.success(dict.TOASTS.USER_BANNED);
-		}
-	};
-
-	const handleUnban = async () => {
-		if (!onUnban) {
-			return;
-		}
-		if (!window.confirm(dict.TOASTS.UNBAN_CONFIRM)) {
-			return;
-		}
-		const result = await onUnban();
-		if (result?.error) {
-			toast.error(result.error);
-		} else {
-			toast.success(dict.TOASTS.USER_UNBANNED);
-		}
+		dialogs.close();
 	};
 
 	if (isLoading) {
@@ -200,32 +202,30 @@ export function UserDetailLayout({
 
 			{children}
 
-			<Dialog open={cleaningModal.isViewOpen} onOpenChange={() => cleaningModal.handleClose()}>
-				<DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-					<DialogHeader>
-						<DialogTitle>Cleaning Details</DialogTitle>
-						<DialogDescription>View complete cleaning information</DialogDescription>
-					</DialogHeader>
-					{viewingCleaningLoading ? (
-						<Loading />
-					) : viewingCleaning ? (
-						<CleaningDetailView
-							cleaning={viewingCleaning}
-							userRole="admin"
-							open={cleaningModal.isViewOpen}
-							onOpenChange={(open) => !open && cleaningModal.handleClose()}
-						/>
-					) : null}
+			<Dialog
+				open={cleaningModal.isViewOpen && viewingCleaningLoading}
+				onOpenChange={() => cleaningModal.handleClose()}>
+				<DialogContent className="">
+					<Loading absolute={false} />
 				</DialogContent>
 			</Dialog>
+			{!viewingCleaningLoading && viewingCleaning && (
+				<CleaningDetailView
+					cleaning={viewingCleaning}
+					userRole="admin"
+					open={cleaningModal.isViewOpen}
+					onOpenChange={(open) => !open && cleaningModal.handleClose()}
+				/>
+			)}
 
-			<ConfirmActionDialog
-				open={resetPasswordDialogOpen}
-				onOpenChange={setResetPasswordDialogOpen}
-				title="Send password reset email?"
-				description={dict.TOASTS.PASSWORD_RESET_CONFIRM}
-				confirmText="Send email"
-				onConfirm={handleResetPasswordConfirm}
+			<AdminActionDialogs
+				{...dialogs}
+				onBanOpenChange={(o) => !o && dialogs.close()}
+				onUnbanOpenChange={(o) => !o && dialogs.close()}
+				onResetPasswordOpenChange={(o) => !o && dialogs.close()}
+				onConfirmBan={handleBanConfirm}
+				onConfirmUnban={handleUnbanConfirm}
+				onConfirmResetPassword={handleResetPasswordConfirm}
 			/>
 		</main>
 	);

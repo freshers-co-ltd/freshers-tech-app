@@ -3,8 +3,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import * as z from 'zod';
+import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -53,7 +53,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
 				return;
 			}
 
-			toast.success(DICT.AUTH.LOGIN.SUCCESS_TOAST, { duration: 3000 });
+			toast.success(DICT.AUTH.LOGIN.TOAST_SUCCESS, { duration: 3000 });
 			navigate('/dashboard');
 		} catch (err) {
 			console.error('Login error:', err);
@@ -111,7 +111,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
 								<Link
 									to="/forgot-password"
 									className="ml-auto text-sm underline-offset-4 hover:underline">
-									{DICT.AUTH.LOGIN.FORGOT_LINK}
+									{DICT.AUTH.LOGIN.LINK_FORGOT}
 								</Link>
 							</div>
 						</Field>
@@ -121,8 +121,8 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
 				<Field>
 					<Button type="submit" disabled={form.formState.isSubmitting}>
 						{form.formState.isSubmitting
-							? DICT.AUTH.LOGIN.SUBMITTING_BUTTON
-							: DICT.AUTH.LOGIN.SUBMIT_BUTTON}
+							? DICT.AUTH.LOGIN.BUTTON_SUBMITTING
+							: DICT.AUTH.LOGIN.BUTTON_SUBMIT}
 					</Button>
 				</Field>
 
@@ -141,7 +141,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
 									}}
 								/>
 								<FieldLabel htmlFor="rememberMe" className="text-sm font-normal">
-									Trust this device
+									{DICT.AUTH.LOGIN.CHECKBOX_TRUST}
 								</FieldLabel>
 							</Field>
 						)}
@@ -152,9 +152,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
 
 				<Field>
 					<FieldDescription className="text-center">
-						{DICT.AUTH.LOGIN.NO_ACCOUNT_LABEL}{' '}
+						{DICT.AUTH.LOGIN.LABEL_NO_ACCOUNT}{' '}
 						<Link to="/signup" className="underline underline-offset-4">
-							{DICT.AUTH.LOGIN.SIGNUP_LINK}
+							{DICT.AUTH.LOGIN.LINK_SIGNUP}
 						</Link>
 					</FieldDescription>
 				</Field>

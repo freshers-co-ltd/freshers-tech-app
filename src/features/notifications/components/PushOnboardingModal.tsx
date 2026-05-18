@@ -44,10 +44,10 @@ export function PushOnboardingModal({ isOpen, onOpenChange }: PushOnboardingModa
 
 				if (success) {
 					await updatePreferences({ push_enabled: true });
-					toast.success(dict.SUCCESS_MESSAGE);
+					toast.success(dict.MESSAGE_SUCCESS);
 					onOpenChange(false);
 				} else {
-					toast.error(subError || dict.SUBSCRIBE_ERROR);
+					toast.error(subError || dict.MESSAGE_ERROR);
 				}
 			} else if (permission === 'denied') {
 				await updatePreferences({ push_enabled: false });
@@ -87,15 +87,15 @@ export function PushOnboardingModal({ isOpen, onOpenChange }: PushOnboardingModa
 						<Bell className="size-6 text-primary" />
 					</div>
 					<DialogTitle className="text-xl">{dict.TITLE}</DialogTitle>
-					<DialogDescription className="mt-2">{dict.DESCRIPTION}</DialogDescription>
+					<DialogDescription className="mt-2">{dict.MESSAGE}</DialogDescription>
 				</DialogHeader>
 
 				<DialogFooter className="flex-row gap-2 sm:flex-col">
 					<Button onClick={handleEnable} disabled={isLoading} className="w-full">
-						{isLoading ? dict.ENABLING : dict.ENABLE_BUTTON}
+						{isLoading ? dict.BUTTON_SUBMITTING : dict.BUTTON_SUBMIT}
 					</Button>
 					<Button variant="outline" onClick={handleDisable} disabled={isLoading} className="w-full">
-						{dict.SKIP_BUTTON}
+						{dict.BUTTON_CANCEL}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

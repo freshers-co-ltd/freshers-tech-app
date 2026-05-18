@@ -12,8 +12,8 @@ type SignupRole = {
 	id: 'host' | 'cleaner';
 	icon: React.ComponentType<LucideProps>;
 	dict: {
-		TITLE: string;
-		MESSAGE: string;
+		BUTTON_TITLE: string;
+		BUTTON_MESSAGE: string;
 	};
 };
 
@@ -52,15 +52,15 @@ export function SignupPage() {
 									</div>
 
 									<h3 className="mt-2 text-lg font-bold md:mt-6 md:text-xl text-card-foreground">
-										{role.dict.TITLE}
+										{role.dict.BUTTON_TITLE}
 									</h3>
 
 									<p className="mt-1 text-xs leading-snug text-muted-foreground md:text-sm">
-										{role.dict.MESSAGE}
+										{role.dict.BUTTON_MESSAGE}
 									</p>
 
 									<div className="flex items-center gap-2 mt-3 text-xs font-semibold transition-all duration-300 opacity-100 md:mt-6 text-primary md:text-sm xl:opacity-0 xl:group-hover:opacity-100">
-										{DICT.AUTH.SIGNUP.ROLES.GET_STARTED}
+										{DICT.AUTH.SIGNUP.ROLES.CALL_TO_ACTION}
 										<ArrowRight className="size-3.5 md:size-4" />
 									</div>
 								</button>
@@ -68,7 +68,8 @@ export function SignupPage() {
 						</div>
 
 						<Button variant="outline" className="mt-6" onClick={() => window.history.back()}>
-							<ChevronLeft className="mr-1 size-4" /> {DICT.AUTH.SIGNUP.BACK_BUTTON}
+							<ChevronLeft className="mr-1 size-4 mt-px" />
+							{DICT.AUTH.SIGNUP.BUTTON_BACK}
 						</Button>
 					</div>
 				</div>
@@ -79,18 +80,19 @@ export function SignupPage() {
 						className="md:max-w-md"
 						title={
 							accountType === 'host'
-								? DICT.AUTH.SIGNUP.ROLES.HOST.CALL_TO_ACTION
-								: DICT.AUTH.SIGNUP.ROLES.CLEANER.CALL_TO_ACTION
+								? DICT.AUTH.SIGNUP.ROLES.HOST.TITLE_FORM
+								: DICT.AUTH.SIGNUP.ROLES.CLEANER.TITLE_FORM
 						}>
 						<SignupForm selectedRole={accountType} />
 
 						<div className="mt-6 pt-4 border-t">
 							<Button
-								variant="ghost"
+								variant="link"
 								size="sm"
-								className="text-muted-foreground hover:text-foreground p-0 h-auto"
+								className="text-muted-foreground p-0 h-auto"
 								onClick={() => setAccountType(null)}>
-								<ChevronLeft className="mr-1 size-4" /> {DICT.AUTH.SIGNUP.ROLES.BACK_BUTTON}
+								<ChevronLeft className="mr-1 size-4" />
+								{DICT.AUTH.SIGNUP.ROLES.BUTTON_BACK}
 							</Button>
 						</div>
 					</FormContainer>

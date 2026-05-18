@@ -10,6 +10,7 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { DICT } from '@/dictionary';
 
 export interface ConfirmActionDialogProps {
 	open: boolean;
@@ -42,14 +43,12 @@ export function ConfirmActionDialog({
 					<AlertDialogTitle>{title}</AlertDialogTitle>
 					<AlertDialogDescription>{description}</AlertDialogDescription>
 				</AlertDialogHeader>
-				<AlertDialogFooter>
-					<AlertDialogCancel onClick={() => onOpenChange(false)}>Cancel</AlertDialogCancel>
+				<AlertDialogFooter className="p-2">
+					<AlertDialogCancel onClick={() => onOpenChange(false)}>
+						{DICT.COMMON.ACTIONS.CANCEL}
+					</AlertDialogCancel>
 					<AlertDialogAction
-						className={
-							variant === 'destructive'
-								? 'bg-destructive text-white hover:bg-destructive/90'
-								: undefined
-						}
+						variant={variant === 'destructive' ? 'destructive' : 'default'}
 						onClick={handleConfirm}>
 						{confirmText}
 					</AlertDialogAction>

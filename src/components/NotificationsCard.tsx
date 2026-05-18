@@ -18,7 +18,7 @@ export function NotificationsCard({ maxItems = 4 }: NotificationsCardProps) {
 			<div className="flex items-center justify-between">
 				<h2 className="text-lg md:text-xl font-bold uppercase">{dict.TITLE}</h2>
 				<Button variant="link" className="px-0 font-bold h-auto" asChild>
-					<Link to={`/${profile?.role}/notifications`}>{dict.VIEW_ALL_BUTTON}</Link>
+					<Link to={`/${profile?.role}/notifications`}>{dict.BUTTON_VIEW_ALL}</Link>
 				</Button>
 			</div>
 			<NotificationList maxItems={maxItems} />

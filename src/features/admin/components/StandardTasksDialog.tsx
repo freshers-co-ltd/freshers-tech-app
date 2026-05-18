@@ -2,8 +2,8 @@
 
 import { Loader2, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'sonner';
 import { Loading } from '@/components/Loading';
+import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {

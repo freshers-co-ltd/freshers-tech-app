@@ -130,6 +130,7 @@ export function CleaningEvidenceForm({ onSubmit, onCancel }: CleaningEvidenceFor
 					<FieldLabel>Any broken or damaged items?</FieldLabel>
 					<Textarea
 						{...form.register('broken_items_report')}
+						className="min-h-15 resize-none"
 						placeholder="Describe any issues found..."
 					/>
 				</Field>
@@ -138,6 +139,7 @@ export function CleaningEvidenceForm({ onSubmit, onCancel }: CleaningEvidenceFor
 					<FieldLabel>Any supplies running low?</FieldLabel>
 					<Textarea
 						{...form.register('low_supplies_report')}
+						className="min-h-15 resize-none"
 						placeholder="List items like toilet paper, soap, etc..."
 					/>
 				</Field>

@@ -98,7 +98,7 @@ export function CleaningForm({
 			property_id: initialData?.property_id ?? '',
 			scheduled_start: initialData
 				? new Date(initialData.scheduled_start)
-				: new Date(Date.now() + 86400000),
+				: ('' as unknown as Date),
 			instructions: initialData?.instructions ?? '',
 			stocks_included: initialData?.stocks_included ?? false,
 			custom_tasks:
@@ -431,7 +431,7 @@ export function CleaningForm({
 									<FieldLabel>{dict.LABELS.INSTRUCTIONS}</FieldLabel>
 									<Textarea
 										{...register('instructions')}
-										className="min-h-25 resize-none"
+										className="min-h-15 resize-none"
 										placeholder={dict.PLACEHOLDERS.INSTRUCTIONS}
 									/>
 								</Field>
@@ -458,7 +458,7 @@ export function CleaningForm({
 										<p className="text-lg font-medium text-muted-foreground">Not set</p>
 									) : (
 										<p className="text-2xl font-black text-primary">
-											{DICT.FORMAT.CURRENCY}
+											{DICT.COMMON.CURRENCY}
 											{calculatedPrice?.toFixed(2) ?? '0.00'}
 										</p>
 									)}

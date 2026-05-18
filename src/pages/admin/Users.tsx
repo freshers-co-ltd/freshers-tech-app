@@ -2,8 +2,7 @@
 
 import { ClockFading, Plus, Search, ShieldBan, User, Users } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
-import { ConfirmActionDialog } from '@/components/ConfirmActionDialog';
+import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,8 +15,10 @@ import {
 } from '@/components/ui/select';
 import { Stat, StatIndicator, StatLabel, StatValue } from '@/components/ui/stat';
 import { DICT } from '@/dictionary';
+import { AdminActionDialogs } from '@/features/admin/components/AdminActionDialogs';
 import { InviteUserDialog } from '@/features/admin/components/InviteUserDialog';
 import { UsersTable } from '@/features/admin/components/UsersTable';
+import { useAdminActionDialogs } from '@/features/admin/useAdminActionDialogs';
 import { useAdminUsers } from '@/features/admin/useAdminUsers';
 
 type UserTab = 'all' | 'host' | 'cleaner' | 'admin';
@@ -46,70 +47,63 @@ export function AdminUsersPage() {
 	} = useAdminUsers();
 
 	const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-	const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-	const [selectedUserName, setSelectedUserName] = useState('');
-	const [banDialogOpen, setBanDialogOpen] = useState(false);
-	const [unbanDialogOpen, setUnbanDialogOpen] = useState(false);
-	const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
+	const dialogs = useAdminActionDialogs();
 
 	const handleResetPasswordClick = (userId: string) => {
 		const user = users.find((u) => u.id === userId);
-		setSelectedUserId(userId);
-		setSelectedUserName(user?.full_name || 'this user');
-		setResetPasswordDialogOpen(true);
-	};
-
-	const handleResetPasswordConfirm = async () => {
-		if (selectedUserId) {
-			const result = await handleResetPassword(selectedUserId);
-			if (result.error) {
-				toast.error(result.error);
-			} else {
-				toast.success(DICT.ADMIN.USERS.TOASTS.PASSWORD_RESET_SENT);
-			}
-			setSelectedUserId(null);
-			setSelectedUserName('');
-		}
+		dialogs.openResetPassword(userId, user?.full_name || '');
 	};
 
 	const handleBanClick = (userId: string) => {
 		const user = users.find((u) => u.id === userId);
-		setSelectedUserId(userId);
-		setSelectedUserName(user?.full_name || 'this user');
-		setBanDialogOpen(true);
+		dialogs.openBan(userId, user?.full_name || '');
 	};
 
 	const handleUnbanClick = (userId: string) => {
 		const user = users.find((u) => u.id === userId);
-		setSelectedUserId(userId);
-		setSelectedUserName(user?.full_name || 'this user');
-		setUnbanDialogOpen(true);
+		dialogs.openUnban(userId, user?.full_name || '');
 	};
 
 	const handleBanConfirm = async () => {
-		if (selectedUserId) {
-			const result = await handleBan(selectedUserId);
-			if (result.error) {
-				toast.error(result.error);
-			} else {
-				toast.success(DICT.ADMIN.USERS.TOASTS.USER_BANNED);
-			}
-			setSelectedUserId(null);
-			setSelectedUserName('');
+		const id = dialogs.selectedUser.id;
+		if (!id) {
+			return;
 		}
+		const result = await handleBan(id);
+		if (result.error) {
+			toast.error(result.error || DICT.ADMIN.USERS.BAN_USER.TOAST_ERROR);
+		} else {
+			toast.success(DICT.ADMIN.USERS.BAN_USER.TOAST_SUCCESS);
+		}
+		dialogs.close();
 	};
 
 	const handleUnbanConfirm = async () => {
-		if (selectedUserId) {
-			const result = await handleUnban(selectedUserId);
-			if (result.error) {
-				toast.error(result.error);
-			} else {
-				toast.success(DICT.ADMIN.USERS.TOASTS.USER_UNBANNED);
-			}
-			setSelectedUserId(null);
-			setSelectedUserName('');
+		const id = dialogs.selectedUser.id;
+		if (!id) {
+			return;
 		}
+		const result = await handleUnban(id);
+		if (result.error) {
+			toast.error(result.error || DICT.ADMIN.USERS.UNBAN_USER.TOAST_ERROR);
+		} else {
+			toast.success(DICT.ADMIN.USERS.UNBAN_USER.TOAST_SUCCESS);
+		}
+		dialogs.close();
+	};
+
+	const handleResetPasswordConfirm = async () => {
+		const id = dialogs.selectedUser.id;
+		if (!id) {
+			return;
+		}
+		const result = await handleResetPassword(id);
+		if (result.error) {
+			toast.error(result.error || DICT.ADMIN.USERS.PASSWORD_RESET.TOAST_ERROR);
+		} else {
+			toast.success(DICT.ADMIN.USERS.PASSWORD_RESET.TOAST_SUCCESS);
+		}
+		dialogs.close();
 	};
 
 	return (
@@ -215,33 +209,14 @@ export function AdminUsersPage() {
 				onInvite={handleInvite}
 			/>
 
-			<ConfirmActionDialog
-				open={banDialogOpen}
-				onOpenChange={setBanDialogOpen}
-				title="Ban User"
-				description={`Are you sure you want to ban ${selectedUserName || 'this user'}? They will no longer be able to sign in.`}
-				confirmText="Ban User"
-				onConfirm={handleBanConfirm}
-				variant="destructive"
-			/>
-
-			<ConfirmActionDialog
-				open={unbanDialogOpen}
-				onOpenChange={setUnbanDialogOpen}
-				title="Unban User"
-				description={`Are you sure you want to unban ${selectedUserName || 'this user'}? They will be able to sign in again.`}
-				confirmText="Unban User"
-				onConfirm={handleUnbanConfirm}
-			/>
-
-			<ConfirmActionDialog
-				open={resetPasswordDialogOpen}
-				onOpenChange={setResetPasswordDialogOpen}
-				title="Send password reset email?"
-				description={`Are you sure you want to send a password reset email to ${selectedUserName || 'this user'}?`}
-				confirmText="Send email"
-				onConfirm={handleResetPasswordConfirm}
-				variant="default"
+			<AdminActionDialogs
+				{...dialogs}
+				onBanOpenChange={(o) => !o && dialogs.close()}
+				onUnbanOpenChange={(o) => !o && dialogs.close()}
+				onResetPasswordOpenChange={(o) => !o && dialogs.close()}
+				onConfirmBan={handleBanConfirm}
+				onConfirmUnban={handleUnbanConfirm}
+				onConfirmResetPassword={handleResetPasswordConfirm}
 			/>
 		</main>
 	);
