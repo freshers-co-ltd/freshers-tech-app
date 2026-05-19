@@ -1,7 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Play } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -14,6 +13,7 @@ import {
 	FileUploaderItem,
 } from '@/components/ui/file-upload';
 import { Textarea } from '@/components/ui/textarea';
+import { VideoThumbnail } from '@/components/VideoThumbnail';
 import { DICT } from '@/dictionary';
 import { DEFAULT_FILE_SIZE_LIMIT, getBucketConfig, mimeTypesToAccept } from '@/lib/mediaService';
 
@@ -171,19 +171,7 @@ export function CleaningEvidenceForm({ onSubmit, onCancel }: CleaningEvidenceFor
 											className="object-cover size-20"
 										/>
 									) : (
-										<div className="relative size-full">
-											<video
-												src={URL.createObjectURL(file)}
-												className="size-full object-cover"
-												preload="metadata">
-												<track kind="captions" />
-											</video>
-											<div className="absolute inset-0 flex items-center justify-center">
-												<div className="flex size-6 items-center justify-center rounded-full bg-white/70 shadow-md">
-													<Play className="size-3 fill-primary text-primary ml-0.5" />
-												</div>
-											</div>
-										</div>
+										<VideoThumbnail src={URL.createObjectURL(file)} className="size-20" />
 									)}
 								</FileUploaderItem>
 							))}

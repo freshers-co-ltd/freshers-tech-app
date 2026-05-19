@@ -1,17 +1,6 @@
 'use client';
 
-import {
-	AlertCircle,
-	Banknote,
-	Bath,
-	Bed,
-	Clock,
-	Info,
-	MapPin,
-	Package,
-	Play,
-	User,
-} from 'lucide-react';
+import { AlertCircle, Banknote, Bath, Bed, Clock, Info, MapPin, Package, User } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { EntityBadge } from '@/components/EntityBadge';
 import { FullscreenMediaCarousel } from '@/components/FullscreenMediaCarousel';
@@ -21,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { VideoThumbnail } from '@/components/VideoThumbnail';
 import { DICT } from '@/dictionary';
 import type { UserRole } from '@/features/auth/authService';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
@@ -440,22 +430,13 @@ export function CleaningDetailView({
 																			alt="Evidence"
 																		/>
 																	) : (
-																		<div className="relative size-full">
-																			<video
-																				src={mediaService.getMediaUrl(
-																					item.media_url,
-																					'cleaning-media',
-																				)}
-																				className="size-full object-cover"
-																				preload="metadata">
-																				<track kind="captions" />
-																			</video>
-																			<div className="absolute inset-0 flex items-center justify-center">
-																				<div className="flex size-10 items-center justify-center rounded-full bg-white/70 shadow-md">
-																					<Play className="size-5 fill-primary text-primary ml-0.5" />
-																				</div>
-																			</div>
-																		</div>
+																		<VideoThumbnail
+																			src={mediaService.getMediaUrl(
+																				item.media_url,
+																				'cleaning-media',
+																			)}
+																			className="size-full"
+																		/>
 																	)}
 																</Button>
 															))}
