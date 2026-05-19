@@ -17,6 +17,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 let authChannel: BroadcastChannel | null = null;
 
+let suppressSessionBroadcast = false;
+
+export const setSuppressSessionBroadcast = (value: boolean): void => {
+	suppressSessionBroadcast = value;
+};
+
 const getAuthChannel = (): BroadcastChannel => {
 	if (!authChannel) {
 		authChannel = new BroadcastChannel('auth_sync_channel');
@@ -56,7 +62,9 @@ const getAuthStorage = () => {
 				window.localStorage.setItem(key, value);
 			} else {
 				window.sessionStorage.setItem(key, value);
-				getAuthChannel().postMessage({ type: 'SEND_SESSION', session: value });
+				if (!suppressSessionBroadcast) {
+					getAuthChannel().postMessage({ type: 'SEND_SESSION', session: value });
+				}
 			}
 		},
 		removeItem: (key: string) => {

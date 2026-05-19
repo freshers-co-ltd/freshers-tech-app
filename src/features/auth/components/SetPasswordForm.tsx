@@ -12,7 +12,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { PasswordInput } from '@/components/ui/password-input';
 import { DICT } from '@/dictionary';
 import { authService } from '@/features/auth/authService';
-import { supabase } from '@/lib/supabaseClient';
+import { setSuppressSessionBroadcast, supabase } from '@/lib/supabaseClient';
 import { cn } from '@/lib/utils';
 
 const setPasswordSchema = z
@@ -44,6 +44,8 @@ export function SetPasswordForm({ className, ...props }: React.ComponentProps<'f
 	});
 
 	useEffect(() => {
+		setSuppressSessionBroadcast(true);
+
 		const handleAuth = async () => {
 			const hash = window.location.hash.substring(1);
 			const params = new URLSearchParams(hash);

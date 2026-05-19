@@ -13,7 +13,7 @@ import {
 import type { Profile, UserRole } from '@/features/auth/authService';
 import { useVisibilityReconnect } from '@/hooks/useVisibilityReconnect';
 import { initAuthSync } from '@/lib/authSync';
-import { supabase } from '@/lib/supabaseClient';
+import { setSuppressSessionBroadcast, supabase } from '@/lib/supabaseClient';
 
 export interface AuthContextType {
 	user: User | null;
@@ -136,6 +136,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 		const initializeAuth = async () => {
 			await initAuthSync();
+
+			const hash = window.location.hash || '';
+			const isRecoveryFlow = hash.includes('type=recovery') || hash.includes('type=invite');
+			if (isRecoveryFlow) {
+				setSuppressSessionBroadcast(true);
+			}
+
 			const {
 				data: { session: initialSession },
 			} = await supabase.auth.getSession();
@@ -168,6 +175,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			data: { subscription },
 		} = supabase.auth.onAuthStateChange((event, currentSession) => {
 			if (event === 'SIGNED_OUT') {
+				setSuppressSessionBroadcast(false);
 				lastUserId.current = null;
 				setSession(null);
 				setUser(null);
@@ -259,6 +267,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		try {
 			await supabase.auth.signOut();
 		} finally {
+			setSuppressSessionBroadcast(false);
 			lastUserId.current = null;
 			setProfile(null);
 			setUser(null);

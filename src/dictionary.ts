@@ -184,7 +184,7 @@ export const DICT = {
 			TOAST_SUCCESS: 'Reset link sent to your email.',
 		},
 		RESET_PASSWORD: {
-			BUTTON_DASHBOARD: 'Go to Dashboard',
+			BUTTON_LOGIN: 'Go to Login',
 			BUTTON_SUBMIT: 'Reset password',
 			BUTTON_SUBMITTING: 'Updating...',
 			MESSAGE: 'Enter your new password below.',

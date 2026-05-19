@@ -11,6 +11,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { PasswordInput } from '@/components/ui/password-input';
 import { DICT } from '@/dictionary';
 import { authService } from '@/features/auth/authService';
+import { supabase } from '@/lib/supabaseClient';
 import { cn } from '@/lib/utils';
 
 const resetPasswordSchema = z
@@ -54,8 +55,13 @@ export function ResetPasswordForm({ className, ...props }: React.ComponentProps<
 			<div className="text-center space-y-4">
 				<h1 className="text-xl font-bold">{DICT.AUTH.RESET_PASSWORD.TITLE_SUCCESS}</h1>
 				<p className="text-muted-foreground mb-8">{DICT.AUTH.RESET_PASSWORD.MESSAGE_SUCCESS}</p>
-				<Button variant="default" onClick={() => navigate('/dashboard')}>
-					{DICT.AUTH.RESET_PASSWORD.BUTTON_DASHBOARD}
+				<Button
+					variant="default"
+					onClick={async () => {
+						await supabase.auth.signOut();
+						navigate('/login');
+					}}>
+					{DICT.AUTH.RESET_PASSWORD.BUTTON_LOGIN}
 				</Button>
 			</div>
 		);
