@@ -1,98 +1,67 @@
 'use client';
 
 import { BrushCleaning, ClipboardList, Clock, Sparkles } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { toast } from '@/components/Toast';
+import { useCallback } from 'react';
+import { useParams } from 'react-router-dom';
+import { DICT } from '@/dictionary';
+import { cleaningService as adminCleaningService } from '@/features/admin/cleaningService';
 import { CleaningsTable } from '@/features/admin/components/CleaningsTable';
 import { useAdminUsers } from '@/features/admin/useAdminUsers';
-import { type AdminCleanerDetail, userService } from '@/features/admin/userService';
-import { useResourceModals } from '@/hooks/useResourceModals';
+import { useCleanerDetail } from '@/features/admin/useCleanerDetail';
+import { cleaningService } from '@/features/cleanings/cleaningService';
+import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
 import { UserDetailLayout } from '@/layouts/UserDetailLayout';
-import { supabase } from '@/lib/supabaseClient';
 import { formatHours } from '@/lib/utils';
 
 export function AdminCleanerDetailPage() {
 	const { id } = useParams<{ id: string }>();
-	const navigate = useNavigate();
-	const [cleaner, setCleaner] = useState<AdminCleanerDetail | null>(null);
-	const [loading, setLoading] = useState(true);
-
-	const modal = useResourceModals({ resourceName: 'cleaning' });
-
+	const { cleaner, loading, refresh } = useCleanerDetail(id);
 	const { handleResetPassword, handleBan, handleUnban } = useAdminUsers();
 
-	const fetchCleanerDetail = useCallback(async () => {
-		if (!id) {
-			return;
-		}
-		setLoading(true);
-		const result = await userService.getCleanerDetail(id);
-		if (result.error) {
-			toast.error(result.error);
-			navigate('/admin/users');
-		} else {
-			setCleaner(result.data as AdminCleanerDetail | null);
-		}
-		setLoading(false);
-	}, [id, navigate]);
+	const fetchCleaningById = useCallback(async (cleaningId: string) => {
+		const result = await cleaningService.getCleaningRequestById(cleaningId);
+		return result.data || null;
+	}, []);
 
-	useEffect(() => {
-		fetchCleanerDetail();
-	}, [fetchCleanerDetail]);
-
-	const cleaningChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-
-	useEffect(() => {
-		if (!id) {
-			return;
-		}
-
-		const channel = supabase
-			.channel(`admin-cleaner-cleanings-${id}`)
-			.on(
-				'postgres_changes',
-				{
-					event: '*',
-					schema: 'public',
-					table: 'cleanings',
-				},
-				() => {
-					fetchCleanerDetail();
-				},
-			)
-			.subscribe();
-
-		cleaningChannelRef.current = channel;
-
-		return () => {
-			if (cleaningChannelRef.current) {
-				supabase.removeChannel(cleaningChannelRef.current);
-				cleaningChannelRef.current = null;
+	const handleUpsert = useCallback(
+		async (values: CleaningFormValues, existingId?: string) => {
+			if (!existingId) {
+				return;
 			}
-		};
-	}, [id, fetchCleanerDetail]);
+			const result = await adminCleaningService.updateCleaning(existingId, {
+				instructions: values.instructions || '',
+				scheduled_start: values.scheduled_start.toISOString(),
+				stocks_included: values.stocks_included,
+				custom_tasks: values.custom_tasks?.map((t) => t.description) || [],
+			});
+			if (result.error) {
+				throw new Error(result.error);
+			}
+			refresh();
+		},
+		[refresh],
+	);
 
 	const onResetPassword = useCallback(async () => {
 		if (!cleaner) {
 			return { error: 'No user loaded' };
 		}
-		return handleResetPassword(cleaner.id, fetchCleanerDetail);
-	}, [cleaner, handleResetPassword, fetchCleanerDetail]);
+		return handleResetPassword(cleaner.id, refresh);
+	}, [cleaner, handleResetPassword, refresh]);
 
 	const onBan = useCallback(async () => {
 		if (!cleaner) {
 			return { error: 'No user loaded' };
 		}
-		return handleBan(cleaner.id, fetchCleanerDetail);
-	}, [cleaner, handleBan, fetchCleanerDetail]);
+		return handleBan(cleaner.id, refresh);
+	}, [cleaner, handleBan, refresh]);
 
 	const onUnban = useCallback(async () => {
 		if (!cleaner) {
 			return { error: 'No user loaded' };
 		}
-		return handleUnban(cleaner.id, fetchCleanerDetail);
-	}, [cleaner, handleUnban, fetchCleanerDetail]);
+		return handleUnban(cleaner.id, refresh);
+	}, [cleaner, handleUnban, refresh]);
 
 	if (!cleaner) {
 		return null;
@@ -100,6 +69,7 @@ export function AdminCleanerDetailPage() {
 
 	const cleanings = cleaner.assigned_cleanings || [];
 	const stats = cleaner.cleaner_stats;
+	const dict = DICT.ADMIN.CLEANINGS.DETAIL.CLEANER_DETAIL;
 
 	const tableData = cleanings.map((c) => ({
 		id: c.id,
@@ -121,28 +91,28 @@ export function AdminCleanerDetailPage() {
 	const statsConfig = [
 		{
 			id: 'total-assigned',
-			label: 'Total Assigned Cleanings',
+			label: dict.STATS.TOTAL_ASSIGNED,
 			value: stats?.total_assigned || 0,
 			icon: ClipboardList,
 			iconColor: 'text-purple-600',
 		},
 		{
 			id: 'current-assigned',
-			label: 'Current Assigned Cleanings',
+			label: dict.STATS.CURRENT_ASSIGNED,
 			value: stats?.confirmed || 0,
 			icon: BrushCleaning,
 			iconColor: 'text-blue-600',
 		},
 		{
 			id: 'completed',
-			label: 'Completed Cleanings',
+			label: dict.STATS.COMPLETED,
 			value: stats?.completed || 0,
 			icon: Sparkles,
 			iconColor: 'text-yellow-400',
 		},
 		{
 			id: 'avg-completion',
-			label: 'Average Completion Time',
+			label: dict.STATS.AVG_COMPLETION,
 			value: stats?.avg_completion_hours ? formatHours(stats.avg_completion_hours) : '0 hours',
 			icon: Clock,
 			iconColor: 'text-orange-500',
@@ -160,15 +130,17 @@ export function AdminCleanerDetailPage() {
 			stats={statsConfig}
 			sections={[
 				{
-					title: 'Assigned Cleanings',
+					title: dict.TITLE,
 					content: (
 						<CleaningsTable
 							data={tableData}
+							fetchById={fetchCleaningById}
+							onUpsert={handleUpsert}
+							userRole="admin"
 							excludeCleaner={true}
 							hideHostCost={true}
-							emptyMessage="No cleanings assigned"
-							onRefresh={fetchCleanerDetail}
-							onView={(id) => modal.openView(id)}
+							emptyMessage={dict.EMPTY}
+							onRefresh={refresh}
 							pageSize={10}
 							totalCount={cleanings.length}
 						/>

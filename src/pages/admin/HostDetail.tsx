@@ -1,8 +1,8 @@
 'use client';
 
 import { BadgeCheck, BrushCleaning, CalendarClock, ClipboardList, Plus } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { Loading } from '@/components/Loading';
 import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,8 @@ import { CleaningsTable } from '@/features/admin/components/CleaningsTable';
 import { HostBasePriceDialog } from '@/features/admin/components/HostBasePriceDialog';
 import { PropertiesTable } from '@/features/admin/components/PropertiesTable';
 import { useAdminUsers } from '@/features/admin/useAdminUsers';
-import { type AdminHostDetail, userService } from '@/features/admin/userService';
+import { useHostDetail } from '@/features/admin/useHostDetail';
+import { cleaningService } from '@/features/cleanings/cleaningService';
 import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
 import { CleaningForm } from '@/features/cleanings/components/CleaningForm';
 import { PropertyDetailView } from '@/features/properties/components/PropertyDetailView';
@@ -31,21 +32,24 @@ import { supabase } from '@/lib/supabaseClient';
 
 export function AdminHostDetailPage() {
 	const { id } = useParams<{ id: string }>();
-	const navigate = useNavigate();
-	const [host, setHost] = useState<AdminHostDetail | null>(null);
-	const [loading, setLoading] = useState(true);
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 	const [isBasePriceDialogOpen, setIsBasePriceDialogOpen] = useState(false);
 	const [propertiesSortField, setPropertiesSortField] = useState<string>('address_line_1');
 	const [propertiesSortDirection, setPropertiesSortDirection] = useState<'asc' | 'desc'>('desc');
 
+	const { host, loading, refresh } = useHostDetail(id, {
+		propertiesSortField,
+		propertiesSortDirection,
+	});
+
 	const propertyModal = useResourceModals({ resourceName: 'property' });
-	const cleaningModal = useResourceModals({ resourceName: 'cleaning' });
 
 	const { handleResetPassword, handleBan, handleUnban } = useAdminUsers();
 
 	const [viewingProperty, setViewingProperty] = useState<Property | null>(null);
 	const [viewingPropertyLoading, setViewingPropertyLoading] = useState(false);
+
+	const dict = DICT.ADMIN.CLEANINGS.DETAIL.HOST_DETAIL;
 
 	const fetchViewingProperty = useCallback(async () => {
 		if (!propertyModal.viewId) {
@@ -71,82 +75,26 @@ export function AdminHostDetailPage() {
 		}
 	}, [propertyModal.isViewOpen, propertyModal.viewId, fetchViewingProperty]);
 
-	const fetchHostDetail = useCallback(async () => {
-		if (!id) {
-			return;
-		}
-		setLoading(true);
-		const result = await userService.getHostDetail(
-			id,
-			propertiesSortField,
-			propertiesSortDirection,
-		);
-		if (result.error) {
-			toast.error(result.error);
-			navigate('/admin/users');
-		} else {
-			setHost(result.data as AdminHostDetail | null);
-		}
-		setLoading(false);
-	}, [id, navigate, propertiesSortField, propertiesSortDirection]);
-
-	useEffect(() => {
-		fetchHostDetail();
-	}, [fetchHostDetail]);
-
-	const cleaningChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-
-	useEffect(() => {
-		if (!id) {
-			return;
-		}
-
-		const channel = supabase
-			.channel(`admin-host-cleanings-${id}`)
-			.on(
-				'postgres_changes',
-				{
-					event: '*',
-					schema: 'public',
-					table: 'cleanings',
-					filter: `host_id=eq.${id}`,
-				},
-				() => {
-					fetchHostDetail();
-				},
-			)
-			.subscribe();
-
-		cleaningChannelRef.current = channel;
-
-		return () => {
-			if (cleaningChannelRef.current) {
-				supabase.removeChannel(cleaningChannelRef.current);
-				cleaningChannelRef.current = null;
-			}
-		};
-	}, [id, fetchHostDetail]);
-
 	const onResetPassword = useCallback(async () => {
 		if (!host) {
 			return { error: 'No user loaded' };
 		}
-		return handleResetPassword(host.id, fetchHostDetail);
-	}, [host, handleResetPassword, fetchHostDetail]);
+		return handleResetPassword(host.id, refresh);
+	}, [host, handleResetPassword, refresh]);
 
 	const onBan = useCallback(async () => {
 		if (!host) {
 			return { error: 'No user loaded' };
 		}
-		return handleBan(host.id, fetchHostDetail);
-	}, [host, handleBan, fetchHostDetail]);
+		return handleBan(host.id, refresh);
+	}, [host, handleBan, refresh]);
 
 	const onUnban = useCallback(async () => {
 		if (!host) {
 			return { error: 'No user loaded' };
 		}
-		return handleUnban(host.id, fetchHostDetail);
-	}, [host, handleUnban, fetchHostDetail]);
+		return handleUnban(host.id, refresh);
+	}, [host, handleUnban, refresh]);
 
 	const handleCreateCleaning = async (values: CleaningFormValues) => {
 		if (!id) {
@@ -167,9 +115,33 @@ export function AdminHostDetailPage() {
 		} else {
 			toast.success(DICT.CLEANINGS.CREATE.TOAST_SUCCESS);
 			setIsCreateModalOpen(false);
-			fetchHostDetail();
+			refresh();
 		}
 	};
+
+	const fetchCleaningById = useCallback(async (cleaningId: string) => {
+		const result = await cleaningService.getCleaningRequestById(cleaningId);
+		return result.data || null;
+	}, []);
+
+	const handleUpsert = useCallback(
+		async (values: CleaningFormValues, existingId?: string) => {
+			if (!existingId) {
+				return;
+			}
+			const result = await adminCleaningService.updateCleaning(existingId, {
+				instructions: values.instructions || '',
+				scheduled_start: values.scheduled_start.toISOString(),
+				stocks_included: values.stocks_included,
+				custom_tasks: values.custom_tasks?.map((t) => t.description) || [],
+			});
+			if (result.error) {
+				throw new Error(result.error);
+			}
+			refresh();
+		},
+		[refresh],
+	);
 
 	if (!host) {
 		return null;
@@ -202,28 +174,28 @@ export function AdminHostDetailPage() {
 	const statsConfig = [
 		{
 			id: 'total-requested',
-			label: 'Total cleanings requested',
+			label: dict.STATS.TOTAL_REQUESTED,
 			value: stats?.total || 0,
 			icon: ClipboardList,
 			iconColor: 'text-purple-600',
 		},
 		{
 			id: 'requested',
-			label: 'Pending requested cleanings',
+			label: dict.STATS.PENDING_REQUESTED,
 			value: stats?.requested || 0,
 			icon: CalendarClock,
 			iconColor: 'text-yellow-600',
 		},
 		{
 			id: 'pending',
-			label: 'Pending confirmed cleanings',
+			label: dict.STATS.PENDING_CONFIRMED,
 			value: stats?.confirmed || 0,
 			icon: BadgeCheck,
 			iconColor: 'text-green-600',
 		},
 		{
 			id: 'in-progress',
-			label: 'Cleanings in progress',
+			label: dict.STATS.IN_PROGRESS,
 			value: stats?.in_progress || 0,
 			icon: BrushCleaning,
 			iconColor: 'text-blue-600',
@@ -242,11 +214,11 @@ export function AdminHostDetailPage() {
 			stats={statsConfig}
 			sections={[
 				{
-					title: 'Properties',
+					title: dict.PROPERTIES_TITLE,
 					content: (
 						<PropertiesTable
 							data={properties}
-							emptyMessage="No properties found"
+							emptyMessage={dict.EMPTY_PROPERTIES}
 							onView={(id) => propertyModal.openView(id)}
 							pageSize={10}
 							totalCount={properties.length}
@@ -264,21 +236,23 @@ export function AdminHostDetailPage() {
 					),
 				},
 				{
-					title: 'Cleaning Requests',
+					title: dict.CLEANINGS_TITLE,
 					actionButton: (
 						<Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
 							<Plus className="size-4 mr-1" />
-							New Cleaning Request
+							{dict.NEW_CLEANING}
 						</Button>
 					),
 					content: (
 						<CleaningsTable
 							data={tableData}
+							fetchById={fetchCleaningById}
+							onUpsert={handleUpsert}
+							userRole="admin"
 							excludeHost={true}
 							hideCleanerPay={true}
-							emptyMessage="No cleanings found"
-							onRefresh={fetchHostDetail}
-							onView={(id) => cleaningModal.openView(id)}
+							emptyMessage={dict.EMPTY_CLEANINGS}
+							onRefresh={refresh}
 							pageSize={10}
 							totalCount={cleanings.length}
 						/>
@@ -306,8 +280,8 @@ export function AdminHostDetailPage() {
 			<Dialog open={propertyModal.isViewOpen} onOpenChange={() => propertyModal.handleClose()}>
 				<DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
 					<DialogHeader>
-						<DialogTitle>Property Details</DialogTitle>
-						<DialogDescription>View complete property information</DialogDescription>
+						<DialogTitle>{dict.PROPERTY_DETAILS}</DialogTitle>
+						<DialogDescription>{dict.PROPERTY_MESSAGE}</DialogDescription>
 					</DialogHeader>
 					{viewingPropertyLoading ? (
 						<Loading />
@@ -322,7 +296,7 @@ export function AdminHostDetailPage() {
 				onOpenChange={setIsBasePriceDialogOpen}
 				hostId={id || ''}
 				currentPrice={host?.base_price_per_cleaning ?? null}
-				onSuccess={fetchHostDetail}
+				onSuccess={refresh}
 			/>
 		</UserDetailLayout>
 	);

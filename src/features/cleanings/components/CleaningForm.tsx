@@ -330,15 +330,19 @@ export function CleaningForm({
 						<div className="space-y-6">
 							<div className="space-y-4">
 								<div className="space-y-2">
-									<FieldLabel>Standard Tasks</FieldLabel>
+									<FieldLabel>{DICT.CLEANINGS.FORM.LABELS.STANDARD_TASKS}</FieldLabel>
 									<div className="grid grid-cols-1 gap-1">
 										{standardTasksLoading ? (
-											<p className="text-muted-foreground text-sm py-2">Loading tasks...</p>
+											<p className="text-muted-foreground text-sm py-2">
+												{DICT.CLEANINGS.FORM.LOADING_TASKS}
+											</p>
 										) : standardTasksError ? (
-											<p className="text-destructive text-sm py-2">Failed to load tasks</p>
+											<p className="text-destructive text-sm py-2">
+												{DICT.CLEANINGS.FORM.FAILED_TASKS}
+											</p>
 										) : standardTasks.length === 0 ? (
 											<p className="text-muted-foreground text-sm py-2">
-												No standard tasks available
+												{DICT.CLEANINGS.FORM.NO_TASKS}
 											</p>
 										) : (
 											standardTasks.map((task) => (
@@ -454,7 +458,12 @@ export function CleaningForm({
 									<p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
 										{dict.LABELS.COST}
 									</p>
-									{hostBasePrice === null ? (
+									{initialData ? (
+										<p className="text-2xl font-black text-primary">
+											{DICT.COMMON.CURRENCY}
+											{Number(initialData.service_cost).toFixed(2)}
+										</p>
+									) : hostBasePrice === null ? (
 										<p className="text-lg font-medium text-muted-foreground">Not set</p>
 									) : (
 										<p className="text-2xl font-black text-primary">
@@ -472,7 +481,13 @@ export function CleaningForm({
 									</Button>
 								)}
 								<Button type="submit" className="flex-1" disabled={isSubmitting}>
-									{isSubmitting ? dict.BUTTONS.SUBMITTING : dict.BUTTONS.SUBMIT}
+									{isSubmitting
+										? initialData
+											? DICT.CLEANINGS.EDIT.BUTTON_SUBMITTING
+											: DICT.CLEANINGS.CREATE.BUTTON_SUBMITTING
+										: initialData
+											? DICT.CLEANINGS.EDIT.BUTTON_SUBMIT
+											: DICT.CLEANINGS.CREATE.BUTTON_SUBMIT}
 								</Button>
 							</div>
 						</div>

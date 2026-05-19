@@ -1,8 +1,7 @@
 'use client';
 
 import { Banknote, ListTodo, Search, Settings } from 'lucide-react';
-import { useState } from 'react';
-import { CleaningViewDialog } from '@/components/CleaningViewDialog';
+import { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,12 +13,14 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { DICT } from '@/dictionary';
+import { cleaningService as adminCleaningService } from '@/features/admin/cleaningService';
 import { CleanerPayConfigDialog } from '@/features/admin/components/CleanerPayConfigDialog';
 import { CleaningsTable } from '@/features/admin/components/CleaningsTable';
 import { HostPricingConfigDialog } from '@/features/admin/components/HostPricingConfigDialog';
 import { StandardTasksDialog } from '@/features/admin/components/StandardTasksDialog';
 import { useAdminCleanings } from '@/features/admin/useAdminCleanings';
-import { useResourceModals } from '@/hooks/useResourceModals';
+import { cleaningService } from '@/features/cleanings/cleaningService';
+import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
 
 export function AdminCleaningsPage() {
 	const {
@@ -42,21 +43,45 @@ export function AdminCleaningsPage() {
 		refresh,
 	} = useAdminCleanings();
 
-	const modal = useResourceModals({ resourceName: 'cleaning' });
 	const [isStandardTasksOpen, setIsStandardTasksOpen] = useState(false);
 	const [isPayConfigOpen, setIsPayConfigOpen] = useState(false);
 	const [isHostPricingOpen, setIsHostPricingOpen] = useState(false);
 
 	const dict = DICT.ADMIN.CLEANINGS;
+	const filtersDict = dict.FILTERS;
+	const statusDict = dict.STATUS_OPTIONS;
+	const buttonsDict = dict.BUTTONS;
+
+	const fetchById = useCallback(async (id: string) => {
+		const result = await cleaningService.getCleaningRequestById(id);
+		return result.data || null;
+	}, []);
+
+	const handleUpsert = useCallback(async (data: CleaningFormValues, existingId?: string) => {
+		if (!existingId) {
+			return;
+		}
+
+		const result = await adminCleaningService.updateCleaning(existingId, {
+			instructions: data.instructions || '',
+			scheduled_start: data.scheduled_start.toISOString(),
+			stocks_included: data.stocks_included,
+			custom_tasks: data.custom_tasks?.map((t) => t.description) || [],
+		});
+
+		if (result.error) {
+			throw new Error(result.error);
+		}
+	}, []);
 
 	const statusOptions = [
-		{ label: 'All Statuses', value: 'all' },
-		{ label: 'Draft', value: 'draft' },
-		{ label: 'Requested', value: 'requested' },
-		{ label: 'Confirmed', value: 'confirmed' },
-		{ label: 'In Progress', value: 'in_progress' },
-		{ label: 'Completed', value: 'completed' },
-		{ label: 'Cancelled', value: 'cancelled' },
+		{ label: statusDict.ALL, value: 'all' },
+		{ label: statusDict.DRAFT, value: 'draft' },
+		{ label: statusDict.REQUESTED, value: 'requested' },
+		{ label: statusDict.CONFIRMED, value: 'confirmed' },
+		{ label: statusDict.IN_PROGRESS, value: 'in_progress' },
+		{ label: statusDict.COMPLETED, value: 'completed' },
+		{ label: statusDict.CANCELLED, value: 'cancelled' },
 	];
 
 	return (
@@ -70,15 +95,15 @@ export function AdminCleaningsPage() {
 				<div className="space-y-3 md:space-x-3 flex flex-col md:flex-row">
 					<Button variant="outline" onClick={() => setIsStandardTasksOpen(true)}>
 						<ListTodo className="size-4 mr-1" />
-						Standard Tasks
+						{buttonsDict.STANDARD_TASKS}
 					</Button>
 					<Button variant="outline" onClick={() => setIsPayConfigOpen(true)}>
 						<Banknote className="size-4 mr-1" />
-						Pay Rates
+						{buttonsDict.PAY_RATES}
 					</Button>
 					<Button variant="outline" onClick={() => setIsHostPricingOpen(true)}>
 						<Settings className="size-4 mr-1" />
-						Property Multipliers
+						{buttonsDict.PROPERTY_MULTIPLIERS}
 					</Button>
 				</div>
 			</header>
@@ -88,7 +113,7 @@ export function AdminCleaningsPage() {
 						<Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
 						<Input
 							className="h-8 pl-9"
-							placeholder="Search..."
+							placeholder={filtersDict.SEARCH_PLACEHOLDER}
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
 							onKeyDown={(e) => {
@@ -105,7 +130,7 @@ export function AdminCleaningsPage() {
 							setPage(1);
 						}}>
 						<SelectTrigger className="w-[150px]">
-							<SelectValue placeholder="Status" />
+							<SelectValue placeholder={filtersDict.STATUS} />
 						</SelectTrigger>
 						<SelectContent>
 							{statusOptions.map((opt) => (
@@ -122,11 +147,11 @@ export function AdminCleaningsPage() {
 							setPage(1);
 						}}>
 						<SelectTrigger className="w-[150px]">
-							<SelectValue placeholder="Cleaner" />
+							<SelectValue placeholder={filtersDict.CLEANER} />
 						</SelectTrigger>
 						<SelectContent>
-							<SelectItem value="all">All Cleaners</SelectItem>
-							<SelectItem value="unassigned">Unassigned</SelectItem>
+							<SelectItem value="all">{filtersDict.ALL_CLEANERS}</SelectItem>
+							<SelectItem value="unassigned">{filtersDict.UNASSIGNED}</SelectItem>
 							{availableCleaners.map((cleaner) => (
 								<SelectItem key={cleaner.id} value={cleaner.id}>
 									{cleaner.full_name}
@@ -143,13 +168,16 @@ export function AdminCleaningsPage() {
 							setCleanerFilter('all');
 							setPage(1);
 						}}>
-						Clear
+						{filtersDict.CLEAR}
 					</Button>
 				</div>
 			</Card>
 
 			<CleaningsTable
 				data={cleanings}
+				fetchById={fetchById}
+				onUpsert={handleUpsert}
+				userRole="admin"
 				loading={loading}
 				page={page}
 				totalCount={totalCount}
@@ -166,13 +194,6 @@ export function AdminCleaningsPage() {
 					setPage(1);
 				}}
 				onRefresh={refresh}
-				onView={(id) => modal.openView(id)}
-			/>
-
-			<CleaningViewDialog
-				open={modal.isViewOpen}
-				viewId={modal.viewId}
-				onClose={modal.handleClose}
 			/>
 
 			<StandardTasksDialog open={isStandardTasksOpen} onOpenChange={setIsStandardTasksOpen} />

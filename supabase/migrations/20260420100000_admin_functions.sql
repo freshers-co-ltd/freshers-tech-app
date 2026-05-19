@@ -938,4 +938,41 @@ GRANT EXECUTE ON FUNCTION public.admin_update_host_base_price(uuid, numeric) TO 
 REVOKE EXECUTE ON FUNCTION public.calculate_service_cost FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.calculate_service_cost TO authenticated;
 
+CREATE OR REPLACE FUNCTION public.admin_update_cleaning (
+    p_cleaning_id UUID,
+    p_custom_tasks TEXT[],
+    p_instructions TEXT,
+    p_scheduled_start TIMESTAMPTZ,
+    p_stocks_included BOOLEAN DEFAULT FALSE
+) RETURNS UUID SECURITY DEFINER
+SET search_path = public AS $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin') THEN
+        RAISE EXCEPTION 'Unauthorized' USING ERRCODE = 'P0001';
+    END IF;
+
+    UPDATE public.cleanings
+    SET scheduled_start = p_scheduled_start,
+        instructions = p_instructions,
+        stocks_included = p_stocks_included,
+        updated_at = now()
+    WHERE id = p_cleaning_id AND deleted_at IS NULL;
+
+    UPDATE public.cleaning_tasks SET deleted_at = now()
+    WHERE cleaning_id = p_cleaning_id AND is_custom = true;
+
+    IF p_custom_tasks IS NOT NULL THEN
+        INSERT INTO public.cleaning_tasks (cleaning_id, description, is_custom, is_completed)
+        SELECT p_cleaning_id, task_desc, true, false
+        FROM unnest(p_custom_tasks) AS task_desc
+        WHERE task_desc <> '';
+    END IF;
+
+    RETURN p_cleaning_id;
+END;
+$$ LANGUAGE plpgsql;
+
+REVOKE EXECUTE ON FUNCTION public.admin_update_cleaning FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_update_cleaning TO authenticated;
+
 COMMIT;

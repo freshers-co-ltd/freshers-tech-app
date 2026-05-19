@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from '@/components/Toast';
+import { DICT } from '@/dictionary';
 import {
 	type AdminCleaning,
 	type CleaningFilters,
@@ -150,7 +151,7 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 
 	const handleAssignCleaner = useCallback(async (): Promise<boolean> => {
 		if (!selectedCleaning || !selectedCleaner) {
-			toast.error('Please select a cleaner');
+			toast.error(DICT.COMMON.TOASTS.PLEASE_SELECT_CLEANER);
 			return false;
 		}
 		const result = await cleaningService.assignCleaner(selectedCleaning, selectedCleaner);
@@ -158,7 +159,7 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 			toast.error(result.error);
 			return false;
 		}
-		toast.success('Cleaner assigned');
+		toast.success(DICT.COMMON.TOASTS.CLEANER_ASSIGNED);
 		setIsAssignModalOpen(false);
 		await fetchCleanings();
 		return true;

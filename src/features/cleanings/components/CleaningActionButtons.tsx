@@ -37,10 +37,11 @@ export function CleaningActionButtons({
 }: CleaningActionButtonsProps) {
 	const isCleaner = userRole === 'cleaner';
 	const isHost = userRole === 'host';
+	const isAdmin = userRole === 'admin';
 
 	const isConfirmed = status === CLEANING_STATUS.CONFIRMED;
 	const isInProgress = status === CLEANING_STATUS.IN_PROGRESS;
-	const canEdit = isHost && STATUS_GROUPS.CAN_EDIT.includes(status);
+	const canEdit = (isHost || isAdmin) && STATUS_GROUPS.CAN_EDIT.includes(status);
 	const canCancel = isHost && STATUS_GROUPS.CAN_CANCEL.includes(status);
 
 	if (isCleaner && (isConfirmed || isInProgress)) {
@@ -63,7 +64,7 @@ export function CleaningActionButtons({
 		);
 	}
 
-	if (isHost && (canEdit || canCancel)) {
+	if ((isHost || isAdmin) && (canEdit || canCancel)) {
 		return (
 			<div className="p-3 border-t shrink-0">
 				<div className="flex flex-col sm:flex-row gap-3">

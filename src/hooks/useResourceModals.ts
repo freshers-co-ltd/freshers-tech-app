@@ -29,14 +29,18 @@ export function useResourceModals(options: UseResourceModalsOptions) {
 	const [deletingId, setDeletingId] = useState<string | null>(null);
 
 	const handleClose = () => {
-		setViewId(null);
 		setEditId(null);
-		setCreate(null);
+		setTimeout(() => {
+			setViewId(null);
+			setCreate(null);
+		}, 0);
 	};
 
 	const openEdit = (id: string) => {
 		setViewId(null);
-		setEditId(id);
+		setTimeout(() => {
+			setEditId(id);
+		}, 0);
 	};
 
 	const openView = (id: string) => {

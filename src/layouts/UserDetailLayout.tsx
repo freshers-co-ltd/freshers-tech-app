@@ -1,7 +1,7 @@
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import { Loading } from '@/components/Loading';
 import { toast } from '@/components/Toast';
 import { Card } from '@/components/ui/card';
@@ -12,10 +12,9 @@ import { AdminActionDialogs } from '@/features/admin/components/AdminActionDialo
 import { UserCard } from '@/features/admin/components/UserCard';
 import { useAdminActionDialogs } from '@/features/admin/useAdminActionDialogs';
 import type { AdminUser } from '@/features/admin/userService';
-import type { CleaningRequest } from '@/features/cleanings/cleaningService';
 import { cleaningService } from '@/features/cleanings/cleaningService';
 import { CleaningDetailView } from '@/features/cleanings/components/CleaningDetailView';
-import { useResourceModals } from '@/hooks/useResourceModals';
+import { useCleaningModals } from '@/hooks/useCleaningModals';
 
 interface StatConfig {
 	id?: string;
@@ -60,29 +59,17 @@ export function UserDetailLayout({
 	const dict = DICT.ADMIN.USERS;
 	const detail = DICT.ADMIN.USERS.DETAIL;
 
-	const cleaningModal = useResourceModals({ resourceName: 'cleaning' });
-	const [viewingCleaning, setViewingCleaning] = useState<CleaningRequest | null>(null);
-	const [viewingCleaningLoading, setViewingCleaningLoading] = useState(false);
 	const dialogs = useAdminActionDialogs();
 
-	const fetchViewingCleaning = useCallback(async () => {
-		if (!cleaningModal.viewId) {
-			return;
-		}
-		setViewingCleaningLoading(true);
-		const result = await cleaningService.getCleaningRequestById(cleaningModal.viewId);
-		if (!result.error && result.data) {
-			setViewingCleaning(result.data);
-		}
-		setViewingCleaningLoading(false);
-	}, [cleaningModal.viewId]);
+	const fetchById = useCallback(async (id: string) => {
+		const result = await cleaningService.getCleaningRequestById(id);
+		return result.data || null;
+	}, []);
 
-	useEffect(() => {
-		if (cleaningModal.isViewOpen && cleaningModal.viewId) {
-			setViewingCleaning(null);
-			fetchViewingCleaning();
-		}
-	}, [cleaningModal.isViewOpen, cleaningModal.viewId, fetchViewingCleaning]);
+	const { modal, viewingCleaning, isViewLoading } = useCleaningModals({
+		fetchById,
+		userRole: 'admin',
+	});
 
 	const isCleaner = userRole === 'cleaner';
 
@@ -202,21 +189,20 @@ export function UserDetailLayout({
 
 			{children}
 
-			<Dialog
-				open={cleaningModal.isViewOpen && viewingCleaningLoading}
-				onOpenChange={() => cleaningModal.handleClose()}>
-				<DialogContent className="">
-					<Loading absolute={false} />
+			<Dialog open={modal.isViewOpen} onOpenChange={(open) => !open && modal.handleClose()}>
+				<DialogContent className="max-w-xl! w-screen sm:w-full h-[95svh] flex flex-col p-0 gap-0 overflow-hidden">
+					{isViewLoading ? (
+						<Loading />
+					) : viewingCleaning ? (
+						<CleaningDetailView
+							cleaning={viewingCleaning}
+							userRole="admin"
+							onEdit={(id) => modal.openEdit(id)}
+							onDelete={(id) => modal.setDeletingId(id)}
+						/>
+					) : null}
 				</DialogContent>
 			</Dialog>
-			{!viewingCleaningLoading && viewingCleaning && (
-				<CleaningDetailView
-					cleaning={viewingCleaning}
-					userRole="admin"
-					open={cleaningModal.isViewOpen}
-					onOpenChange={(open) => !open && cleaningModal.handleClose()}
-				/>
-			)}
 
 			<AdminActionDialogs
 				{...dialogs}

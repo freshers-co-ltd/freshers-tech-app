@@ -2,7 +2,6 @@
 
 import { CalendarX, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { DialogContent } from '@/components/ui/dialog';
 import { DICT } from '@/dictionary';
 import { CleaningDetailView } from '@/features/cleanings/components/CleaningDetailView';
 import { CleaningForm } from '@/features/cleanings/components/CleaningForm';
@@ -55,15 +54,11 @@ export function HostCleaningsPage() {
 					<CleaningDetailView
 						cleaning={viewingCleaning}
 						userRole="host"
-						open={modal.isViewOpen}
-						onOpenChange={modal.handleClose}
 						onEdit={modal.openEdit}
 						onDelete={modal.setDeletingId}
 					/>
 				) : (
-					<DialogContent>
-						<div className="p-6 text-center text-muted-foreground">{DICT.CLEANINGS.NOT_FOUND}</div>
-					</DialogContent>
+					<div className="p-6 text-center text-muted-foreground">{DICT.CLEANINGS.NOT_FOUND}</div>
 				)
 			}
 			formTitle={editingCleaning ? DICT.CLEANINGS.EDIT.TITLE : DICT.CLEANINGS.CREATE.TITLE}

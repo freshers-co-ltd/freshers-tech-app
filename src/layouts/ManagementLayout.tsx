@@ -69,7 +69,9 @@ export function ManagementLayout({
 			</section>
 
 			<Dialog open={isViewOpen} onOpenChange={(open) => !open && onClose()}>
-				{viewContent}
+				<DialogContent className="max-w-xl! w-screen sm:w-full h-[95svh] flex flex-col p-0 gap-0 overflow-hidden">
+					{viewContent}
+				</DialogContent>
 			</Dialog>
 
 			<Dialog open={isEditOrCreateOpen} onOpenChange={(open) => !open && onClose()}>

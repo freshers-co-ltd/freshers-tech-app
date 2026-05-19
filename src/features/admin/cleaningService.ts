@@ -42,6 +42,13 @@ export interface StandardTask {
 	created_at: string;
 }
 
+export interface UpdateCleaningPayload {
+	custom_tasks: string[];
+	instructions: string;
+	scheduled_start: string;
+	stocks_included: boolean;
+}
+
 export const cleaningService = {
 	async getAllCleanings(
 		filters: CleaningFilters = {},
@@ -129,6 +136,25 @@ export const cleaningService = {
 			p_instructions: (options?.instructions ?? null) as string,
 			p_stocks_included: options?.stocksIncluded ?? false,
 			p_custom_tasks: options?.customTasks ?? [],
+		});
+
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+
+		return { data: data as string, error: null };
+	},
+
+	async updateCleaning(
+		cleaningId: string,
+		payload: UpdateCleaningPayload,
+	): Promise<ActionResult<string>> {
+		const { data, error } = await supabase.rpc('admin_update_cleaning', {
+			p_cleaning_id: cleaningId,
+			p_custom_tasks: payload.custom_tasks,
+			p_instructions: payload.instructions,
+			p_scheduled_start: payload.scheduled_start,
+			p_stocks_included: payload.stocks_included,
 		});
 
 		if (error) {

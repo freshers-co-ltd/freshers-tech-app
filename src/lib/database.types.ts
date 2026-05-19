@@ -830,6 +830,16 @@ export type Database = {
 				Args: { p_cleaning_id: string };
 				Returns: undefined;
 			};
+			admin_update_cleaning: {
+				Args: {
+					p_cleaning_id: string;
+					p_custom_tasks: string[];
+					p_instructions: string;
+					p_scheduled_start: string;
+					p_stocks_included?: boolean;
+				};
+				Returns: string;
+			};
 			admin_update_host_base_price: {
 				Args: { p_base_price: number; p_host_id: string };
 				Returns: undefined;

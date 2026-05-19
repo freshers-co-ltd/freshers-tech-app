@@ -1,7 +1,6 @@
 'use client';
 
 import { CalendarX } from 'lucide-react';
-import { DialogContent } from '@/components/ui/dialog';
 import { DICT } from '@/dictionary';
 import { CleanerCleaningGrid } from '@/features/cleanings/components/CleanerCleaningGrid';
 import { CleaningDetailView } from '@/features/cleanings/components/CleaningDetailView';
@@ -31,16 +30,9 @@ export function CleanerCleaningsPage() {
 			onClose={modal.handleClose}
 			viewContent={
 				viewingCleaning ? (
-					<CleaningDetailView
-						cleaning={viewingCleaning}
-						userRole="cleaner"
-						open={modal.isViewOpen}
-						onOpenChange={modal.handleClose}
-					/>
+					<CleaningDetailView cleaning={viewingCleaning} userRole="cleaner" />
 				) : (
-					<DialogContent>
-						<div className="p-6 text-center text-muted-foreground">{DICT.CLEANINGS.NOT_FOUND}</div>
-					</DialogContent>
+					<div className="p-6 text-center text-muted-foreground">{DICT.CLEANINGS.NOT_FOUND}</div>
 				)
 			}
 			formContent={null}

@@ -1,7 +1,8 @@
 'use client';
 
-import { ArrowUpDown, Eye, UserPlus } from 'lucide-react';
+import { ArrowUpDown, Eye, Pencil, UserPlus } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { CleaningDialogs } from '@/components/CleaningDialogs';
 import { DataTable } from '@/components/DataTable';
 import { EntityBadge } from '@/components/EntityBadge';
 import { toast } from '@/components/Toast';
@@ -10,7 +11,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { DICT } from '@/dictionary';
 import { cleaningService as adminCleaningService } from '@/features/admin/cleaningService';
 import { AssignCleanerDialog } from '@/features/admin/components/AssignCleanerDialog';
-import type { CleaningStatus } from '@/features/cleanings/cleaningService';
+import type { UserRole } from '@/features/auth/authService';
+import type { CleaningRequest, CleaningStatus } from '@/features/cleanings/cleaningService';
+import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
+import { useCleaningModals } from '@/hooks/useCleaningModals';
 import { supabase } from '@/lib/supabaseClient';
 import { formatDate } from '@/lib/utils';
 
@@ -33,13 +37,15 @@ export interface CleaningData {
 
 export interface CleaningsTableProps {
 	data: CleaningData[];
+	fetchById: (id: string) => Promise<CleaningRequest | null>;
+	onUpsert: (data: CleaningFormValues, existingId?: string) => Promise<void>;
+	userRole: UserRole;
 	excludeHost?: boolean;
 	excludeCleaner?: boolean;
 	hideHostCost?: boolean;
 	hideCleanerPay?: boolean;
 	emptyMessage?: string;
 	onRefresh?: () => void;
-	onView?: (id: string) => void;
 	page?: number;
 	totalCount?: number;
 	pageSize?: number;
@@ -52,13 +58,15 @@ export interface CleaningsTableProps {
 
 export function CleaningsTable({
 	data,
+	fetchById,
+	onUpsert,
+	userRole,
 	excludeHost,
 	excludeCleaner,
 	hideHostCost,
 	hideCleanerPay,
 	emptyMessage = 'No cleaning requests found',
 	onRefresh,
-	onView,
 	page = 1,
 	totalCount,
 	pageSize = 20,
@@ -68,6 +76,12 @@ export function CleaningsTable({
 	sortDirection = 'desc',
 	onSort,
 }: CleaningsTableProps) {
+	const { modal, viewingCleaning, editingCleaning, isViewLoading, isEditLoading, handleUpsert } =
+		useCleaningModals({
+			fetchById,
+			onUpsert,
+			userRole,
+		});
 	const [availableCleaners, setAvailableCleaners] = useState<
 		{ id: string; full_name: string | null }[]
 	>([]);
@@ -116,7 +130,7 @@ export function CleaningsTable({
 
 	const handleAssignCleaner = useCallback(async (): Promise<boolean> => {
 		if (!selectedCleaningId || !selectedCleanerId) {
-			toast.error('Please select a cleaner');
+			toast.error(DICT.COMMON.TOASTS.PLEASE_SELECT_CLEANER);
 			return false;
 		}
 		const result = await adminCleaningService.assignCleaner(selectedCleaningId, selectedCleanerId);
@@ -124,7 +138,7 @@ export function CleaningsTable({
 			toast.error(result.error);
 			return false;
 		}
-		toast.success('Cleaner assigned');
+		toast.success(DICT.COMMON.TOASTS.CLEANER_ASSIGNED);
 		setIsAssignModalOpen(false);
 		onRefresh?.();
 		return true;
@@ -239,7 +253,7 @@ export function CleaningsTable({
 				<div className="flex items-center justify-end gap-1">
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<Button variant="secondary" size="icon-sm" onClick={() => onView?.(item.id)}>
+							<Button variant="secondary" size="icon-sm" onClick={() => modal.openView(item.id)}>
 								<Eye className="size-4" />
 							</Button>
 						</TooltipTrigger>
@@ -247,6 +261,18 @@ export function CleaningsTable({
 							<p>{DICT.COMMON.ACTIONS.VIEW_DETAILS}</p>
 						</TooltipContent>
 					</Tooltip>
+					{!isDisabled(item) && (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button variant="secondary" size="icon-sm" onClick={() => modal.openEdit(item.id)}>
+									<Pencil className="size-4" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p>Edit</p>
+							</TooltipContent>
+						</Tooltip>
+					)}
 					{!item.cleaner_name && (
 						<Tooltip>
 							<TooltipTrigger asChild>
@@ -284,7 +310,7 @@ export function CleaningsTable({
 		excludeCleaner,
 		openAssignModal,
 		handleReassignCleaner,
-		onView,
+		modal,
 		isDisabled,
 		hideCleanerPay,
 		hideHostCost,
@@ -312,7 +338,7 @@ export function CleaningsTable({
 								variant="secondary"
 								size="sm"
 								className="h-8 w-8 p-0"
-								onClick={() => onView?.(cleaning.id)}>
+								onClick={() => modal.openView(cleaning.id)}>
 								<Eye className="size-4" />
 							</Button>
 						</TooltipTrigger>
@@ -320,6 +346,22 @@ export function CleaningsTable({
 							<p>View Details</p>
 						</TooltipContent>
 					</Tooltip>
+					{!isDisabled(cleaning) && (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									variant="secondary"
+									size="sm"
+									className="h-8 w-8 p-0"
+									onClick={() => modal.openEdit(cleaning.id)}>
+									<Pencil className="size-4" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p>Edit</p>
+							</TooltipContent>
+						</Tooltip>
+					)}
 					{!cleaning.cleaner_name && (
 						<Tooltip>
 							<TooltipTrigger asChild>
@@ -355,7 +397,7 @@ export function CleaningsTable({
 				</div>
 			</div>
 		),
-		[onView, openAssignModal, isDisabled],
+		[modal, openAssignModal, isDisabled],
 	);
 
 	const priorityColumns = [
@@ -400,6 +442,29 @@ export function CleaningsTable({
 				selectedCleanerId={selectedCleanerId}
 				onSelectCleaner={setSelectedCleanerId}
 				onAssign={handleAssignCleaner}
+			/>
+			<CleaningDialogs
+				isViewOpen={modal.isViewOpen}
+				isEditOpen={modal.isEditOrCreateOpen}
+				viewingCleaning={viewingCleaning}
+				editingCleaning={editingCleaning}
+				isViewLoading={isViewLoading}
+				isEditLoading={isEditLoading}
+				deletingId={modal.deletingId}
+				onEdit={modal.openEdit}
+				onDeleteConfirm={() => {
+					if (modal.deletingId) {
+						modal.setDeletingId(null);
+					}
+				}}
+				onDeleteCancel={() => modal.setDeletingId(null)}
+				onUpsert={async (data) => {
+					await handleUpsert(data, editingCleaning?.id);
+					modal.handleClose();
+					onRefresh?.();
+				}}
+				onCancel={() => modal.handleClose()}
+				userRole={userRole}
 			/>
 		</>
 	);
