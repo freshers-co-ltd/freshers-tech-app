@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import cleanersImg from '@/assets/images/cleaners.jpg';
-import logoImg from '@/assets/images/logo.png';
+import cleanersImg from '@/assets/images/cleaners.webp';
+import { Logo } from '@/components/Logo';
 import { toast } from '@/components/Toast';
 import { FormContainer } from '@/components/ui/form-container';
 import { DICT } from '@/dictionary';
@@ -31,11 +31,7 @@ export function LoginPage() {
 	return (
 		<div className="relative grid w-full min-h-dvh lg:grid-cols-2 bg-background overflow-hidden">
 			<div className="relative flex-col-center p-4 md:p-8">
-				<img
-					src={logoImg}
-					alt={DICT.AUTH.LOGIN.ALT_LOGO}
-					className="w-full max-w-104 relative right-2.5 object-contain mb-5 shrink-0"
-				/>
+				<Logo className="text-5xl mb-14" />
 
 				<FormContainer variant="page" className="w-full max-w-sm lg:max-w-xs">
 					<LoginForm />

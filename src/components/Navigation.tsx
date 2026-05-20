@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/features/auth/AuthContext';
 import type { UserRole } from '@/features/auth/authService';
 import { cn } from '@/lib/utils';
+import { Logo } from './Logo';
 
 type NavItem = {
 	name: string;
@@ -43,9 +44,7 @@ export function Navigation() {
 		<>
 			<nav className="fixed top-0 left-0 right-0 z-50 hidden h-20 border-b bg-background/80 backdrop-blur-md md:block">
 				<div className="flex-between h-full max-w-6xl px-6 mx-auto">
-					<div className="text-2xl font-black tracking-tight text-primary">
-						FRESHERS<span className="text-muted-foreground">CO</span>
-					</div>
+					<Logo />
 					<div className="flex items-center gap-2">
 						{navItems.map((item) => (
 							<Link

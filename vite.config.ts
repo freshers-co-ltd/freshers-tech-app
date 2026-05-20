@@ -75,14 +75,5 @@ export default defineConfig({
 		target: 'esnext',
 		sourcemap: true,
 		chunkSizeWarningLimit: 1000,
-		rollupOptions: {
-			output: {
-				manualChunks(id) {
-					if (id.includes('node_modules')) {
-						return 'vendor';
-					}
-				},
-			},
-		},
 	},
 });

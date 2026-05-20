@@ -48,7 +48,7 @@ export function VideoThumbnail({ src, className = 'size-full' }: VideoThumbnailP
 	return (
 		<div className={`relative overflow-hidden ${className}`}>
 			{poster ? (
-				<img src={poster} alt="Video thumbnail" className="size-full object-cover" />
+				<img src={poster} alt="Video thumbnail" className="size-full absolute inset-0" />
 			) : (
 				<video
 					ref={videoRef}

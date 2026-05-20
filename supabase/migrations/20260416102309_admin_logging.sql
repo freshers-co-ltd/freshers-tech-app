@@ -37,11 +37,18 @@ SET
     search_path = public AS $$
 DECLARE
     v_action text;
+    v_old_meaningful jsonb;
+    v_new_meaningful jsonb;
 BEGIN
     IF (TG_OP = 'INSERT') THEN
         v_action := 'INSERT';
     ELSIF (TG_OP = 'UPDATE') THEN
         v_action := 'UPDATE';
+        v_old_meaningful := to_jsonb(OLD) - 'updated_at' - 'created_at';
+        v_new_meaningful := to_jsonb(NEW) - 'updated_at' - 'created_at';
+        IF v_old_meaningful = v_new_meaningful THEN
+            RETURN NEW;
+        END IF;
     ELSIF (TG_OP = 'DELETE') THEN
         v_action := 'DELETE';
     END IF;

@@ -127,7 +127,7 @@ export function DataTable<T>({
 	});
 
 	if (loading) {
-		return <Loading />;
+		return <Loading absolute={false} />;
 	}
 
 	if (data.length === 0) {

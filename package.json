@@ -28,7 +28,6 @@
 		"update-types": "npx supabase gen types typescript --local --schema public,storage > src/lib/database.types.ts"
 	},
 	"dependencies": {
-		"@fontsource-variable/noto-sans": "5.2.10",
 		"@hookform/resolvers": "5.2.2",
 		"@supabase/supabase-js": "2.97.0",
 		"@tailwindcss/vite": "4.2.0",
@@ -36,11 +35,9 @@
 		"@tanstack/react-table": "8.21.3",
 		"class-variance-authority": "0.7.1",
 		"clsx": "2.1.1",
-		"cmdk": "1.1.1",
 		"date-fns": "4.1.0",
 		"input-otp": "1.4.2",
 		"lucide-react": "0.575.0",
-		"media-chrome": "4.19.0",
 		"nuqs": "2.8.9",
 		"radix-ui": "1.4.3",
 		"react": "19.2.0",

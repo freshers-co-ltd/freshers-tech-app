@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
 	Dialog,
@@ -64,6 +64,50 @@ export function FullscreenMediaCarousel({
 	});
 
 	const currentVideoHasErrored = videoErrors.has(currentIndex);
+
+	const generatePoster = useCallback((videoUrl: string): Promise<string> => {
+		return new Promise((resolve) => {
+			const video = document.createElement('video');
+			video.src = videoUrl;
+			video.crossOrigin = 'anonymous';
+			video.muted = true;
+			video.preload = 'auto';
+
+			video.oncanplay = () => {
+				try {
+					const canvas = document.createElement('canvas');
+					canvas.width = 320;
+					canvas.height = 180;
+					const ctx = canvas.getContext('2d');
+					if (ctx) {
+						ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+						const poster = canvas.toDataURL('image/jpeg', 0.6);
+						resolve(poster);
+						return;
+					}
+				} catch {
+					// Fall through
+				}
+				resolve('');
+			};
+
+			video.onerror = () => resolve('');
+			setTimeout(() => resolve(''), 3000);
+		});
+	}, []);
+
+	const [videoPoster, setVideoPoster] = useState<string>('');
+
+	useEffect(() => {
+		if (safeMedia[currentIndex]?.type === 'video' && safeMedia[currentIndex]?.url) {
+			setVideoPoster('');
+			generatePoster(safeMedia[currentIndex].url).then((poster) => {
+				if (poster) {
+					setVideoPoster(poster);
+				}
+			});
+		}
+	}, [currentIndex, safeMedia, generatePoster]);
 
 	useEffect(() => {
 		if (initialMedia) {
@@ -155,7 +199,7 @@ export function FullscreenMediaCarousel({
 							onMediaError={() => {
 								setVideoErrors((prev) => new Set(prev).add(currentIndex));
 							}}>
-							<MediaPlayerVideo className="bg-black">
+							<MediaPlayerVideo className="bg-black" poster={videoPoster}>
 								<source src={safeMedia[currentIndex]?.url} type="video/mp4" />
 							</MediaPlayerVideo>
 							<MediaPlayerLoading />

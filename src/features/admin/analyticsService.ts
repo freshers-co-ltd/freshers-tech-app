@@ -109,7 +109,6 @@ export const analyticsService = {
 		dateTo: string | null = null,
 	): Promise<ActionResult<AuditLogEntry[]>> {
 		const { targetTable, actionType } = filters;
-
 		const { data, error } = await supabase.rpc('admin_get_audit_logs', {
 			p_target_table: (targetTable ?? null) as string,
 			p_action_type: (actionType ?? null) as string,

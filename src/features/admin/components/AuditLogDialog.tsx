@@ -32,7 +32,6 @@ export function AuditLogDialog({ open, onOpenChange }: AuditLogDialogProps) {
 	const [logs, setLogs] = useState<AuditLogEntry[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [page, setPage] = useState(1);
-	const [_totalPages, setTotalPages] = useState(1);
 	const [filters, setFilters] = useState<AuditFilters>({});
 	const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
@@ -47,7 +46,6 @@ export function AuditLogDialog({ open, onOpenChange }: AuditLogDialogProps) {
 		);
 		if (result.data) {
 			setLogs(result.data);
-			setTotalPages(Math.ceil((result.data.length < PAGE_SIZE ? page : page + 1) || 1));
 		}
 		setLoading(false);
 	}, [filters, page, dateRange]);

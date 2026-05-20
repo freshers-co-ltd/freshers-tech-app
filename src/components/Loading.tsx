@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 export const Loading = ({ absolute = true }) => {
 	return (
-		<div
+		<output
 			className={cn(
 				'flex flex-col items-center justify-center gap-4 w-full h-full',
 				absolute && 'absolute inset-0',
@@ -14,6 +14,6 @@ export const Loading = ({ absolute = true }) => {
 				<h2 className="text-2xl font-semibold tracking-tight">{DICT.COMMON.LOADING.TITLE}</h2>
 				<p className="text-lg text-muted-foreground">{DICT.COMMON.LOADING.MESSAGE}</p>
 			</div>
-		</div>
+		</output>
 	);
 };

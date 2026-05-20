@@ -102,6 +102,10 @@ export function AuditLogEntryComponent({ log }: AuditLogEntryProps) {
 	const diffs = computeDiff(log.old_data, log.new_data);
 	const changeCount = diffs.length;
 
+	if (changeCount === 0) {
+		return null;
+	}
+
 	return (
 		<div className="rounded-lg border bg-card">
 			<div className="flex flex-col gap-2 p-4 md:flex-row md:items-center md:justify-between md:gap-0">

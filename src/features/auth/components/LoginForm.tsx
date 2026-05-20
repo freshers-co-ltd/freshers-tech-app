@@ -108,9 +108,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
 							/>
 							{fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
 							<div className="flex items-center">
-								<Link
-									to="/forgot-password"
-									className="ml-auto text-sm underline-offset-4 hover:underline">
+								<Link to="/forgot-password" className="ml-auto text-sm link">
 									{DICT.AUTH.LOGIN.LINK_FORGOT}
 								</Link>
 							</div>
@@ -153,7 +151,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
 				<Field>
 					<FieldDescription className="text-center">
 						{DICT.AUTH.LOGIN.LABEL_NO_ACCOUNT}{' '}
-						<Link to="/signup" className="underline underline-offset-4">
+						<Link to="/signup" className="link">
 							{DICT.AUTH.LOGIN.LINK_SIGNUP}
 						</Link>
 					</FieldDescription>

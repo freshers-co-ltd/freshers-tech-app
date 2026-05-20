@@ -101,7 +101,7 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
 				<Field>
 					<FieldDescription className="text-center">
 						{DICT.AUTH.FORGOT_PASSWORD.LINK_REMEMBER}{' '}
-						<Link to="/login" className="underline underline-offset-4">
+						<Link to="/login" className="link">
 							{DICT.AUTH.LOGIN.BUTTON_SUBMIT}
 						</Link>
 					</FieldDescription>

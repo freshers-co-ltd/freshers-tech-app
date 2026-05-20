@@ -302,9 +302,7 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 					</Button>
 					<FieldDescription className="text-center">
 						{DICT.AUTH.SIGNUP.LABEL_HAVE_ACCOUNT}{' '}
-						<Link
-							to="/"
-							className="underline transition-colors underline-offset-4 decoration-muted-foreground hover:text-primary">
+						<Link to="/" className="link">
 							{DICT.AUTH.SIGNUP.LINK_LOGIN}
 						</Link>
 					</FieldDescription>
