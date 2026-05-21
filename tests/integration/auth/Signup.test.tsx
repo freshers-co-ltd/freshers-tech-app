@@ -1,21 +1,18 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { HttpResponse, http } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { toast } from '@/components/Toast';
+import { DICT } from '@/dictionary';
 import { AuthProvider } from '@/features/auth/AuthContext';
 import { SignupPage } from '@/pages/auth/Signup';
-import { server } from '~/server';
+import { mockSupabase } from '~/mocks/supabaseClient';
 
 describe('Signup Feature', () => {
-	beforeAll(() => server.listen());
 	afterEach(() => {
-		server.resetHandlers();
 		vi.clearAllMocks();
 		localStorage.clear();
 	});
-	afterAll(() => server.close());
 
 	const renderSignup = () => {
 		const routes = [
@@ -33,40 +30,6 @@ describe('Signup Feature', () => {
 
 	it('completes signup and redirects to dashboard on success', async () => {
 		const user = userEvent.setup();
-		server.use(
-			http.post('*/auth/v1/signup*', () => {
-				return HttpResponse.json({
-					access_token: 'fake_token',
-					token_type: 'bearer',
-					expires_in: 3600,
-					refresh_token: 'fake_refresh',
-					user: {
-						id: 'user_123',
-						email: 'newuser@example.com',
-						aud: 'authenticated',
-						role: 'authenticated',
-						email_confirmed_at: new Date().toISOString(),
-						created_at: new Date().toISOString(),
-						last_sign_in_at: new Date().toISOString(),
-						app_metadata: { provider: 'email', providers: ['email'] },
-						user_metadata: { full_name: 'John Doe', role: 'host' },
-						identities: [],
-					},
-					session: {
-						access_token: 'fake_token',
-						token_type: 'bearer',
-						expires_in: 3600,
-						refresh_token: 'fake_refresh',
-						user: {
-							id: 'user_123',
-							email: 'newuser@example.com',
-							aud: 'authenticated',
-							role: 'authenticated',
-						},
-					},
-				});
-			}),
-		);
 
 		renderSignup();
 
@@ -80,19 +43,15 @@ describe('Signup Feature', () => {
 		await user.click(screen.getByRole('button', { name: /create account/i }));
 
 		expect(await screen.findByTestId('dashboard', {}, { timeout: 3000 })).toBeInTheDocument();
-		expect(toast.success).toHaveBeenCalledWith('Account created successfully', expect.anything());
+		expect(toast.success).toHaveBeenCalledWith(DICT.AUTH.SIGNUP.TOAST_SUCCESS, expect.anything());
 	});
 
 	it('shows error toast when email is already registered', async () => {
 		const user = userEvent.setup();
-		server.use(
-			http.post('*/auth/v1/signup*', () => {
-				return new HttpResponse(
-					JSON.stringify({ error: 'User already registered', message: 'User already registered' }),
-					{ status: 400 },
-				);
-			}),
-		);
+		mockSupabase.auth.signUp.mockResolvedValueOnce({
+			data: { user: null, session: null },
+			error: { code: 'user_already_exists', message: 'User already registered' },
+		});
 
 		renderSignup();
 
@@ -105,7 +64,7 @@ describe('Signup Feature', () => {
 		await user.click(screen.getByRole('button', { name: /create account/i }));
 
 		await waitFor(() => {
-			expect(toast.error).toHaveBeenCalledWith('User already registered');
+			expect(toast.error).toHaveBeenCalledWith(DICT.ERRORS.AUTH.USER_EXISTS);
 		});
 	});
 });

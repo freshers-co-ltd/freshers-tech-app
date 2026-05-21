@@ -8,10 +8,6 @@ vi.mock('@/features/auth/AuthContext', () => ({
 	useAuth: vi.fn(),
 }));
 
-vi.mock('@/components/Loading', () => ({
-	Loading: () => <div data-testid="loading"></div>,
-}));
-
 describe('Authentication Routing', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -51,7 +47,7 @@ describe('Authentication Routing', () => {
 			</MemoryRouter>,
 		);
 
-		expect(screen.getByTestId('loading')).toBeInTheDocument();
+		expect(screen.getByRole('status')).toBeInTheDocument();
 	});
 
 	it.each([
