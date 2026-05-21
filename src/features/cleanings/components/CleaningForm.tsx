@@ -278,6 +278,7 @@ export function CleaningForm({
 								{!disableCreateProperty && (
 									<>
 										<Button
+											type="button"
 											variant="secondary"
 											className="w-full"
 											onClick={() => setEntryMode('create')}>
@@ -311,6 +312,7 @@ export function CleaningForm({
 										</Field>
 
 										<Button
+											type="button"
 											className="w-full"
 											onClick={async () => {
 												const isValid = await trigger('property_id');
@@ -373,12 +375,17 @@ export function CleaningForm({
 														</FieldError>
 													)}
 												</Field>
-												<Button variant="ghost" size="icon" onClick={() => remove(index)}>
+												<Button
+													type="button"
+													variant="ghost"
+													size="icon"
+													onClick={() => remove(index)}>
 													<Trash2 className="size-4 text-destructive" />
 												</Button>
 											</div>
 										))}
 										<Button
+											type="button"
 											variant="outline"
 											size="sm"
 											className="w-full border-dashed"
@@ -394,11 +401,12 @@ export function CleaningForm({
 
 							<div className="flex gap-3">
 								{!initialData && (
-									<Button variant="outline" onClick={() => setStep(1)}>
+									<Button type="button" variant="outline" onClick={() => setStep(1)}>
 										{DICT.COMMON.ACTIONS.BACK}
 									</Button>
 								)}
 								<Button
+									type="button"
 									className="flex-1"
 									onClick={async () => {
 										const isValid = await trigger('custom_tasks');
@@ -476,7 +484,7 @@ export function CleaningForm({
 
 							<div className="flex gap-3 pt-4 border-t">
 								{!isRestricted && (
-									<Button variant="outline" onClick={() => setStep(2)}>
+									<Button type="button" variant="outline" onClick={() => setStep(2)}>
 										{DICT.COMMON.ACTIONS.BACK}
 									</Button>
 								)}

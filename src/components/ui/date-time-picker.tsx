@@ -185,6 +185,7 @@ export function DateTimePicker({ value, onChange, error }: DateTimePickerProps) 
 
 	const TriggerButton = (
 		<Button
+			data-testid="date-picker"
 			variant="outline"
 			className={cn(
 				'w-full justify-start text-left font-normal h-10',

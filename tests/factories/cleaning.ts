@@ -40,3 +40,17 @@ export function buildCleaning(overrides?: Partial<CleaningRequest>): CleaningReq
 		...overrides,
 	};
 }
+
+/**
+ * Build a cleaning in the raw format returned by Supabase queries,
+ * which includes cleading_tasks / cleaning_reports fields.
+ * This format passes the isRawCleaningQueryResult check in the service layer.
+ */
+export function buildRawCleaning(overrides?: Partial<CleaningRequest>) {
+	const cleaning = buildCleaning(overrides);
+	return {
+		...cleaning,
+		cleaning_tasks: cleaning.tasks,
+		cleaning_reports: cleaning.report ? [cleaning.report] : [],
+	};
+}

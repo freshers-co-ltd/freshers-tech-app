@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { type RenderOptions, type RenderResult, render } from '@testing-library/react';
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v6';
 import type { ReactElement, ReactNode } from 'react';
 import { createMemoryRouter, type RouteObject, RouterProvider } from 'react-router-dom';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -42,7 +43,13 @@ function AllProviders({
 					<PropertyProvider>
 						<CleaningProvider>
 							<TooltipProvider>
-								{router ? <RouterProvider router={router} /> : children}
+								{router ? (
+									<NuqsAdapter>
+										<RouterProvider router={router} />
+									</NuqsAdapter>
+								) : (
+									children
+								)}
 							</TooltipProvider>
 						</CleaningProvider>
 					</PropertyProvider>

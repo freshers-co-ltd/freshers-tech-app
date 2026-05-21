@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import { createDefaultQueryBuilder } from '~/mocks/queryBuilder';
 
 const defaultUser = {
 	id: 'user_123',
@@ -75,34 +76,7 @@ export const mockSupabase = {
 				return { data: { subscription: { unsubscribe: vi.fn() } } };
 			}),
 	},
-	from: vi.fn().mockImplementation((_table: string) => {
-		return {
-			select: vi.fn().mockReturnThis(),
-			insert: vi.fn().mockReturnThis(),
-			update: vi.fn().mockReturnThis(),
-			delete: vi.fn().mockReturnThis(),
-			eq: vi.fn().mockReturnThis(),
-			neq: vi.fn().mockReturnThis(),
-			gt: vi.fn().mockReturnThis(),
-			gte: vi.fn().mockReturnThis(),
-			lt: vi.fn().mockReturnThis(),
-			lte: vi.fn().mockReturnThis(),
-			like: vi.fn().mockReturnThis(),
-			ilike: vi.fn().mockReturnThis(),
-			is: vi.fn().mockReturnThis(),
-			in: vi.fn().mockReturnThis(),
-			contains: vi.fn().mockReturnThis(),
-			containedBy: vi.fn().mockReturnThis(),
-			rangeGt: vi.fn().mockReturnThis(),
-			rangeGte: vi.fn().mockReturnThis(),
-			rangeLt: vi.fn().mockReturnThis(),
-			rangeLte: vi.fn().mockReturnThis(),
-			order: vi.fn().mockReturnThis(),
-			limit: vi.fn().mockReturnThis(),
-			single: vi.fn().mockResolvedValue({ data: null, error: null }),
-			maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-		};
-	}),
+	from: vi.fn().mockImplementation((_table: string) => createDefaultQueryBuilder()),
 	rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
 	channel: vi.fn().mockReturnValue({
 		on: vi.fn().mockReturnThis(),

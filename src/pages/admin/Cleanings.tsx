@@ -146,7 +146,7 @@ export function AdminCleaningsPage() {
 							setCleanerFilter(v);
 							setPage(1);
 						}}>
-						<SelectTrigger className="w-[150px]">
+						<SelectTrigger className="w-[150px]" aria-label={filtersDict.CLEANER}>
 							<SelectValue placeholder={filtersDict.CLEANER} />
 						</SelectTrigger>
 						<SelectContent>
