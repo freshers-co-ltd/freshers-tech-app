@@ -41,7 +41,6 @@ interface UserDetailLayoutProps {
 	onResetPassword?: () => Promise<{ error: string | null }>;
 	onBan?: () => Promise<{ error: string | null }>;
 	onUnban?: () => Promise<{ error: string | null }>;
-	onEditBasePrice?: () => void;
 }
 
 export function UserDetailLayout({
@@ -54,7 +53,6 @@ export function UserDetailLayout({
 	onResetPassword,
 	onBan,
 	onUnban,
-	onEditBasePrice,
 }: UserDetailLayoutProps) {
 	const dict = DICT.ADMIN.USERS;
 	const detail = DICT.ADMIN.USERS.DETAIL;
@@ -158,7 +156,6 @@ export function UserDetailLayout({
 						onResetPassword={handleResetPasswordClick}
 						onBan={handleBan}
 						onUnban={handleUnban}
-						onEditBasePrice={onEditBasePrice}
 					/>
 				</Card>
 

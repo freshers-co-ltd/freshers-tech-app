@@ -1,6 +1,6 @@
 'use client';
 
-import { Banknote, ListTodo, Search, Settings } from 'lucide-react';
+import { Banknote, ListTodo, Search } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -16,7 +16,6 @@ import { DICT } from '@/dictionary';
 import { cleaningService as adminCleaningService } from '@/features/admin/cleaningService';
 import { CleanerPayConfigDialog } from '@/features/admin/components/CleanerPayConfigDialog';
 import { CleaningsTable } from '@/features/admin/components/CleaningsTable';
-import { HostPricingConfigDialog } from '@/features/admin/components/HostPricingConfigDialog';
 import { StandardTasksDialog } from '@/features/admin/components/StandardTasksDialog';
 import { useAdminCleanings } from '@/features/admin/useAdminCleanings';
 import { cleaningService } from '@/features/cleanings/cleaningService';
@@ -45,7 +44,6 @@ export function AdminCleaningsPage() {
 
 	const [isStandardTasksOpen, setIsStandardTasksOpen] = useState(false);
 	const [isPayConfigOpen, setIsPayConfigOpen] = useState(false);
-	const [isHostPricingOpen, setIsHostPricingOpen] = useState(false);
 
 	const dict = DICT.ADMIN.CLEANINGS;
 	const filtersDict = dict.FILTERS;
@@ -100,10 +98,6 @@ export function AdminCleaningsPage() {
 					<Button variant="outline" onClick={() => setIsPayConfigOpen(true)}>
 						<Banknote className="size-4 mr-1" />
 						{buttonsDict.PAY_RATES}
-					</Button>
-					<Button variant="outline" onClick={() => setIsHostPricingOpen(true)}>
-						<Settings className="size-4 mr-1" />
-						{buttonsDict.PROPERTY_MULTIPLIERS}
 					</Button>
 				</div>
 			</header>
@@ -198,7 +192,6 @@ export function AdminCleaningsPage() {
 
 			<StandardTasksDialog open={isStandardTasksOpen} onOpenChange={setIsStandardTasksOpen} />
 			<CleanerPayConfigDialog open={isPayConfigOpen} onOpenChange={setIsPayConfigOpen} />
-			<HostPricingConfigDialog open={isHostPricingOpen} onOpenChange={setIsHostPricingOpen} />
 		</main>
 	);
 }

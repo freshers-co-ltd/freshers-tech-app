@@ -882,32 +882,32 @@ VALUES
 
 -- 4. PUBLIC PROFILES
 INSERT INTO
-    public.profiles (id, email, ROLE, full_name, is_verified, base_price_per_cleaning)
+    public.profiles (id, email, ROLE, full_name, is_verified)
 VALUES
-    ('00000000-0000-0000-0000-000000000001', 'admin@test.com', 'admin', 'Steve Admin', TRUE, NULL),
-    ('00000000-0000-0000-0000-000000000002', 'host@test.com', 'host', 'John Host', TRUE, 70.00),
-    ('00000000-0000-0000-0000-000000000003', 'cleaner@test.com', 'cleaner', 'Mark Cleaner', TRUE, NULL),
-    ('00000000-0000-0000-0000-000000000004', 'sarah@test.com', 'host', 'Sarah Smith', TRUE, 90.00),
-    ('00000000-0000-0000-0000-000000000005', 'emily@test.com', 'cleaner', 'Emily Johnson', TRUE, NULL),
-    ('00000000-0000-0000-0000-000000000006', 'david@test.com', 'host', 'David Brown', TRUE, 85.00),
-    ('00000000-0000-0000-0000-000000000007', 'lisa@test.com', 'cleaner', 'Lisa Williams', TRUE, NULL),
-    ('00000000-0000-0000-0000-000000000008', 'james@test.com', 'host', 'James Wilson', TRUE, 75.00),
-    ('00000000-0000-0000-0000-000000000009', 'jessica@test.com', 'cleaner', 'Jessica Taylor', TRUE, NULL),
-    ('00000000-0000-0000-0000-000000000010', 'michael@test.com', 'host', 'Michael Davis', TRUE, 100.00),
-    ('00000000-0000-0000-0000-000000000011', 'amanda@test.com', 'cleaner', 'Amanda Martinez', TRUE, NULL),
-    ('00000000-0000-0000-0000-000000000012', 'robert@test.com', 'host', 'Robert Anderson', TRUE, 95.00),
-    ('00000000-0000-0000-0000-000000000013', 'rachel@test.com', 'cleaner', 'Rachel White', TRUE, NULL),
-    ('00000000-0000-0000-0000-000000000014', 'chris@test.com', 'host', 'Chris Thompson', TRUE, 70.00),
-    ('00000000-0000-0000-0000-000000000015', 'sophie@test.com', 'cleaner', 'Sophie Garcia', TRUE, NULL),
-    ('00000000-0000-0000-0000-000000000016', 'daniel@test.com', 'host', 'Daniel Lee', TRUE, 80.00),
-    ('00000000-0000-0000-0000-000000000017', 'natalie@test.com', 'cleaner', 'Natalie Clark', TRUE, NULL),
-    ('00000000-0000-0000-0000-000000000018', 'paul@test.com', 'host', 'Paul Harris', TRUE, 75.00),
-    ('00000000-0000-0000-0000-000000000019', 'ashley@test.com', 'cleaner', 'Ashley Robinson', TRUE, NULL),
-    ('00000000-0000-0000-0000-000000000020', 'kevin@test.com', 'host', 'Kevin Lewis', TRUE, 85.00),
-    ('00000000-0000-0000-0000-000000000021', 'bruce@test.com', 'admin', 'Bruce Green', TRUE, NULL),
-    ('00000000-0000-0000-0000-000000000022', 'linda@test.com', 'admin', 'Linda Smith', TRUE, NULL),
-    ('00000000-0000-0000-0000-000000000023', 'marta@test.com', 'admin', 'Marta Hansen', TRUE, NULL),
-    ('00000000-0000-0000-0000-000000000024', 'joe@test.com', 'admin', 'Joe Stu', TRUE, NULL);
+    ('00000000-0000-0000-0000-000000000001', 'admin@test.com', 'admin', 'Steve Admin', TRUE),
+    ('00000000-0000-0000-0000-000000000002', 'host@test.com', 'host', 'John Host', TRUE),
+    ('00000000-0000-0000-0000-000000000003', 'cleaner@test.com', 'cleaner', 'Mark Cleaner', TRUE),
+    ('00000000-0000-0000-0000-000000000004', 'sarah@test.com', 'host', 'Sarah Smith', TRUE),
+    ('00000000-0000-0000-0000-000000000005', 'emily@test.com', 'cleaner', 'Emily Johnson', TRUE),
+    ('00000000-0000-0000-0000-000000000006', 'david@test.com', 'host', 'David Brown', TRUE),
+    ('00000000-0000-0000-0000-000000000007', 'lisa@test.com', 'cleaner', 'Lisa Williams', TRUE),
+    ('00000000-0000-0000-0000-000000000008', 'james@test.com', 'host', 'James Wilson', TRUE),
+    ('00000000-0000-0000-0000-000000000009', 'jessica@test.com', 'cleaner', 'Jessica Taylor', TRUE),
+    ('00000000-0000-0000-0000-000000000010', 'michael@test.com', 'host', 'Michael Davis', TRUE),
+    ('00000000-0000-0000-0000-000000000011', 'amanda@test.com', 'cleaner', 'Amanda Martinez', TRUE),
+    ('00000000-0000-0000-0000-000000000012', 'robert@test.com', 'host', 'Robert Anderson', TRUE),
+    ('00000000-0000-0000-0000-000000000013', 'rachel@test.com', 'cleaner', 'Rachel White', TRUE),
+    ('00000000-0000-0000-0000-000000000014', 'chris@test.com', 'host', 'Chris Thompson', TRUE),
+    ('00000000-0000-0000-0000-000000000015', 'sophie@test.com', 'cleaner', 'Sophie Garcia', TRUE),
+    ('00000000-0000-0000-0000-000000000016', 'daniel@test.com', 'host', 'Daniel Lee', TRUE),
+    ('00000000-0000-0000-0000-000000000017', 'natalie@test.com', 'cleaner', 'Natalie Clark', TRUE),
+    ('00000000-0000-0000-0000-000000000018', 'paul@test.com', 'host', 'Paul Harris', TRUE),
+    ('00000000-0000-0000-0000-000000000019', 'ashley@test.com', 'cleaner', 'Ashley Robinson', TRUE),
+    ('00000000-0000-0000-0000-000000000020', 'kevin@test.com', 'host', 'Kevin Lewis', TRUE),
+    ('00000000-0000-0000-0000-000000000021', 'bruce@test.com', 'admin', 'Bruce Green', TRUE),
+    ('00000000-0000-0000-0000-000000000022', 'linda@test.com', 'admin', 'Linda Smith', TRUE),
+    ('00000000-0000-0000-0000-000000000023', 'marta@test.com', 'admin', 'Marta Hansen', TRUE),
+    ('00000000-0000-0000-0000-000000000024', 'joe@test.com', 'admin', 'Joe Stu', TRUE);
 
 SET
     session_replication_role = 'origin';
@@ -924,7 +924,8 @@ INSERT INTO
         bedrooms,
         bathrooms,
         main_image_url,
-        extra_images_urls
+        extra_images_urls,
+        price_per_cleaning
     )
 VALUES
     (
@@ -942,7 +943,8 @@ VALUES
             '00000000-0000-0000-0000-000000000002/property-1-img-3.jpg',
             '00000000-0000-0000-0000-000000000002/property-1-img-4.jpg',
             '00000000-0000-0000-0000-000000000002/property-1-img-5.jpg'
-        ]
+        ],
+        70.00
     ),
     (
         '22222222-2222-2222-2222-222222222222',
@@ -959,7 +961,8 @@ VALUES
             '00000000-0000-0000-0000-000000000002/property-2-img-3.jpg',
             '00000000-0000-0000-0000-000000000002/property-2-img-4.jpg',
             '00000000-0000-0000-0000-000000000002/property-2-img-5.jpg'
-        ]
+        ],
+        85.00
     ),
     (
         '33333333-3333-3333-3333-333333333333',
@@ -975,7 +978,8 @@ VALUES
             '00000000-0000-0000-0000-000000000004/property-3-img-2.jpg',
             '00000000-0000-0000-0000-000000000004/property-3-img-3.jpg',
             '00000000-0000-0000-0000-000000000004/property-3-img-4.jpg'
-        ]
+        ],
+        85.00
     ),
     (
         '44444444-4444-4444-4444-444444444444',
@@ -990,7 +994,8 @@ VALUES
         ARRAY[
             '00000000-0000-0000-0000-000000000004/property-4-img-2.jpg',
             '00000000-0000-0000-0000-000000000004/property-4-img-3.jpg'
-        ]
+        ],
+        100.00
     ),
     (
         '55555555-5555-5555-5555-555555555555',
@@ -1006,7 +1011,8 @@ VALUES
             '00000000-0000-0000-0000-000000000006/property-5-img-2.jpg',
             '00000000-0000-0000-0000-000000000006/property-5-img-3.jpg',
             '00000000-0000-0000-0000-000000000006/property-5-img-4.jpg'
-        ]
+        ],
+        70.00
     ),
     (
         '66666666-6666-6666-6666-666666666666',
@@ -1021,7 +1027,8 @@ VALUES
         ARRAY[
             '00000000-0000-0000-0000-000000000006/property-6-img-2.jpg',
             '00000000-0000-0000-0000-000000000006/property-6-img-3.jpg'
-        ]
+        ],
+        85.00
     ),
     (
         '77777777-7777-7777-7777-777777777777',
@@ -1037,7 +1044,8 @@ VALUES
             '00000000-0000-0000-0000-000000000008/property-7-img-2.jpg',
             '00000000-0000-0000-0000-000000000008/property-7-img-3.jpg',
             '00000000-0000-0000-0000-000000000008/property-7-img-4.jpg'
-        ]
+        ],
+        85.00
     ),
     (
         '88888888-8888-8888-8888-888888888888',
@@ -1052,7 +1060,8 @@ VALUES
         ARRAY[
             '00000000-0000-0000-0000-000000000008/property-8-img-2.jpg',
             '00000000-0000-0000-0000-000000000008/property-8-img-3.jpg'
-        ]
+        ],
+        120.00
     ),
     (
         '99999999-9999-9999-9999-999999999999',
@@ -1067,7 +1076,8 @@ VALUES
         ARRAY[
             '00000000-0000-0000-0000-000000000010/property-9-img-2.jpg',
             '00000000-0000-0000-0000-000000000010/property-9-img-3.jpg'
-        ]
+        ],
+        70.00
     ),
     (
         'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
@@ -1083,7 +1093,8 @@ VALUES
             '00000000-0000-0000-0000-000000000010/property-10-img-2.jpg',
             '00000000-0000-0000-0000-000000000010/property-10-img-3.jpg',
             '00000000-0000-0000-0000-000000000010/property-10-img-4.jpg'
-        ]
+        ],
+        100.00
     ),
     (
         'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
@@ -1098,7 +1109,8 @@ VALUES
         ARRAY[
             '00000000-0000-0000-0000-000000000012/property-11-img-2.jpg',
             '00000000-0000-0000-0000-000000000012/property-11-img-3.jpg'
-        ]
+        ],
+        85.00
     ),
     (
         'cccccccc-cccc-cccc-cccc-cccccccccccc',
@@ -1114,7 +1126,8 @@ VALUES
             '00000000-0000-0000-0000-000000000012/property-12-img-2.jpg',
             '00000000-0000-0000-0000-000000000012/property-12-img-3.jpg',
             '00000000-0000-0000-0000-000000000012/property-12-img-4.jpg'
-        ]
+        ],
+        85.00
     ),
     (
         'dddddddd-dddd-dddd-dddd-dddddddddddd',
@@ -1126,7 +1139,8 @@ VALUES
         1,
         1,
         '00000000-0000-0000-0000-000000000014/property-13-img-1.jpg',
-        ARRAY['00000000-0000-0000-0000-000000000014/property-13-img-2.jpg']
+        ARRAY['00000000-0000-0000-0000-000000000014/property-13-img-2.jpg'],
+        70.00
     ),
     (
         'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
@@ -1141,7 +1155,8 @@ VALUES
         ARRAY[
             '00000000-0000-0000-0000-000000000014/property-14-img-2.jpg',
             '00000000-0000-0000-0000-000000000014/property-14-img-3.jpg'
-        ]
+        ],
+        120.00
     ),
     (
         'ffffffff-ffff-ffff-ffff-ffffffffffff',
@@ -1153,7 +1168,8 @@ VALUES
         0,
         1,
         '00000000-0000-0000-0000-000000000016/property-15-img-1.jpg',
-        ARRAY['00000000-0000-0000-0000-000000000016/property-15-img-2.jpg']
+        ARRAY['00000000-0000-0000-0000-000000000016/property-15-img-2.jpg'],
+        60.00
     ),
     (
         '11111111-1111-1111-1111-111111111112',
@@ -1168,7 +1184,8 @@ VALUES
         ARRAY[
             '00000000-0000-0000-0000-000000000016/property-16-img-2.jpg',
             '00000000-0000-0000-0000-000000000016/property-16-img-3.jpg'
-        ]
+        ],
+        100.00
     ),
     (
         '11111111-1111-1111-1111-111111111113',
@@ -1183,7 +1200,8 @@ VALUES
         ARRAY[
             '00000000-0000-0000-0000-000000000018/property-17-img-2.jpg',
             '00000000-0000-0000-0000-000000000018/property-17-img-3.jpg'
-        ]
+        ],
+        85.00
     ),
     (
         '11111111-1111-1111-1111-111111111114',
@@ -1199,7 +1217,8 @@ VALUES
             '00000000-0000-0000-0000-000000000018/property-18-img-2.jpg',
             '00000000-0000-0000-0000-000000000018/property-18-img-3.jpg',
             '00000000-0000-0000-0000-000000000018/property-18-img-4.jpg'
-        ]
+        ],
+        85.00
     ),
     (
         '11111111-1111-1111-1111-111111111115',
@@ -1214,7 +1233,8 @@ VALUES
         ARRAY[
             '00000000-0000-0000-0000-000000000020/property-19-img-2.jpg',
             '00000000-0000-0000-0000-000000000020/property-19-img-3.jpg'
-        ]
+        ],
+        70.00
     ),
     (
         '11111111-1111-1111-1111-111111111116',
@@ -1230,7 +1250,8 @@ VALUES
             '00000000-0000-0000-0000-000000000020/property-20-img-2.jpg',
             '00000000-0000-0000-0000-000000000020/property-20-img-3.jpg',
             '00000000-0000-0000-0000-000000000020/property-20-img-4.jpg'
-        ]
+        ],
+        100.00
     );
 
 INSERT INTO

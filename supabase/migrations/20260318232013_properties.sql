@@ -13,6 +13,7 @@ CREATE TABLE
         bathrooms SMALLINT NOT NULL DEFAULT 1 CHECK (bathrooms >= 0),
         main_image_url TEXT NOT NULL,
         extra_images_urls TEXT[] DEFAULT '{}',
+        price_per_cleaning NUMERIC(10,2),
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         deleted_at TIMESTAMPTZ
@@ -183,7 +184,5 @@ $$ LANGUAGE plpgsql;
 REVOKE EXECUTE ON FUNCTION public.soft_delete_property(uuid) FROM PUBLIC, anon;
 GRANT
     EXECUTE ON FUNCTION public.soft_delete_property (p_property_id UUID) TO authenticated;
-
-ALTER TABLE public.profiles ADD COLUMN base_price_per_cleaning NUMERIC;
 
 COMMIT;

@@ -15,21 +15,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { userService } from '@/features/admin/userService';
 
-interface HostBasePriceDialogProps {
+interface PropertyPriceDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	hostId: string;
+	propertyId: string;
+	propertyAddress: string;
 	currentPrice: number | null;
 	onSuccess?: () => void;
 }
 
-export function HostBasePriceDialog({
+export function PropertyPriceDialog({
 	open,
 	onOpenChange,
-	hostId,
+	propertyId,
+	propertyAddress,
 	currentPrice,
 	onSuccess,
-}: HostBasePriceDialogProps) {
+}: PropertyPriceDialogProps) {
 	const [saving, setSaving] = useState(false);
 	const [price, setPrice] = useState(currentPrice?.toString() || '');
 
@@ -41,20 +43,20 @@ export function HostBasePriceDialog({
 	};
 
 	const handleSave = async () => {
-		const basePrice = parseFloat(price);
-		if (Number.isNaN(basePrice) || basePrice <= 0) {
+		const priceValue = parseFloat(price);
+		if (Number.isNaN(priceValue) || priceValue <= 0) {
 			toast.error('Please enter a valid price greater than 0');
 			return;
 		}
 
 		setSaving(true);
-		const result = await userService.updateHostBasePrice(hostId, basePrice);
+		const result = await userService.updatePropertyPrice(propertyId, priceValue);
 		setSaving(false);
 
 		if (result.error) {
 			toast.error(result.error);
 		} else {
-			toast.success('Base price updated successfully');
+			toast.success('Property price updated successfully');
 			onSuccess?.();
 			handleOpen(false);
 		}
@@ -64,18 +66,18 @@ export function HostBasePriceDialog({
 		<Dialog open={open} onOpenChange={handleOpen}>
 			<DialogContent className="max-w-sm">
 				<DialogHeader>
-					<DialogTitle>Edit Base Price</DialogTitle>
+					<DialogTitle>Set Property Price</DialogTitle>
 					<DialogDescription>
-						Set the base price per cleaning for this host. The final price is calculated by
-						multiplying this base price with the property type multiplier.
+						Set the cleaning price for {propertyAddress}. Every cleaning at this property will use
+						this price.
 					</DialogDescription>
 				</DialogHeader>
 
 				<div className="space-y-4 py-4">
 					<div className="space-y-2">
-						<Label htmlFor="base-price">Base Price (£)</Label>
+						<Label htmlFor="property-price">Price per cleaning (£)</Label>
 						<Input
-							id="base-price"
+							id="property-price"
 							type="number"
 							step="0.01"
 							min="0"

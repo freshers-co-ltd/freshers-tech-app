@@ -109,7 +109,6 @@ OR REPLACE FUNCTION public.admin_get_host_detail (
     last_sign_in_text TEXT,
     is_online BOOLEAN,
     last_seen_at TIMESTAMP WITH TIME ZONE,
-    base_price_per_cleaning NUMERIC,
     properties JSONB,
     cleanings JSONB,
     cleaning_stats JSONB
@@ -140,7 +139,6 @@ BEGIN
         END AS last_sign_in_text,
         p.last_seen_at IS NOT NULL AND p.last_seen_at > now() - interval '5 minutes' as is_online,
         p.last_seen_at,
-        p.base_price_per_cleaning,
         (
             SELECT jsonb_agg(row ORDER BY
                 CASE WHEN p_properties_sort_direction = 'asc' THEN
@@ -151,6 +149,7 @@ BEGIN
                         WHEN 'type' THEN (row->>'type')::text
                         WHEN 'bedrooms' THEN (row->>'bedrooms')::text
                         WHEN 'bathrooms' THEN (row->>'bathrooms')::text
+                        WHEN 'price_per_cleaning' THEN (row->>'price_per_cleaning')::text
                         ELSE (row->>'created_at')::text
                     END
                 END ASC NULLS LAST,
@@ -162,6 +161,7 @@ BEGIN
                         WHEN 'type' THEN (row->>'type')::text
                         WHEN 'bedrooms' THEN (row->>'bedrooms')::text
                         WHEN 'bathrooms' THEN (row->>'bathrooms')::text
+                        WHEN 'price_per_cleaning' THEN (row->>'price_per_cleaning')::text
                         ELSE (row->>'created_at')::text
                     END
                 END DESC NULLS LAST
@@ -176,6 +176,7 @@ BEGIN
                     'bedrooms', pr.bedrooms,
                     'bathrooms', pr.bathrooms,
                     'main_image_url', pr.main_image_url,
+                    'price_per_cleaning', pr.price_per_cleaning,
                     'created_at', pr.created_at
                 ) AS row
                 FROM public.properties pr
@@ -417,7 +418,7 @@ OR REPLACE FUNCTION public.admin_create_cleaning_for_host (
     p_host_id UUID,
     p_property_id UUID,
     p_scheduled_start TIMESTAMPTZ,
-    p_instructions TEXT DEFAULT NULL,
+    p_information TEXT DEFAULT NULL,
     p_stocks_included BOOLEAN DEFAULT FALSE,
     p_custom_tasks TEXT[] DEFAULT '{}'
 ) RETURNS UUID SECURITY DEFINER
@@ -439,7 +440,7 @@ BEGIN
     FROM public.properties p WHERE p.id = p_property_id;
     
     INSERT INTO public.cleanings (host_id, property_id, scheduled_start, status, instructions, stocks_included)
-    VALUES (p_host_id, p_property_id, p_scheduled_start, 'requested', p_instructions, p_stocks_included)
+    VALUES (p_host_id, p_property_id, p_scheduled_start, 'requested', p_information, p_stocks_included)
     RETURNING id INTO v_cleaning_id;
     INSERT INTO public.cleaning_tasks (cleaning_id, description, is_custom)
     SELECT v_cleaning_id, description, false FROM public.standard_tasks WHERE is_active = true;
@@ -749,14 +750,16 @@ SET search_path = public AS $$
 DECLARE
     v_property_type TEXT;
     v_bedrooms INT;
+    v_bathrooms INT;
     v_hourly_rate NUMERIC;
     v_target_times JSONB;
+    v_bathroom_time NUMERIC;
     v_target_hours NUMERIC;
 BEGIN
-    SELECT p.type, p.bedrooms INTO v_property_type, v_bedrooms
+    SELECT p.type, p.bedrooms, p.bathrooms INTO v_property_type, v_bedrooms, v_bathrooms
     FROM public.properties p WHERE p.id = NEW.property_id;
 
-    SELECT c.hourly_rate, c.target_times INTO v_hourly_rate, v_target_times
+    SELECT c.hourly_rate, c.target_times, c.bathroom_time INTO v_hourly_rate, v_target_times, v_bathroom_time
     FROM cleaner_pay_config c WHERE c.id = 1;
 
     IF v_property_type = 'studio' THEN
@@ -772,6 +775,8 @@ BEGIN
         END IF;
     END IF;
 
+    v_target_hours := v_target_hours + GREATEST(0, v_bathrooms - 1) * COALESCE(v_bathroom_time, 0.5);
+
     NEW.cleaner_pay := ROUND(v_hourly_rate * COALESCE(v_target_hours, 0), 2);
     RETURN NEW;
 END;
@@ -783,97 +788,28 @@ EXECUTE FUNCTION public.set_cleaner_pay_on_cleaning_insert ();
 REVOKE EXECUTE ON FUNCTION public.set_cleaner_pay_on_cleaning_insert() FROM PUBLIC, anon, authenticated;
 
 CREATE
-OR REPLACE FUNCTION public.admin_update_host_base_price (p_host_id UUID, p_base_price NUMERIC) RETURNS VOID SECURITY DEFINER
+OR REPLACE FUNCTION public.admin_update_property_price (p_property_id UUID, p_price NUMERIC) RETURNS VOID SECURITY DEFINER
 SET
     search_path = public AS $$
-DECLARE
-    v_current_base_price NUMERIC;
-    v_host_multipliers JSONB;
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin') THEN
         RAISE EXCEPTION 'Unauthorized';
     END IF;
 
-    IF p_base_price IS NULL OR p_base_price <= 0 THEN
-        RAISE EXCEPTION 'Base price must be greater than 0';
-    END IF;
-
-    SELECT base_price_per_cleaning INTO v_current_base_price FROM profiles WHERE id = p_host_id;
-
-    UPDATE profiles SET base_price_per_cleaning = p_base_price WHERE id = p_host_id;
-
-    IF v_current_base_price IS NULL THEN
-        SELECT c.host_multipliers INTO v_host_multipliers FROM cleaner_pay_config c WHERE c.id = 1;
-
-        UPDATE cleanings c
-        SET service_cost = public.calculate_service_cost(
-            (SELECT p.bedrooms::INTEGER FROM properties p WHERE p.id = c.property_id),
-            (SELECT p.type::TEXT FROM properties p WHERE p.id = c.property_id),
-            c.stocks_included,
-            p_base_price,
-            v_host_multipliers
-        )
-        WHERE c.host_id = p_host_id
-          AND c.service_cost IS NULL
-          AND c.deleted_at IS NULL;
-    END IF;
+    UPDATE properties SET price_per_cleaning = p_price WHERE id = p_property_id;
 END;
 $$ LANGUAGE plpgsql;
-
-CREATE
-OR REPLACE FUNCTION public.calculate_service_cost (
-    p_bedrooms INTEGER,
-    p_property_type TEXT,
-    p_stocks_included BOOLEAN,
-    p_base_price NUMERIC,
-    p_host_multipliers JSONB DEFAULT NULL
-) RETURNS NUMERIC LANGUAGE plpgsql SECURITY DEFINER
-SET
-    search_path = public AS $$
-DECLARE
-    v_multiplier NUMERIC;
-    v_property_key TEXT;
-BEGIN
-    IF p_base_price IS NULL THEN
-        RETURN NULL;
-    END IF;
-
-    IF p_property_type = 'studio' THEN
-        v_property_key := 'studio';
-    ELSE
-        v_property_key := p_bedrooms || '_bed';
-    END IF;
-
-    v_multiplier := COALESCE((p_host_multipliers->>v_property_key)::NUMERIC, 1);
-    RETURN ROUND(p_base_price * v_multiplier, 2);
-END;
-$$;
 
 CREATE
 OR REPLACE FUNCTION public.set_service_cost_on_cleaning_insert () RETURNS TRIGGER
 SET search_path = public AS $$
 DECLARE
-    v_property_type TEXT;
-    v_bedrooms INT;
-    v_base_price NUMERIC;
-    v_host_multipliers JSONB;
+    v_price NUMERIC;
 BEGIN
-    SELECT p.type, p.bedrooms INTO v_property_type, v_bedrooms
-    FROM public.properties p WHERE p.id = NEW.property_id;
+    SELECT price_per_cleaning INTO v_price
+    FROM public.properties WHERE id = NEW.property_id;
 
-    SELECT pr.base_price_per_cleaning INTO v_base_price 
-    FROM public.profiles pr WHERE pr.id = NEW.host_id;
-
-    SELECT c.host_multipliers INTO v_host_multipliers 
-    FROM cleaner_pay_config c WHERE c.id = 1;
-
-    NEW.service_cost := public.calculate_service_cost(
-        v_bedrooms,
-        v_property_type,
-        NEW.stocks_included,
-        v_base_price,
-        v_host_multipliers
-    );
+    NEW.service_cost := v_price;
 
     RETURN NEW;
 END;
@@ -932,16 +868,13 @@ GRANT EXECUTE ON FUNCTION public.admin_get_user_stats() TO authenticated;
 REVOKE EXECUTE ON FUNCTION public.admin_ban_user(uuid, boolean) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.admin_ban_user(uuid, boolean) TO authenticated;
 
-REVOKE EXECUTE ON FUNCTION public.admin_update_host_base_price(uuid, numeric) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_update_host_base_price(uuid, numeric) TO authenticated;
-
-REVOKE EXECUTE ON FUNCTION public.calculate_service_cost FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.calculate_service_cost TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.admin_update_property_price(uuid, numeric) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_update_property_price(uuid, numeric) TO authenticated;
 
 CREATE OR REPLACE FUNCTION public.admin_update_cleaning (
     p_cleaning_id UUID,
     p_custom_tasks TEXT[],
-    p_instructions TEXT,
+    p_information TEXT,
     p_scheduled_start TIMESTAMPTZ,
     p_stocks_included BOOLEAN DEFAULT FALSE
 ) RETURNS UUID SECURITY DEFINER
@@ -953,7 +886,7 @@ BEGIN
 
     UPDATE public.cleanings
     SET scheduled_start = p_scheduled_start,
-        instructions = p_instructions,
+        instructions = p_information,
         stocks_included = p_stocks_included,
         updated_at = now()
     WHERE id = p_cleaning_id AND deleted_at IS NULL;

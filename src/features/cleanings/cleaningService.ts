@@ -413,7 +413,7 @@ export const cleaningService = {
 		const { error } = await supabase.rpc('update_cleaner_pay_config', {
 			p_hourly_rate: config.hourly_rate,
 			p_target_times: config.target_times,
-			p_host_multipliers: config.host_multipliers,
+			p_bathroom_time: config.bathroom_time,
 		});
 		if (error) {
 			return { data: null, error: mapDatabaseError(error) };
@@ -421,32 +421,6 @@ export const cleaningService = {
 		return { data: undefined, error: null };
 	},
 };
-
-export async function calculateServiceCost(
-	bedrooms: number,
-	propertyType: string,
-	stocksIncluded: boolean,
-	basePrice: number | null,
-	hostMultipliers: Record<string, number> | null,
-): Promise<number | null> {
-	if (basePrice === null) {
-		return null;
-	}
-
-	const { data, error } = await supabase.rpc('calculate_service_cost', {
-		p_bedrooms: bedrooms,
-		p_property_type: propertyType,
-		p_stocks_included: stocksIncluded,
-		p_base_price: basePrice,
-		p_host_multipliers: hostMultipliers,
-	});
-
-	if (error) {
-		return null;
-	}
-
-	return data;
-}
 
 export interface CleanerPayConfig {
 	hourly_rate: number;
@@ -457,11 +431,5 @@ export interface CleanerPayConfig {
 		'3_bed': number;
 		'4_bed': number;
 	};
-	host_multipliers: {
-		studio: number;
-		'1_bed': number;
-		'2_bed': number;
-		'3_bed': number;
-		'4_bed': number;
-	};
+	bathroom_time: number;
 }

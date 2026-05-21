@@ -17,8 +17,8 @@ import { FormContainer } from '@/components/ui/form-container';
 import { DICT } from '@/dictionary';
 import { cleaningService as adminCleaningService } from '@/features/admin/cleaningService';
 import { CleaningsTable } from '@/features/admin/components/CleaningsTable';
-import { HostBasePriceDialog } from '@/features/admin/components/HostBasePriceDialog';
 import { PropertiesTable } from '@/features/admin/components/PropertiesTable';
+import { PropertyPriceDialog } from '@/features/admin/components/PropertyPriceDialog';
 import { useAdminUsers } from '@/features/admin/useAdminUsers';
 import { useHostDetail } from '@/features/admin/useHostDetail';
 import { cleaningService } from '@/features/cleanings/cleaningService';
@@ -33,7 +33,7 @@ import { supabase } from '@/lib/supabaseClient';
 export function AdminHostDetailPage() {
 	const { id } = useParams<{ id: string }>();
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-	const [isBasePriceDialogOpen, setIsBasePriceDialogOpen] = useState(false);
+	const [editingProperty, setEditingProperty] = useState<Property | null>(null);
 	const [propertiesSortField, setPropertiesSortField] = useState<string>('address_line_1');
 	const [propertiesSortDirection, setPropertiesSortDirection] = useState<'asc' | 'desc'>('desc');
 
@@ -210,7 +210,6 @@ export function AdminHostDetailPage() {
 			onResetPassword={onResetPassword}
 			onBan={onBan}
 			onUnban={onUnban}
-			onEditBasePrice={() => setIsBasePriceDialogOpen(true)}
 			stats={statsConfig}
 			sections={[
 				{
@@ -220,6 +219,7 @@ export function AdminHostDetailPage() {
 							data={properties}
 							emptyMessage={dict.EMPTY_PROPERTIES}
 							onView={(id) => propertyModal.openView(id)}
+							onEditPrice={(property) => setEditingProperty(property)}
 							pageSize={10}
 							totalCount={properties.length}
 							sortField={propertiesSortField}
@@ -291,11 +291,16 @@ export function AdminHostDetailPage() {
 				</DialogContent>
 			</Dialog>
 
-			<HostBasePriceDialog
-				open={isBasePriceDialogOpen}
-				onOpenChange={setIsBasePriceDialogOpen}
-				hostId={id || ''}
-				currentPrice={host?.base_price_per_cleaning ?? null}
+			<PropertyPriceDialog
+				open={editingProperty !== null}
+				onOpenChange={(open) => {
+					if (!open) {
+						setEditingProperty(null);
+					}
+				}}
+				propertyId={editingProperty?.id ?? ''}
+				propertyAddress={`${editingProperty?.address_line_1 ?? ''}, ${editingProperty?.postcode ?? ''}`}
+				currentPrice={editingProperty?.price_per_cleaning ?? null}
 				onSuccess={refresh}
 			/>
 		</UserDetailLayout>

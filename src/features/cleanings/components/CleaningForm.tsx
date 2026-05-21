@@ -21,12 +21,10 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { DICT } from '@/dictionary';
 import { cleaningService } from '@/features/admin/cleaningService';
-import { useAuth } from '@/features/auth/AuthContext';
 import { type CleaningRequest, STATUS_GROUPS } from '@/features/cleanings/cleaningService';
 import { PropertyForm } from '@/features/properties/components/PropertyForm';
 import { useProperties } from '@/features/properties/PropertyContext';
 import type { Property, PropertyInsert } from '@/features/properties/propertyService';
-import { supabase } from '@/lib/supabaseClient';
 
 const cleaningFormSchema = z.object({
 	property_id: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, {
@@ -61,6 +59,7 @@ interface CleaningFormProps {
 		postcode: string;
 		bedrooms: number;
 		type: string;
+		price_per_cleaning?: number | null;
 	}[];
 }
 
@@ -82,9 +81,6 @@ export function CleaningForm({
 	const [standardTasksError, setStandardTasksError] = useState<string | null>(null);
 	const { properties: contextProperties, upsertProperty } = useProperties();
 	const navigate = useNavigate();
-	const { user } = useAuth();
-	const [hostBasePrice, setHostBasePrice] = useState<number | null>(null);
-	const [hostMultipliers, setHostMultipliers] = useState<Record<string, number> | null>(null);
 
 	const displayedProperties = availableProperties || contextProperties;
 
@@ -140,7 +136,6 @@ export function CleaningForm({
 	});
 
 	const selectedPropertyId = watch('property_id');
-	const stocksIncluded = watch('stocks_included');
 
 	useEffect(() => {
 		let isMounted = true;
@@ -164,37 +159,6 @@ export function CleaningForm({
 		};
 	}, []);
 
-	useEffect(() => {
-		if (!user?.id) {
-			return;
-		}
-
-		const isMounted = true;
-		async function fetchHostPricing() {
-			if (!user) {
-				return;
-			}
-
-			const { data: profile } = await supabase
-				.from('profiles')
-				.select('base_price_per_cleaning')
-				.eq('id', user.id)
-				.single();
-
-			const { data: config } = await supabase.rpc('get_cleaner_pay_config');
-
-			if (isMounted) {
-				setHostBasePrice(profile?.base_price_per_cleaning ?? null);
-				setHostMultipliers(
-					config && Array.isArray(config) && config[0]?.host_multipliers
-						? (config[0].host_multipliers as Record<string, number>)
-						: null,
-				);
-			}
-		}
-		fetchHostPricing();
-	}, [user]);
-
 	const selectedProperty = useMemo(
 		() => displayedProperties.find((p) => p.id === selectedPropertyId),
 		[displayedProperties, selectedPropertyId],
@@ -203,36 +167,12 @@ export function CleaningForm({
 	const [calculatedPrice, setCalculatedPrice] = useState<number | null>(null);
 
 	useEffect(() => {
-		if (!selectedProperty || hostBasePrice === null) {
+		if (!selectedProperty) {
 			setCalculatedPrice(null);
 			return;
 		}
-
-		let isMounted = true;
-
-		async function calcPrice() {
-			if (hostBasePrice === null || !selectedProperty) {
-				return;
-			}
-
-			const { data } = await supabase.rpc('calculate_service_cost', {
-				p_bedrooms: selectedProperty.bedrooms,
-				p_property_type: selectedProperty.type,
-				p_stocks_included: stocksIncluded,
-				p_base_price: hostBasePrice,
-				p_host_multipliers: hostMultipliers,
-			});
-
-			if (isMounted) {
-				setCalculatedPrice(data);
-			}
-		}
-		calcPrice();
-
-		return () => {
-			isMounted = false;
-		};
-	}, [selectedProperty, stocksIncluded, hostBasePrice, hostMultipliers]);
+		setCalculatedPrice(selectedProperty.price_per_cleaning ?? null);
+	}, [selectedProperty]);
 
 	const handlePropertySubmit = async (propertyData: PropertyInsert): Promise<void> => {
 		const result = await upsertProperty(propertyData);
@@ -423,12 +363,9 @@ export function CleaningForm({
 					{step === 3 && (
 						<div className="space-y-6">
 							<FieldGroup>
-								<div className="flex items-center justify-between p-4 rounded-xl border bg-card">
+								<div className="flex items-center justify-between bg-card">
 									<div className="space-y-0.5">
-										<FieldLabel className="text-base">Include Household Stocks</FieldLabel>
-										<p className="text-xs text-muted-foreground">
-											Toiletries, beverages, and cleaning supplies.
-										</p>
+										<FieldLabel className="text-sm">Include Toiletries Restock</FieldLabel>
 									</div>
 									<Controller
 										control={control}
@@ -471,7 +408,7 @@ export function CleaningForm({
 											{DICT.COMMON.CURRENCY}
 											{Number(initialData.service_cost).toFixed(2)}
 										</p>
-									) : hostBasePrice === null ? (
+									) : calculatedPrice === null ? (
 										<p className="text-lg font-medium text-muted-foreground">Not set</p>
 									) : (
 										<p className="text-2xl font-black text-primary">

@@ -1,10 +1,11 @@
 'use client';
 
-import { Eye } from 'lucide-react';
+import { Banknote, Eye } from 'lucide-react';
 import { useMemo } from 'react';
 import { DataTable } from '@/components/DataTable';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { DICT } from '@/dictionary';
 import type { Property } from '@/features/properties/propertyService';
 
 export interface PropertyData {
@@ -21,6 +22,7 @@ export interface PropertiesTableProps {
 	data: Property[];
 	emptyMessage?: string;
 	onView?: (id: string) => void;
+	onEditPrice?: (property: Property) => void;
 	page?: number;
 	totalCount?: number;
 	pageSize?: number;
@@ -35,6 +37,7 @@ export function PropertiesTable({
 	data,
 	emptyMessage = 'No properties found',
 	onView,
+	onEditPrice,
 	page = 1,
 	totalCount,
 	pageSize = 20,
@@ -95,11 +98,20 @@ export function PropertiesTable({
 				render: (item) => item.bathrooms,
 			},
 			{
+				key: 'price_per_cleaning',
+				label: 'Price',
+				sortable: false,
+				render: (item) =>
+					item.price_per_cleaning
+						? `${DICT.COMMON.CURRENCY}${Number(item.price_per_cleaning).toFixed(2)}`
+						: '-',
+			},
+			{
 				key: 'actions',
 				label: 'Actions',
 				sortable: false,
 				render: (item) => (
-					<div className="flex items-center justify-end">
+					<div className="flex items-center justify-end gap-1">
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<Button variant="secondary" size="icon-sm" onClick={() => onView?.(item.id)}>
@@ -110,13 +122,23 @@ export function PropertiesTable({
 								<p>View Details</p>
 							</TooltipContent>
 						</Tooltip>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button variant="secondary" size="icon-sm" onClick={() => onEditPrice?.(item)}>
+									<Banknote className="size-4" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p>Set Price</p>
+							</TooltipContent>
+						</Tooltip>
 					</div>
 				),
 			},
 		];
 
 		return cols;
-	}, [onView]);
+	}, [onView, onEditPrice]);
 
 	const renderMobileHeader = useMemo(
 		() => (property: Property) => (
@@ -127,25 +149,46 @@ export function PropertiesTable({
 						{property.postcode}
 						{property.town_city ? `, ${property.town_city}` : ''}
 					</p>
+					<p className="text-xs text-muted-foreground mt-1">
+						{property.price_per_cleaning
+							? `${DICT.COMMON.CURRENCY}${Number(property.price_per_cleaning).toFixed(2)}`
+							: 'No price set'}
+					</p>
 				</div>
 
-				<Tooltip>
-					<TooltipTrigger asChild>
-						<Button
-							variant="secondary"
-							size="sm"
-							className="h-8 w-8 p-0 shrink-0"
-							onClick={() => onView?.(property.id)}>
-							<Eye className="size-4" />
-						</Button>
-					</TooltipTrigger>
-					<TooltipContent>
-						<p>View Details</p>
-					</TooltipContent>
-				</Tooltip>
+				<div className="flex gap-1 shrink-0">
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								variant="secondary"
+								size="sm"
+								className="h-8 w-8 p-0 shrink-0"
+								onClick={() => onEditPrice?.(property)}>
+								<Banknote className="size-4" />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>
+							<p>Set Price</p>
+						</TooltipContent>
+					</Tooltip>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								variant="secondary"
+								size="sm"
+								className="h-8 w-8 p-0 shrink-0"
+								onClick={() => onView?.(property.id)}>
+								<Eye className="size-4" />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>
+							<p>View Details</p>
+						</TooltipContent>
+					</Tooltip>
+				</div>
 			</div>
 		),
-		[onView],
+		[onView, onEditPrice],
 	);
 
 	const priorityColumns = ['address_line_1', 'postcode', 'town_city', 'actions'];

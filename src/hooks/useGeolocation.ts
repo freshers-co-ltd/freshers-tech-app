@@ -58,6 +58,7 @@ export function useGeolocation() {
 			new Promise((resolve, reject) => {
 				if (!navigator.geolocation) {
 					reject(new Error('Geolocation is not supported by this browser.'));
+					return;
 				}
 				navigator.geolocation.getCurrentPosition(resolve, reject, {
 					enableHighAccuracy: highAccuracy,
@@ -85,8 +86,19 @@ export function useGeolocation() {
 	);
 
 	const checkProximity = useCallback(
-		async (postcode: string, thresholdMetres: number = 500): Promise<boolean> => {
+		async (
+			postcode: string,
+			thresholdMetres: number = 500,
+		): Promise<{ isNear: boolean; distance: number; error?: string }> => {
 			setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
+			if (!navigator.geolocation) {
+				if (import.meta.env.DEV) {
+					console.warn('[GEOLOCATION_TRACE] Geolocation not supported, skipping proximity check');
+				}
+				setState((prev) => ({ ...prev, isLoading: false }));
+				return { isNear: true, distance: 0 };
+			}
 
 			if (import.meta.env.DEV) {
 				console.group('[GEOLOCATION_TRACE]');
@@ -145,18 +157,32 @@ export function useGeolocation() {
 					isLoading: false,
 				});
 
-				return isNear;
+				return { isNear, distance };
 			} catch (err) {
 				const userMessage = getErrorMessage(err);
 
 				if (import.meta.env.DEV) {
-					console.error('[GEOLOCATION_TRACE] Failure:', userMessage);
+					console.warn('[GEOLOCATION_TRACE] Proximity check failed:', userMessage);
 					console.debug('Error Details:', err);
 					console.groupEnd();
 				}
 
-				setState((prev) => ({ ...prev, isLoading: false, error: userMessage }));
-				return false;
+				if (err instanceof GeolocationPositionError && err.code === 1) {
+					if (window.location.protocol !== 'https:') {
+						if (import.meta.env.DEV) {
+							console.debug(
+								'[GEOLOCATION_TRACE] Geolocation blocked by browser (non-HTTPS), allowing clock-in',
+							);
+						}
+						setState((prev) => ({ ...prev, isLoading: false, error: null }));
+						return { isNear: true, distance: 0 };
+					}
+					setState((prev) => ({ ...prev, isLoading: false, error: userMessage }));
+					return { isNear: false, distance: 0, error: userMessage };
+				}
+
+				setState((prev) => ({ ...prev, isLoading: false, error: null }));
+				return { isNear: true, distance: 0 };
 			}
 		},
 		[getPosition, calculateDistance],

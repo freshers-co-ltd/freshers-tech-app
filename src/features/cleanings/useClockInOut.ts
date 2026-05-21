@@ -33,9 +33,15 @@ export function useClockInOut({ cleaning, onClockIn }: UseClockInOutOptions): Us
 
 		setIsProcessing(true);
 		try {
-			const isNear = await checkProximity(cleaning.property.postcode);
+			const { isNear, distance, error } = await checkProximity(cleaning.property.postcode);
 			if (!isNear) {
-				toast.error(DICT.CLEANINGS.DETAIL.CLOCK_IN.MUST_BE_AT_PROPERTY);
+				if (error) {
+					toast.error(error);
+				} else {
+					toast.error(
+						`${DICT.CLEANINGS.DETAIL.CLOCK_IN.MUST_BE_AT_PROPERTY} Current distance: ${Math.round(distance)}m`,
+					);
+				}
 				return;
 			}
 			await onClockIn(cleaning.id);

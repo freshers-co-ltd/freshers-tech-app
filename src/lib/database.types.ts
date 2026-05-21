@@ -41,21 +41,21 @@ export type Database = {
 			};
 			cleaner_pay_config: {
 				Row: {
-					host_multipliers: Json;
+					bathroom_time: number;
 					hourly_rate: number;
 					id: number;
 					target_times: Json;
 					updated_at: string | null;
 				};
 				Insert: {
-					host_multipliers?: Json;
+					bathroom_time?: number;
 					hourly_rate?: number;
 					id?: number;
 					target_times?: Json;
 					updated_at?: string | null;
 				};
 				Update: {
-					host_multipliers?: Json;
+					bathroom_time?: number;
 					hourly_rate?: number;
 					id?: number;
 					target_times?: Json;
@@ -358,7 +358,6 @@ export type Database = {
 			profiles: {
 				Row: {
 					avatar_url: string | null;
-					base_price_per_cleaning: number | null;
 					email: string | null;
 					full_name: string | null;
 					id: string;
@@ -369,7 +368,6 @@ export type Database = {
 				};
 				Insert: {
 					avatar_url?: string | null;
-					base_price_per_cleaning?: number | null;
 					email?: string | null;
 					full_name?: string | null;
 					id: string;
@@ -380,7 +378,6 @@ export type Database = {
 				};
 				Update: {
 					avatar_url?: string | null;
-					base_price_per_cleaning?: number | null;
 					email?: string | null;
 					full_name?: string | null;
 					id?: string;
@@ -404,6 +401,7 @@ export type Database = {
 					id: string;
 					main_image_url: string;
 					postcode: string;
+					price_per_cleaning: number | null;
 					town_city: string;
 					type: Database['public']['Enums']['property_type'];
 					updated_at: string;
@@ -420,6 +418,7 @@ export type Database = {
 					id?: string;
 					main_image_url: string;
 					postcode: string;
+					price_per_cleaning?: number | null;
 					town_city: string;
 					type?: Database['public']['Enums']['property_type'];
 					updated_at?: string;
@@ -436,6 +435,7 @@ export type Database = {
 					id?: string;
 					main_image_url?: string;
 					postcode?: string;
+					price_per_cleaning?: number | null;
 					town_city?: string;
 					type?: Database['public']['Enums']['property_type'];
 					updated_at?: string;
@@ -685,7 +685,6 @@ export type Database = {
 				Returns: {
 					avatar_url: string;
 					banned_until: string;
-					base_price_per_cleaning: number;
 					cleaning_stats: Json;
 					cleanings: Json;
 					created_at: string;
@@ -840,23 +839,13 @@ export type Database = {
 				};
 				Returns: string;
 			};
-			admin_update_host_base_price: {
-				Args: { p_base_price: number; p_host_id: string };
+			admin_update_property_price: {
+				Args: { p_price: number; p_property_id: string };
 				Returns: undefined;
 			};
 			admin_update_standard_tasks: {
 				Args: { p_tasks: Json; p_tasks_to_delete: string[] };
 				Returns: undefined;
-			};
-			calculate_service_cost: {
-				Args: {
-					p_base_price: number;
-					p_bedrooms: number;
-					p_host_multipliers?: Json;
-					p_property_type: string;
-					p_stocks_included: boolean;
-				};
-				Returns: number;
 			};
 			create_cleaning_request: {
 				Args: {
@@ -882,7 +871,7 @@ export type Database = {
 			get_cleaner_pay_config: {
 				Args: never;
 				Returns: {
-					host_multipliers: Json;
+					bathroom_time: number;
 					hourly_rate: number;
 					target_times: Json;
 					updated_at: string;
@@ -919,7 +908,7 @@ export type Database = {
 			};
 			update_cleaner_pay_config: {
 				Args: {
-					p_host_multipliers: Json;
+					p_bathroom_time?: number;
 					p_hourly_rate: number;
 					p_target_times: Json;
 				};

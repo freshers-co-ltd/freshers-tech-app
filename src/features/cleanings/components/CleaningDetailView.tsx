@@ -1,7 +1,7 @@
 'use client';
 
 import { AlertCircle, Banknote, Bath, Bed, Clock, Info, MapPin, Package, User } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { EntityBadge } from '@/components/EntityBadge';
 import { FullscreenMediaCarousel } from '@/components/FullscreenMediaCarousel';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
@@ -14,7 +14,11 @@ import { VideoThumbnail } from '@/components/VideoThumbnail';
 import { DICT } from '@/dictionary';
 import type { UserRole } from '@/features/auth/authService';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
-import { CLEANING_STATUS, type CleaningRequest } from '@/features/cleanings/cleaningService';
+import {
+	CLEANING_STATUS,
+	type CleaningRequest,
+	cleaningService,
+} from '@/features/cleanings/cleaningService';
 import { CleaningActionButtons } from '@/features/cleanings/components/CleaningActionButtons';
 import {
 	CleaningEvidenceForm,
@@ -65,6 +69,23 @@ export function CleaningDetailView({
 	const [isFullScreen, setIsFullScreen] = useState(false);
 	const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
 	const [isProcessing, setIsProcessing] = useState(false);
+
+	const [hourlyRate, setHourlyRate] = useState<number | null>(null);
+
+	useEffect(() => {
+		if (!isHost) {
+			cleaningService.getCleanerPayConfig().then((result) => {
+				if (result.data) {
+					setHourlyRate(result.data.hourly_rate);
+				}
+			});
+		}
+	}, [isHost]);
+
+	const estimatedHours =
+		cleaning.cleaner_pay != null && hourlyRate != null && hourlyRate > 0
+			? cleaning.cleaner_pay / hourlyRate
+			: null;
 
 	const tasks = localTasks;
 	const evidence = Array.isArray(cleaning.evidence) ? cleaning.evidence : [];
@@ -214,6 +235,12 @@ export function CleaningDetailView({
 															{cleaning.cleaner_pay?.toFixed(2) ?? '0.00'}
 														</p>
 													</div>
+													<div>
+														<p className="text-[10px] text-muted-foreground uppercase font-bold">
+															Est. Time
+														</p>
+														<p>{estimatedHours ? `${estimatedHours.toFixed(1)}h` : '-'}</p>
+													</div>
 												</>
 											) : isHost ? (
 												<div>
@@ -230,15 +257,23 @@ export function CleaningDetailView({
 													)}
 												</div>
 											) : (
-												<div>
-													<p className="text-[10px] text-muted-foreground uppercase font-bold">
-														Earnings
-													</p>
-													<p>
-														{DICT.COMMON.CURRENCY}
-														{cleaning.cleaner_pay?.toFixed(2) ?? '0.00'}
-													</p>
-												</div>
+												<>
+													<div>
+														<p className="text-[10px] text-muted-foreground uppercase font-bold">
+															Earnings
+														</p>
+														<p>
+															{DICT.COMMON.CURRENCY}
+															{cleaning.cleaner_pay?.toFixed(2) ?? '0.00'}
+														</p>
+													</div>
+													<div>
+														<p className="text-[10px] text-muted-foreground uppercase font-bold">
+															Est. Time
+														</p>
+														<p>{estimatedHours ? `${estimatedHours.toFixed(1)}h` : '-'}</p>
+													</div>
+												</>
 											)}
 										</div>
 									</div>

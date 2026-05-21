@@ -18,12 +18,10 @@ export type AdminUser = {
 	last_sign_in_at: string | null;
 	last_seen_at: string | null;
 	is_online: boolean;
-	base_price_per_cleaning: number | null;
 	last_sign_in_text?: string | null;
 };
 
 export interface AdminHostDetail extends AdminUser {
-	base_price_per_cleaning: number | null;
 	properties: Property[];
 	cleanings: {
 		id: string;
@@ -148,10 +146,10 @@ export const userService = {
 		return { data: data[0] as unknown as AdminHostDetail, error: null };
 	},
 
-	async updateHostBasePrice(hostId: string, basePrice: number): Promise<ActionResult<void>> {
-		const { error } = await supabase.rpc('admin_update_host_base_price', {
-			p_host_id: hostId,
-			p_base_price: basePrice,
+	async updatePropertyPrice(propertyId: string, price: number): Promise<ActionResult<void>> {
+		const { error } = await supabase.rpc('admin_update_property_price', {
+			p_property_id: propertyId,
+			p_price: price,
 		});
 
 		if (error) {
