@@ -26,6 +26,18 @@ export function LoginPage() {
 				state: location.state,
 			});
 		}
+
+		if (reason === 'session_expired') {
+			toast.error(DICT.AUTH.LOGIN.TOAST_SESSION_EXPIRED, {
+				id: 'session-expired-toast',
+				duration: Infinity,
+			});
+
+			navigate(location.pathname, {
+				replace: true,
+				state: location.state,
+			});
+		}
 	}, [searchParams, navigate, location.pathname, location.state]);
 
 	return (

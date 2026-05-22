@@ -87,7 +87,8 @@ export const PublicRoute = () => {
 	}
 
 	const searchParams = new URLSearchParams(location.search);
-	const isLoggingOut = searchParams.get('reason') === 'inactivity';
+	const logoutReason = searchParams.get('reason');
+	const isLoggingOut = logoutReason === 'inactivity' || logoutReason === 'session_expired';
 
 	if (user && profile && !isLoggingOut) {
 		const fallbackPath = state?.from && typeof state.from === 'string' ? state.from : '/dashboard';

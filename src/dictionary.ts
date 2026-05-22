@@ -141,6 +141,7 @@ export const DICT = {
 			TITLE: 'Log in to your account',
 			TOAST_SUCCESS: 'Login successful',
 			TOAST_INACTIVITY: 'You have been logged out due to inactivity.',
+			TOAST_SESSION_EXPIRED: 'Your session has expired. Please sign in again.',
 		},
 		SIGNUP: {
 			BUTTON_BACK: 'Back to login',

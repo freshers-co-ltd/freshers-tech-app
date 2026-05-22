@@ -264,6 +264,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	}, [user, fetchProfile]);
 
 	const signOut = useCallback(async () => {
+		const trustDevice = window.localStorage.getItem('trust_device');
 		try {
 			await supabase.auth.signOut();
 		} finally {
@@ -272,14 +273,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			setProfile(null);
 			setUser(null);
 			setSession(null);
-			localStorage.clear();
-			sessionStorage.clear();
+			window.localStorage.clear();
+			window.sessionStorage.clear();
+			if (trustDevice === 'true') {
+				window.localStorage.setItem('trust_device', 'true');
+			}
 		}
 	}, []);
 
 	useVisibilityReconnect({
 		enabled: !!user,
 		onVisible: async () => {
+			const {
+				data: { user: currentUser },
+			} = await supabase.auth.getUser();
+
+			if (!currentUser) {
+				await supabase.auth.signOut();
+				lastUserId.current = null;
+				setSession(null);
+				setUser(null);
+				setProfile(null);
+				const trustDevice = window.localStorage.getItem('trust_device');
+				window.localStorage.clear();
+				window.sessionStorage.clear();
+				if (trustDevice === 'true') {
+					window.localStorage.setItem('trust_device', 'true');
+				}
+				window.location.href = '/login?reason=session_expired';
+				return;
+			}
+
 			await refreshProfile();
 			if (!profileChannelRef.current || profileChannelRef.current.state !== 'joined') {
 				setupProfileChannel();

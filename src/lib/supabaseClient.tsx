@@ -62,9 +62,9 @@ const getAuthStorage = () => {
 				window.localStorage.setItem(key, value);
 			} else {
 				window.sessionStorage.setItem(key, value);
-				if (!suppressSessionBroadcast) {
-					getAuthChannel().postMessage({ type: 'SEND_SESSION', session: value });
-				}
+			}
+			if (!suppressSessionBroadcast) {
+				getAuthChannel().postMessage({ type: 'SEND_SESSION', session: value });
 			}
 		},
 		removeItem: (key: string) => {

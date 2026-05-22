@@ -173,7 +173,7 @@ export function DateTimePicker({ value, onChange, error }: DateTimePickerProps) 
 
 	const handleDateSelect = (date: Date | undefined) => {
 		if (date) {
-			const current = value || new Date();
+			const current = value || roundUpTo5Minutes(new Date());
 			const newDate = new Date(date);
 			newDate.setHours(current.getHours());
 			newDate.setMinutes(current.getMinutes());
@@ -215,13 +215,15 @@ export function DateTimePicker({ value, onChange, error }: DateTimePickerProps) 
 
 	if (isMobile) {
 		return (
-			<Drawer open={isOpen} onOpenChange={setIsOpen}>
+			<Drawer open={isOpen} onOpenChange={setIsOpen} handleOnly noBodyStyles>
 				<DrawerTrigger asChild>{TriggerButton}</DrawerTrigger>
 				<DrawerContent className="p-0 max-h-[90dvh]">
 					<DrawerHeader className="sr-only">
 						<DrawerTitle>Select Date and Time</DrawerTitle>
 					</DrawerHeader>
-					<div className="w-full pb-4">{PickerContent}</div>
+					<div className="w-full pb-4 overflow-y-auto overscroll-behavior-contain">
+						{PickerContent}
+					</div>
 				</DrawerContent>
 			</Drawer>
 		);

@@ -73,7 +73,7 @@ export function Navigation() {
 							key={item.path}
 							to={item.path}
 							className={cn(
-								'flex flex-col items-center justify-center gap-1 transition-all w-full',
+								'flex flex-col items-center justify-center gap-1 transition-all w-full h-full',
 								location.pathname.startsWith(item.path) ? 'text-primary' : 'text-muted-foreground',
 							)}>
 							<div
