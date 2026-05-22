@@ -37,8 +37,8 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin') THEN
-    RAISE EXCEPTION 'Unauthorized';
+  IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') != 'admin') THEN
+    RAISE EXCEPTION 'Unauthorised: Only admins can perform this action';
   END IF;
   
   UPDATE cleaner_pay_config 

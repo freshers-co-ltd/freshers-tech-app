@@ -189,7 +189,7 @@ export function UserDetailLayout({
 			<Dialog open={modal.isViewOpen} onOpenChange={(open) => !open && modal.handleClose()}>
 				<DialogContent className="max-w-xl! w-screen sm:w-full h-[95svh] flex flex-col p-0 gap-0 overflow-hidden">
 					{isViewLoading ? (
-						<Loading />
+						<Loading absolute={false} />
 					) : viewingCleaning ? (
 						<CleaningDetailView
 							cleaning={viewingCleaning}

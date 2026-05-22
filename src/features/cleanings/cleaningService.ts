@@ -406,7 +406,11 @@ export const cleaningService = {
 		if (!data || data.length === 0) {
 			return { data: null, error: 'No config found' };
 		}
-		return { data: data[0] as unknown as CleanerPayConfig, error: null };
+		const config = data[0] as unknown as CleanerPayConfig;
+		return {
+			data: { ...config, bathroom_time: config.bathroom_time ?? 0.5 },
+			error: null,
+		};
 	},
 
 	async updateCleanerPayConfig(config: CleanerPayConfig): Promise<ActionResult<void>> {

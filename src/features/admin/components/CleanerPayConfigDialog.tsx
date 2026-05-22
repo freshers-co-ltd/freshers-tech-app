@@ -21,10 +21,23 @@ interface CleanerPayConfigDialogProps {
 	onOpenChange: (open: boolean) => void;
 }
 
+const isValidDecimal = (value: string) => /^\d*\.?\d{0,2}$/.test(value);
+
+const buildRawInputs = (data: CleanerPayConfig) => ({
+	hourlyRate: data.hourly_rate.toFixed(2),
+	bathroomTime: data.bathroom_time.toFixed(2),
+	studio: data.target_times.studio.toFixed(2),
+	'1_bed': data.target_times['1_bed'].toFixed(2),
+	'2_bed': data.target_times['2_bed'].toFixed(2),
+	'3_bed': data.target_times['3_bed'].toFixed(2),
+	'4_bed': data.target_times['4_bed'].toFixed(2),
+});
+
 export function CleanerPayConfigDialog({ open, onOpenChange }: CleanerPayConfigDialogProps) {
 	const [config, setConfig] = useState<CleanerPayConfig | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [saving, setSaving] = useState(false);
+	const [rawInputs, setRawInputs] = useState<Record<string, string>>({});
 
 	const fetchConfig = useCallback(async () => {
 		setLoading(true);
@@ -33,6 +46,9 @@ export function CleanerPayConfigDialog({ open, onOpenChange }: CleanerPayConfigD
 			toast.error(result.error);
 		} else {
 			setConfig(result.data ?? null);
+			if (result.data) {
+				setRawInputs(buildRawInputs(result.data));
+			}
 		}
 		setLoading(false);
 	}, []);
@@ -61,27 +77,49 @@ export function CleanerPayConfigDialog({ open, onOpenChange }: CleanerPayConfigD
 	};
 
 	const updateHourlyRate = (value: string) => {
-		if (!config) {
+		if (!config || !isValidDecimal(value)) {
 			return;
 		}
 		const rate = parseFloat(value);
 		if (!Number.isNaN(rate)) {
 			setConfig({ ...config, hourly_rate: rate });
 		}
+		setRawInputs((prev) => ({ ...prev, hourlyRate: value }));
+	};
+
+	const commitHourlyRate = () => {
+		if (!config) {
+			return;
+		}
+		setRawInputs((prev) => ({
+			...prev,
+			hourlyRate: config.hourly_rate.toFixed(2),
+		}));
 	};
 
 	const updateBathroomTime = (value: string) => {
-		if (!config) {
+		if (!config || !isValidDecimal(value)) {
 			return;
 		}
 		const hours = parseFloat(value);
 		if (!Number.isNaN(hours)) {
 			setConfig({ ...config, bathroom_time: hours });
 		}
+		setRawInputs((prev) => ({ ...prev, bathroomTime: value }));
+	};
+
+	const commitBathroomTime = () => {
+		if (!config) {
+			return;
+		}
+		setRawInputs((prev) => ({
+			...prev,
+			bathroomTime: config.bathroom_time.toFixed(2),
+		}));
 	};
 
 	const updateTargetTime = (key: keyof CleanerPayConfig['target_times'], value: string) => {
-		if (!config) {
+		if (!config || !isValidDecimal(value)) {
 			return;
 		}
 		const hours = parseFloat(value);
@@ -91,6 +129,17 @@ export function CleanerPayConfigDialog({ open, onOpenChange }: CleanerPayConfigD
 				target_times: { ...config.target_times, [key]: hours },
 			});
 		}
+		setRawInputs((prev) => ({ ...prev, [key]: value }));
+	};
+
+	const commitTargetTime = (key: keyof CleanerPayConfig['target_times']) => {
+		if (!config) {
+			return;
+		}
+		setRawInputs((prev) => ({
+			...prev,
+			[key]: config.target_times[key].toFixed(2),
+		}));
 	};
 
 	if (!config) {
@@ -125,8 +174,9 @@ export function CleanerPayConfigDialog({ open, onOpenChange }: CleanerPayConfigD
 								id="hourlyRate"
 								type="number"
 								step="0.01"
-								value={config.hourly_rate}
+								value={rawInputs.hourlyRate ?? config.hourly_rate.toFixed(2)}
 								onChange={(e) => updateHourlyRate(e.target.value)}
+								onBlur={commitHourlyRate}
 								className="flex-1"
 							/>
 						</div>
@@ -138,10 +188,11 @@ export function CleanerPayConfigDialog({ open, onOpenChange }: CleanerPayConfigD
 							<Input
 								id="bathroomTime"
 								type="number"
-								step="0.5"
+								step="0.01"
 								min="0"
-								value={config.bathroom_time}
+								value={rawInputs.bathroomTime ?? config.bathroom_time.toFixed(2)}
 								onChange={(e) => updateBathroomTime(e.target.value)}
+								onBlur={commitBathroomTime}
 								className="flex-1"
 							/>
 						</div>
@@ -154,45 +205,50 @@ export function CleanerPayConfigDialog({ open, onOpenChange }: CleanerPayConfigD
 								<Label className="text-sm text-muted-foreground">Studio</Label>
 								<Input
 									type="number"
-									step="0.5"
-									value={config.target_times.studio}
+									step="0.01"
+									value={rawInputs.studio ?? config.target_times.studio.toFixed(2)}
 									onChange={(e) => updateTargetTime('studio', e.target.value)}
+									onBlur={() => commitTargetTime('studio')}
 								/>
 							</div>
 							<div className="space-y-1">
 								<Label className="text-sm text-muted-foreground">1 Bedroom</Label>
 								<Input
 									type="number"
-									step="0.5"
-									value={config.target_times['1_bed']}
+									step="0.01"
+									value={rawInputs['1_bed'] ?? config.target_times['1_bed'].toFixed(2)}
 									onChange={(e) => updateTargetTime('1_bed', e.target.value)}
+									onBlur={() => commitTargetTime('1_bed')}
 								/>
 							</div>
 							<div className="space-y-1">
 								<Label className="text-sm text-muted-foreground">2 Bedrooms</Label>
 								<Input
 									type="number"
-									step="0.5"
-									value={config.target_times['2_bed']}
+									step="0.01"
+									value={rawInputs['2_bed'] ?? config.target_times['2_bed'].toFixed(2)}
 									onChange={(e) => updateTargetTime('2_bed', e.target.value)}
+									onBlur={() => commitTargetTime('2_bed')}
 								/>
 							</div>
 							<div className="space-y-1">
 								<Label className="text-sm text-muted-foreground">3 Bedrooms</Label>
 								<Input
 									type="number"
-									step="0.5"
-									value={config.target_times['3_bed']}
+									step="0.01"
+									value={rawInputs['3_bed'] ?? config.target_times['3_bed'].toFixed(2)}
 									onChange={(e) => updateTargetTime('3_bed', e.target.value)}
+									onBlur={() => commitTargetTime('3_bed')}
 								/>
 							</div>
 							<div className="space-y-1">
 								<Label className="text-sm text-muted-foreground">4+ Bedrooms</Label>
 								<Input
 									type="number"
-									step="0.5"
-									value={config.target_times['4_bed']}
+									step="0.01"
+									value={rawInputs['4_bed'] ?? config.target_times['4_bed'].toFixed(2)}
 									onChange={(e) => updateTargetTime('4_bed', e.target.value)}
+									onBlur={() => commitTargetTime('4_bed')}
 								/>
 							</div>
 						</div>
