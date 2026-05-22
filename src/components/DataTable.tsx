@@ -48,6 +48,10 @@ interface DataTableProps<T> {
 	renderMobileHeader?: (item: T) => React.ReactNode;
 	priorityColumns?: string[];
 	excludeFromExpanded?: string[];
+	allData?: T[];
+	hasMore?: boolean;
+	onLoadMore?: () => void;
+	loadingMore?: boolean;
 }
 
 export function DataTable<T>({
@@ -66,6 +70,10 @@ export function DataTable<T>({
 	renderMobileHeader,
 	priorityColumns,
 	excludeFromExpanded,
+	allData,
+	hasMore,
+	onLoadMore,
+	loadingMore = false,
 }: DataTableProps<T>) {
 	const [sorting, setSorting] = useState<SortingState>(() => {
 		if (sortField) {
@@ -126,7 +134,7 @@ export function DataTable<T>({
 		},
 	});
 
-	if (loading) {
+	if (loading && !loadingMore) {
 		return <Loading absolute={false} />;
 	}
 
@@ -142,6 +150,7 @@ export function DataTable<T>({
 	const sortableColumns = columns.filter((col) => col.sortable);
 	const priorityKeys = new Set(priorityColumns || []);
 	const excludeKeys = new Set(excludeFromExpanded || []);
+	const mobileData = allData ?? data;
 
 	return (
 		<>
@@ -184,7 +193,7 @@ export function DataTable<T>({
 						</Button>
 					</div>
 				)}
-				{data.map((item) => {
+				{mobileData.map((item) => {
 					const itemId = String(item[keyField]);
 					const isExpanded = expandedCards.has(itemId);
 
@@ -241,6 +250,22 @@ export function DataTable<T>({
 						</Card>
 					);
 				})}
+				{hasMore && onLoadMore && (
+					<Button
+						variant="default"
+						className="w-full mt-2"
+						onClick={onLoadMore}
+						disabled={loadingMore}>
+						{loadingMore ? (
+							<>
+								<span className="mr-2 inline-block size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+								Loading...
+							</>
+						) : (
+							'Load More'
+						)}
+					</Button>
+				)}
 			</div>
 
 			<Card className="hidden md:block p-0 overflow-hidden">

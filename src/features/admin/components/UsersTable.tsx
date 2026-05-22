@@ -24,6 +24,10 @@ export interface UsersTableProps {
 	onResetPassword?: (userId: string) => void;
 	onBan?: (userId: string) => void;
 	onUnban?: (userId: string) => void;
+	allData?: AdminUser[];
+	hasMore?: boolean;
+	onLoadMore?: () => void;
+	loadingMore?: boolean;
 }
 
 export function UsersTable({
@@ -39,6 +43,10 @@ export function UsersTable({
 	onResetPassword,
 	onBan,
 	onUnban,
+	allData,
+	hasMore,
+	onLoadMore,
+	loadingMore = false,
 }: UsersTableProps) {
 	const navigate = useNavigate();
 
@@ -255,6 +263,10 @@ export function UsersTable({
 			renderMobileHeader={renderMobileHeader}
 			priorityColumns={priorityColumns}
 			excludeFromExpanded={excludeFromExpanded}
+			allData={allData}
+			hasMore={hasMore}
+			onLoadMore={onLoadMore}
+			loadingMore={loadingMore}
 		/>
 	);
 }

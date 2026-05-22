@@ -44,6 +44,11 @@ export function AdminUsersPage() {
 		handleResetPassword,
 		handleBan,
 		handleUnban,
+		allData,
+		hasMore,
+		loadMore,
+		loadingMore,
+		onPageChange,
 	} = useAdminUsers();
 
 	const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
@@ -192,7 +197,7 @@ export function AdminUsersPage() {
 				loading={loading}
 				page={page}
 				totalCount={totalCount}
-				onPageChange={setPage}
+				onPageChange={onPageChange}
 				sortField={sortField}
 				sortDirection={sortDirection}
 				onSort={(field) =>
@@ -201,6 +206,10 @@ export function AdminUsersPage() {
 				onResetPassword={handleResetPasswordClick}
 				onBan={handleBanClick}
 				onUnban={handleUnbanClick}
+				allData={allData}
+				hasMore={hasMore}
+				onLoadMore={loadMore}
+				loadingMore={loadingMore}
 			/>
 
 			<InviteUserDialog

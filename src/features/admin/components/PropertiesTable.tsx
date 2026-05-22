@@ -31,6 +31,10 @@ export interface PropertiesTableProps {
 	sortField?: string;
 	sortDirection?: 'asc' | 'desc';
 	onSort?: (field: string) => void;
+	allData?: Property[];
+	hasMore?: boolean;
+	onLoadMore?: () => void;
+	loadingMore?: boolean;
 }
 
 export function PropertiesTable({
@@ -46,6 +50,10 @@ export function PropertiesTable({
 	sortField,
 	sortDirection = 'asc',
 	onSort,
+	allData,
+	hasMore,
+	onLoadMore,
+	loadingMore = false,
 }: PropertiesTableProps) {
 	const handleSort = useMemo(
 		() => (field: string) => {
@@ -212,6 +220,10 @@ export function PropertiesTable({
 			renderMobileHeader={renderMobileHeader}
 			priorityColumns={priorityColumns}
 			excludeFromExpanded={excludeFromExpanded}
+			allData={allData}
+			hasMore={hasMore}
+			onLoadMore={onLoadMore}
+			loadingMore={loadingMore}
 		/>
 	);
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from '@/components/Toast';
 import { analyticsService } from '@/features/admin/analyticsService';
 import { type AdminUser, type UserFilters, userService } from '@/features/admin/userService';
@@ -38,11 +38,18 @@ interface UseAdminUsersResult {
 		onRefetch?: () => Promise<void>,
 	) => Promise<{ error: string | null }>;
 	refresh: () => Promise<void>;
+	allData: AdminUser[];
+	hasMore: boolean;
+	loadMore: () => Promise<void>;
+	loadingMore: boolean;
+	onPageChange: (page: number) => void;
 }
 
 export function useAdminUsers(): UseAdminUsersResult {
 	const [users, setUsers] = useState<AdminUser[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [allData, setAllData] = useState<AdminUser[]>([]);
+	const [loadingMore, setLoadingMore] = useState(false);
 	const [totalCount, setTotalCount] = useState(0);
 	const [onlineCount, setOnlineCount] = useState(0);
 	const [bannedCount, setBannedCount] = useState(0);
@@ -55,33 +62,58 @@ export function useAdminUsers(): UseAdminUsersResult {
 	const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
 	const limit = 20;
+	const pageRef = useRef(page);
+	pageRef.current = page;
 
-	const fetchUsers = useCallback(async () => {
-		setLoading(true);
-		const roleMap: Record<UserTab, UserRole | undefined> = {
-			all: undefined,
-			host: 'host',
-			cleaner: 'cleaner',
-			admin: 'admin',
-		};
-		const filters: UserFilters = {
-			role: roleMap[onlineTab],
-			search: searchQuery || undefined,
-		};
-		const [usersResult, countResult] = await Promise.all([
-			userService.getUsers(filters, page, limit, sortField, sortDirection),
-			userService.getUsersCount(filters),
-		]);
-		if (usersResult.error) {
-			toast.error(usersResult.error);
-		} else {
-			setUsers(usersResult.data || []);
-		}
-		if (!countResult.error) {
-			setTotalCount(countResult.data || 0);
-		}
-		setLoading(false);
-	}, [onlineTab, page, searchQuery, sortField, sortDirection]);
+	const fetchData = useCallback(
+		async (targetPage: number, mode: 'replace' | 'append' = 'replace') => {
+			if (mode === 'replace') {
+				setLoading(true);
+			} else {
+				setLoadingMore(true);
+			}
+
+			const roleMap: Record<UserTab, UserRole | undefined> = {
+				all: undefined,
+				host: 'host',
+				cleaner: 'cleaner',
+				admin: 'admin',
+			};
+			const filters: UserFilters = {
+				role: roleMap[onlineTab],
+				search: searchQuery || undefined,
+			};
+			const [usersResult, countResult] = await Promise.all([
+				userService.getUsers(filters, targetPage, limit, sortField, sortDirection),
+				userService.getUsersCount(filters),
+			]);
+			if (usersResult.error) {
+				toast.error(usersResult.error);
+			} else {
+				const pageData = usersResult.data || [];
+				if (mode === 'append') {
+					setAllData((prev) => [...prev, ...pageData]);
+				} else {
+					setAllData(pageData);
+				}
+				setUsers(pageData);
+			}
+			if (!countResult.error) {
+				setTotalCount(countResult.data || 0);
+			}
+
+			if (mode === 'replace') {
+				setLoading(false);
+			} else {
+				setLoadingMore(false);
+			}
+		},
+		[onlineTab, searchQuery, sortField, sortDirection],
+	);
+
+	const refetchCurrentPage = useCallback(() => {
+		return fetchData(page, 'replace');
+	}, [fetchData, page]);
 
 	const fetchCounts = useCallback(async () => {
 		const statsResult = await analyticsService.getUserStats();
@@ -94,12 +126,12 @@ export function useAdminUsers(): UseAdminUsersResult {
 	}, []);
 
 	const refresh = useCallback(async () => {
-		await Promise.all([fetchUsers(), fetchCounts()]);
-	}, [fetchUsers, fetchCounts]);
+		await Promise.all([refetchCurrentPage(), fetchCounts()]);
+	}, [refetchCurrentPage, fetchCounts]);
 
 	useEffect(() => {
-		fetchUsers();
-	}, [fetchUsers]);
+		fetchData(pageRef.current, 'replace');
+	}, [fetchData]);
 
 	useEffect(() => {
 		fetchCounts();
@@ -126,10 +158,10 @@ export function useAdminUsers(): UseAdminUsersResult {
 				return false;
 			}
 			toast.success('Invitation sent successfully');
-			await fetchUsers();
+			await refetchCurrentPage();
 			return true;
 		},
-		[fetchUsers],
+		[refetchCurrentPage],
 	);
 
 	const handleResetPassword = useCallback(
@@ -150,10 +182,10 @@ export function useAdminUsers(): UseAdminUsersResult {
 			if (result.error) {
 				return { error: result.error };
 			}
-			await (onRefetch ?? fetchUsers)();
+			await (onRefetch ?? refetchCurrentPage)();
 			return { error: null };
 		},
-		[fetchUsers],
+		[refetchCurrentPage],
 	);
 
 	const handleUnban = useCallback(
@@ -162,11 +194,27 @@ export function useAdminUsers(): UseAdminUsersResult {
 			if (result.error) {
 				return { error: result.error };
 			}
-			await (onRefetch ?? fetchUsers)();
+			await (onRefetch ?? refetchCurrentPage)();
 			return { error: null };
 		},
-		[fetchUsers],
+		[refetchCurrentPage],
 	);
+
+	const loadMore = useCallback(async () => {
+		const nextPage = page + 1;
+		setPage(nextPage);
+		await fetchData(nextPage, 'append');
+	}, [fetchData, page]);
+
+	const onPageChange = useCallback(
+		(newPage: number) => {
+			setPage(newPage);
+			fetchData(newPage, 'replace');
+		},
+		[fetchData],
+	);
+
+	const hasMore = allData.length < totalCount;
 
 	return {
 		users,
@@ -190,5 +238,10 @@ export function useAdminUsers(): UseAdminUsersResult {
 		handleBan,
 		handleUnban,
 		refresh,
+		allData,
+		hasMore,
+		loadMore,
+		loadingMore,
+		onPageChange,
 	};
 }

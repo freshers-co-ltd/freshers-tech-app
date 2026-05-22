@@ -54,6 +54,10 @@ export interface CleaningsTableProps {
 	sortField?: string;
 	sortDirection?: 'asc' | 'desc';
 	onSort?: (field: string) => void;
+	allData?: CleaningData[];
+	hasMore?: boolean;
+	onLoadMore?: () => void;
+	loadingMore?: boolean;
 }
 
 export function CleaningsTable({
@@ -75,6 +79,10 @@ export function CleaningsTable({
 	sortField = 'date',
 	sortDirection = 'desc',
 	onSort,
+	allData,
+	hasMore,
+	onLoadMore,
+	loadingMore = false,
 }: CleaningsTableProps) {
 	const { modal, viewingCleaning, editingCleaning, isViewLoading, isEditLoading, handleUpsert } =
 		useCleaningModals({
@@ -434,6 +442,10 @@ export function CleaningsTable({
 				renderMobileHeader={renderMobileHeader}
 				priorityColumns={priorityColumns}
 				excludeFromExpanded={excludeFromExpanded}
+				allData={allData}
+				hasMore={hasMore}
+				onLoadMore={onLoadMore}
+				loadingMore={loadingMore}
 			/>
 			<AssignCleanerDialog
 				open={isAssignModalOpen}

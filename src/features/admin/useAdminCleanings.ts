@@ -39,11 +39,18 @@ interface UseAdminCleaningsResult {
 	handleUnassignCleaner: (cleaningId: string) => Promise<boolean>;
 	openAssignModal: (cleaningId: string) => void;
 	refresh: () => Promise<void>;
+	allData: AdminCleaning[];
+	hasMore: boolean;
+	loadMore: () => Promise<void>;
+	loadingMore: boolean;
+	onPageChange: (page: number) => void;
 }
 
 export function useAdminCleanings(): UseAdminCleaningsResult {
 	const [cleanings, setCleanings] = useState<AdminCleaning[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [allData, setAllData] = useState<AdminCleaning[]>([]);
+	const [loadingMore, setLoadingMore] = useState(false);
 	const [totalCount, setTotalCount] = useState(0);
 
 	const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -53,6 +60,8 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 	const [sortField, setSortField] = useState<string>('date');
 	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 	const limit = 20;
+	const pageRef = useRef(page);
+	pageRef.current = page;
 
 	const [availableCleaners, setAvailableCleaners] = useState<AvailableCleaner[]>([]);
 
@@ -60,34 +69,56 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 	const [selectedCleaning, setSelectedCleaning] = useState('');
 	const [selectedCleaner, setSelectedCleaner] = useState('');
 
-	const fetchCleanings = useCallback(async () => {
-		setLoading(true);
+	const fetchData = useCallback(
+		async (targetPage: number, mode: 'replace' | 'append' = 'replace') => {
+			if (mode === 'replace') {
+				setLoading(true);
+			} else {
+				setLoadingMore(true);
+			}
 
-		const filters: CleaningFilters = {};
-		if (statusFilter !== 'all') {
-			filters.status = statusFilter as CleaningStatus;
-		}
-		if (cleanerFilter !== 'all') {
-			filters.cleanerId = cleanerFilter;
-		}
-		filters.search = searchQuery || undefined;
+			const filters: CleaningFilters = {};
+			if (statusFilter !== 'all') {
+				filters.status = statusFilter as CleaningStatus;
+			}
+			if (cleanerFilter !== 'all') {
+				filters.cleanerId = cleanerFilter;
+			}
+			filters.search = searchQuery || undefined;
 
-		const [cleaningsResult, countResult] = await Promise.all([
-			cleaningService.getAllCleanings(filters, page, limit, sortField, sortDirection),
-			cleaningService.getCleaningsCount(filters),
-		]);
+			const [cleaningsResult, countResult] = await Promise.all([
+				cleaningService.getAllCleanings(filters, targetPage, limit, sortField, sortDirection),
+				cleaningService.getCleaningsCount(filters),
+			]);
 
-		if (cleaningsResult.error) {
-			toast.error(cleaningsResult.error);
-		} else {
-			setCleanings(cleaningsResult.data || []);
-		}
+			if (cleaningsResult.error) {
+				toast.error(cleaningsResult.error);
+			} else {
+				const pageData = cleaningsResult.data || [];
+				if (mode === 'append') {
+					setAllData((prev) => [...prev, ...pageData]);
+				} else {
+					setAllData(pageData);
+				}
+				setCleanings(pageData);
+			}
 
-		if (!countResult.error) {
-			setTotalCount(countResult.data || 0);
-		}
-		setLoading(false);
-	}, [statusFilter, cleanerFilter, page, searchQuery, sortField, sortDirection]);
+			if (!countResult.error) {
+				setTotalCount(countResult.data || 0);
+			}
+
+			if (mode === 'replace') {
+				setLoading(false);
+			} else {
+				setLoadingMore(false);
+			}
+		},
+		[statusFilter, cleanerFilter, searchQuery, sortField, sortDirection],
+	);
+
+	const refetchCurrentPage = useCallback(() => {
+		return fetchData(page, 'replace');
+	}, [fetchData, page]);
 
 	const fetchAvailableCleaners = useCallback(async () => {
 		const result = await userService.getAvailableCleaners();
@@ -97,12 +128,12 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 	}, []);
 
 	const refresh = useCallback(async () => {
-		await Promise.all([fetchCleanings(), fetchAvailableCleaners()]);
-	}, [fetchCleanings, fetchAvailableCleaners]);
+		await Promise.all([refetchCurrentPage(), fetchAvailableCleaners()]);
+	}, [refetchCurrentPage, fetchAvailableCleaners]);
 
 	useEffect(() => {
-		fetchCleanings();
-	}, [fetchCleanings]);
+		fetchData(pageRef.current, 'replace');
+	}, [fetchData]);
 
 	useEffect(() => {
 		fetchAvailableCleaners();
@@ -132,13 +163,13 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 					table: 'cleanings',
 				},
 				() => {
-					fetchCleanings();
+					fetchData(page, 'replace');
 				},
 			)
 			.subscribe();
 
 		cleaningChannelRef.current = newChannel;
-	}, [fetchCleanings]);
+	}, [fetchData, page]);
 
 	useEffect(() => {
 		cleanupChannel();
@@ -161,9 +192,9 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 		}
 		toast.success(DICT.COMMON.TOASTS.CLEANER_ASSIGNED);
 		setIsAssignModalOpen(false);
-		await fetchCleanings();
+		await refetchCurrentPage();
 		return true;
-	}, [selectedCleaning, selectedCleaner, fetchCleanings]);
+	}, [selectedCleaning, selectedCleaner, refetchCurrentPage]);
 
 	const handleUnassignCleaner = useCallback(
 		async (cleaningId: string): Promise<boolean> => {
@@ -173,10 +204,10 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 				return false;
 			}
 			toast.success('Cleaner unassigned');
-			await fetchCleanings();
+			await refetchCurrentPage();
 			return true;
 		},
-		[fetchCleanings],
+		[refetchCurrentPage],
 	);
 
 	const openAssignModal = useCallback(
@@ -188,6 +219,22 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 		},
 		[cleanings],
 	);
+
+	const loadMore = useCallback(async () => {
+		const nextPage = page + 1;
+		setPage(nextPage);
+		await fetchData(nextPage, 'append');
+	}, [fetchData, page]);
+
+	const onPageChange = useCallback(
+		(newPage: number) => {
+			setPage(newPage);
+			fetchData(newPage, 'replace');
+		},
+		[fetchData],
+	);
+
+	const hasMore = allData.length < totalCount;
 
 	return {
 		cleanings,
@@ -216,5 +263,10 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 		handleUnassignCleaner,
 		openAssignModal,
 		refresh,
+		allData,
+		hasMore,
+		loadMore,
+		loadingMore,
+		onPageChange,
 	};
 }

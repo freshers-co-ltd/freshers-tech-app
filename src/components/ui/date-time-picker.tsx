@@ -221,7 +221,7 @@ export function DateTimePicker({ value, onChange, error }: DateTimePickerProps) 
 					<DrawerHeader className="sr-only">
 						<DrawerTitle>Select Date and Time</DrawerTitle>
 					</DrawerHeader>
-					<div className="w-full pb-2">{PickerContent}</div>
+					<div className="w-full pb-4">{PickerContent}</div>
 				</DrawerContent>
 			</Drawer>
 		);

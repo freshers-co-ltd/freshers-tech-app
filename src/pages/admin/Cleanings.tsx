@@ -40,6 +40,11 @@ export function AdminCleaningsPage() {
 		setSortField,
 		setSortDirection,
 		refresh,
+		allData,
+		hasMore,
+		loadMore,
+		loadingMore,
+		onPageChange,
 	} = useAdminCleanings();
 
 	const [isStandardTasksOpen, setIsStandardTasksOpen] = useState(false);
@@ -175,7 +180,7 @@ export function AdminCleaningsPage() {
 				loading={loading}
 				page={page}
 				totalCount={totalCount}
-				onPageChange={setPage}
+				onPageChange={onPageChange}
 				sortField={sortField}
 				sortDirection={sortDirection}
 				onSort={(field) => {
@@ -188,6 +193,10 @@ export function AdminCleaningsPage() {
 					setPage(1);
 				}}
 				onRefresh={refresh}
+				allData={allData}
+				hasMore={hasMore}
+				onLoadMore={loadMore}
+				loadingMore={loadingMore}
 			/>
 
 			<StandardTasksDialog open={isStandardTasksOpen} onOpenChange={setIsStandardTasksOpen} />
