@@ -31,7 +31,7 @@ const cleaningFormSchema = z.object({
 		message: 'Please select a valid property',
 	}),
 	scheduled_start: z.date({ message: 'Please select a start date' }),
-	instructions: z.string().optional(),
+	information: z.string().optional(),
 	stocks_included: z.boolean(),
 	custom_tasks: z.array(
 		z.object({ description: z.string().min(1, { message: 'Task description required' }) }),
@@ -43,7 +43,7 @@ export type CleaningFormValues = z.infer<typeof cleaningFormSchema>;
 type CleaningFormInput = {
 	property_id: string;
 	scheduled_start: Date;
-	instructions?: string;
+	information?: string;
 	stocks_included: boolean;
 	custom_tasks: { description: string }[];
 };
@@ -95,7 +95,7 @@ export function CleaningForm({
 			scheduled_start: initialData
 				? new Date(initialData.scheduled_start)
 				: ('' as unknown as Date),
-			instructions: initialData?.instructions ?? '',
+			information: initialData?.information ?? '',
 			stocks_included: initialData?.stocks_included ?? false,
 			custom_tasks:
 				initialData?.tasks
@@ -120,7 +120,7 @@ export function CleaningForm({
 			reset({
 				property_id: initialData.property_id,
 				scheduled_start: new Date(initialData.scheduled_start),
-				instructions: initialData.instructions ?? '',
+				information: initialData.information ?? '',
 				stocks_included: initialData.stocks_included ?? false,
 				custom_tasks:
 					initialData.tasks
@@ -377,9 +377,9 @@ export function CleaningForm({
 								</div>
 
 								<Field>
-									<FieldLabel>{dict.LABELS.INSTRUCTIONS}</FieldLabel>
+									<FieldLabel>{dict.LABELS.INFORMATION}</FieldLabel>
 									<Textarea
-										{...register('instructions')}
+										{...register('information')}
 										className="min-h-15 resize-none"
 										placeholder={dict.PLACEHOLDERS.INSTRUCTIONS}
 									/>

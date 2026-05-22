@@ -63,13 +63,13 @@ export interface CleaningRequest extends CleaningDetails {
 export interface CreateCleaningRequestPayload {
 	property_id: string;
 	custom_tasks: string[];
-	instructions: string;
+	information: string;
 	scheduled_start: string;
 }
 
 export interface UpdateCleaningRequestPayload {
 	custom_tasks: string[];
-	instructions: string;
+	information: string;
 	scheduled_start: string;
 }
 
@@ -214,7 +214,7 @@ export const cleaningService = {
 		const { data: id, error } = await supabase.rpc('create_cleaning_request', {
 			p_property_id: payload.property_id,
 			p_custom_tasks: payload.custom_tasks,
-			p_instructions: payload.instructions,
+			p_information: payload.information,
 			p_scheduled_start: payload.scheduled_start,
 		});
 
@@ -245,7 +245,7 @@ export const cleaningService = {
 		const { error } = await supabase.rpc('update_cleaning_request', {
 			p_cleaning_id: id,
 			p_custom_tasks: payload.custom_tasks,
-			p_instructions: payload.instructions,
+			p_information: payload.information,
 			p_scheduled_start: payload.scheduled_start,
 		});
 

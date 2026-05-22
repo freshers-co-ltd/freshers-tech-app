@@ -8,7 +8,7 @@ export function buildCleaning(overrides?: Partial<CleaningRequest>): CleaningReq
 		property_id: 'property_123',
 		status: 'requested',
 		scheduled_start: new Date().toISOString(),
-		instructions: null,
+		information: null,
 		stocks_included: false,
 		service_cost: null,
 		cleaner_pay: null,

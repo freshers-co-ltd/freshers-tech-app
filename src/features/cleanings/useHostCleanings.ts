@@ -23,7 +23,7 @@ export function useHostCleanings() {
 				...(editingCleaning ? { id: editingCleaning.id } : {}),
 				property_id: data.property_id,
 				scheduled_start: new Date(data.scheduled_start).toISOString(),
-				instructions: data.instructions ?? '',
+				information: data.information ?? '',
 				custom_tasks: data.custom_tasks.map((t) => t.description),
 			};
 

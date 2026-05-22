@@ -29,7 +29,7 @@ export function AdminCleanerDetailPage() {
 				return;
 			}
 			const result = await adminCleaningService.updateCleaning(existingId, {
-				instructions: values.instructions || '',
+				information: values.information || '',
 				scheduled_start: values.scheduled_start.toISOString(),
 				stocks_included: values.stocks_included,
 				custom_tasks: values.custom_tasks?.map((t) => t.description) || [],

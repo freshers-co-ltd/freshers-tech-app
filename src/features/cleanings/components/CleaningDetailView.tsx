@@ -319,14 +319,14 @@ export function CleaningDetailView({
 									)}
 								</div>
 
-								{cleaning.instructions && (
+								{cleaning.information && (
 									<div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 min-w-0">
 										<Clock className="size-5 text-primary shrink-0" />
 										<div className="min-w-0">
 											<p className="text-[10px] text-muted-foreground uppercase font-bold">
-												Instructions
+												Additional Information
 											</p>
-											<span>{cleaning.instructions}</span>
+											<span>{cleaning.information}</span>
 										</div>
 									</div>
 								)}

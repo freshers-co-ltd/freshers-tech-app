@@ -330,7 +330,7 @@ OR REPLACE FUNCTION public.admin_get_all_cleanings (
     scheduled_start TIMESTAMP WITH TIME ZONE,
     service_cost NUMERIC,
     cleaner_pay NUMERIC,
-    instructions TEXT,
+    information TEXT,
     stocks_included BOOLEAN,
     clock_in_time TIMESTAMP WITH TIME ZONE,
     clock_out_time TIMESTAMP WITH TIME ZONE,
@@ -349,7 +349,7 @@ BEGIN
     RETURN QUERY
     SELECT 
         c.id, c.host_id, c.property_id, c.cleaner_id, c.status::TEXT,
-        c.scheduled_start, c.service_cost, c.cleaner_pay, c.instructions, c.stocks_included,
+        c.scheduled_start, c.service_cost, c.cleaner_pay, c.information, c.stocks_included,
         c.clock_in_time, c.clock_out_time, c.created_at, c.updated_at, c.deleted_at,
         hp.full_name, cp.full_name, pr.address_line_1, pr.postcode, pr.town_city
     FROM public.cleanings c
@@ -439,7 +439,7 @@ BEGIN
     SELECT p.type, p.bedrooms INTO v_property_type, v_bedrooms
     FROM public.properties p WHERE p.id = p_property_id;
     
-    INSERT INTO public.cleanings (host_id, property_id, scheduled_start, status, instructions, stocks_included)
+    INSERT INTO public.cleanings (host_id, property_id, scheduled_start, status, information, stocks_included)
     VALUES (p_host_id, p_property_id, p_scheduled_start, 'requested', p_information, p_stocks_included)
     RETURNING id INTO v_cleaning_id;
     INSERT INTO public.cleaning_tasks (cleaning_id, description, is_custom)
@@ -886,7 +886,7 @@ BEGIN
 
     UPDATE public.cleanings
     SET scheduled_start = p_scheduled_start,
-        instructions = p_information,
+        information = p_information,
         stocks_included = p_stocks_included,
         updated_at = now()
     WHERE id = p_cleaning_id AND deleted_at IS NULL;

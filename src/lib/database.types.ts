@@ -163,7 +163,7 @@ export type Database = {
 					deleted_at: string | null;
 					host_id: string;
 					id: string;
-					instructions: string | null;
+					information: string | null;
 					property_id: string;
 					scheduled_start: string;
 					service_cost: number | null;
@@ -180,7 +180,7 @@ export type Database = {
 					deleted_at?: string | null;
 					host_id: string;
 					id?: string;
-					instructions?: string | null;
+					information?: string | null;
 					property_id: string;
 					scheduled_start: string;
 					service_cost?: number | null;
@@ -197,7 +197,7 @@ export type Database = {
 					deleted_at?: string | null;
 					host_id?: string;
 					id?: string;
-					instructions?: string | null;
+					information?: string | null;
 					property_id?: string;
 					scheduled_start?: string;
 					service_cost?: number | null;
@@ -555,7 +555,7 @@ export type Database = {
 				Args: {
 					p_custom_tasks?: string[];
 					p_host_id: string;
-					p_instructions?: string;
+					p_information?: string;
 					p_property_id: string;
 					p_scheduled_start: string;
 					p_stocks_included?: boolean;
@@ -591,7 +591,7 @@ export type Database = {
 					host_id: string;
 					host_name: string;
 					id: string;
-					instructions: string;
+					information: string;
 					property_address: string;
 					property_id: string;
 					property_postcode: string;
@@ -833,7 +833,7 @@ export type Database = {
 				Args: {
 					p_cleaning_id: string;
 					p_custom_tasks: string[];
-					p_instructions: string;
+					p_information: string;
 					p_scheduled_start: string;
 					p_stocks_included?: boolean;
 				};
@@ -850,7 +850,7 @@ export type Database = {
 			create_cleaning_request: {
 				Args: {
 					p_custom_tasks: string[];
-					p_instructions: string;
+					p_information: string;
 					p_property_id: string;
 					p_scheduled_start: string;
 					p_stocks_included?: boolean;
@@ -918,7 +918,7 @@ export type Database = {
 				Args: {
 					p_cleaning_id: string;
 					p_custom_tasks: string[];
-					p_instructions: string;
+					p_information: string;
 					p_scheduled_start: string;
 					p_stocks_included?: boolean;
 				};

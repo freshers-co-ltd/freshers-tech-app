@@ -11,7 +11,7 @@ export function buildAdminCleaning(overrides?: Partial<AdminCleaning>): AdminCle
 		scheduled_start: new Date().toISOString(),
 		service_cost: 120,
 		cleaner_pay: null,
-		instructions: null,
+		information: null,
 		stocks_included: false,
 		clock_in_time: null,
 		clock_out_time: null,

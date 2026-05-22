@@ -86,7 +86,7 @@ CREATE TABLE
         scheduled_start TIMESTAMPTZ NOT NULL,
         service_cost NUMERIC(10, 2),
         cleaner_pay NUMERIC(10, 2),
-        instructions TEXT,
+information TEXT,
         stocks_included BOOLEAN DEFAULT FALSE NOT NULL,
         clock_in_time TIMESTAMPTZ,
         clock_out_time TIMESTAMPTZ,
@@ -442,7 +442,7 @@ CREATE
 OR REPLACE FUNCTION public.create_cleaning_request (
     p_property_id UUID,
     p_custom_tasks TEXT[],
-    p_instructions TEXT,
+    p_information TEXT,
     p_scheduled_start TIMESTAMPTZ,
     p_stocks_included BOOLEAN DEFAULT FALSE
 ) RETURNS UUID SECURITY DEFINER
@@ -461,8 +461,8 @@ BEGIN
     SELECT p.host_id, p.type, p.bedrooms INTO v_host_id, v_property_type, v_bedrooms
     FROM public.properties p WHERE p.id = p_property_id;
     
-    INSERT INTO public.cleanings (property_id, host_id, scheduled_start, status, instructions, stocks_included) 
-    VALUES (p_property_id, v_host_id, p_scheduled_start, 'requested', p_instructions, p_stocks_included)
+    INSERT INTO public.cleanings (property_id, host_id, scheduled_start, status, information, stocks_included) 
+    VALUES (p_property_id, v_host_id, p_scheduled_start, 'requested', p_information, p_stocks_included)
     RETURNING id INTO v_cleaning_id;
     INSERT INTO public.cleaning_tasks (cleaning_id, description, is_custom, is_completed)
     SELECT v_cleaning_id, description, false, false FROM standard_tasks WHERE is_active = true;
@@ -482,7 +482,7 @@ CREATE
 OR REPLACE FUNCTION public.update_cleaning_request (
     p_cleaning_id UUID,
     p_custom_tasks TEXT[],
-    p_instructions TEXT,
+    p_information TEXT,
     p_scheduled_start TIMESTAMPTZ,
     p_stocks_included BOOLEAN DEFAULT FALSE
 ) RETURNS UUID SECURITY DEFINER
@@ -493,7 +493,7 @@ BEGIN
         RAISE EXCEPTION 'Unauthorised' USING ERRCODE = 'P0001';
     END IF;
     UPDATE public.cleanings
-    SET scheduled_start = p_scheduled_start, instructions = p_instructions, stocks_included = p_stocks_included
+    SET scheduled_start = p_scheduled_start, information = p_information, stocks_included = p_stocks_included
     WHERE id = p_cleaning_id AND deleted_at IS NULL;
     UPDATE public.cleaning_tasks SET deleted_at = now() WHERE cleaning_id = p_cleaning_id AND is_custom = true;
     IF p_custom_tasks IS NOT NULL THEN

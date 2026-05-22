@@ -14,7 +14,7 @@ export interface AdminCleaning {
 	scheduled_start: string;
 	service_cost: number;
 	cleaner_pay: number | null;
-	instructions: string | null;
+	information: string | null;
 	stocks_included: boolean;
 	clock_in_time: string | null;
 	clock_out_time: string | null;
@@ -44,7 +44,7 @@ export interface StandardTask {
 
 export interface UpdateCleaningPayload {
 	custom_tasks: string[];
-	instructions: string;
+	information: string;
 	scheduled_start: string;
 	stocks_included: boolean;
 }
@@ -124,7 +124,7 @@ export const cleaningService = {
 		propertyId: string,
 		scheduledStart: string,
 		options?: {
-			instructions?: string;
+			information?: string;
 			stocksIncluded?: boolean;
 			customTasks?: string[];
 		},
@@ -133,7 +133,7 @@ export const cleaningService = {
 			p_host_id: hostId,
 			p_property_id: propertyId,
 			p_scheduled_start: scheduledStart,
-			p_instructions: (options?.instructions ?? null) as string,
+			p_information: (options?.information ?? null) as string,
 			p_stocks_included: options?.stocksIncluded ?? false,
 			p_custom_tasks: options?.customTasks ?? [],
 		});
@@ -152,7 +152,7 @@ export const cleaningService = {
 		const { data, error } = await supabase.rpc('admin_update_cleaning', {
 			p_cleaning_id: cleaningId,
 			p_custom_tasks: payload.custom_tasks,
-			p_instructions: payload.instructions,
+			p_information: payload.information,
 			p_scheduled_start: payload.scheduled_start,
 			p_stocks_included: payload.stocks_included,
 		});

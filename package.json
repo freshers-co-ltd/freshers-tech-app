@@ -38,7 +38,7 @@
 		"date-fns": "4.1.0",
 		"input-otp": "1.4.2",
 		"lucide-react": "0.575.0",
-		"media-chrome": "^4.19.0",
+		"media-chrome": "4.19.0",
 		"nuqs": "2.8.9",
 		"radix-ui": "1.4.3",
 		"react": "19.2.0",

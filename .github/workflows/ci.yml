@@ -28,10 +28,5 @@ jobs:
       - name: Type Check
         run: npx tsc --noEmit
 
-      - name: Debug Media Chrome Folder Structure
-        run: |
-          ls -R node_modules/media-chrome/react || echo "react directory not found"
-          cat node_modules/media-chrome/package.json | grep -A 20 '"exports"' || true
-
       - name: Test
         run: npm test

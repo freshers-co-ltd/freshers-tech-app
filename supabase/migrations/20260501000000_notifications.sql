@@ -468,7 +468,7 @@ BEGIN
 
     IF NEW.status = 'requested' AND OLD.status = 'requested' THEN
         IF NEW.scheduled_start IS DISTINCT FROM OLD.scheduled_start
-            OR NEW.instructions IS DISTINCT FROM OLD.instructions
+            OR NEW.information IS DISTINCT FROM OLD.information
             OR NEW.stocks_included IS DISTINCT FROM OLD.stocks_included
             OR EXISTS (SELECT 1 FROM public.cleaning_tasks ct WHERE ct.cleaning_id = NEW.id AND ct.deleted_at IS NULL AND (SELECT count(*) FROM public.cleaning_tasks ct2 WHERE ct2.cleaning_id = NEW.id AND ct2.deleted_at IS NULL) != (SELECT count(*) FROM public.cleaning_tasks ct3 WHERE ct3.cleaning_id = OLD.id AND ct3.deleted_at IS NULL)) THEN
 

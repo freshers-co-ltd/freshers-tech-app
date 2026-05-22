@@ -61,7 +61,7 @@ export function AdminCleaningsPage() {
 		}
 
 		const result = await adminCleaningService.updateCleaning(existingId, {
-			instructions: data.instructions || '',
+			information: data.information || '',
 			scheduled_start: data.scheduled_start.toISOString(),
 			stocks_included: data.stocks_included,
 			custom_tasks: data.custom_tasks?.map((t) => t.description) || [],

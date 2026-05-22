@@ -305,7 +305,7 @@ export const DICT = {
 			LABELS: {
 				COST: 'Cost',
 				CUSTOM_TASKS: 'Additional Tasks',
-				INSTRUCTIONS: 'Instructions',
+				INFORMATION: 'Additional Information',
 				NEW_PROPERTY: 'Create New Property',
 				SCHEDULED_DATE: 'Scheduled Date',
 				SCHEDULED_TIME: 'Scheduled Time',
