@@ -1487,7 +1487,7 @@ VALUES
         '00000000-0000-0000-0000-000000000019',
         'completed',
         NOW() - INTERVAL '8 days',
-        'Enter via main lobby, take lift to 4th floor. Flat 4B.',
+        'Enter via main lobby, take lift.',
         NOW() - INTERVAL '8 days' + INTERVAL '10 hours',
         NOW() - INTERVAL '8 days' + INTERVAL '13 hours'
     ),
@@ -1566,7 +1566,7 @@ VALUES
         '00000000-0000-0000-0000-000000000011',
         'in_progress',
         NOW() - INTERVAL '1 hour',
-        'Let yourself in with the code sent via text. Door code: 2233.',
+        'Let yourself in with the code. Door code: 2233.',
         NOW() - INTERVAL '1 hour',
         NULL
     ),
@@ -1713,7 +1713,7 @@ VALUES
         '00000000-0000-0000-0000-000000000019',
         'confirmed',
         NOW() + INTERVAL '10 days',
-        'Coastal way confirmed.',
+        NULL,
         NULL,
         NULL
     ),
@@ -1724,7 +1724,7 @@ VALUES
         '00000000-0000-0000-0000-000000000011',
         'confirmed',
         NOW() + INTERVAL '11 days',
-        'Meadow drive booked.',
+        'Use side entrance.',
         NULL,
         NULL
     ),
@@ -1735,7 +1735,7 @@ VALUES
         '00000000-0000-0000-0000-000000000003',
         'confirmed',
         NOW() + INTERVAL '12 days',
-        'Ocean view confirmed.',
+        'Park in the visitor bay. Code for gate: 7722.',
         NULL,
         NULL
     ),
@@ -1746,7 +1746,7 @@ VALUES
         '00000000-0000-0000-0000-000000000005',
         'confirmed',
         NOW() + INTERVAL '13 days',
-        'Garden lane confirmed.',
+        'Code for key safe: 5582. Please return keys to safe when done.',
         NULL,
         NULL
     ),
@@ -1757,11 +1757,10 @@ VALUES
         '00000000-0000-0000-0000-000000000007',
         'confirmed',
         NOW() + INTERVAL '14 days',
-        'High street scheduled.',
+        NULL,
         NULL,
         NULL
     ),
-    -- Keep original seed data too
     (
         'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
         '00000000-0000-0000-0000-000000000002',
@@ -1780,7 +1779,7 @@ VALUES
         '00000000-0000-0000-0000-000000000003',
         'confirmed',
         NOW() + INTERVAL '1 day',
-        'Please focus on the balcony.',
+        NULL,
         NULL,
         NULL
     ),
@@ -1791,7 +1790,7 @@ VALUES
         '00000000-0000-0000-0000-000000000003',
         'in_progress',
         NOW() - INTERVAL '1 hour',
-        'Standard clean plus oven.',
+        NULL,
         NOW() - INTERVAL '45 minutes',
         NULL
     ),
@@ -1802,7 +1801,7 @@ VALUES
         '00000000-0000-0000-0000-000000000003',
         'completed',
         NOW() - INTERVAL '1 day',
-        'Check-out clean.',
+        'Park in the visitor bay. Code for gate: 7722.',
         NOW() - INTERVAL '26 hours',
         NOW() - INTERVAL '23 hours'
     );

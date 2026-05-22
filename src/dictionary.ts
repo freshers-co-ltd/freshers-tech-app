@@ -290,6 +290,9 @@ export const DICT = {
 				SUCCESS: 'Cleaning completed and report submitted!',
 				FAILED: 'Failed to submit report. Please try again.',
 			},
+			TOILETRIES_RESTOCK: 'Toiletries Restock',
+			RESTOCK_INCLUDED: 'Included',
+			RESTOCK_NOT_INCLUDED: 'Not Included',
 		},
 		SEARCH: {
 			PLACEHOLDER: 'Search by address...',

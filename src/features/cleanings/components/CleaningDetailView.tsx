@@ -1,6 +1,17 @@
 'use client';
 
-import { AlertCircle, Banknote, Bath, Bed, Clock, Info, MapPin, Package, User } from 'lucide-react';
+import {
+	AlertCircle,
+	Banknote,
+	Bath,
+	Bed,
+	Clock,
+	Info,
+	MapPin,
+	NotepadText,
+	Package,
+	User,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { EntityBadge } from '@/components/EntityBadge';
 import { FullscreenMediaCarousel } from '@/components/FullscreenMediaCarousel';
@@ -319,17 +330,23 @@ export function CleaningDetailView({
 									)}
 								</div>
 
-								{cleaning.information && (
-									<div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 min-w-0">
-										<Clock className="size-5 text-primary shrink-0" />
-										<div className="min-w-0">
-											<p className="text-[10px] text-muted-foreground uppercase font-bold">
-												Additional Information
-											</p>
-											<span>{cleaning.information}</span>
-										</div>
+								<div className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30 min-w-0">
+									<NotepadText className="size-5 text-primary shrink-0 mt-0.5" />
+									<div className="min-w-0 space-y-2">
+										<p className="text-[10px] text-muted-foreground uppercase font-bold">
+											{DICT.CLEANINGS.FORM.LABELS.INFORMATION}
+										</p>
+										{cleaning.information && (
+											<span className="text-sm block">{cleaning.information}</span>
+										)}
+										<span>
+											{DICT.CLEANINGS.DETAIL.TOILETRIES_RESTOCK}:{' '}
+											{cleaning.stocks_included
+												? DICT.CLEANINGS.DETAIL.RESTOCK_INCLUDED
+												: DICT.CLEANINGS.DETAIL.RESTOCK_NOT_INCLUDED}
+										</span>
 									</div>
-								)}
+								</div>
 
 								<CleaningTaskList
 									tasks={tasks}
