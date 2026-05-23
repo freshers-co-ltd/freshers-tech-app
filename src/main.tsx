@@ -1,5 +1,4 @@
 import { registerSW } from 'virtual:pwa-register';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v6';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -12,15 +11,6 @@ import { NotificationProvider } from '@/features/notifications/NotificationConte
 import { PropertyProvider } from '@/features/properties/PropertyContext';
 import { router } from '@/routes.tsx';
 import '@/index.css';
-
-const queryClient = new QueryClient({
-	defaultOptions: {
-		queries: {
-			staleTime: 1000 * 60 * 5,
-			refetchOnWindowFocus: false,
-		},
-	},
-});
 
 const updateSW = registerSW({
 	onNeedRefresh() {
@@ -40,21 +30,19 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
 	<StrictMode>
-		<QueryClientProvider client={queryClient}>
-			<AuthProvider>
-				<NotificationProvider>
-					<PropertyProvider>
-						<CleaningProvider>
-							<TooltipProvider>
-								<NuqsAdapter>
-									<RouterProvider router={router} />
-								</NuqsAdapter>
-								<Toaster />
-							</TooltipProvider>
-						</CleaningProvider>
-					</PropertyProvider>
-				</NotificationProvider>
-			</AuthProvider>
-		</QueryClientProvider>
+		<AuthProvider>
+			<NotificationProvider>
+				<PropertyProvider>
+					<CleaningProvider>
+						<TooltipProvider>
+							<NuqsAdapter>
+								<RouterProvider router={router} />
+							</NuqsAdapter>
+							<Toaster />
+						</TooltipProvider>
+					</CleaningProvider>
+				</PropertyProvider>
+			</NotificationProvider>
+		</AuthProvider>
 	</StrictMode>,
 );

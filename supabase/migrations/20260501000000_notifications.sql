@@ -177,7 +177,7 @@ BEGIN
                     'cleaner_name', rec.cleaner_name,
                     'scheduled_time', TO_CHAR(rec.scheduled_start, 'HH12:MI AM')
                 ),
-                '/admin/cleanings?cleaning_view=' || rec.cleaning_id::TEXT
+                '/admin/users/hosts/' || rec.host_id::TEXT || '?cleaning_view=' || rec.cleaning_id::TEXT
             )
             ON CONFLICT DO NOTHING;
         END LOOP;
@@ -331,7 +331,7 @@ BEGIN
         SELECT p.id, 'cleaning_requested', 'New Cleaning Requested',
             'Host ' || COALESCE(hp.full_name, 'Unknown') || ' has requested a cleaning at ' || v_property_address,
             jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id, 'property_address', v_property_address, 'host_name', COALESCE(hp.full_name, 'Unknown')),
-            '/admin/cleanings?cleaning_view=' || NEW.id::TEXT
+            '/admin/users/hosts/' || v_host_id::TEXT || '?cleaning_view=' || NEW.id::TEXT
         FROM public.profiles p
         CROSS JOIN (SELECT full_name FROM public.profiles WHERE id = v_host_id) hp
         WHERE p.role = 'admin'
@@ -425,7 +425,7 @@ BEGIN
         SELECT p.id, 'cleaning_started', 'Cleaning Started',
             'Cleaning started by ' || v_cleaner_name || ' at ' || v_property_address || '.',
             jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id, 'property_address', v_property_address, 'cleaner_name', v_cleaner_name),
-            '/admin/cleanings?cleaning_view=' || NEW.id::TEXT
+            '/admin/users/hosts/' || v_host_id::TEXT || '?cleaning_view=' || NEW.id::TEXT
         FROM public.profiles p
         WHERE p.role = 'admin'
         ON CONFLICT DO NOTHING;
@@ -449,7 +449,7 @@ BEGIN
         SELECT p.id, 'cleaning_completed', 'Cleaning Completed',
             'Cleaning completed by ' || v_cleaner_name || ' at ' || v_property_address || '.',
             jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id, 'property_address', v_property_address, 'cleaner_name', v_cleaner_name),
-            '/admin/cleanings?cleaning_view=' || NEW.id::TEXT
+            '/admin/users/hosts/' || v_host_id::TEXT || '?cleaning_view=' || NEW.id::TEXT
         FROM public.profiles p
         WHERE p.role = 'admin'
         ON CONFLICT DO NOTHING;
@@ -460,7 +460,7 @@ BEGIN
         SELECT p.id, 'cleaning_cancelled', 'Cleaning Cancelled',
             'Cleaning at ' || v_property_address || ' has been cancelled.',
             jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id, 'property_address', v_property_address),
-            '/admin/cleanings?cleaning_view=' || NEW.id::TEXT
+            '/admin/users/hosts/' || v_host_id::TEXT || '?cleaning_view=' || NEW.id::TEXT
         FROM public.profiles p
         WHERE p.role = 'admin'
         ON CONFLICT DO NOTHING;
@@ -489,7 +489,7 @@ BEGIN
             SELECT p.id, 'cleaning_updated', 'Cleaning Details Updated',
                 'Cleaning at ' || v_property_address || ' has been updated by the host.',
                 jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id, 'property_address', v_property_address),
-                '/admin/cleanings?cleaning_view=' || NEW.id::TEXT
+                '/admin/users/hosts/' || v_host_id::TEXT || '?cleaning_view=' || NEW.id::TEXT
             FROM public.profiles p
             WHERE p.role = 'admin'
             ON CONFLICT DO NOTHING;

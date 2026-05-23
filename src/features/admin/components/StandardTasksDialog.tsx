@@ -144,7 +144,7 @@ export function StandardTasksDialog({ open, onOpenChange }: StandardTasksDialogP
 				</DialogHeader>
 
 				{loading ? (
-					<Loading />
+					<Loading absolute={false} />
 				) : (
 					<div className="flex-1 min-h-0 flex flex-col pb-2 gap-4 overflow-hidden">
 						<ScrollArea className="flex-1 min-h-0 px-2">

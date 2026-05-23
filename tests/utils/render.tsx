@@ -1,4 +1,3 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { type RenderOptions, type RenderResult, render } from '@testing-library/react';
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v6';
 import type { ReactElement, ReactNode } from 'react';
@@ -8,15 +7,6 @@ import { AuthProvider } from '@/features/auth/AuthContext';
 import { CleaningProvider } from '@/features/cleanings/CleaningContext';
 import { NotificationProvider } from '@/features/notifications/NotificationContext';
 import { PropertyProvider } from '@/features/properties/PropertyContext';
-
-const defaultQueryClient = new QueryClient({
-	defaultOptions: {
-		queries: {
-			retry: false,
-			gcTime: 0,
-		},
-	},
-});
 
 interface RenderWithProvidersOptions extends Omit<RenderOptions, 'wrapper'> {
 	initialEntries?: string[];
@@ -37,25 +27,23 @@ function AllProviders({
 		: undefined;
 
 	return (
-		<QueryClientProvider client={defaultQueryClient}>
-			<AuthProvider>
-				<NotificationProvider>
-					<PropertyProvider>
-						<CleaningProvider>
-							<TooltipProvider>
-								{router ? (
-									<NuqsAdapter>
-										<RouterProvider router={router} />
-									</NuqsAdapter>
-								) : (
-									children
-								)}
-							</TooltipProvider>
-						</CleaningProvider>
-					</PropertyProvider>
-				</NotificationProvider>
-			</AuthProvider>
-		</QueryClientProvider>
+		<AuthProvider>
+			<NotificationProvider>
+				<PropertyProvider>
+					<CleaningProvider>
+						<TooltipProvider>
+							{router ? (
+								<NuqsAdapter>
+									<RouterProvider router={router} />
+								</NuqsAdapter>
+							) : (
+								children
+							)}
+						</TooltipProvider>
+					</CleaningProvider>
+				</PropertyProvider>
+			</NotificationProvider>
+		</AuthProvider>
 	);
 }
 
@@ -72,5 +60,3 @@ export function renderWithProviders(
 		),
 	});
 }
-
-export { defaultQueryClient };
