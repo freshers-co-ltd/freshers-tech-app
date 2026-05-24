@@ -35,13 +35,6 @@ export interface CleaningFilters {
 	search?: string;
 }
 
-export interface StandardTask {
-	id: string;
-	description: string;
-	is_active: boolean;
-	created_at: string;
-}
-
 export interface UpdateCleaningPayload {
 	custom_tasks: string[];
 	information: string;
@@ -162,16 +155,6 @@ export const cleaningService = {
 		}
 
 		return { data: data as string, error: null };
-	},
-
-	async getStandardTasks(): Promise<ActionResult<StandardTask[]>> {
-		const { data, error } = await supabase.rpc('admin_get_standard_tasks');
-
-		if (error) {
-			return { data: null, error: mapDatabaseError(error) };
-		}
-
-		return { data: data as StandardTask[], error: null };
 	},
 
 	async updateStandardTasks(

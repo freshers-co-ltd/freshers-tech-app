@@ -15,7 +15,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cleaningService, type StandardTask } from '@/features/admin/cleaningService';
+import { cleaningService as adminCleaningService } from '@/features/admin/cleaningService';
+import { cleaningService, type StandardTask } from '@/features/cleanings/cleaningService';
 
 interface StandardTasksDialogProps {
 	open: boolean;
@@ -119,7 +120,7 @@ export function StandardTasksDialog({ open, onOpenChange }: StandardTasksDialogP
 		const tasksToDelete = tasks.filter((t) => t.isDeleted && t.id).map((t) => t.id);
 
 		setSaving(true);
-		const result = await cleaningService.updateStandardTasks(allTasks, tasksToDelete);
+		const result = await adminCleaningService.updateStandardTasks(allTasks, tasksToDelete);
 		setSaving(false);
 
 		if (result.error) {

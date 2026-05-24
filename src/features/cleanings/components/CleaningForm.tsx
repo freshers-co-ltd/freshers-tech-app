@@ -20,8 +20,11 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { DICT } from '@/dictionary';
-import { cleaningService } from '@/features/admin/cleaningService';
-import { type CleaningRequest, STATUS_GROUPS } from '@/features/cleanings/cleaningService';
+import {
+	type CleaningRequest,
+	cleaningService,
+	STATUS_GROUPS,
+} from '@/features/cleanings/cleaningService';
 import { PropertyForm } from '@/features/properties/components/PropertyForm';
 import { useProperties } from '@/features/properties/PropertyContext';
 import type { Property, PropertyInsert } from '@/features/properties/propertyService';

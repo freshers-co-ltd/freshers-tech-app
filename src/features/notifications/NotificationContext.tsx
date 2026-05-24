@@ -75,7 +75,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 			return;
 		}
 
-		const { data, error } = await notificationsService.getOrCreatePreferences(user.id);
+		const { data, error } = await notificationsService.getOrCreatePreferences();
 
 		if (!error && data) {
 			setPreferences(data as NotificationPreferences);

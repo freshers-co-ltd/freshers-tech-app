@@ -13,6 +13,7 @@ export type TaskInsert = Database['public']['Tables']['cleaning_tasks']['Insert'
 export type TaskUpdate = Database['public']['Tables']['cleaning_tasks']['Update'];
 export type EvidenceInsert = Database['public']['Tables']['evidence_media']['Insert'];
 export type ReportInsert = Database['public']['Tables']['cleaning_reports']['Insert'];
+export type StandardTask = Database['public']['Tables']['standard_tasks']['Row'];
 
 export const CLEANING_STATUS: Record<string, CleaningStatus> = {
 	DRAFT: 'draft',
@@ -385,17 +386,18 @@ export const cleaningService = {
 		return { data: undefined, error: null };
 	},
 
-	async getStandardTasks(): Promise<ActionResult<{ id: string; description: string }[]>> {
+	async getStandardTasks(): Promise<ActionResult<StandardTask[]>> {
 		const { data, error } = await supabase
 			.from('standard_tasks')
-			.select('id, description')
-			.eq('is_active', true);
+			.select('id, description, is_active, created_at')
+			.order('is_active', { ascending: false })
+			.order('created_at', { ascending: true });
 
 		if (error) {
 			return { data: null, error: mapDatabaseError(error) };
 		}
 
-		return { data: data || [], error: null };
+		return { data: data ?? [], error: null };
 	},
 
 	async getCleanerPayConfig(): Promise<ActionResult<CleanerPayConfig>> {

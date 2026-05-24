@@ -482,14 +482,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE
-OR REPLACE FUNCTION public.admin_get_standard_tasks () RETURNS TABLE (id UUID, description TEXT, is_active BOOLEAN, created_at TIMESTAMP WITH TIME ZONE) SECURITY DEFINER
-SET search_path = public AS $$
-BEGIN
-    RETURN QUERY SELECT st.id, st.description, st.is_active, st.created_at FROM public.standard_tasks st ORDER BY st.created_at;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE
 OR REPLACE FUNCTION public.admin_get_available_cleaners () RETURNS TABLE (id UUID, full_name TEXT, avatar_url TEXT, current_assignments INT, avg_completion_hours NUMERIC) SECURITY DEFINER
 SET
     search_path = public AS $$
@@ -847,8 +839,6 @@ GRANT EXECUTE ON FUNCTION public.admin_create_cleaning_for_host TO authenticated
 REVOKE EXECUTE ON FUNCTION public.admin_update_standard_tasks(jsonb, uuid[]) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.admin_update_standard_tasks(jsonb, uuid[]) TO authenticated;
 
-REVOKE EXECUTE ON FUNCTION public.admin_get_standard_tasks() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_get_standard_tasks() TO authenticated;
 
 REVOKE EXECUTE ON FUNCTION public.admin_get_available_cleaners() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.admin_get_available_cleaners() TO authenticated;

@@ -79,6 +79,16 @@ describe('Host Cleanings Page', () => {
 		cleanupFrom = mockTableData({
 			cleanings: { data: [buildRawCleaning({ id: 'cleaning_456' })] },
 			properties: { data: [property] },
+			standard_tasks: {
+				data: [
+					{
+						id: 'std_1',
+						description: 'Vacuum',
+						is_active: true,
+						created_at: new Date().toISOString(),
+					},
+				],
+			},
 		});
 		cleanupRpc = mockRpcData({
 			get_cleaner_pay_config: {
@@ -92,7 +102,6 @@ describe('Host Cleanings Page', () => {
 			},
 			calculate_service_cost: { data: 120 },
 			create_cleaning_request: { data: 'cleaning_456' },
-			admin_get_standard_tasks: { data: [{ id: 'std_1', description: 'Vacuum' }] },
 		});
 
 		// Render CleaningForm directly with initialData to avoid Select interaction.

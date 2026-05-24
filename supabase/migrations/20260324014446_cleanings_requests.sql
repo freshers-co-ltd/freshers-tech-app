@@ -67,7 +67,10 @@ CREATE POLICY "Admins can do everything and hosts can view standard tasks" ON pu
     public.is_not_banned ()
     AND (
         (auth.jwt () -> 'app_metadata' ->> 'role' = 'admin')
-        OR (auth.jwt () -> 'app_metadata' ->> 'role' = 'host')
+        OR (
+            (auth.jwt () -> 'app_metadata' ->> 'role' = 'host')
+            AND is_active = true
+        )
     )
 )
 WITH

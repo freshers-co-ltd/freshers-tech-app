@@ -37,7 +37,7 @@ export function mockTableData(
 			return {
 				...createDefaultQueryBuilder(),
 				select: vi.fn().mockReturnThis(),
-				order: vi.fn().mockResolvedValue(result),
+				order: vi.fn().mockReturnThis(),
 				eq: vi.fn().mockReturnThis(),
 				upsert: vi.fn().mockReturnThis(),
 				single: vi.fn().mockResolvedValue({
@@ -48,6 +48,11 @@ export function mockTableData(
 					data: error ? null : data,
 					error: error ? { message: error } : null,
 				}),
+				// biome-ignore lint/suspicious/noThenProperty: Supabase client builder is inherently thenable
+				then: (
+					onfulfilled: (value: { data: unknown; error: unknown }) => unknown,
+					onrejected?: (reason: unknown) => unknown,
+				) => Promise.resolve(result).then(onfulfilled, onrejected),
 			};
 		}
 		return createDefaultQueryBuilder();
