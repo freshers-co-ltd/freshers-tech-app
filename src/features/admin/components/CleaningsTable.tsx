@@ -339,69 +339,74 @@ export function CleaningsTable({
 					</p>
 				</div>
 
-				<div className="flex gap-1 shrink-0">
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<Button
-								variant="secondary"
-								size="sm"
-								className="h-8 w-8 p-0"
-								onClick={() => modal.openView(cleaning.id)}>
-								<Eye className="size-4" />
-							</Button>
-						</TooltipTrigger>
-						<TooltipContent>
-							<p>View Details</p>
-						</TooltipContent>
-					</Tooltip>
-					{!isDisabled(cleaning) && (
+				<div className="flex flex-col gap-1 shrink-0">
+					<div>
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<Button
 									variant="secondary"
 									size="sm"
 									className="h-8 w-8 p-0"
-									onClick={() => modal.openEdit(cleaning.id)}>
-									<Pencil className="size-4" />
+									onClick={() => modal.openView(cleaning.id)}>
+									<Eye className="size-4" />
 								</Button>
 							</TooltipTrigger>
 							<TooltipContent>
-								<p>Edit</p>
+								<p>View Details</p>
 							</TooltipContent>
 						</Tooltip>
-					)}
-					{!cleaning.cleaner_name && (
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Button
-									variant="secondary"
-									size="sm"
-									className="h-8 w-8 p-0"
-									onClick={() => openAssignModal(cleaning.id)}>
-									<UserPlus className="size-4" />
-								</Button>
-							</TooltipTrigger>
-							<TooltipContent>
-								<p>Assign</p>
-							</TooltipContent>
-						</Tooltip>
-					)}
-					{cleaning.cleaner_name && !isDisabled(cleaning) && (
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Button
-									variant="secondary"
-									size="sm"
-									className="h-8 w-8 p-0"
-									onClick={() => openAssignModal(cleaning.id, cleaning.cleaner_id)}>
-									<ArrowUpDown className="size-4" />
-								</Button>
-							</TooltipTrigger>
-							<TooltipContent>
-								<p>Reassign</p>
-							</TooltipContent>
-						</Tooltip>
-					)}
+						{!isDisabled(cleaning) && (
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										variant="secondary"
+										size="sm"
+										className="h-8 w-8 p-0"
+										onClick={() => modal.openEdit(cleaning.id)}>
+										<Pencil className="size-4" />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>Edit</p>
+								</TooltipContent>
+							</Tooltip>
+						)}
+						{!cleaning.cleaner_name && (
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										variant="secondary"
+										size="sm"
+										className="h-8 w-8 p-0"
+										onClick={() => openAssignModal(cleaning.id)}>
+										<UserPlus className="size-4" />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>Assign</p>
+								</TooltipContent>
+							</Tooltip>
+						)}
+						{cleaning.cleaner_name && !isDisabled(cleaning) && (
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										variant="secondary"
+										size="sm"
+										className="h-8 w-8 p-0"
+										onClick={() => openAssignModal(cleaning.id, cleaning.cleaner_id)}>
+										<ArrowUpDown className="size-4" />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>Reassign</p>
+								</TooltipContent>
+							</Tooltip>
+						)}
+					</div>
+					<div>
+						<EntityBadge variant={{ type: 'cleaning', value: cleaning.status }} />
+					</div>
 				</div>
 			</div>
 		),
@@ -418,6 +423,7 @@ export function CleaningsTable({
 	const excludeFromExpanded = [
 		'date',
 		'time',
+		'status',
 		'property_address',
 		'property_postcode',
 		'property_town_city',

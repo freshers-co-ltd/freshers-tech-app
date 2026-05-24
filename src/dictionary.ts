@@ -290,6 +290,11 @@ export const DICT = {
 				SUCCESS: 'Cleaning completed and report submitted!',
 				FAILED: 'Failed to submit report. Please try again.',
 			},
+			EVIDENCE: {
+				TITLE: 'Media Evidence',
+				WARNING: 'Media evidence will be automatically deleted in {days} day(s).',
+				EXPIRED: 'Media evidence has been automatically removed.',
+			},
 			TOILETRIES_RESTOCK: 'Toiletries Restock',
 			RESTOCK_INCLUDED: 'Included',
 			RESTOCK_NOT_INCLUDED: 'Not Included',

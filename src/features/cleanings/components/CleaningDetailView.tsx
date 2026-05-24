@@ -117,6 +117,17 @@ export function CleaningDetailView({
 		[evidence],
 	);
 
+	const expiryInfo = useMemo(() => {
+		if (!cleaning.clock_out_time) {
+			return null;
+		}
+		const completedAt = new Date(cleaning.clock_out_time);
+		const expiresAt = new Date(completedAt.getTime() + 14 * 24 * 60 * 60 * 1000);
+		const now = new Date();
+		const daysRemaining = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+		return { daysRemaining, isExpired: daysRemaining <= 0 };
+	}, [cleaning.clock_out_time]);
+
 	const onFormSubmit = async (values: EvidenceFormValues, files: File[]) => {
 		if (!cleaning.cleaner_id) {
 			return;
@@ -355,70 +366,90 @@ export function CleaningDetailView({
 									onTaskToggle={handleTaskToggle}
 								/>
 
-								{isCompleted && (cleaning.report || evidence.length > 0) && (
-									<div className="grid grid-cols-1 gap-6 pt-2 w-full overflow-hidden">
-										{cleaning.report && (
-											<div className="grid grid-cols-1 gap-4">
-												{cleaning.report.broken_items_report && (
-													<div className="space-y-2">
-														<h4 className="text-xs font-bold uppercase text-destructive tracking-wider flex items-center gap-2">
-															<AlertCircle className="size-4" /> Broken Items
-														</h4>
-														<div className="p-3 rounded-md border border-destructive/20 bg-destructive/5">
-															<p className="text-sm">{cleaning.report.broken_items_report}</p>
+								{isCompleted &&
+									(cleaning.report || (evidence.length > 0 && !expiryInfo?.isExpired)) && (
+										<div className="grid grid-cols-1 gap-6 pt-2 w-full overflow-hidden">
+											{cleaning.report && (
+												<div className="grid grid-cols-1 gap-4">
+													{cleaning.report.broken_items_report && (
+														<div className="space-y-2">
+															<h4 className="text-xs font-bold uppercase text-destructive tracking-wider flex items-center gap-2">
+																<AlertCircle className="size-4" /> Broken Items
+															</h4>
+															<div className="p-3 rounded-md border border-destructive/20 bg-destructive/5">
+																<p className="text-sm">{cleaning.report.broken_items_report}</p>
+															</div>
 														</div>
-													</div>
-												)}
-												{cleaning.report.low_supplies_report && (
-													<div className="space-y-2">
-														<h4 className="text-xs font-bold uppercase text-orange-500 tracking-wider flex items-center gap-2">
-															<Package className="size-4" /> Low Supplies
-														</h4>
-														<div className="p-3 rounded-md border border-orange-200 bg-orange-50">
-															<p className="text-sm">{cleaning.report.low_supplies_report}</p>
+													)}
+													{cleaning.report.low_supplies_report && (
+														<div className="space-y-2">
+															<h4 className="text-xs font-bold uppercase text-orange-500 tracking-wider flex items-center gap-2">
+																<Package className="size-4" /> Low Supplies
+															</h4>
+															<div className="p-3 rounded-md border border-orange-200 bg-orange-50">
+																<p className="text-sm">{cleaning.report.low_supplies_report}</p>
+															</div>
 														</div>
-													</div>
-												)}
-											</div>
-										)}
+													)}
+												</div>
+											)}
 
-										{evidenceMedia.length > 0 && (
-											<div className="space-y-3 w-full min-w-0 overflow-hidden">
-												<h4 className="text-xs font-bold uppercase text-muted-foreground tracking-wider">
-													Cleaning Evidence
-												</h4>
-												<ScrollArea className="w-full pb-2">
-													<div className="flex gap-2 p-1 min-w-0">
-														{evidence.map((item, index) => (
-															<Button
-																key={item.id}
-																variant="outline"
-																className="p-0 size-40 shrink-0 overflow-hidden border rounded-md"
-																onClick={() => {
-																	setSelectedMediaIndex(index);
-																	setIsFullScreen(true);
-																}}>
-																{item.type === 'image' ? (
-																	<ImageWithFallback
-																		src={mediaService.getMediaUrl(item.media_url, 'cleaning-media')}
-																		className="size-full object-cover"
-																		alt="Evidence"
-																	/>
-																) : (
-																	<VideoThumbnail
-																		src={mediaService.getMediaUrl(item.media_url, 'cleaning-media')}
-																		className="size-full"
-																	/>
-																)}
-															</Button>
-														))}
-													</div>
-													<ScrollBar orientation="horizontal" />
-												</ScrollArea>
-											</div>
-										)}
-									</div>
-								)}
+											{evidenceMedia.length > 0 && !expiryInfo?.isExpired && (
+												<div className="space-y-3 w-full min-w-0 overflow-hidden">
+													<h4 className="text-xs font-bold uppercase text-muted-foreground tracking-wider">
+														{DICT.CLEANINGS.DETAIL.EVIDENCE.TITLE}
+													</h4>
+													<ScrollArea className="w-full pb-2">
+														<div className="flex gap-2 p-1 min-w-0">
+															{evidence.map((item, index) => (
+																<Button
+																	key={item.id}
+																	variant="outline"
+																	className="p-0 size-40 shrink-0 overflow-hidden border rounded-md"
+																	onClick={() => {
+																		setSelectedMediaIndex(index);
+																		setIsFullScreen(true);
+																	}}>
+																	{item.type === 'image' ? (
+																		<ImageWithFallback
+																			src={mediaService.getMediaUrl(
+																				item.media_url,
+																				'cleaning-media',
+																			)}
+																			className="size-full object-cover"
+																			alt="Evidence"
+																		/>
+																	) : (
+																		<VideoThumbnail
+																			src={mediaService.getMediaUrl(
+																				item.media_url,
+																				'cleaning-media',
+																			)}
+																			className="size-full"
+																		/>
+																	)}
+																</Button>
+															))}
+														</div>
+														<ScrollBar orientation="horizontal" />
+													</ScrollArea>
+													{expiryInfo &&
+														expiryInfo.daysRemaining > 0 &&
+														expiryInfo.daysRemaining <= 14 && (
+															<div className="flex items-start gap-2 p-2 rounded-md border border-amber-200 bg-amber-50 text-amber-800 text-sm">
+																<Clock className="size-4 shrink-0 mt-0.5" />
+																<span>
+																	{DICT.CLEANINGS.DETAIL.EVIDENCE.WARNING.replace(
+																		'{days}',
+																		String(expiryInfo.daysRemaining),
+																	)}
+																</span>
+															</div>
+														)}
+												</div>
+											)}
+										</div>
+									)}
 							</>
 						)}
 					</div>
