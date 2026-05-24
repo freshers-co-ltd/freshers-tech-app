@@ -1,88 +1,17 @@
 'use client';
 
+import type {
+	AuditFilters,
+	AuditLogEntry,
+	MonthlyStats,
+	PlatformStats,
+	RevenueMetrics,
+	StatusBreakdown,
+	UserGrowthByMonth,
+	UserStats,
+} from '@/features/admin/types';
 import { type ActionResult, mapDatabaseError } from '@/lib/serviceUtils';
 import { supabase } from '@/lib/supabaseClient';
-
-export interface PlatformStats {
-	total_properties: number;
-	total_hosts: number;
-	total_cleaners: number;
-	completed_cleanings_mtd: number;
-	completed_cleanings_ytd: number;
-	total_cleanings_mtd: number;
-	cleanings_in_progress: number;
-	avg_completion_hours: number;
-	broken_items_mtd: number;
-	low_supplies_mtd: number;
-	calculated_at: string;
-}
-
-export interface UserStats {
-	total_users: number;
-	online_users: number;
-	banned_users: number;
-	hosts_count: number;
-	cleaners_count: number;
-	admins_count: number;
-	new_users_this_month: number;
-	new_users_last_month: number;
-	recently_online: number;
-	online_now: number;
-}
-
-export interface AuditLogEntry {
-	id: string;
-	actor_id: string | null;
-	target_id: string;
-	target_table: string;
-	action_type: string;
-	old_data: Record<string, unknown> | null;
-	new_data: Record<string, unknown> | null;
-	created_at: string;
-	actor_name: string | null;
-}
-
-export interface AuditFilters {
-	targetTable?: string;
-	actionType?: string;
-}
-
-export interface MonthlyStats {
-	month: string;
-	cleanings: number;
-	revenue: number;
-	gross: number;
-	net: number;
-}
-
-export interface UserGrowthByMonth {
-	month: string;
-	hosts: number;
-	cleaners: number;
-}
-
-export interface StatusBreakdown {
-	status: string;
-	count: number;
-}
-
-export interface RevenueMetrics {
-	completed_count: number;
-	cancelled_count: number;
-	pending_count: number;
-	in_progress_count: number;
-	revenue_current: number;
-	revenue_last_month: number;
-	avg_completion_hours: number;
-	revenue_change_pct: number;
-	completed_change_pct: number;
-	gross_revenue_current: number;
-	net_revenue_current: number;
-	gross_revenue_last_month: number;
-	net_revenue_last_month: number;
-	gross_revenue_change_pct: number;
-	net_revenue_change_pct: number;
-}
 
 type RpcParams = Record<string, unknown>;
 

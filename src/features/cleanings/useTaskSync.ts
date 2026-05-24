@@ -1,14 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CLEANING_STATUS, type CleaningRequest } from '@/features/cleanings/cleaningService';
-
-interface CleaningTask {
-	id: string;
-	description: string;
-	is_completed: boolean;
-	is_custom: boolean;
-}
+import type { CleaningRequest, CleaningTask } from '@/features/cleanings/types';
+import { CLEANING_STATUS } from '@/features/cleanings/types';
 
 interface UseTaskSyncOptions {
 	cleaning: CleaningRequest;

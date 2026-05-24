@@ -23,11 +23,8 @@ import {
 } from '@/components/ui/select';
 import { DICT } from '@/dictionary';
 import { useAuth } from '@/features/auth/AuthContext';
-import {
-	type Property,
-	type PropertyInsert,
-	propertyTypeValues,
-} from '@/features/properties/propertyService';
+import type { Property, PropertyInsert } from '@/features/properties/types';
+import { propertyTypeValues } from '@/features/properties/types';
 import {
 	DEFAULT_FILE_SIZE_LIMIT,
 	getBucketConfig,

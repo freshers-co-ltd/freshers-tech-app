@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react';
 import { toast } from '@/components/Toast';
 import { DICT } from '@/dictionary';
-import type { CleaningRequest } from '@/features/cleanings/cleaningService';
+import type { CleaningRequest } from '@/features/cleanings/types';
 import { useGeolocation } from '@/hooks/useGeolocation';
 
 interface UseClockInOutOptions {

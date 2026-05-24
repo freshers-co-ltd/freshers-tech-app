@@ -10,12 +10,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
-import {
-	CLEANING_STATUS,
-	type CleaningStatus,
-	STATUS_GROUPS,
-} from '@/features/cleanings/cleaningService';
 import { CleaningCard } from '@/features/cleanings/components/CleaningCard';
+import type { CleaningStatus } from '@/features/cleanings/types';
+import { CLEANING_STATUS, STATUS_GROUPS } from '@/features/cleanings/types';
 import { useCleanerCleanings } from '@/features/cleanings/useCleanerCleanings';
 
 interface CleanerCleaningGridProps {
@@ -97,7 +94,7 @@ export function CleanerCleaningGrid({ onView }: CleanerCleaningGridProps) {
 						</SelectTrigger>
 						<SelectContent align="end" emptyMessage="No statuses available">
 							<SelectItem value="all">All Statuses</SelectItem>
-							{(STATUS_GROUPS.CLEANER_VIEW as CleaningStatus[]).map((status) => {
+							{STATUS_GROUPS.CLEANER_VIEW.map((status: CleaningStatus) => {
 								const displayLabel = status === CLEANING_STATUS.CONFIRMED ? 'assigned' : status;
 
 								return (

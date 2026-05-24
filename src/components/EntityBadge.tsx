@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
-import type { UserRole } from '@/features/auth/authService';
-import type { CleaningStatus } from '@/features/cleanings/cleaningService';
+import type { UserRole } from '@/features/auth/types';
+import type { CleaningStatus } from '@/features/cleanings/types';
 
 export type EntityBadgeVariant =
 	| { type: 'cleaning'; value: CleaningStatus }

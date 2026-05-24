@@ -3,12 +3,9 @@
 import { Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DICT } from '@/dictionary';
-import type { UserRole } from '@/features/auth/authService';
-import {
-	CLEANING_STATUS,
-	type CleaningStatus,
-	STATUS_GROUPS,
-} from '@/features/cleanings/cleaningService';
+import type { UserRole } from '@/features/auth/types';
+import type { CleaningStatus } from '@/features/cleanings/types';
+import { CLEANING_STATUS, STATUS_GROUPS } from '@/features/cleanings/types';
 
 interface CleaningActionButtonsProps {
 	userRole: UserRole;

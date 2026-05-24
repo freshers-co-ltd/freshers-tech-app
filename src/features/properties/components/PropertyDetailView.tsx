@@ -14,7 +14,7 @@ import {
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { DICT } from '@/dictionary';
 import { useAuth } from '@/features/auth/AuthContext';
-import type { Property } from '@/features/properties/propertyService';
+import type { Property } from '@/features/properties/types';
 import { useCarousel } from '@/hooks/useCarousel';
 import { mediaService } from '@/lib/mediaService';
 

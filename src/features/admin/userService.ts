@@ -1,87 +1,17 @@
 'use client';
 
-import type { UserRole } from '@/features/auth/authService';
-import type { CleaningStatus } from '@/features/cleanings/cleaningService';
-import type { Property } from '@/features/properties/propertyService';
+import type {
+	AdminCleanerDetail,
+	AdminHostDetail,
+	AdminUser,
+	AvailableCleaner,
+	SortDirection,
+	SortField,
+	UserFilters,
+} from '@/features/admin/types';
+import type { UserRole } from '@/features/auth/types';
 import { type ActionResult, mapDatabaseError } from '@/lib/serviceUtils';
 import { supabase } from '@/lib/supabaseClient';
-
-export type AdminUser = {
-	id: string;
-	email: string | null;
-	full_name: string | null;
-	role: UserRole;
-	is_verified: boolean | null;
-	avatar_url: string | null;
-	banned_until: string | null;
-	created_at: string | null;
-	last_sign_in_at: string | null;
-	last_seen_at: string | null;
-	is_online: boolean;
-	last_sign_in_text?: string | null;
-};
-
-export interface AdminHostDetail extends AdminUser {
-	properties: Property[];
-	cleanings: {
-		id: string;
-		status: CleaningStatus;
-		scheduled_start: string;
-		service_cost: number;
-		cleaner_pay: number | null;
-		cleaner_id: string | null;
-		cleaner_name: string | null;
-		property_id: string;
-		created_at: string;
-	}[];
-	cleaning_stats: {
-		total: number;
-		requested: number;
-		confirmed: number;
-		in_progress: number;
-	};
-}
-
-export interface AdminCleanerDetail extends AdminUser {
-	assigned_cleanings: {
-		id: string;
-		status: CleaningStatus;
-		scheduled_start: string;
-		service_cost: number;
-		cleaner_pay: number | null;
-		host_id: string;
-		property_id: string;
-		clock_in_time: string | null;
-		clock_out_time: string | null;
-		created_at: string;
-		host_name: string | null;
-		property_address: string | null;
-		property_postcode: string | null;
-		property_town_city: string | null;
-	}[];
-	cleaner_stats: {
-		total_assigned: number;
-		completed: number;
-		confirmed: number;
-		avg_completion_hours: number | null;
-	};
-}
-
-export type SortField = 'name' | 'email' | 'role' | 'status' | 'last_online' | 'joined';
-export type SortDirection = 'asc' | 'desc';
-
-export interface UserFilters {
-	role?: UserRole;
-	search?: string;
-}
-
-export interface AvailableCleaner {
-	id: string;
-	full_name: string | null;
-	avatar_url: string | null;
-	current_assignments: number;
-	avg_completion_hours: number | null;
-}
 
 export const userService = {
 	async getUsers(

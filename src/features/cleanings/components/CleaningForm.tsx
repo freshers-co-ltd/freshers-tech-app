@@ -20,14 +20,12 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { DICT } from '@/dictionary';
-import {
-	type CleaningRequest,
-	cleaningService,
-	STATUS_GROUPS,
-} from '@/features/cleanings/cleaningService';
+import { cleaningService } from '@/features/cleanings/cleaningService';
+import type { CleaningRequest } from '@/features/cleanings/types';
+import { STATUS_GROUPS } from '@/features/cleanings/types';
 import { PropertyForm } from '@/features/properties/components/PropertyForm';
 import { useProperties } from '@/features/properties/PropertyContext';
-import type { Property, PropertyInsert } from '@/features/properties/propertyService';
+import type { Property, PropertyInsert } from '@/features/properties/types';
 
 const cleaningFormSchema = z.object({
 	property_id: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, {

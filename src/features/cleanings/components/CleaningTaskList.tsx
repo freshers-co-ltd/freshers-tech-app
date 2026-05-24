@@ -3,13 +3,7 @@
 import { CheckCircle2, ListChecks } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-
-interface CleaningTask {
-	id: string;
-	description: string;
-	is_completed: boolean;
-	is_custom: boolean;
-}
+import type { CleaningTask } from '@/features/cleanings/types';
 
 interface CleaningTaskListProps {
 	tasks: CleaningTask[];

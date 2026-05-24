@@ -1,46 +1,8 @@
 'use client';
 
-import type { CleaningStatus } from '@/features/cleanings/cleaningService';
+import type { AdminCleaning, CleaningFilters, UpdateCleaningPayload } from '@/features/admin/types';
 import { type ActionResult, mapDatabaseError } from '@/lib/serviceUtils';
 import { supabase } from '@/lib/supabaseClient';
-
-export type { CleaningStatus };
-export interface AdminCleaning {
-	id: string;
-	host_id: string;
-	property_id: string;
-	cleaner_id: string | null;
-	status: CleaningStatus;
-	scheduled_start: string;
-	service_cost: number;
-	cleaner_pay: number | null;
-	information: string | null;
-	stocks_included: boolean;
-	clock_in_time: string | null;
-	clock_out_time: string | null;
-	created_at: string;
-	updated_at: string;
-	deleted_at: string | null;
-	host_name: string | null;
-	cleaner_name: string | null;
-	property_address: string | null;
-	property_postcode: string | null;
-	property_town_city: string | null;
-}
-
-export interface CleaningFilters {
-	status?: CleaningStatus;
-	cleanerId?: string | null;
-	hostId?: string;
-	search?: string;
-}
-
-export interface UpdateCleaningPayload {
-	custom_tasks: string[];
-	information: string;
-	scheduled_start: string;
-	stocks_included: boolean;
-}
 
 export const cleaningService = {
 	async getAllCleanings(

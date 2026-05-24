@@ -12,9 +12,9 @@ import {
 } from '@/components/ui/select';
 import { DICT } from '@/dictionary';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
-import { STATUS_GROUPS } from '@/features/cleanings/cleaningService';
 import { CleaningCard } from '@/features/cleanings/components/CleaningCard';
 import { CleaningGridSkeleton } from '@/features/cleanings/components/CleaningGridSkeleton';
+import { STATUS_GROUPS } from '@/features/cleanings/types';
 
 interface HostCleaningGridProps {
 	onView: (id: string) => void;

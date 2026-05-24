@@ -6,7 +6,7 @@ import { DataTable } from '@/components/DataTable';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DICT } from '@/dictionary';
-import type { Property } from '@/features/properties/propertyService';
+import type { Property } from '@/features/properties/types';
 
 export interface PropertyData {
 	id: string;

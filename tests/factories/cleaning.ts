@@ -1,4 +1,4 @@
-import type { CleaningRequest } from '@/features/cleanings/cleaningService';
+import type { CleaningRequest } from '@/features/cleanings/types';
 
 export function buildCleaning(overrides?: Partial<CleaningRequest>): CleaningRequest {
 	return {

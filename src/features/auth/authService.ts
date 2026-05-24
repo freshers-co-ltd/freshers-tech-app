@@ -1,24 +1,7 @@
-import type { AuthError, User } from '@supabase/supabase-js';
+import type { AuthError } from '@supabase/supabase-js';
 import { DICT } from '@/dictionary';
-import type { Database } from '@/lib/database.types';
+import type { AuthActionResult, Profile, UserRole } from '@/features/auth/types';
 import { supabase } from '@/lib/supabaseClient';
-
-export type UserRole = Database['public']['Enums']['user_role'];
-
-export interface Profile {
-	id: string;
-	email: string;
-	role: UserRole;
-	full_name: string;
-	avatar_url: string | null;
-	is_verified: boolean;
-}
-
-export interface AuthActionResult {
-	error: string | null;
-	user?: User | null;
-	needsConfirmation?: boolean;
-}
 
 const mapAuthError = (error: AuthError): string => {
 	switch (error.code) {

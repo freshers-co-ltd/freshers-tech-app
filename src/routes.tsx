@@ -8,6 +8,7 @@ import {
 } from 'react-router-dom';
 import { Loading } from '@/components/Loading';
 import { useAuth } from '@/features/auth/AuthContext';
+import type { UserRole } from '@/features/auth/types';
 import { AppLayout } from '@/layouts/AppLayout';
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPassword';
@@ -15,7 +16,6 @@ import { LoginPage } from '@/pages/auth/Login';
 import { SetPasswordPage } from '@/pages/auth/SetPassword';
 import { SignupPage } from '@/pages/auth/Signup';
 import { ErrorPage } from '@/pages/Error';
-import type { UserRole } from './features/auth/authService';
 
 const ROLE_DASHBOARDS: Record<UserRole, string> = {
 	host: '/host/dashboard',

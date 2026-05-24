@@ -23,19 +23,17 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { VideoThumbnail } from '@/components/VideoThumbnail';
 import { DICT } from '@/dictionary';
-import type { UserRole } from '@/features/auth/authService';
+import type { UserRole } from '@/features/auth/types';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
-import {
-	CLEANING_STATUS,
-	type CleaningRequest,
-	cleaningService,
-} from '@/features/cleanings/cleaningService';
+import { cleaningService } from '@/features/cleanings/cleaningService';
 import { CleaningActionButtons } from '@/features/cleanings/components/CleaningActionButtons';
 import {
 	CleaningEvidenceForm,
 	type EvidenceFormValues,
 } from '@/features/cleanings/components/CleaningEvidenceForm';
 import { CleaningTaskList } from '@/features/cleanings/components/CleaningTaskList';
+import type { CleaningRequest } from '@/features/cleanings/types';
+import { CLEANING_STATUS } from '@/features/cleanings/types';
 import { useCleanerCleanings } from '@/features/cleanings/useCleanerCleanings';
 import { useClockInOut } from '@/features/cleanings/useClockInOut';
 import { useTaskSync } from '@/features/cleanings/useTaskSync';
@@ -198,7 +196,9 @@ export function CleaningDetailView({
 						<EntityBadge
 							className="mr-8"
 							variant={{ type: 'cleaning', value: cleaning.status }}
-							customLabel={isCleaner && cleaning.status === 'confirmed' ? 'ASSIGNED' : undefined}
+							customLabel={
+								isCleaner && cleaning.status === CLEANING_STATUS.CONFIRMED ? 'ASSIGNED' : undefined
+							}
 						/>
 					)}
 				</div>

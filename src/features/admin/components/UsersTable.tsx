@@ -8,7 +8,7 @@ import { EntityBadge } from '@/components/EntityBadge';
 import { UserAvatar } from '@/components/UserAvatar';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import type { AdminUser } from '@/features/admin/userService';
+import type { AdminUser } from '@/features/admin/types';
 import { formatDate } from '@/lib/utils';
 
 export interface UsersTableProps {

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from '@/components/Toast';
-import type { AdminHostDetail } from '@/features/admin/userService';
+import type { AdminHostDetail } from '@/features/admin/types';
 import { userService } from '@/features/admin/userService';
 import { supabase } from '@/lib/supabaseClient';
 

@@ -1,4 +1,4 @@
-import type { Profile } from '@/features/auth/authService';
+import type { Profile } from '@/features/auth/types';
 
 export function buildProfile(overrides?: Partial<Profile>): Profile {
 	return {

@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from '@/components/Toast';
 import { DICT } from '@/dictionary';
-import type { UserRole } from '@/features/auth/authService';
-import type { CleaningRequest } from '@/features/cleanings/cleaningService';
+import type { UserRole } from '@/features/auth/types';
 import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
+import type { CleaningRequest } from '@/features/cleanings/types';
 import { useResourceModals } from '@/hooks/useResourceModals';
 
 interface UseCleaningModalsOptions {

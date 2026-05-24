@@ -16,7 +16,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cleaningService as adminCleaningService } from '@/features/admin/cleaningService';
-import { cleaningService, type StandardTask } from '@/features/cleanings/cleaningService';
+import { cleaningService } from '@/features/cleanings/cleaningService';
+import type { StandardTask } from '@/features/cleanings/types';
 
 interface StandardTasksDialogProps {
 	open: boolean;

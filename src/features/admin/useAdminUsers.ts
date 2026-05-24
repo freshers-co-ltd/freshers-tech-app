@@ -3,12 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from '@/components/Toast';
 import { analyticsService } from '@/features/admin/analyticsService';
-import { type AdminUser, type UserFilters, userService } from '@/features/admin/userService';
-import type { UserRole } from '@/features/auth/authService';
-
-type UserTab = 'all' | 'host' | 'cleaner' | 'admin';
-type SortField = 'name' | 'email' | 'role' | 'status' | 'last_online' | 'joined';
-type SortDirection = 'asc' | 'desc';
+import type {
+	AdminUser,
+	SortDirection,
+	SortField,
+	UserFilters,
+	UserTab,
+} from '@/features/admin/types';
+import { userService } from '@/features/admin/userService';
+import type { UserRole } from '@/features/auth/types';
 
 interface UseAdminUsersResult {
 	users: AdminUser[];

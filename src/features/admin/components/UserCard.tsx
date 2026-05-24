@@ -4,7 +4,7 @@ import { Calendar, Clock, KeyRound, Mail, ShieldBan, ShieldCheck } from 'lucide-
 import { EntityBadge } from '@/components/EntityBadge';
 import { UserAvatar } from '@/components/UserAvatar';
 import { Button } from '@/components/ui/button';
-import type { UserRole } from '@/features/auth/authService';
+import type { UserRole } from '@/features/auth/types';
 import { formatDate } from '@/lib/utils';
 
 interface UserCardProps {

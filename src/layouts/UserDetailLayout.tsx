@@ -10,8 +10,8 @@ import { Stat, StatIndicator, StatLabel, StatValue } from '@/components/ui/stat'
 import { DICT } from '@/dictionary';
 import { AdminActionDialogs } from '@/features/admin/components/AdminActionDialogs';
 import { UserCard } from '@/features/admin/components/UserCard';
+import type { AdminUser } from '@/features/admin/types';
 import { useAdminActionDialogs } from '@/features/admin/useAdminActionDialogs';
-import type { AdminUser } from '@/features/admin/userService';
 import { cleaningService } from '@/features/cleanings/cleaningService';
 import { CleaningDetailView } from '@/features/cleanings/components/CleaningDetailView';
 import { useCleaningModals } from '@/hooks/useCleaningModals';

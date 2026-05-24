@@ -3,13 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from '@/components/Toast';
 import { DICT } from '@/dictionary';
-import {
-	type AdminCleaning,
-	type CleaningFilters,
-	type CleaningStatus,
-	cleaningService,
-} from '@/features/admin/cleaningService';
-import { type AvailableCleaner, userService } from '@/features/admin/userService';
+import { cleaningService } from '@/features/admin/cleaningService';
+import type {
+	AdminCleaning,
+	AvailableCleaner,
+	CleaningFilters,
+	CleaningStatus,
+} from '@/features/admin/types';
+import { userService } from '@/features/admin/userService';
+import { CLEANING_STATUS } from '@/features/cleanings/types';
 import { supabase } from '@/lib/supabaseClient';
 
 interface UseAdminCleaningsResult {
@@ -46,6 +48,12 @@ interface UseAdminCleaningsResult {
 	onPageChange: (page: number) => void;
 }
 
+const validStatuses = new Set<string>(['all', ...Object.values(CLEANING_STATUS)]);
+
+function isValidStatus(value: string): value is CleaningStatus | 'all' {
+	return validStatuses.has(value);
+}
+
 export function useAdminCleanings(): UseAdminCleaningsResult {
 	const [cleanings, setCleanings] = useState<AdminCleaning[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -53,7 +61,7 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 	const [loadingMore, setLoadingMore] = useState(false);
 	const [totalCount, setTotalCount] = useState(0);
 
-	const [statusFilter, setStatusFilter] = useState<string>('all');
+	const [statusFilter, setStatusFilter] = useState<CleaningStatus | 'all'>('all');
 	const [searchQuery, setSearchQuery] = useState('');
 	const [cleanerFilter, setCleanerFilter] = useState<string>('all');
 	const [page, setPage] = useState(1);
@@ -79,7 +87,7 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 
 			const filters: CleaningFilters = {};
 			if (statusFilter !== 'all') {
-				filters.status = statusFilter as CleaningStatus;
+				filters.status = statusFilter;
 			}
 			if (cleanerFilter !== 'all') {
 				filters.cleanerId = cleanerFilter;
@@ -250,7 +258,11 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 		isAssignModalOpen,
 		selectedCleaning,
 		selectedCleaner,
-		setStatusFilter,
+		setStatusFilter: (status: string) => {
+			if (isValidStatus(status)) {
+				setStatusFilter(status);
+			}
+		},
 		setSearchQuery,
 		setCleanerFilter,
 		setPage,

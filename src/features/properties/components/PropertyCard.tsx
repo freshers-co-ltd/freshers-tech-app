@@ -5,7 +5,7 @@ import { memo, useMemo } from 'react';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { Property } from '@/features/properties/propertyService';
+import type { Property } from '@/features/properties/types';
 import { mediaService } from '@/lib/mediaService';
 
 interface PropertyCardProps {

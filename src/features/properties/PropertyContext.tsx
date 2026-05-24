@@ -11,11 +11,8 @@ import {
 } from 'react';
 import { toast } from '@/components/Toast';
 import { useAuth } from '@/features/auth/AuthContext';
-import {
-	type Property,
-	type PropertyInsert,
-	propertyService,
-} from '@/features/properties/propertyService';
+import { propertyService } from '@/features/properties/propertyService';
+import type { Property, PropertyInsert } from '@/features/properties/types';
 
 interface PropertyContextType {
 	properties: Property[];

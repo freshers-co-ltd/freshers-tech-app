@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from '@/components/Toast';
-import type { AdminCleanerDetail } from '@/features/admin/userService';
+import type { AdminCleanerDetail } from '@/features/admin/types';
 import { userService } from '@/features/admin/userService';
 import { supabase } from '@/lib/supabaseClient';
 

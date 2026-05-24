@@ -80,12 +80,18 @@ export function AdminCleanerDetailPage() {
 		cleaner_id: cleaner.id,
 		cleaner_name: cleaner.full_name,
 		host_id: c.host_id,
-		host_name: c.host_name || undefined,
+		host_name: c.host_name,
 		property_id: c.property_id,
 		property_address: c.property_address,
 		property_postcode: c.property_postcode,
 		property_town_city: c.property_town_city,
 		created_at: c.created_at,
+		information: null,
+		stocks_included: false,
+		clock_in_time: c.clock_in_time,
+		clock_out_time: c.clock_out_time,
+		updated_at: c.created_at,
+		deleted_at: null,
 	}));
 
 	const statsConfig = [

@@ -1,7 +1,7 @@
 import { BarChart3, ClipboardList, Home, LayoutDashboard, User, Users } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/features/auth/AuthContext';
-import type { UserRole } from '@/features/auth/authService';
+import type { UserRole } from '@/features/auth/types';
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
 

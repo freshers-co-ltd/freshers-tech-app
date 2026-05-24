@@ -18,7 +18,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
-import type { UserRole } from '@/features/auth/authService';
+import type { UserRole } from '@/features/auth/types';
 
 export interface InviteUserDialogProps {
 	open: boolean;

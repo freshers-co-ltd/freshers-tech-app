@@ -5,7 +5,8 @@ import { useAuth } from '@/features/auth/AuthContext';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
 import type { PropertyFormValues } from '@/features/properties/components/PropertyForm';
 import { useProperties } from '@/features/properties/PropertyContext';
-import type { PropertyInsert } from '@/features/properties/propertyService';
+import type { PropertyInsert } from '@/features/properties/types';
+import { propertyTypeValues } from '@/features/properties/types';
 import { useResourceModals } from '@/hooks/useResourceModals';
 
 export function useHostProperties() {
@@ -40,7 +41,7 @@ export function useHostProperties() {
 				address_line_2: data.address_line_2 ?? null,
 				town_city: 'town_city' in data ? data.town_city : '',
 				postcode: 'postcode' in data ? data.postcode : '',
-				type: 'type' in data ? data.type : 'house',
+				type: 'type' in data ? data.type : propertyTypeValues[0],
 				bedrooms: data.bedrooms ?? 0,
 				bathrooms: data.bathrooms ?? 0,
 				main_image_url: data.main_image_url ?? '',

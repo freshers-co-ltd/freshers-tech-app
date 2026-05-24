@@ -25,7 +25,7 @@ import { cleaningService } from '@/features/cleanings/cleaningService';
 import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
 import { CleaningForm } from '@/features/cleanings/components/CleaningForm';
 import { PropertyDetailView } from '@/features/properties/components/PropertyDetailView';
-import type { Property } from '@/features/properties/propertyService';
+import type { Property } from '@/features/properties/types';
 import { useResourceModals } from '@/hooks/useResourceModals';
 import { UserDetailLayout } from '@/layouts/UserDetailLayout';
 import { supabase } from '@/lib/supabaseClient';
@@ -168,6 +168,12 @@ export function AdminHostDetailPage() {
 			property_postcode: property ? property.postcode : null,
 			property_town_city: property ? property.town_city : null,
 			created_at: c.created_at,
+			information: null,
+			stocks_included: false,
+			clock_in_time: null,
+			clock_out_time: null,
+			updated_at: c.created_at,
+			deleted_at: null,
 		};
 	});
 

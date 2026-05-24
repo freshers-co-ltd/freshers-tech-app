@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
-import { CLEANING_STATUS } from '@/features/cleanings/cleaningService';
+import { CLEANING_STATUS } from '@/features/cleanings/types';
 
 interface CleanerDashboardStats {
 	assigned: number;

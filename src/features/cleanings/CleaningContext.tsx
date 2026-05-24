@@ -11,17 +11,17 @@ import {
 } from 'react';
 import { toast } from '@/components/Toast';
 import { useAuth } from '@/features/auth/AuthContext';
-import {
-	type CleaningRequest,
-	type CleaningUpdate,
-	type CreateCleaningRequestPayload,
-	cleaningService,
-	type EvidenceInsert,
-	type ReportInsert,
-	type TaskInsert,
-	type TaskUpdate,
-	type UpdateCleaningRequestPayload,
-} from '@/features/cleanings/cleaningService';
+import { cleaningService } from '@/features/cleanings/cleaningService';
+import type {
+	CleaningRequest,
+	CleaningUpdate,
+	CreateCleaningRequestPayload,
+	EvidenceInsert,
+	ReportInsert,
+	TaskInsert,
+	TaskUpdate,
+	UpdateCleaningRequestPayload,
+} from '@/features/cleanings/types';
 import { useVisibilityReconnect } from '@/hooks/useVisibilityReconnect';
 import { supabase } from '@/lib/supabaseClient';
 

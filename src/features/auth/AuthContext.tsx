@@ -10,7 +10,7 @@ import {
 	useRef,
 	useState,
 } from 'react';
-import type { Profile, UserRole } from '@/features/auth/authService';
+import type { Profile, UserRole } from '@/features/auth/types';
 import { useVisibilityReconnect } from '@/hooks/useVisibilityReconnect';
 import { initAuthSync } from '@/lib/authSync';
 import { setSuppressSessionBroadcast, supabase } from '@/lib/supabaseClient';

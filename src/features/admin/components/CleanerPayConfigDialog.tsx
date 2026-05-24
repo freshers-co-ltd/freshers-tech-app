@@ -14,7 +14,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { type CleanerPayConfig, cleaningService } from '@/features/cleanings/cleaningService';
+import { cleaningService } from '@/features/cleanings/cleaningService';
+import type { CleanerPayConfig } from '@/features/cleanings/types';
 
 interface CleanerPayConfigDialogProps {
 	open: boolean;

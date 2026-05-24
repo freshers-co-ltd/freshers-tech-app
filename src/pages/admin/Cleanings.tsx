@@ -20,6 +20,7 @@ import { StandardTasksDialog } from '@/features/admin/components/StandardTasksDi
 import { useAdminCleanings } from '@/features/admin/useAdminCleanings';
 import { cleaningService } from '@/features/cleanings/cleaningService';
 import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
+import { CLEANING_STATUS } from '@/features/cleanings/types';
 
 export function AdminCleaningsPage() {
 	const {
@@ -79,12 +80,12 @@ export function AdminCleaningsPage() {
 
 	const statusOptions = [
 		{ label: statusDict.ALL, value: 'all' },
-		{ label: statusDict.DRAFT, value: 'draft' },
-		{ label: statusDict.REQUESTED, value: 'requested' },
-		{ label: statusDict.CONFIRMED, value: 'confirmed' },
-		{ label: statusDict.IN_PROGRESS, value: 'in_progress' },
-		{ label: statusDict.COMPLETED, value: 'completed' },
-		{ label: statusDict.CANCELLED, value: 'cancelled' },
+		{ label: statusDict.DRAFT, value: CLEANING_STATUS.DRAFT },
+		{ label: statusDict.REQUESTED, value: CLEANING_STATUS.REQUESTED },
+		{ label: statusDict.CONFIRMED, value: CLEANING_STATUS.CONFIRMED },
+		{ label: statusDict.IN_PROGRESS, value: CLEANING_STATUS.IN_PROGRESS },
+		{ label: statusDict.COMPLETED, value: CLEANING_STATUS.COMPLETED },
+		{ label: statusDict.CANCELLED, value: CLEANING_STATUS.CANCELLED },
 	];
 
 	return (

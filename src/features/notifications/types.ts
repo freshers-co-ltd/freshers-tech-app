@@ -47,9 +47,3 @@ export const NOTIFICATION_TYPES: Record<NotificationType, NotificationType> = {
 	cleaning_starting_soon: 'cleaning_starting_soon',
 	cleaning_missed_clockin: 'cleaning_missed_clockin',
 };
-
-export interface GetNotificationsOptions {
-	limit?: number;
-	offset?: number;
-	unreadOnly?: boolean;
-}

@@ -1,4 +1,4 @@
-import type { Property } from '@/features/properties/propertyService';
+import type { Property } from '@/features/properties/types';
 
 export function buildProperty(overrides?: Partial<Property>): Property {
 	return {

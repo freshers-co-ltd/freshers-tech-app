@@ -3,7 +3,7 @@
 import { useCallback, useMemo } from 'react';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
-import { CLEANING_STATUS } from '@/features/cleanings/cleaningService';
+import { CLEANING_STATUS } from '@/features/cleanings/types';
 import { useResourceModals } from '@/hooks/useResourceModals';
 
 export function useCleanerCleanings() {

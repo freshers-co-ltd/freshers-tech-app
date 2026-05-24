@@ -11,32 +11,17 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { DICT } from '@/dictionary';
 import { cleaningService as adminCleaningService } from '@/features/admin/cleaningService';
 import { AssignCleanerDialog } from '@/features/admin/components/AssignCleanerDialog';
-import type { UserRole } from '@/features/auth/authService';
-import type { CleaningRequest, CleaningStatus } from '@/features/cleanings/cleaningService';
+import type { AdminCleaning } from '@/features/admin/types';
+import type { UserRole } from '@/features/auth/types';
 import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
+import type { CleaningRequest } from '@/features/cleanings/types';
+import { CLEANING_STATUS } from '@/features/cleanings/types';
 import { useCleaningModals } from '@/hooks/useCleaningModals';
 import { supabase } from '@/lib/supabaseClient';
 import { formatDate } from '@/lib/utils';
 
-export interface CleaningData {
-	id: string;
-	status: CleaningStatus;
-	scheduled_start: string;
-	service_cost: number;
-	cleaner_pay: number | null | undefined;
-	cleaner_id: string | null | undefined;
-	cleaner_name: string | null | undefined;
-	host_id: string;
-	host_name: string | null | undefined;
-	property_id: string;
-	property_address: string | null | undefined;
-	property_postcode: string | null | undefined;
-	property_town_city: string | null | undefined;
-	created_at: string;
-}
-
 export interface CleaningsTableProps {
-	data: CleaningData[];
+	data: AdminCleaning[];
 	fetchById: (id: string) => Promise<CleaningRequest | null>;
 	onUpsert: (data: CleaningFormValues, existingId?: string) => Promise<void>;
 	userRole: UserRole;
@@ -54,7 +39,7 @@ export interface CleaningsTableProps {
 	sortField?: string;
 	sortDirection?: 'asc' | 'desc';
 	onSort?: (field: string) => void;
-	allData?: CleaningData[];
+	allData?: AdminCleaning[];
 	hasMore?: boolean;
 	onLoadMore?: () => void;
 	loadingMore?: boolean;
@@ -123,10 +108,10 @@ export function CleaningsTable({
 	);
 
 	const isDisabled = useCallback(
-		(cleaning: CleaningData) =>
-			cleaning.status === 'in_progress' ||
-			cleaning.status === 'completed' ||
-			cleaning.status === 'cancelled',
+		(cleaning: AdminCleaning) =>
+			cleaning.status === CLEANING_STATUS.IN_PROGRESS ||
+			cleaning.status === CLEANING_STATUS.COMPLETED ||
+			cleaning.status === CLEANING_STATUS.CANCELLED,
 		[],
 	);
 
@@ -164,7 +149,7 @@ export function CleaningsTable({
 			key: string;
 			label: string;
 			sortable: boolean;
-			render?: (item: CleaningData) => React.ReactNode;
+			render?: (item: AdminCleaning) => React.ReactNode;
 		}[] = [
 			{
 				key: 'date',
@@ -325,7 +310,7 @@ export function CleaningsTable({
 	]);
 
 	const renderMobileHeader = useCallback(
-		(cleaning: CleaningData) => (
+		(cleaning: AdminCleaning) => (
 			<div className="flex items-start justify-between gap-2">
 				<div className="min-w-0">
 					<p className="font-medium truncate">{cleaning.property_address || 'Unknown Property'}</p>
@@ -339,8 +324,8 @@ export function CleaningsTable({
 					</p>
 				</div>
 
-				<div className="flex flex-col gap-1 shrink-0">
-					<div>
+				<div className="flex flex-col gap-3 shrink-0">
+					<div className="flex gap-1">
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<Button
@@ -404,7 +389,7 @@ export function CleaningsTable({
 							</Tooltip>
 						)}
 					</div>
-					<div>
+					<div className="self-center justify-self-end">
 						<EntityBadge variant={{ type: 'cleaning', value: cleaning.status }} />
 					</div>
 				</div>

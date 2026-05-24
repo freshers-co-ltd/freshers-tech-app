@@ -14,13 +14,13 @@ import {
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { FormContainer } from '@/components/ui/form-container';
 import { DICT } from '@/dictionary';
-import type { UserRole } from '@/features/auth/authService';
-import type { CleaningRequest } from '@/features/cleanings/cleaningService';
+import type { UserRole } from '@/features/auth/types';
 import { CleaningDetailView } from '@/features/cleanings/components/CleaningDetailView';
 import {
 	CleaningForm,
 	type CleaningFormValues,
 } from '@/features/cleanings/components/CleaningForm';
+import type { CleaningRequest } from '@/features/cleanings/types';
 
 interface CleaningDialogsProps {
 	isViewOpen: boolean;

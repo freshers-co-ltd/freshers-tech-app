@@ -1,5 +1,5 @@
-import type { AdminCleaning } from '@/features/admin/cleaningService';
-import type { CleaningStatus } from '@/features/cleanings/cleaningService';
+import type { AdminCleaning } from '@/features/admin/types';
+import type { CleaningStatus } from '@/features/cleanings/types';
 
 export function buildAdminCleaning(overrides?: Partial<AdminCleaning>): AdminCleaning {
 	return {

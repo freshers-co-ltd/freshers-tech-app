@@ -165,7 +165,7 @@ export const notificationsService = {
 		return { data: data ?? null, error: null };
 	},
 
-	async getOrCreatePreferences(_userId: string): Promise<ActionResult<NotificationPreferences>> {
+	async getOrCreatePreferences(): Promise<ActionResult<NotificationPreferences>> {
 		const { data, error } = await supabase.rpc('get_or_create_notification_preferences');
 
 		if (error) {

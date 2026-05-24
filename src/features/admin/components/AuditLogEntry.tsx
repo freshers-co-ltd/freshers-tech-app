@@ -3,7 +3,7 @@
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import type { AuditLogEntry } from '@/features/admin/analyticsService';
+import type { AuditLogEntry } from '@/features/admin/types';
 import { formatDate } from '@/lib/utils';
 
 const ACTION_LABELS: Record<string, string> = {

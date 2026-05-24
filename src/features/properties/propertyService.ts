@@ -1,17 +1,6 @@
-import type { Database } from '@/lib/database.types';
+import type { Property, PropertyInsert } from '@/features/properties/types';
 import { type ActionResult, mapDatabaseError } from '@/lib/serviceUtils';
 import { supabase } from '@/lib/supabaseClient';
-
-export type Property = Database['public']['Tables']['properties']['Row'];
-export type PropertyInsert = Database['public']['Tables']['properties']['Insert'];
-export type PropertyUpdate = Database['public']['Tables']['properties']['Update'];
-export type PropertyType = Database['public']['Enums']['property_type'];
-
-export const propertyTypeValues = [
-	'house',
-	'apartment',
-	'studio',
-] as const satisfies readonly PropertyType[];
 
 export const propertyService = {
 	async getProperties(): Promise<ActionResult<Property[]>> {

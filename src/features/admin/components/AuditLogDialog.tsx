@@ -13,9 +13,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
-import type { AuditFilters, AuditLogEntry } from '@/features/admin/analyticsService';
 import { analyticsService } from '@/features/admin/analyticsService';
 import { AuditLogEntryComponent } from '@/features/admin/components/AuditLogEntry';
+import type { AuditFilters, AuditLogEntry } from '@/features/admin/types';
 
 interface AuditLogDialogProps {
 	open: boolean;

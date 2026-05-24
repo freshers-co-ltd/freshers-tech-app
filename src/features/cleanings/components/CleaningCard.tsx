@@ -7,7 +7,8 @@ import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DICT } from '@/dictionary';
-import type { CleaningRequest } from '@/features/cleanings/cleaningService';
+import type { CleaningRequest } from '@/features/cleanings/types';
+import { CLEANING_STATUS, STATUS_GROUPS } from '@/features/cleanings/types';
 import { mediaService } from '@/lib/mediaService';
 import { formatDate } from '@/lib/utils';
 
@@ -36,23 +37,17 @@ export const CleaningCard = memo(
 			if (!isHost) {
 				return false;
 			}
-			const STATUS_GROUPS = { CAN_EDIT: ['draft', 'requested', 'confirmed'] as const };
-			return STATUS_GROUPS.CAN_EDIT.includes(
-				cleaning.status as 'draft' | 'requested' | 'confirmed',
-			);
+			return STATUS_GROUPS.CAN_EDIT.includes(cleaning.status);
 		}, [cleaning.status, isHost]);
 
 		const canCancel = useMemo(() => {
 			if (!isHost) {
 				return false;
 			}
-			const STATUS_GROUPS = { CAN_CANCEL: ['draft', 'requested', 'confirmed'] as const };
-			return STATUS_GROUPS.CAN_CANCEL.includes(
-				cleaning.status as 'draft' | 'requested' | 'confirmed',
-			);
+			return STATUS_GROUPS.CAN_CANCEL.includes(cleaning.status);
 		}, [cleaning.status, isHost]);
 
-		const isActive = isCleaner && cleaning.status === 'in_progress';
+		const isActive = isCleaner && cleaning.status === CLEANING_STATUS.IN_PROGRESS;
 
 		return (
 			<Card
@@ -79,7 +74,9 @@ export const CleaningCard = memo(
 					<div className="absolute top-2 left-2">
 						<EntityBadge
 							variant={{ type: 'cleaning', value: cleaning.status }}
-							customLabel={isCleaner && cleaning.status === 'confirmed' ? 'assigned' : undefined}
+							customLabel={
+								isCleaner && cleaning.status === CLEANING_STATUS.CONFIRMED ? 'assigned' : undefined
+							}
 						/>
 					</div>
 

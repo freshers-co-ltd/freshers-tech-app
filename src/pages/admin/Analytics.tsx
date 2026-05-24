@@ -14,16 +14,16 @@ import { LineChartComponent } from '@/components/ui/linear-line-chart';
 import { PieChartComponent } from '@/components/ui/pie-chart';
 import { Stat, StatIndicator, StatLabel, StatValue } from '@/components/ui/stat';
 import { DICT } from '@/dictionary';
-import {
-	type AuditLogEntry,
-	analyticsService,
-	type MonthlyStats,
-	type RevenueMetrics,
-	type StatusBreakdown,
-	type UserGrowthByMonth,
-} from '@/features/admin/analyticsService';
+import { analyticsService } from '@/features/admin/analyticsService';
 import { AuditLogDialog } from '@/features/admin/components/AuditLogDialog';
 import { AuditLogEntryComponent } from '@/features/admin/components/AuditLogEntry';
+import type {
+	AuditLogEntry,
+	MonthlyStats,
+	RevenueMetrics,
+	StatusBreakdown,
+	UserGrowthByMonth,
+} from '@/features/admin/types';
 import { formatCurrency, formatHours } from '@/lib/utils';
 
 function generateLast6Months(): string[] {

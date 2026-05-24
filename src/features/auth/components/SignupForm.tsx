@@ -12,7 +12,8 @@ import { Input } from '@/components/ui/input';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { PasswordInput } from '@/components/ui/password-input';
 import { DICT } from '@/dictionary';
-import { type AuthActionResult, authService, type UserRole } from '@/features/auth/authService';
+import { authService } from '@/features/auth/authService';
+import type { AuthActionResult, UserRole } from '@/features/auth/types';
 import { cn } from '@/lib/utils';
 
 const signupSchema = z
