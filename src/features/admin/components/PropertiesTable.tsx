@@ -167,11 +167,7 @@ export function PropertiesTable({
 				<div className="flex gap-1 shrink-0">
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<Button
-								variant="secondary"
-								size="sm"
-								className="h-8 w-8 p-0 shrink-0"
-								onClick={() => onEditPrice?.(property)}>
+							<Button variant="secondary" size="icon-sm" onClick={() => onEditPrice?.(property)}>
 								<Banknote className="size-4" />
 							</Button>
 						</TooltipTrigger>
@@ -181,11 +177,7 @@ export function PropertiesTable({
 					</Tooltip>
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<Button
-								variant="secondary"
-								size="sm"
-								className="h-8 w-8 p-0 shrink-0"
-								onClick={() => onView?.(property.id)}>
+							<Button variant="secondary" size="icon-sm" onClick={() => onView?.(property.id)}>
 								<Eye className="size-4" />
 							</Button>
 						</TooltipTrigger>

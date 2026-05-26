@@ -1,4 +1,4 @@
-import type { AuthError } from '@supabase/supabase-js';
+import type { AuthError, PostgrestSingleResponse, Session } from '@supabase/supabase-js';
 import { DICT } from '@/dictionary';
 import type { AuthActionResult, Profile, UserRole } from '@/features/auth/types';
 import { supabase } from '@/lib/supabaseClient';
@@ -174,5 +174,70 @@ export const authService = {
 		});
 
 		return { error: error ? mapAuthError(error) : null };
+	},
+
+	async getSession() {
+		return supabase.auth.getSession();
+	},
+
+	async setSession(session: { access_token: string; refresh_token: string }) {
+		return supabase.auth.setSession(session);
+	},
+
+	onAuthStateChange(callback: (event: string, session: Session | null) => void) {
+		return supabase.auth.onAuthStateChange(callback);
+	},
+
+	async getProfileWithFallback(
+		userId: string,
+		signal?: AbortSignal,
+		retryCount: number = 0,
+	): Promise<{ data: Profile | null; error: string | null }> {
+		const timeout = new Promise<never>((_, reject) => {
+			setTimeout(() => {
+				reject(new Error('DB_TIMEOUT'));
+			}, 10000);
+		});
+
+		try {
+			const fetchPromise = supabase.from('profiles').select('*').eq('id', userId).single();
+			const { data, error } = await (Promise.race([fetchPromise, timeout]) as Promise<
+				PostgrestSingleResponse<Profile>
+			>);
+
+			if (error) {
+				throw error;
+			}
+
+			if (signal?.aborted) {
+				return { data: null, error: null };
+			}
+
+			return { data: data as Profile, error: null };
+		} catch (err: unknown) {
+			if (retryCount < 2 && !(err instanceof Error && err.name === 'AbortError')) {
+				await new Promise((resolve) => setTimeout(resolve, 2000));
+				return authService.getProfileWithFallback(userId, signal, retryCount + 1);
+			}
+
+			const {
+				data: { user },
+			} = await supabase.auth.getUser();
+			if (user) {
+				const rawRole = user.user_metadata?.role;
+				const role: UserRole =
+					rawRole === 'admin' || rawRole === 'host' || rawRole === 'cleaner' ? rawRole : 'cleaner';
+				const fallback: Profile = {
+					id: user.id,
+					full_name: user.user_metadata?.full_name || 'User',
+					role,
+					avatar_url: user.user_metadata?.avatar_url || null,
+					email: user.email || '',
+					is_verified: false,
+				};
+				return { data: fallback, error: null };
+			}
+			return { data: null, error: 'Failed to fetch profile' };
+		}
 	},
 };

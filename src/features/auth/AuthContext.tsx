@@ -1,6 +1,6 @@
 'use client';
 
-import type { PostgrestSingleResponse, Session, User } from '@supabase/supabase-js';
+import type { Session, User } from '@supabase/supabase-js';
 import {
 	createContext,
 	type ReactNode,
@@ -10,10 +10,12 @@ import {
 	useRef,
 	useState,
 } from 'react';
+import { authService } from '@/features/auth/authService';
 import type { Profile, UserRole } from '@/features/auth/types';
+import { useProfileRealtime } from '@/features/auth/useProfileRealtime';
 import { useVisibilityReconnect } from '@/hooks/useVisibilityReconnect';
 import { initAuthSync } from '@/lib/authSync';
-import { setSuppressSessionBroadcast, supabase } from '@/lib/supabaseClient';
+import { setSuppressSessionBroadcast } from '@/lib/supabaseClient';
 
 export interface AuthContextType {
 	user: User | null;
@@ -36,55 +38,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 	const lastUserId = useRef<string | null>(null);
 	const abortControllerRef = useRef<AbortController | null>(null);
-	const profileChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
 	const fetchProfile = useCallback(
-		async (
-			userId: string,
-			signal?: AbortSignal,
-			retryCount: number = 0,
-		): Promise<Profile | null> => {
-			const timeout = new Promise<null>((_, reject) => {
-				setTimeout(() => {
-					reject(new Error('DB_TIMEOUT'));
-				}, 10000);
-			});
-
-			try {
-				const fetchPromise = supabase.from('profiles').select('*').eq('id', userId).single();
-				const { data, error } = await (Promise.race([fetchPromise, timeout]) as Promise<
-					PostgrestSingleResponse<Profile>
-				>);
-
-				if (error) {
-					throw error;
-				}
-
-				if (signal?.aborted) {
-					return null;
-				}
-
-				return data as Profile;
-			} catch (err: unknown) {
-				if (retryCount < 2 && !(err instanceof Error && err.name === 'AbortError')) {
-					await new Promise((resolve) => setTimeout(resolve, 2000));
-					return fetchProfile(userId, signal, retryCount + 1);
-				}
-				const {
-					data: { user: currentUser },
-				} = await supabase.auth.getUser();
-				if (currentUser) {
-					return {
-						id: currentUser.id,
-						full_name: currentUser.user_metadata?.full_name || 'User',
-						role: (currentUser.user_metadata?.role as UserRole) || 'cleaner',
-						avatar_url: currentUser.user_metadata?.avatar_url || null,
-						email: currentUser.email || '',
-						is_verified: false,
-					};
-				}
-				return null;
-			}
+		async (userId: string, signal?: AbortSignal): Promise<Profile | null> => {
+			const { data } = await authService.getProfileWithFallback(userId, signal);
+			return data;
 		},
 		[],
 	);
@@ -105,10 +63,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			if (currentUser) {
 				if (!profile || profile.id !== currentUser.id) {
 					const metadata = currentUser.user_metadata;
+					const rawRole = metadata?.role;
+					const userRole: UserRole =
+						rawRole === 'admin' || rawRole === 'host' || rawRole === 'cleaner'
+							? rawRole
+							: 'cleaner';
 					const initialProfile: Profile = {
 						id: currentUser.id,
 						full_name: metadata?.full_name || 'User',
-						role: (metadata?.role as UserRole) || 'cleaner',
+						role: userRole,
 						avatar_url: metadata?.avatar_url || null,
 						email: currentUser.email || '',
 						is_verified: false,
@@ -145,16 +108,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 			const {
 				data: { session: initialSession },
-			} = await supabase.auth.getSession();
+			} = await authService.getSession();
 
 			if (!initialSession && !window.localStorage.getItem('trust_device')) {
 				const syncedSession = window.sessionStorage.getItem('sb-auth-token');
 				if (syncedSession) {
 					const parsed = JSON.parse(syncedSession);
-					await supabase.auth.setSession(parsed);
+					await authService.setSession(parsed);
 					const {
 						data: { session: retrySession },
-					} = await supabase.auth.getSession();
+					} = await authService.getSession();
 					if (isMounted) {
 						await handleAuthStateChange(retrySession, controller.signal);
 						setInitialised(true);
@@ -173,7 +136,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 		const {
 			data: { subscription },
-		} = supabase.auth.onAuthStateChange((event, currentSession) => {
+		} = authService.onAuthStateChange((event, currentSession) => {
 			if (event === 'SIGNED_OUT') {
 				setSuppressSessionBroadcast(false);
 				lastUserId.current = null;
@@ -199,60 +162,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		};
 	}, [handleAuthStateChange]);
 
-	const cleanupProfileChannel = useCallback(() => {
-		if (profileChannelRef.current) {
-			supabase.removeChannel(profileChannelRef.current);
-			profileChannelRef.current = null;
-		}
-	}, []);
-
-	const setupProfileChannel = useCallback(() => {
-		if (!user) {
-			return;
-		}
-
-		if (profileChannelRef.current) {
-			return;
-		}
-
-		const newChannel = supabase
-			.channel('profile-realtime')
-			.on(
-				'postgres_changes',
-				{
-					event: 'UPDATE',
-					schema: 'public',
-					table: 'profiles',
-					filter: `id=eq.${user.id}`,
-				},
-				async () => {
-					const data = await fetchProfile(user.id);
-					if (data) {
-						setProfile(data);
-					}
-				},
-			)
-			.subscribe((status: string, err?: unknown) => {
-				if (err) {
-					console.error('[Auth] Profile channel error', { status, error: err });
-				}
-			});
-
-		profileChannelRef.current = newChannel;
-	}, [user, fetchProfile]);
-
-	useEffect(() => {
-		if (!user) {
-			cleanupProfileChannel();
-			return;
-		}
-
-		setupProfileChannel();
-
-		return () => {
-			cleanupProfileChannel();
-		};
-	}, [user, setupProfileChannel, cleanupProfileChannel]);
+	const { reconnect: reconnectProfileChannel } = useProfileRealtime(
+		user?.id,
+		fetchProfile,
+		setProfile,
+	);
 
 	const refreshProfile = useCallback(async () => {
 		if (user) {
@@ -266,7 +180,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const signOut = useCallback(async () => {
 		const trustDevice = window.localStorage.getItem('trust_device');
 		try {
-			await supabase.auth.signOut();
+			await authService.signOut();
 		} finally {
 			setSuppressSessionBroadcast(false);
 			lastUserId.current = null;
@@ -286,10 +200,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		onVisible: async () => {
 			const {
 				data: { user: currentUser },
-			} = await supabase.auth.getUser();
+			} = await authService.getCurrentUser();
 
 			if (!currentUser) {
-				await supabase.auth.signOut();
+				await authService.signOut();
 				lastUserId.current = null;
 				setSession(null);
 				setUser(null);
@@ -305,9 +219,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			}
 
 			await refreshProfile();
-			if (!profileChannelRef.current || profileChannelRef.current.state !== 'joined') {
-				setupProfileChannel();
-			}
+			reconnectProfileChannel();
 		},
 	});
 

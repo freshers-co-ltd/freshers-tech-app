@@ -21,14 +21,15 @@ import { PropertiesTable } from '@/features/admin/components/PropertiesTable';
 import { PropertyPriceDialog } from '@/features/admin/components/PropertyPriceDialog';
 import { useAdminUsers } from '@/features/admin/useAdminUsers';
 import { useHostDetail } from '@/features/admin/useHostDetail';
+import { userService } from '@/features/admin/userService';
 import { cleaningService } from '@/features/cleanings/cleaningService';
 import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
 import { CleaningForm } from '@/features/cleanings/components/CleaningForm';
 import { PropertyDetailView } from '@/features/properties/components/PropertyDetailView';
+import { propertyService } from '@/features/properties/propertyService';
 import type { Property } from '@/features/properties/types';
 import { useResourceModals } from '@/hooks/useResourceModals';
 import { UserDetailLayout } from '@/layouts/UserDetailLayout';
-import { supabase } from '@/lib/supabaseClient';
 
 export function AdminHostDetailPage() {
 	const { id } = useParams<{ id: string }>();
@@ -48,6 +49,17 @@ export function AdminHostDetailPage() {
 
 	const [viewingProperty, setViewingProperty] = useState<Property | null>(null);
 	const [viewingPropertyLoading, setViewingPropertyLoading] = useState(false);
+	const [availableCleaners, setAvailableCleaners] = useState<
+		{ id: string; full_name: string | null }[]
+	>([]);
+
+	useEffect(() => {
+		userService.getAvailableCleaners().then((result) => {
+			if (!result.error && result.data) {
+				setAvailableCleaners(result.data);
+			}
+		});
+	}, []);
 
 	const dict = DICT.ADMIN.CLEANINGS.DETAIL.HOST_DETAIL;
 
@@ -56,13 +68,9 @@ export function AdminHostDetailPage() {
 			return;
 		}
 		setViewingPropertyLoading(true);
-		const { data, error } = await supabase
-			.from('properties')
-			.select('*')
-			.eq('id', propertyModal.viewId)
-			.single();
+		const { data, error } = await propertyService.getPropertyById(propertyModal.viewId);
 		if (!error && data) {
-			setViewingProperty(data as Property);
+			setViewingProperty(data);
 		}
 		setViewingPropertyLoading(false);
 	}, [propertyModal.viewId]);
@@ -261,6 +269,7 @@ export function AdminHostDetailPage() {
 							onRefresh={refresh}
 							pageSize={10}
 							totalCount={cleanings.length}
+							availableCleaners={availableCleaners}
 						/>
 					),
 				},

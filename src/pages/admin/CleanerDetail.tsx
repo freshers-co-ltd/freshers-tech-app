@@ -1,13 +1,14 @@
 'use client';
 
 import { BrushCleaning, ClipboardList, Clock, Sparkles } from 'lucide-react';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { DICT } from '@/dictionary';
 import { cleaningService as adminCleaningService } from '@/features/admin/cleaningService';
 import { CleaningsTable } from '@/features/admin/components/CleaningsTable';
 import { useAdminUsers } from '@/features/admin/useAdminUsers';
 import { useCleanerDetail } from '@/features/admin/useCleanerDetail';
+import { userService } from '@/features/admin/userService';
 import { cleaningService } from '@/features/cleanings/cleaningService';
 import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
 import { UserDetailLayout } from '@/layouts/UserDetailLayout';
@@ -17,6 +18,17 @@ export function AdminCleanerDetailPage() {
 	const { id } = useParams<{ id: string }>();
 	const { cleaner, loading, refresh } = useCleanerDetail(id);
 	const { handleResetPassword, handleBan, handleUnban } = useAdminUsers();
+	const [availableCleaners, setAvailableCleaners] = useState<
+		{ id: string; full_name: string | null }[]
+	>([]);
+
+	useEffect(() => {
+		userService.getAvailableCleaners().then((result) => {
+			if (!result.error && result.data) {
+				setAvailableCleaners(result.data);
+			}
+		});
+	}, []);
 
 	const fetchCleaningById = useCallback(async (cleaningId: string) => {
 		const result = await cleaningService.getCleaningRequestById(cleaningId);
@@ -149,6 +161,7 @@ export function AdminCleanerDetailPage() {
 							onRefresh={refresh}
 							pageSize={10}
 							totalCount={cleanings.length}
+							availableCleaners={availableCleaners}
 						/>
 					),
 				},

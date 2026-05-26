@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -23,14 +23,9 @@ import {
 } from '@/components/ui/select';
 import { DICT } from '@/dictionary';
 import { useAuth } from '@/features/auth/AuthContext';
+import { usePropertyImageUpload } from '@/features/properties/hooks/usePropertyImageUpload';
 import type { Property, PropertyInsert } from '@/features/properties/types';
 import { propertyTypeValues } from '@/features/properties/types';
-import {
-	DEFAULT_FILE_SIZE_LIMIT,
-	getBucketConfig,
-	mediaService,
-	mimeTypesToAccept,
-} from '@/lib/mediaService';
 
 const POSTCODE_REGEX = /^[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}$/i;
 
@@ -78,32 +73,19 @@ interface PropertyFormProps {
 
 export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: PropertyFormProps) {
 	const { user } = useAuth();
-	const [mainImage, setMainImage] = useState<File[] | null>(null);
-	const [extraImages, setExtraImages] = useState<File[] | null>([]);
-	const [isUploading, setIsUploading] = useState(false);
-	const [extraImagesPaths, setExtraImagesPaths] = useState<string[]>(
-		initialData?.extra_images_urls || [],
-	);
 
-	const [bucketConfig, setBucketConfig] = useState({
-		maxSize: DEFAULT_FILE_SIZE_LIMIT,
-		accept: { 'image/*': ['.jpg', '.jpeg', '.png'] } as Record<string, string[]>,
-	});
-
-	const fetchBucketConfig = useCallback(async () => {
-		const config = await getBucketConfig('property-media');
-		setBucketConfig({
-			maxSize: config.fileSizeLimit,
-			accept:
-				config.allowedMimeTypes.length > 0
-					? mimeTypesToAccept(config.allowedMimeTypes)
-					: { 'image/*': ['.jpg', '.jpeg', '.png'] },
-		});
-	}, []);
-
-	useEffect(() => {
-		fetchBucketConfig();
-	}, [fetchBucketConfig]);
+	const {
+		mainImage,
+		setMainImage,
+		extraImages,
+		setExtraImages,
+		extraImagesPaths,
+		removeExistingImage,
+		remainingSlots,
+		isUploading,
+		bucketConfig,
+		uploadImages,
+	} = usePropertyImageUpload(initialData);
 
 	const form = useForm<PropertyFormInput, undefined, PropertyFormValues>({
 		resolver: zodResolver(propertySchema),
@@ -119,15 +101,6 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 		},
 	});
 
-	const remainingSlots = useMemo(
-		() => Math.max(0, 10 - extraImagesPaths.length),
-		[extraImagesPaths.length],
-	);
-
-	const removeExistingImage = (pathToRemove: string) => {
-		setExtraImagesPaths((prev) => prev.filter((path) => path !== pathToRemove));
-	};
-
 	useEffect(() => {
 		const hasImage = !!(mainImage?.[0] || initialData?.main_image_url);
 		form.setValue('has_main_image', hasImage);
@@ -142,64 +115,21 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 			return;
 		}
 
-		setIsUploading(true);
-		try {
-			let mainImagePath = initialData?.main_image_url || '';
-			const { has_main_image, ...databaseValues } = values;
+		const { has_main_image, ...databaseValues } = values;
+		const { mainImagePath, finalExtraImagesPaths } = await uploadImages(user.id);
 
-			if (mainImage?.[0]) {
-				const { path: uploadedPath, error } = await mediaService.uploadMedia(
-					user.id,
-					mainImage[0],
-					'property-media',
-				);
-				if (error) {
-					throw new Error(error);
-				}
-				if (uploadedPath) {
-					mainImagePath = uploadedPath;
-				}
-			}
+		const payload: PropertyInsert = {
+			...databaseValues,
+			host_id: user.id,
+			main_image_url: mainImagePath,
+			extra_images_urls: finalExtraImagesPaths,
+		};
 
-			let finalExtraImagesPaths = [...extraImagesPaths];
-
-			if (extraImages && extraImages.length > 0) {
-				const totalImages = extraImagesPaths.length + extraImages.length;
-				if (totalImages > 10) {
-					form.setError('root', { message: DICT.COMMON.VALIDATION.IMAGE_LIMIT });
-					setIsUploading(false);
-					return;
-				}
-
-				const uploadPromises = extraImages.map((file) =>
-					mediaService.uploadMedia(user.id, file, 'property-media'),
-				);
-				const results = await Promise.allSettled(uploadPromises);
-
-				const newPaths = results
-					.map((res) => (res.status === 'fulfilled' && res.value.path ? res.value.path : null))
-					.filter((path): path is string => !!path);
-
-				finalExtraImagesPaths = [...finalExtraImagesPaths, ...newPaths];
-				setExtraImagesPaths(finalExtraImagesPaths);
-				setExtraImages([]);
-			}
-
-			const payload: PropertyInsert = {
-				...databaseValues,
-				host_id: user.id,
-				main_image_url: mainImagePath,
-				extra_images_urls: finalExtraImagesPaths,
-			};
-
-			if (initialData?.id) {
-				payload.id = initialData.id;
-			}
-
-			await onSubmit(payload);
-		} finally {
-			setIsUploading(false);
+		if (initialData?.id) {
+			payload.id = initialData.id;
 		}
+
+		await onSubmit(payload);
 	};
 
 	return (

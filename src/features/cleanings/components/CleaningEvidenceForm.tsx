@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { VideoThumbnail } from '@/components/VideoThumbnail';
 import { DICT } from '@/dictionary';
-import { DEFAULT_FILE_SIZE_LIMIT, getBucketConfig, mimeTypesToAccept } from '@/lib/mediaService';
+import { useBucketConfig } from '@/hooks/useBucketConfig';
 
 const evidenceSchema = z.object({
 	broken_items_report: z.string().optional(),
@@ -70,28 +70,10 @@ const FileSvgDraw = ({ accept }: { accept?: Record<string, string[]> }) => {
 export function CleaningEvidenceForm({ onSubmit, onCancel }: CleaningEvidenceFormProps) {
 	const [files, setFiles] = useState<File[] | null>([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [bucketConfig, setBucketConfig] = useState({
-		maxSize: DEFAULT_FILE_SIZE_LIMIT,
-		accept: {
-			'image/*': ['.jpg', '.jpeg', '.png'],
-			'video/*': ['.mp4', '.mov'],
-		} as Record<string, string[]>,
+	const bucketConfig = useBucketConfig('cleaning-media', {
+		'image/*': ['.jpg', '.jpeg', '.png'],
+		'video/*': ['.mp4', '.mov'],
 	});
-
-	const fetchBucketConfig = useCallback(async () => {
-		const config = await getBucketConfig('cleaning-media');
-		setBucketConfig({
-			maxSize: config.fileSizeLimit,
-			accept:
-				config.allowedMimeTypes.length > 0
-					? mimeTypesToAccept(config.allowedMimeTypes)
-					: { 'image/*': ['.jpg', '.jpeg', '.png'], 'video/*': ['.mp4', '.mov'] },
-		});
-	}, []);
-
-	useEffect(() => {
-		fetchBucketConfig();
-	}, [fetchBucketConfig]);
 
 	const form = useForm<EvidenceFormValues>({
 		resolver: zodResolver(evidenceSchema),

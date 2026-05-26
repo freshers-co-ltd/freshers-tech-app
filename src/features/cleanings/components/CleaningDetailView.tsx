@@ -12,7 +12,7 @@ import {
 	Package,
 	User,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { EntityBadge } from '@/components/EntityBadge';
 import { FullscreenMediaCarousel } from '@/components/FullscreenMediaCarousel';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
@@ -25,7 +25,6 @@ import { VideoThumbnail } from '@/components/VideoThumbnail';
 import { DICT } from '@/dictionary';
 import type { UserRole } from '@/features/auth/types';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
-import { cleaningService } from '@/features/cleanings/cleaningService';
 import { CleaningActionButtons } from '@/features/cleanings/components/CleaningActionButtons';
 import {
 	CleaningEvidenceForm,
@@ -35,6 +34,7 @@ import { CleaningTaskList } from '@/features/cleanings/components/CleaningTaskLi
 import type { CleaningRequest } from '@/features/cleanings/types';
 import { CLEANING_STATUS } from '@/features/cleanings/types';
 import { useCleanerCleanings } from '@/features/cleanings/useCleanerCleanings';
+import { useCleanerPayConfig } from '@/features/cleanings/useCleanerPayConfig';
 import { useClockInOut } from '@/features/cleanings/useClockInOut';
 import { useTaskSync } from '@/features/cleanings/useTaskSync';
 import { mediaService } from '@/lib/mediaService';
@@ -79,17 +79,8 @@ export function CleaningDetailView({
 	const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
 	const [isProcessing, setIsProcessing] = useState(false);
 
-	const [hourlyRate, setHourlyRate] = useState<number | null>(null);
-
-	useEffect(() => {
-		if (!isHost) {
-			cleaningService.getCleanerPayConfig().then((result) => {
-				if (result.data) {
-					setHourlyRate(result.data.hourly_rate);
-				}
-			});
-		}
-	}, [isHost]);
+	const cleanerPayConfig = useCleanerPayConfig();
+	const hourlyRate = !isHost ? (cleanerPayConfig?.hourly_rate ?? null) : null;
 
 	const estimatedHours =
 		cleaning.cleaner_pay != null && hourlyRate != null && hourlyRate > 0

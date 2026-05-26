@@ -25,6 +25,16 @@ export const propertyService = {
 		return { data, error: null };
 	},
 
+	async getPropertyById(id: string): Promise<ActionResult<Property>> {
+		const { data, error } = await supabase.from('properties').select('*').eq('id', id).single();
+
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+
+		return { data, error: null };
+	},
+
 	async upsertProperty(property: PropertyInsert): Promise<ActionResult<Property>> {
 		const { data, error } = await supabase.from('properties').upsert(property).select().single();
 

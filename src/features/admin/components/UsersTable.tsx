@@ -127,8 +127,7 @@ export function UsersTable({
 								<TooltipTrigger asChild>
 									<Button
 										variant="secondary"
-										size="sm"
-										className="h-8 w-8 p-0"
+										size="icon-sm"
 										onClick={() =>
 											navigate(
 												`/admin/users/${user.role === 'host' ? 'hosts' : 'cleaners'}/${user.id}`,
@@ -146,8 +145,7 @@ export function UsersTable({
 							<TooltipTrigger asChild>
 								<Button
 									variant="secondary"
-									size="sm"
-									className="h-8 w-8 p-0"
+									size="icon-sm"
 									onClick={() => onResetPassword?.(user.id)}>
 									<KeyRound className="size-4" />
 								</Button>
@@ -161,8 +159,7 @@ export function UsersTable({
 								<TooltipTrigger asChild>
 									<Button
 										variant="secondary"
-										size="sm"
-										className="h-8 w-8 p-0"
+										size="icon-sm"
 										onClick={() => (user.banned_until ? onUnban?.(user.id) : onBan?.(user.id))}>
 										{user.banned_until ? (
 											<ShieldCheck className="size-4" />
@@ -208,26 +205,20 @@ export function UsersTable({
 					{user.role !== 'admin' && (
 						<Button
 							variant="secondary"
-							size="sm"
-							className="h-8 w-8 p-0"
+							size="icon-sm"
 							onClick={() =>
 								navigate(`/admin/users/${user.role === 'host' ? 'hosts' : 'cleaners'}/${user.id}`)
 							}>
 							<Eye className="size-4" />
 						</Button>
 					)}
-					<Button
-						variant="secondary"
-						size="sm"
-						className="h-8 w-8 p-0"
-						onClick={() => onResetPassword?.(user.id)}>
+					<Button variant="secondary" size="icon-sm" onClick={() => onResetPassword?.(user.id)}>
 						<KeyRound className="size-4" />
 					</Button>
 					{user.role !== 'admin' && (
 						<Button
 							variant="secondary"
-							size="sm"
-							className="h-8 w-8 p-0"
+							size="icon-sm"
 							onClick={() => (user.banned_until ? onUnban?.(user.id) : onBan?.(user.id))}>
 							{user.banned_until ? (
 								<ShieldCheck className="size-4" />

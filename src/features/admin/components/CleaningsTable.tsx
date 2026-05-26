@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowUpDown, Eye, Pencil, UserPlus } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { CleaningDialogs } from '@/components/CleaningDialogs';
 import { DataTable } from '@/components/DataTable';
 import { EntityBadge } from '@/components/EntityBadge';
@@ -17,7 +17,6 @@ import type { CleaningFormValues } from '@/features/cleanings/components/Cleanin
 import type { CleaningRequest } from '@/features/cleanings/types';
 import { CLEANING_STATUS } from '@/features/cleanings/types';
 import { useCleaningModals } from '@/hooks/useCleaningModals';
-import { supabase } from '@/lib/supabaseClient';
 import { formatDate } from '@/lib/utils';
 
 export interface CleaningsTableProps {
@@ -30,6 +29,7 @@ export interface CleaningsTableProps {
 	hideHostCost?: boolean;
 	hideCleanerPay?: boolean;
 	emptyMessage?: string;
+	availableCleaners: { id: string; full_name: string | null }[];
 	onRefresh?: () => void;
 	page?: number;
 	totalCount?: number;
@@ -68,6 +68,7 @@ export function CleaningsTable({
 	hasMore,
 	onLoadMore,
 	loadingMore = false,
+	availableCleaners,
 }: CleaningsTableProps) {
 	const { modal, viewingCleaning, editingCleaning, isViewLoading, isEditLoading, handleUpsert } =
 		useCleaningModals({
@@ -75,30 +76,9 @@ export function CleaningsTable({
 			onUpsert,
 			userRole,
 		});
-	const [availableCleaners, setAvailableCleaners] = useState<
-		{ id: string; full_name: string | null }[]
-	>([]);
 	const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
 	const [selectedCleaningId, setSelectedCleaningId] = useState<string>('');
 	const [selectedCleanerId, setSelectedCleanerId] = useState<string>('');
-
-	const fetchAvailableCleaners = useCallback(async () => {
-		const { data: cleaners, error } = await supabase
-			.from('profiles')
-			.select('id, full_name')
-			.eq('role', 'cleaner')
-			.order('full_name');
-		if (error) {
-			console.error('Error fetching cleaners:', error);
-		}
-		if (cleaners) {
-			setAvailableCleaners(cleaners);
-		}
-	}, []);
-
-	useEffect(() => {
-		fetchAvailableCleaners();
-	}, [fetchAvailableCleaners]);
 
 	const handleSort = useCallback(
 		(field: string) => {
@@ -330,8 +310,7 @@ export function CleaningsTable({
 							<TooltipTrigger asChild>
 								<Button
 									variant="secondary"
-									size="sm"
-									className="h-8 w-8 p-0"
+									size="icon-sm"
 									onClick={() => modal.openView(cleaning.id)}>
 									<Eye className="size-4" />
 								</Button>
@@ -345,8 +324,7 @@ export function CleaningsTable({
 								<TooltipTrigger asChild>
 									<Button
 										variant="secondary"
-										size="sm"
-										className="h-8 w-8 p-0"
+										size="icon-sm"
 										onClick={() => modal.openEdit(cleaning.id)}>
 										<Pencil className="size-4" />
 									</Button>
@@ -361,8 +339,7 @@ export function CleaningsTable({
 								<TooltipTrigger asChild>
 									<Button
 										variant="secondary"
-										size="sm"
-										className="h-8 w-8 p-0"
+										size="icon-sm"
 										onClick={() => openAssignModal(cleaning.id)}>
 										<UserPlus className="size-4" />
 									</Button>
@@ -377,8 +354,7 @@ export function CleaningsTable({
 								<TooltipTrigger asChild>
 									<Button
 										variant="secondary"
-										size="sm"
-										className="h-8 w-8 p-0"
+										size="icon-sm"
 										onClick={() => openAssignModal(cleaning.id, cleaning.cleaner_id)}>
 										<ArrowUpDown className="size-4" />
 									</Button>

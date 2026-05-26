@@ -198,6 +198,7 @@ export function AdminCleaningsPage() {
 				hasMore={hasMore}
 				onLoadMore={loadMore}
 				loadingMore={loadingMore}
+				availableCleaners={availableCleaners}
 			/>
 
 			<StandardTasksDialog open={isStandardTasksOpen} onOpenChange={setIsStandardTasksOpen} />
