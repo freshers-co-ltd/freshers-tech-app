@@ -4,7 +4,7 @@ import { CalendarX } from 'lucide-react';
 import { DICT } from '@/dictionary';
 import { CleanerCleaningGrid } from '@/features/cleanings/components/CleanerCleaningGrid';
 import { CleaningDetailView } from '@/features/cleanings/components/CleaningDetailView';
-import { useCleanerCleanings } from '@/features/cleanings/useCleanerCleanings';
+import { useCleanerCleanings } from '@/features/cleanings/hooks/useCleanerCleanings';
 import { ManagementLayout } from '@/layouts/ManagementLayout';
 
 export function CleanerCleaningsPage() {

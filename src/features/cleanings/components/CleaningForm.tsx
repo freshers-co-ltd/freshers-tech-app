@@ -4,8 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Controller, type SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
 import * as z from 'zod';
+import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -20,7 +20,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { DICT } from '@/dictionary';
-import { cleaningService } from '@/features/cleanings/cleaningService';
+import { cleaningsService } from '@/features/cleanings/services/cleaningsService';
 import type { CleaningRequest } from '@/features/cleanings/types';
 import { STATUS_GROUPS } from '@/features/cleanings/types';
 import { PropertyForm } from '@/features/properties/components/PropertyForm';
@@ -81,7 +81,6 @@ export function CleaningForm({
 	const [standardTasksLoading, setStandardTasksLoading] = useState(false);
 	const [standardTasksError, setStandardTasksError] = useState<string | null>(null);
 	const { properties: contextProperties, upsertProperty } = useProperties();
-	const navigate = useNavigate();
 
 	const displayedProperties = availableProperties || contextProperties;
 
@@ -143,7 +142,7 @@ export function CleaningForm({
 		async function fetchStandardTasks() {
 			setStandardTasksLoading(true);
 			setStandardTasksError(null);
-			const result = await cleaningService.getStandardTasks();
+			const result = await cleaningsService.getStandardTasks();
 			if (isMounted) {
 				if (result.error) {
 					setStandardTasksError(result.error);
@@ -197,7 +196,7 @@ export function CleaningForm({
 		try {
 			await onSubmit(values);
 		} catch {
-			navigate('/error/500');
+			toast.error(DICT.ERRORS.COMMON.GENERIC);
 		}
 	};
 

@@ -15,16 +15,16 @@ import {
 } from '@/components/ui/dialog';
 import { FormContainer } from '@/components/ui/form-container';
 import { DICT } from '@/dictionary';
-import { cleaningService as adminCleaningService } from '@/features/admin/cleaningService';
 import { CleaningsTable } from '@/features/admin/components/CleaningsTable';
 import { PropertiesTable } from '@/features/admin/components/PropertiesTable';
 import { PropertyPriceDialog } from '@/features/admin/components/PropertyPriceDialog';
-import { useAdminUsers } from '@/features/admin/useAdminUsers';
-import { useHostDetail } from '@/features/admin/useHostDetail';
-import { userService } from '@/features/admin/userService';
-import { cleaningService } from '@/features/cleanings/cleaningService';
+import { useAdminUsers } from '@/features/admin/hooks/useAdminUsers';
+import { useHostDetail } from '@/features/admin/hooks/useHostDetail';
+import { cleaningService as adminCleaningService } from '@/features/admin/services/cleaningService';
+import { userService } from '@/features/admin/services/userService';
 import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
 import { CleaningForm } from '@/features/cleanings/components/CleaningForm';
+import { cleaningsService } from '@/features/cleanings/services/cleaningsService';
 import { PropertyDetailView } from '@/features/properties/components/PropertyDetailView';
 import { propertyService } from '@/features/properties/propertyService';
 import type { Property } from '@/features/properties/types';
@@ -128,7 +128,7 @@ export function AdminHostDetailPage() {
 	};
 
 	const fetchCleaningById = useCallback(async (cleaningId: string) => {
-		const result = await cleaningService.getCleaningRequestById(cleaningId);
+		const result = await cleaningsService.getCleaningRequestById(cleaningId);
 		return result.data || null;
 	}, []);
 

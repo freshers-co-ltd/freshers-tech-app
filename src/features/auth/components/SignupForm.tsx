@@ -65,34 +65,26 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 	}, [resendCooldown]);
 
 	const onSignupSubmit = async (values: SignupFormValues) => {
-		try {
-			const { error, user, needsConfirmation } = (await Promise.race([
-				authService.signUp({
-					email: values.email,
-					password: values.password,
-					full_name: values.name,
-					role: selectedRole,
-				}),
-			])) as AuthActionResult;
+		const { error, user, needsConfirmation } = (await Promise.race([
+			authService.signUp({
+				email: values.email,
+				password: values.password,
+				full_name: values.name,
+				role: selectedRole,
+			}),
+		])) as AuthActionResult;
 
-			if (error) {
-				toast.error(error);
-				return;
-			}
-
-			if (needsConfirmation) {
-				setStep('verify');
-				toast.success(DICT.AUTH.SIGNUP.VERIFICATION.TOAST_SUCCESS, { duration: 3000 });
-			} else if (user) {
-				toast.success(DICT.AUTH.SIGNUP.TOAST_SUCCESS, { duration: 3000 });
-				navigate('/dashboard');
-			}
-		} catch (err) {
-			console.error('Error:', err);
-			toast.error(DICT.ERRORS.COMMON.GENERIC);
+		if (error) {
+			toast.error(error);
 			return;
-		} finally {
-			form.reset(undefined, { keepValues: true });
+		}
+
+		if (needsConfirmation) {
+			setStep('verify');
+			toast.success(DICT.AUTH.SIGNUP.VERIFICATION.TOAST_SUCCESS, { duration: 3000 });
+		} else if (user) {
+			toast.success(DICT.AUTH.SIGNUP.TOAST_SUCCESS, { duration: 3000 });
+			navigate('/dashboard');
 		}
 	};
 

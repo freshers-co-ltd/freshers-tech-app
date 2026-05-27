@@ -1,7 +1,7 @@
 'use client';
 
 import { Search } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import {
 	Select,
@@ -13,7 +13,7 @@ import {
 import { DICT } from '@/dictionary';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
 import { CleaningCard } from '@/features/cleanings/components/CleaningCard';
-import { CleaningGridSkeleton } from '@/features/cleanings/components/CleaningGridSkeleton';
+import { useCleaningFilters } from '@/features/cleanings/hooks/useCleaningFilters';
 import { STATUS_GROUPS } from '@/features/cleanings/types';
 
 interface HostCleaningGridProps {
@@ -23,48 +23,14 @@ interface HostCleaningGridProps {
 }
 
 export function HostCleaningGrid({ onView, onEdit, onDelete }: HostCleaningGridProps) {
-	const { cleanings, isLoading } = useCleanings();
+	const { cleanings } = useCleanings();
 	const [searchQuery, setSearchQuery] = useState('');
 	const [statusFilter, setStatusFilter] = useState('all');
 	const [sortBy, setSortBy] = useState('date_desc');
 
 	const dict = DICT.CLEANINGS;
 
-	const filteredCleanings = useMemo(() => {
-		let result = [...cleanings];
-
-		if (searchQuery) {
-			const query = searchQuery.toLowerCase();
-			result = result.filter(
-				(c) =>
-					c.property?.address_line_1.toLowerCase().includes(query) ||
-					c.property?.postcode.toLowerCase().includes(query),
-			);
-		}
-
-		if (statusFilter !== 'all') {
-			result = result.filter((c) => c.status === statusFilter);
-		}
-
-		result.sort((a, b) => {
-			if (sortBy === 'date_asc') {
-				return new Date(a.scheduled_start).getTime() - new Date(b.scheduled_start).getTime();
-			}
-			if (sortBy === 'date_desc') {
-				return new Date(b.scheduled_start).getTime() - new Date(a.scheduled_start).getTime();
-			}
-			if (sortBy === 'requested_desc') {
-				return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-			}
-			return 0;
-		});
-
-		return result;
-	}, [cleanings, searchQuery, statusFilter, sortBy]);
-
-	if (isLoading) {
-		return <CleaningGridSkeleton />;
-	}
+	const filteredCleanings = useCleaningFilters(cleanings, { searchQuery, statusFilter, sortBy });
 
 	return (
 		<div className="space-y-6">

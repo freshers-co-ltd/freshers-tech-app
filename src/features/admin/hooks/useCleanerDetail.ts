@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from '@/components/Toast';
+import { userService } from '@/features/admin/services/userService';
 import type { AdminCleanerDetail } from '@/features/admin/types';
-import { userService } from '@/features/admin/userService';
 import { supabase } from '@/lib/supabaseClient';
 
 interface UseCleanerDetailResult {

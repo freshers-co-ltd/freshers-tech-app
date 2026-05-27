@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { cleaningService } from '@/features/cleanings/cleaningService';
+import { cleaningsService } from '@/features/cleanings/services/cleaningsService';
 import type { CleanerPayConfig } from '@/features/cleanings/types';
 
 interface CleanerPayConfigDialogProps {
@@ -29,7 +29,7 @@ export function CleanerPayConfigDialog({ open, onOpenChange }: CleanerPayConfigD
 
 	const fetchConfig = useCallback(async () => {
 		setLoading(true);
-		const result = await cleaningService.getCleanerPayConfig();
+		const result = await cleaningsService.getCleanerPayConfig();
 		if (result.error) {
 			toast.error(result.error);
 		} else {
@@ -50,7 +50,7 @@ export function CleanerPayConfigDialog({ open, onOpenChange }: CleanerPayConfigD
 		}
 
 		setSaving(true);
-		const result = await cleaningService.updateCleanerPayConfig(config);
+		const result = await cleaningsService.updateCleanerPayConfig(config);
 		setSaving(false);
 
 		if (result.error) {

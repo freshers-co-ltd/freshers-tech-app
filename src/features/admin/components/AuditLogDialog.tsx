@@ -13,8 +13,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
-import { analyticsService } from '@/features/admin/analyticsService';
 import { AuditLogEntryComponent } from '@/features/admin/components/AuditLogEntry';
+import { analyticsService } from '@/features/admin/services/analyticsService';
 import type { AuditFilters, AuditLogEntry } from '@/features/admin/types';
 
 interface AuditLogDialogProps {

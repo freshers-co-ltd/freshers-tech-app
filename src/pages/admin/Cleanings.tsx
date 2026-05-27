@@ -13,13 +13,13 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { DICT } from '@/dictionary';
-import { cleaningService as adminCleaningService } from '@/features/admin/cleaningService';
 import { CleanerPayConfigDialog } from '@/features/admin/components/CleanerPayConfigDialog';
 import { CleaningsTable } from '@/features/admin/components/CleaningsTable';
 import { StandardTasksDialog } from '@/features/admin/components/StandardTasksDialog';
-import { useAdminCleanings } from '@/features/admin/useAdminCleanings';
-import { cleaningService } from '@/features/cleanings/cleaningService';
+import { useAdminCleanings } from '@/features/admin/hooks/useAdminCleanings';
+import { cleaningService as adminCleaningService } from '@/features/admin/services/cleaningService';
 import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
+import { cleaningsService } from '@/features/cleanings/services/cleaningsService';
 import { CLEANING_STATUS } from '@/features/cleanings/types';
 
 export function AdminCleaningsPage() {
@@ -57,7 +57,7 @@ export function AdminCleaningsPage() {
 	const buttonsDict = dict.BUTTONS;
 
 	const fetchById = useCallback(async (id: string) => {
-		const result = await cleaningService.getCleaningRequestById(id);
+		const result = await cleaningsService.getCleaningRequestById(id);
 		return result.data || null;
 	}, []);
 

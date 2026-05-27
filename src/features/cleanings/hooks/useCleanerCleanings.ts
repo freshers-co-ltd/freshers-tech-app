@@ -10,8 +10,8 @@ export function useCleanerCleanings() {
 	const { user } = useAuth();
 	const {
 		cleanings,
-		updateCleaning,
 		isLoading,
+		updateCleaning,
 		insertTask,
 		updateTask,
 		addEvidence,
@@ -19,15 +19,14 @@ export function useCleanerCleanings() {
 		upsertReport,
 	} = useCleanings();
 	const modal = useResourceModals({ resourceName: 'cleaning' });
+	const viewingCleaning = useMemo(
+		() => cleanings.find((c) => c.id === modal.viewId),
+		[cleanings, modal.viewId],
+	);
 
 	const cleanerCleanings = useMemo(
 		() => cleanings.filter((c) => c.cleaner_id === user?.id),
 		[cleanings, user?.id],
-	);
-
-	const viewingCleaning = useMemo(
-		() => cleanerCleanings.find((c) => c.id === modal.viewId),
-		[cleanerCleanings, modal.viewId],
 	);
 
 	const activeCleaning = useMemo(

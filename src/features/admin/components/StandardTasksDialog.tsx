@@ -15,8 +15,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cleaningService as adminCleaningService } from '@/features/admin/cleaningService';
-import { cleaningService } from '@/features/cleanings/cleaningService';
+import { cleaningService as adminCleaningService } from '@/features/admin/services/cleaningService';
+import { cleaningsService } from '@/features/cleanings/services/cleaningsService';
 import type { StandardTask } from '@/features/cleanings/types';
 
 interface StandardTasksDialogProps {
@@ -39,7 +39,7 @@ export function StandardTasksDialog({ open, onOpenChange }: StandardTasksDialogP
 
 	const fetchTasks = useCallback(async () => {
 		setLoading(true);
-		const result = await cleaningService.getStandardTasks();
+		const result = await cleaningsService.getStandardTasks();
 		if (result.error) {
 			toast.error(result.error);
 		} else {

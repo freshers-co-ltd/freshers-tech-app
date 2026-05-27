@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { analyticsService } from '@/features/admin/analyticsService';
+import { analyticsService } from '@/features/admin/services/analyticsService';
 
 interface AdminDashboardStats {
 	completedCleaningsMtd: number;

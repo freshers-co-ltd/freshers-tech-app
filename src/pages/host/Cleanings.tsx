@@ -6,7 +6,7 @@ import { DICT } from '@/dictionary';
 import { CleaningDetailView } from '@/features/cleanings/components/CleaningDetailView';
 import { CleaningForm } from '@/features/cleanings/components/CleaningForm';
 import { HostCleaningGrid } from '@/features/cleanings/components/HostCleaningGrid';
-import { useHostCleanings } from '@/features/cleanings/useHostCleanings';
+import { useHostCleanings } from '@/features/cleanings/hooks/useHostCleanings';
 import { ManagementLayout } from '@/layouts/ManagementLayout';
 
 export function HostCleaningsPage() {

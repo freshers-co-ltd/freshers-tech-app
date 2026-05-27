@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { cleaningService } from '@/features/cleanings/cleaningService';
+import { cleaningsService } from '@/features/cleanings/services/cleaningsService';
 import type { CleanerPayConfig } from '@/features/cleanings/types';
 
 let cachedConfig: CleanerPayConfig | null = null;
@@ -16,7 +16,7 @@ export function useCleanerPayConfig(): CleanerPayConfig | null {
 		}
 
 		if (!fetchPromise) {
-			fetchPromise = cleaningService.getCleanerPayConfig().then((result) => {
+			fetchPromise = cleaningsService.getCleanerPayConfig().then((result) => {
 				if (result.data) {
 					cachedConfig = result.data;
 					setConfig(result.data);

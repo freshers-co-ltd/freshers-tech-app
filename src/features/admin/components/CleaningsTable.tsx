@@ -1,6 +1,7 @@
 'use client';
 
 import { ArrowUpDown, Eye, Pencil, UserPlus } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { CleaningDialogs } from '@/components/CleaningDialogs';
 import { DataTable } from '@/components/DataTable';
@@ -9,8 +10,9 @@ import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DICT } from '@/dictionary';
-import { cleaningService as adminCleaningService } from '@/features/admin/cleaningService';
 import { AssignCleanerDialog } from '@/features/admin/components/AssignCleanerDialog';
+
+import { cleaningService as adminCleaningService } from '@/features/admin/services/cleaningService';
 import type { AdminCleaning } from '@/features/admin/types';
 import type { UserRole } from '@/features/auth/types';
 import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
@@ -129,13 +131,13 @@ export function CleaningsTable({
 			key: string;
 			label: string;
 			sortable: boolean;
-			render?: (item: AdminCleaning) => React.ReactNode;
+			render?: (item: AdminCleaning) => ReactNode;
 		}[] = [
 			{
 				key: 'date',
 				label: 'Date',
 				sortable: true,
-				render: (cleaning) => (
+				render: (cleaning: AdminCleaning) => (
 					<div>{formatDate(cleaning.scheduled_start, { variant: 'numeric' })}</div>
 				),
 			},
@@ -143,7 +145,7 @@ export function CleaningsTable({
 				key: 'time',
 				label: 'Time',
 				sortable: true,
-				render: (cleaning) => (
+				render: (cleaning: AdminCleaning) => (
 					<div>{formatDate(cleaning.scheduled_start, { variant: 'time' })}</div>
 				),
 			},
@@ -151,19 +153,19 @@ export function CleaningsTable({
 				key: 'property_address',
 				label: 'Address',
 				sortable: true,
-				render: (item) => item.property_address || 'Unknown Property',
+				render: (item: AdminCleaning) => item.property_address || 'Unknown Property',
 			},
 			{
 				key: 'property_postcode',
 				label: 'Postcode',
 				sortable: true,
-				render: (item) => item.property_postcode || '-',
+				render: (item: AdminCleaning) => item.property_postcode || '-',
 			},
 			{
 				key: 'property_town_city',
 				label: 'City',
 				sortable: true,
-				render: (item) => item.property_town_city || '-',
+				render: (item: AdminCleaning) => item.property_town_city || '-',
 			},
 		];
 
@@ -172,7 +174,7 @@ export function CleaningsTable({
 				key: 'host_name',
 				label: 'Host',
 				sortable: true,
-				render: (item) => item.host_name || '-',
+				render: (item: AdminCleaning) => item.host_name || '-',
 			});
 		}
 
@@ -181,7 +183,7 @@ export function CleaningsTable({
 				key: 'cleaner_name',
 				label: 'Cleaner',
 				sortable: true,
-				render: (item) =>
+				render: (item: AdminCleaning) =>
 					item.cleaner_name || (
 						<span className="text-muted-foreground">{DICT.CLEANINGS.UNASSIGNED}</span>
 					),
@@ -192,7 +194,9 @@ export function CleaningsTable({
 			key: 'status',
 			label: 'Status',
 			sortable: true,
-			render: (item) => <EntityBadge variant={{ type: 'cleaning', value: item.status }} />,
+			render: (item: AdminCleaning) => (
+				<EntityBadge variant={{ type: 'cleaning', value: item.status }} />
+			),
 		});
 
 		if (!hideHostCost) {
@@ -200,7 +204,7 @@ export function CleaningsTable({
 				key: 'service_cost',
 				label: 'Host Cost',
 				sortable: true,
-				render: (item) =>
+				render: (item: AdminCleaning) =>
 					item.service_cost === null ? (
 						<span className="text-muted-foreground">Not set</span>
 					) : (
@@ -214,7 +218,7 @@ export function CleaningsTable({
 				key: 'cleaner_pay',
 				label: 'Cleaner Pay',
 				sortable: true,
-				render: (item) => <span>£{item.cleaner_pay?.toFixed(2) ?? '0.00'}</span>,
+				render: (item: AdminCleaning) => <span>£{item.cleaner_pay?.toFixed(2) ?? '0.00'}</span>,
 			});
 		}
 
@@ -222,7 +226,7 @@ export function CleaningsTable({
 			key: 'actions',
 			label: 'Actions',
 			sortable: false,
-			render: (item) => (
+			render: (item: AdminCleaning) => (
 				<div className="flex items-center justify-end gap-1">
 					<Tooltip>
 						<TooltipTrigger asChild>
@@ -284,9 +288,9 @@ export function CleaningsTable({
 		openAssignModal,
 		handleReassignCleaner,
 		modal,
-		isDisabled,
 		hideCleanerPay,
 		hideHostCost,
+		isDisabled,
 	]);
 
 	const renderMobileHeader = useCallback(
@@ -303,7 +307,6 @@ export function CleaningsTable({
 						{formatDate(cleaning.scheduled_start, { variant: 'time' })}
 					</p>
 				</div>
-
 				<div className="flex flex-col gap-3 shrink-0">
 					<div className="flex gap-1">
 						<Tooltip>

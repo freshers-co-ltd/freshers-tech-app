@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from '@/components/Toast';
-import { analyticsService } from '@/features/admin/analyticsService';
+import { analyticsService } from '@/features/admin/services/analyticsService';
+import { userService } from '@/features/admin/services/userService';
 import type {
 	AdminUser,
 	SortDirection,
@@ -10,7 +11,6 @@ import type {
 	UserFilters,
 	UserTab,
 } from '@/features/admin/types';
-import { userService } from '@/features/admin/userService';
 import type { UserRole } from '@/features/auth/types';
 
 interface UseAdminUsersResult {

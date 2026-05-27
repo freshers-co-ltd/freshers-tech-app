@@ -1,44 +1,28 @@
 'use client';
 
-import {
-	AlertCircle,
-	Banknote,
-	Bath,
-	Bed,
-	Clock,
-	Info,
-	MapPin,
-	NotepadText,
-	Package,
-	User,
-} from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { MapPin } from 'lucide-react';
+import { useMemo } from 'react';
 import { EntityBadge } from '@/components/EntityBadge';
 import { FullscreenMediaCarousel } from '@/components/FullscreenMediaCarousel';
-import { ImageWithFallback } from '@/components/ImageWithFallback';
-import { toast } from '@/components/Toast';
-import { Button } from '@/components/ui/button';
 import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { VideoThumbnail } from '@/components/VideoThumbnail';
 import { DICT } from '@/dictionary';
 import type { UserRole } from '@/features/auth/types';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
 import { CleaningActionButtons } from '@/features/cleanings/components/CleaningActionButtons';
-import {
-	CleaningEvidenceForm,
-	type EvidenceFormValues,
-} from '@/features/cleanings/components/CleaningEvidenceForm';
+import { CleaningEvidenceForm } from '@/features/cleanings/components/CleaningEvidenceForm';
+import { CleaningReportView } from '@/features/cleanings/components/CleaningReportView';
+import { CleaningRequestDetails } from '@/features/cleanings/components/CleaningrequestDetails';
 import { CleaningTaskList } from '@/features/cleanings/components/CleaningTaskList';
+import { useCleanerCleanings } from '@/features/cleanings/hooks/useCleanerCleanings';
+import { useCleanerPayConfig } from '@/features/cleanings/hooks/useCleanerPayConfig';
+import { useClockInOut } from '@/features/cleanings/hooks/useClockInOut';
+import { useEvidenceSubmission } from '@/features/cleanings/hooks/useEvidenceSubmission';
+import { useTaskSync } from '@/features/cleanings/hooks/useTaskSync';
 import type { CleaningRequest } from '@/features/cleanings/types';
 import { CLEANING_STATUS } from '@/features/cleanings/types';
-import { useCleanerCleanings } from '@/features/cleanings/useCleanerCleanings';
-import { useCleanerPayConfig } from '@/features/cleanings/useCleanerPayConfig';
-import { useClockInOut } from '@/features/cleanings/useClockInOut';
-import { useTaskSync } from '@/features/cleanings/useTaskSync';
 import { mediaService } from '@/lib/mediaService';
-import { formatDate } from '@/lib/utils';
 
 interface CleaningDetailViewProps {
 	cleaning: CleaningRequest;
@@ -74,11 +58,6 @@ export function CleaningDetailView({
 		updateTasksBatch,
 	});
 
-	const [showEvidenceForm, setShowEvidenceForm] = useState(false);
-	const [isFullScreen, setIsFullScreen] = useState(false);
-	const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
-	const [isProcessing, setIsProcessing] = useState(false);
-
 	const cleanerPayConfig = useCleanerPayConfig();
 	const hourlyRate = !isHost ? (cleanerPayConfig?.hourly_rate ?? null) : null;
 
@@ -86,6 +65,23 @@ export function CleaningDetailView({
 		cleaning.cleaner_pay != null && hourlyRate != null && hourlyRate > 0
 			? cleaning.cleaner_pay / hourlyRate
 			: null;
+
+	const {
+		showEvidenceForm,
+		setShowEvidenceForm,
+		isFullScreen,
+		setIsFullScreen,
+		selectedMediaIndex,
+		setSelectedMediaIndex,
+		isFinishDisabled,
+		onFormSubmit,
+	} = useEvidenceSubmission({
+		cleaning,
+		addEvidence,
+		upsertReport,
+		updateCleaning,
+		handleSyncTasks,
+	});
 
 	const tasks = localTasks;
 	const evidence = Array.isArray(cleaning.evidence) ? cleaning.evidence : [];
@@ -117,52 +113,7 @@ export function CleaningDetailView({
 		return { daysRemaining, isExpired: daysRemaining <= 0 };
 	}, [cleaning.clock_out_time]);
 
-	const onFormSubmit = async (values: EvidenceFormValues, files: File[]) => {
-		if (!cleaning.cleaner_id) {
-			return;
-		}
-		setIsProcessing(true);
-		try {
-			await handleSyncTasks();
-
-			for (const file of files) {
-				const { path, error: uploadError } = await mediaService.uploadMedia(
-					cleaning.id,
-					file,
-					'cleaning-media',
-				);
-				if (uploadError) {
-					throw new Error(uploadError);
-				}
-				if (path) {
-					await addEvidence({
-						cleaning_id: cleaning.id,
-						uploader_id: cleaning.cleaner_id,
-						media_url: path,
-						type: file.type.startsWith('video') ? 'video' : 'image',
-					});
-				}
-			}
-
-			await upsertReport({
-				cleaning_id: cleaning.id,
-				cleaner_id: cleaning.cleaner_id,
-				broken_items_report: values.broken_items_report,
-				low_supplies_report: values.low_supplies_report,
-			});
-
-			await updateCleaning(cleaning.id, { clock_out_time: new Date().toISOString() });
-			toast.success(DICT.CLEANINGS.DETAIL.COMPLETION.SUCCESS);
-			setShowEvidenceForm(false);
-		} catch {
-			toast.error(DICT.CLEANINGS.DETAIL.COMPLETION.FAILED);
-		} finally {
-			setIsProcessing(false);
-		}
-	};
-
 	const isClockInDisabled = !canClockIn || isClockInProcessing;
-	const isFinishDisabled = isProcessing;
 
 	return (
 		<div className="flex flex-col overflow-hidden flex-1">
@@ -209,146 +160,11 @@ export function CleaningDetailView({
 							<>
 								<Separator />
 
-								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-									<div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 min-w-0">
-										<Clock className="size-5 text-primary shrink-0" />
-										<div className="min-w-0">
-											<p className="text-[10px] text-muted-foreground uppercase font-bold">
-												Scheduled
-											</p>
-											<span>{formatDate(cleaning.scheduled_start)}</span>
-											<span> at {formatDate(cleaning.scheduled_start, { variant: 'time' })}</span>
-										</div>
-									</div>
-
-									<div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 min-w-0">
-										<Banknote className="size-5 text-primary shrink-0" />
-										<div className="min-w-0 flex gap-4">
-											{isAdmin ? (
-												<>
-													<div>
-														<p className="text-[10px] text-muted-foreground uppercase font-bold">
-															Host Cost
-														</p>
-														{cleaning.service_cost === null ? (
-															<p className="text-muted-foreground">Not set</p>
-														) : (
-															<p>
-																{DICT.COMMON.CURRENCY}
-																{cleaning.service_cost.toFixed(2)}
-															</p>
-														)}
-													</div>
-													<div>
-														<p className="text-[10px] text-muted-foreground uppercase font-bold">
-															Cleaner Pay
-														</p>
-														<p>
-															{DICT.COMMON.CURRENCY}
-															{cleaning.cleaner_pay?.toFixed(2) ?? '0.00'}
-														</p>
-													</div>
-													<div>
-														<p className="text-[10px] text-muted-foreground uppercase font-bold">
-															Est. Time
-														</p>
-														<p>{estimatedHours ? `${estimatedHours.toFixed(1)}h` : '-'}</p>
-													</div>
-												</>
-											) : isHost ? (
-												<div>
-													<p className="text-[10px] text-muted-foreground uppercase font-bold">
-														Cost
-													</p>
-													{cleaning.service_cost === null ? (
-														<p className="text-muted-foreground">Not set</p>
-													) : (
-														<p>
-															{DICT.COMMON.CURRENCY}
-															{cleaning.service_cost.toFixed(2)}
-														</p>
-													)}
-												</div>
-											) : (
-												<>
-													<div>
-														<p className="text-[10px] text-muted-foreground uppercase font-bold">
-															Earnings
-														</p>
-														<p>
-															{DICT.COMMON.CURRENCY}
-															{cleaning.cleaner_pay?.toFixed(2) ?? '0.00'}
-														</p>
-													</div>
-													<div>
-														<p className="text-[10px] text-muted-foreground uppercase font-bold">
-															Est. Time
-														</p>
-														<p>{estimatedHours ? `${estimatedHours.toFixed(1)}h` : '-'}</p>
-													</div>
-												</>
-											)}
-										</div>
-									</div>
-								</div>
-
-								<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-									<div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 min-w-0">
-										<Info className="size-5 text-primary shrink-0" />
-										<div className="">
-											<p className="text-[10px] text-muted-foreground uppercase font-bold">
-												Details
-											</p>
-
-											<div className="flex gap-3">
-												<div className="flex items-center gap-1">
-													<Bed className="size-4 " />
-													<span>{cleaning.property?.bedrooms}</span>
-												</div>
-												<div className="flex items-center gap-1">
-													<Bath className="size-4" />
-													<span>{cleaning.property?.bathrooms}</span>
-												</div>
-												<span className="ml-auto capitalize">{cleaning.property?.type}</span>
-											</div>
-										</div>
-									</div>
-									{(isHost || isAdmin) && (
-										<div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 min-w-0">
-											<User className="size-5 text-primary shrink-0" />
-											<div className="min-w-0">
-												<p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">
-													Assigned Cleaner
-												</p>
-												{cleaning.cleaner?.full_name ? (
-													<span className="text-sm truncate">{cleaning.cleaner.full_name}</span>
-												) : (
-													<span className="text-sm text-muted-foreground">
-														{DICT.CLEANINGS.DETAIL.PENDING_ASSIGNMENT}
-													</span>
-												)}
-											</div>
-										</div>
-									)}
-								</div>
-
-								<div className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30 min-w-0">
-									<NotepadText className="size-5 text-primary shrink-0 mt-0.5" />
-									<div className="min-w-0 space-y-2">
-										<p className="text-[10px] text-muted-foreground uppercase font-bold">
-											{DICT.CLEANINGS.FORM.LABELS.INFORMATION}
-										</p>
-										{cleaning.information && (
-											<span className="text-sm block">{cleaning.information}</span>
-										)}
-										<span>
-											{DICT.CLEANINGS.DETAIL.TOILETRIES_RESTOCK}:{' '}
-											{cleaning.stocks_included
-												? DICT.CLEANINGS.DETAIL.RESTOCK_INCLUDED
-												: DICT.CLEANINGS.DETAIL.RESTOCK_NOT_INCLUDED}
-										</span>
-									</div>
-								</div>
+								<CleaningRequestDetails
+									cleaning={cleaning}
+									userRole={userRole}
+									estimatedHours={estimatedHours}
+								/>
 
 								<CleaningTaskList
 									tasks={tasks}
@@ -359,87 +175,15 @@ export function CleaningDetailView({
 
 								{isCompleted &&
 									(cleaning.report || (evidence.length > 0 && !expiryInfo?.isExpired)) && (
-										<div className="grid grid-cols-1 gap-6 pt-2 w-full overflow-hidden">
-											{cleaning.report && (
-												<div className="grid grid-cols-1 gap-4">
-													{cleaning.report.broken_items_report && (
-														<div className="space-y-2">
-															<h4 className="text-xs font-bold uppercase text-destructive tracking-wider flex items-center gap-2">
-																<AlertCircle className="size-4" /> Broken Items
-															</h4>
-															<div className="p-3 rounded-md border border-destructive/20 bg-destructive/5">
-																<p className="text-sm">{cleaning.report.broken_items_report}</p>
-															</div>
-														</div>
-													)}
-													{cleaning.report.low_supplies_report && (
-														<div className="space-y-2">
-															<h4 className="text-xs font-bold uppercase text-orange-500 tracking-wider flex items-center gap-2">
-																<Package className="size-4" /> Low Supplies
-															</h4>
-															<div className="p-3 rounded-md border border-orange-200 bg-orange-50">
-																<p className="text-sm">{cleaning.report.low_supplies_report}</p>
-															</div>
-														</div>
-													)}
-												</div>
-											)}
-
-											{evidenceMedia.length > 0 && !expiryInfo?.isExpired && (
-												<div className="space-y-3 w-full min-w-0 overflow-hidden">
-													<h4 className="text-xs font-bold uppercase text-muted-foreground tracking-wider">
-														{DICT.CLEANINGS.DETAIL.EVIDENCE.TITLE}
-													</h4>
-													<ScrollArea className="w-full pb-2">
-														<div className="flex gap-2 p-1 min-w-0">
-															{evidence.map((item, index) => (
-																<Button
-																	key={item.id}
-																	variant="outline"
-																	className="p-0 size-40 shrink-0 overflow-hidden border rounded-md"
-																	onClick={() => {
-																		setSelectedMediaIndex(index);
-																		setIsFullScreen(true);
-																	}}>
-																	{item.type === 'image' ? (
-																		<ImageWithFallback
-																			src={mediaService.getMediaUrl(
-																				item.media_url,
-																				'cleaning-media',
-																			)}
-																			className="size-full object-cover"
-																			alt="Evidence"
-																		/>
-																	) : (
-																		<VideoThumbnail
-																			src={mediaService.getMediaUrl(
-																				item.media_url,
-																				'cleaning-media',
-																			)}
-																			className="size-full"
-																		/>
-																	)}
-																</Button>
-															))}
-														</div>
-														<ScrollBar orientation="horizontal" />
-													</ScrollArea>
-													{expiryInfo &&
-														expiryInfo.daysRemaining > 0 &&
-														expiryInfo.daysRemaining <= 14 && (
-															<div className="flex items-start gap-2 p-2 rounded-md border border-amber-200 bg-amber-50 text-amber-800 text-sm">
-																<Clock className="size-4 shrink-0 mt-0.5" />
-																<span>
-																	{DICT.CLEANINGS.DETAIL.EVIDENCE.WARNING.replace(
-																		'{days}',
-																		String(expiryInfo.daysRemaining),
-																	)}
-																</span>
-															</div>
-														)}
-												</div>
-											)}
-										</div>
+										<CleaningReportView
+											cleaning={cleaning}
+											evidenceMedia={evidenceMedia}
+											expiryInfo={expiryInfo}
+											onMediaClick={(index) => {
+												setSelectedMediaIndex(index);
+												setIsFullScreen(true);
+											}}
+										/>
 									)}
 							</>
 						)}

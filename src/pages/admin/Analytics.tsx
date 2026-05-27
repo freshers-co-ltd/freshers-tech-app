@@ -14,9 +14,9 @@ import { LineChartComponent } from '@/components/ui/linear-line-chart';
 import { PieChartComponent } from '@/components/ui/pie-chart';
 import { Stat, StatIndicator, StatLabel, StatValue } from '@/components/ui/stat';
 import { DICT } from '@/dictionary';
-import { analyticsService } from '@/features/admin/analyticsService';
 import { AuditLogDialog } from '@/features/admin/components/AuditLogDialog';
 import { AuditLogEntryComponent } from '@/features/admin/components/AuditLogEntry';
+import { analyticsService } from '@/features/admin/services/analyticsService';
 import type {
 	AuditLogEntry,
 	MonthlyStats,

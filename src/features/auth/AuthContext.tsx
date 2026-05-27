@@ -41,7 +41,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 	const fetchProfile = useCallback(
 		async (userId: string, signal?: AbortSignal): Promise<Profile | null> => {
-			const { data } = await authService.getProfileWithFallback(userId, signal);
+			const { data, error } = await authService.getProfileWithFallback(userId, signal);
+			if (error) {
+				console.error('Failed to fetch profile:', error);
+			}
 			return data;
 		},
 		[],
@@ -138,6 +141,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			data: { subscription },
 		} = authService.onAuthStateChange((event, currentSession) => {
 			if (event === 'SIGNED_OUT') {
+				abortControllerRef.current?.abort();
+				abortControllerRef.current = null;
 				setSuppressSessionBroadcast(false);
 				lastUserId.current = null;
 				setSession(null);

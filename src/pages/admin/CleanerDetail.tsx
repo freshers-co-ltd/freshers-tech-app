@@ -4,13 +4,13 @@ import { BrushCleaning, ClipboardList, Clock, Sparkles } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { DICT } from '@/dictionary';
-import { cleaningService as adminCleaningService } from '@/features/admin/cleaningService';
 import { CleaningsTable } from '@/features/admin/components/CleaningsTable';
-import { useAdminUsers } from '@/features/admin/useAdminUsers';
-import { useCleanerDetail } from '@/features/admin/useCleanerDetail';
-import { userService } from '@/features/admin/userService';
-import { cleaningService } from '@/features/cleanings/cleaningService';
+import { useAdminUsers } from '@/features/admin/hooks/useAdminUsers';
+import { useCleanerDetail } from '@/features/admin/hooks/useCleanerDetail';
+import { cleaningService as adminCleaningService } from '@/features/admin/services/cleaningService';
+import { userService } from '@/features/admin/services/userService';
 import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
+import { cleaningsService } from '@/features/cleanings/services/cleaningsService';
 import { UserDetailLayout } from '@/layouts/UserDetailLayout';
 import { formatHours } from '@/lib/utils';
 
@@ -31,7 +31,7 @@ export function AdminCleanerDetailPage() {
 	}, []);
 
 	const fetchCleaningById = useCallback(async (cleaningId: string) => {
-		const result = await cleaningService.getCleaningRequestById(cleaningId);
+		const result = await cleaningsService.getCleaningRequestById(cleaningId);
 		return result.data || null;
 	}, []);
 

@@ -3,14 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from '@/components/Toast';
 import { DICT } from '@/dictionary';
-import { cleaningService } from '@/features/admin/cleaningService';
+import { cleaningService } from '@/features/admin/services/cleaningService';
+import { userService } from '@/features/admin/services/userService';
 import type {
 	AdminCleaning,
 	AvailableCleaner,
 	CleaningFilters,
 	CleaningStatus,
 } from '@/features/admin/types';
-import { userService } from '@/features/admin/userService';
 import { CLEANING_STATUS } from '@/features/cleanings/types';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -130,7 +130,9 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 
 	const fetchAvailableCleaners = useCallback(async () => {
 		const result = await userService.getAvailableCleaners();
-		if (!result.error) {
+		if (result.error) {
+			toast.error(result.error);
+		} else {
 			setAvailableCleaners(result.data || []);
 		}
 	}, []);

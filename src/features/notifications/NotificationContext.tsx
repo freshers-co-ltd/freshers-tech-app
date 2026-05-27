@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, type ReactNode, useCallback, useEffect, useState } from 'react';
+import { toast } from '@/components/Toast';
 import { useAuth } from '@/features/auth/AuthContext';
 import { useVisibilityReconnect } from '@/hooks/useVisibilityReconnect';
 import { supabase } from '@/lib/supabaseClient';
@@ -48,6 +49,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 		const { data, error } = await notificationsService.getNotifications(user.id, { limit: 20 });
 
 		if (error) {
+			toast.error(error);
 			setNotifications([]);
 		} else if (data) {
 			setNotifications(data);
@@ -64,7 +66,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
 		const { count, error } = await notificationsService.getUnreadCount(user.id);
 
-		if (!error) {
+		if (error) {
+			toast.error(error);
+		} else {
 			setUnreadCount(count);
 		}
 	}, [user]);
@@ -77,7 +81,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
 		const { data, error } = await notificationsService.getOrCreatePreferences();
 
-		if (!error && data) {
+		if (error) {
+			toast.error(error);
+		} else if (data) {
 			setPreferences(data as NotificationPreferences);
 		}
 	}, [user]);

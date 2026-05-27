@@ -10,10 +10,10 @@ import { Stat, StatIndicator, StatLabel, StatValue } from '@/components/ui/stat'
 import { DICT } from '@/dictionary';
 import { AdminActionDialogs } from '@/features/admin/components/AdminActionDialogs';
 import { UserCard } from '@/features/admin/components/UserCard';
+import { useAdminActionDialogs } from '@/features/admin/hooks/useAdminActionDialogs';
 import type { AdminUser } from '@/features/admin/types';
-import { useAdminActionDialogs } from '@/features/admin/useAdminActionDialogs';
-import { cleaningService } from '@/features/cleanings/cleaningService';
 import { CleaningDetailView } from '@/features/cleanings/components/CleaningDetailView';
+import { cleaningsService } from '@/features/cleanings/services/cleaningsService';
 import { useCleaningModals } from '@/hooks/useCleaningModals';
 
 interface StatConfig {
@@ -60,7 +60,7 @@ export function UserDetailLayout({
 	const dialogs = useAdminActionDialogs();
 
 	const fetchById = useCallback(async (id: string) => {
-		const result = await cleaningService.getCleaningRequestById(id);
+		const result = await cleaningsService.getCleaningRequestById(id);
 		return result.data || null;
 	}, []);
 

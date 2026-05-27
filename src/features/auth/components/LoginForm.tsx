@@ -43,24 +43,17 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
 	});
 
 	const onSubmit = async (values: LoginFormValues) => {
-		try {
-			localStorage.setItem('trust_device', String(values.rememberMe));
+		localStorage.setItem('trust_device', String(values.rememberMe));
 
-			const { error } = await authService.signIn(values);
+		const { error } = await authService.signIn(values);
 
-			if (error) {
-				toast.error(error);
-				return;
-			}
-
-			toast.success(DICT.AUTH.LOGIN.TOAST_SUCCESS, { duration: 3000 });
-			navigate('/dashboard');
-		} catch (err) {
-			console.error('Login error:', err);
-			toast.error(DICT.ERRORS.COMMON.GENERIC);
-		} finally {
-			form.reset(undefined, { keepValues: true });
+		if (error) {
+			toast.error(error);
+			return;
 		}
+
+		toast.success(DICT.AUTH.LOGIN.TOAST_SUCCESS, { duration: 3000 });
+		navigate('/dashboard');
 	};
 
 	return (

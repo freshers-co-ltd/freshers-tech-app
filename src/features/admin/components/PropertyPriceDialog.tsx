@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { userService } from '@/features/admin/userService';
+import { userService } from '@/features/admin/services/userService';
 
 interface PropertyPriceDialogProps {
 	open: boolean;

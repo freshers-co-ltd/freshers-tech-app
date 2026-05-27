@@ -6,16 +6,18 @@ import type { CleaningFormValues } from '@/features/cleanings/components/Cleanin
 import { useResourceModals } from '@/hooks/useResourceModals';
 
 export function useHostCleanings() {
-	const { cleanings, upsertCleaning, deleteCleaning, isLoading } = useCleanings();
+	const { cleanings, isLoading, upsertCleaning, deleteCleaning } = useCleanings();
 	const modal = useResourceModals({ resourceName: 'cleaning' });
 
-	const viewingCleaning = useMemo(() => {
-		return cleanings.find((c) => c.id === modal.viewId);
-	}, [cleanings, modal.viewId]);
+	const viewingCleaning = useMemo(
+		() => cleanings.find((c) => c.id === modal.viewId),
+		[cleanings, modal.viewId],
+	);
 
-	const editingCleaning = useMemo(() => {
-		return cleanings.find((c) => c.id === modal.editId);
-	}, [cleanings, modal.editId]);
+	const editingCleaning = useMemo(
+		() => cleanings.find((c) => c.id === modal.editId),
+		[cleanings, modal.editId],
+	);
 
 	const handleUpsert = useCallback(
 		async (data: CleaningFormValues) => {

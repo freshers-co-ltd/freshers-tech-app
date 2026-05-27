@@ -18,9 +18,9 @@ import { DICT } from '@/dictionary';
 import { AdminActionDialogs } from '@/features/admin/components/AdminActionDialogs';
 import { InviteUserDialog } from '@/features/admin/components/InviteUserDialog';
 import { UsersTable } from '@/features/admin/components/UsersTable';
+import { useAdminActionDialogs } from '@/features/admin/hooks/useAdminActionDialogs';
+import { useAdminUsers } from '@/features/admin/hooks/useAdminUsers';
 import type { UserTab } from '@/features/admin/types';
-import { useAdminActionDialogs } from '@/features/admin/useAdminActionDialogs';
-import { useAdminUsers } from '@/features/admin/useAdminUsers';
 
 export function AdminUsersPage() {
 	const {
