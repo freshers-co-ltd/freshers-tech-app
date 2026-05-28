@@ -10,8 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { PasswordInput } from '@/components/ui/password-input';
 import { DICT } from '@/dictionary';
+import { useAuth } from '@/features/auth/AuthContext';
 import { authService } from '@/features/auth/authService';
-import { supabase } from '@/lib/supabaseClient';
 import { cn } from '@/lib/utils';
 
 const resetPasswordSchema = z
@@ -32,6 +32,7 @@ type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 export function ResetPasswordForm({ className, ...props }: React.ComponentProps<'form'>) {
 	const navigate = useNavigate();
+	const { signOut } = useAuth();
 	const [isSuccess, setIsSuccess] = useState(false);
 	const form = useForm<ResetPasswordFormValues>({
 		resolver: zodResolver(resetPasswordSchema),
@@ -58,7 +59,7 @@ export function ResetPasswordForm({ className, ...props }: React.ComponentProps<
 				<Button
 					variant="default"
 					onClick={async () => {
-						await supabase.auth.signOut();
+						await signOut();
 						navigate('/login');
 					}}>
 					{DICT.AUTH.RESET_PASSWORD.BUTTON_LOGIN}

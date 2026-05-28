@@ -40,10 +40,10 @@ export function CleaningReportView({
 					)}
 					{cleaning.report.low_supplies_report && (
 						<div className="space-y-2">
-							<h4 className="text-xs font-bold uppercase text-orange-500 tracking-wider flex items-center gap-2">
+							<h4 className="text-xs font-bold uppercase text-warning tracking-wider flex items-center gap-2">
 								<Package className="size-4" /> Low Supplies
 							</h4>
-							<div className="p-3 rounded-md border border-orange-200 bg-orange-50">
+							<div className="p-3 rounded-md border border-warning-light bg-warning-background">
 								<p className="text-sm">{cleaning.report.low_supplies_report}</p>
 							</div>
 						</div>
@@ -82,7 +82,7 @@ export function CleaningReportView({
 						<ScrollBar orientation="horizontal" />
 					</ScrollArea>
 					{expiryInfo && expiryInfo.daysRemaining > 0 && expiryInfo.daysRemaining <= 14 && (
-						<div className="flex items-start gap-2 p-2 rounded-md border border-amber-200 bg-amber-50 text-amber-800 text-sm">
+						<div className="flex items-start gap-2 p-2 rounded-md border border-warning-light bg-warning-background text-yellow text-sm">
 							<Clock className="size-4 shrink-0 mt-0.5" />
 							<span>
 								{DICT.CLEANINGS.DETAIL.EVIDENCE.WARNING.replace(

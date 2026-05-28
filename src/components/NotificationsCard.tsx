@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
-import { NotificationList } from '@/features/notifications/components/NotificationList';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { DICT } from '@/dictionary';
 import { useAuth } from '@/features/auth/AuthContext';
+import { NotificationList } from '@/features/notifications/components/NotificationList';
 
 interface NotificationsCardProps {
 	maxItems?: number;

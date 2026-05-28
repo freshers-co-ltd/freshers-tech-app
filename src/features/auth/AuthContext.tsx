@@ -38,6 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 	const lastUserId = useRef<string | null>(null);
 	const abortControllerRef = useRef<AbortController | null>(null);
+	const isVoluntarySignOutRef = useRef(false);
 
 	const fetchProfile = useCallback(
 		async (userId: string, signal?: AbortSignal): Promise<Profile | null> => {
@@ -109,14 +110,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 				setSuppressSessionBroadcast(true);
 			}
 
-			const {
+			let {
 				data: { session: initialSession },
 			} = await authService.getSession();
 
-			if (!initialSession && !window.localStorage.getItem('trust_device')) {
+			const isTrusted = window.localStorage.getItem('trust_device') === 'true';
+			if (!initialSession && isTrusted) {
+				await new Promise((resolve) => setTimeout(resolve, 1000));
+				const retry = await authService.getSession();
+				initialSession = retry.data.session;
+			}
+
+			if (!initialSession && !isTrusted) {
 				const syncedSession = window.sessionStorage.getItem('sb-auth-token');
 				if (syncedSession) {
 					const parsed = JSON.parse(syncedSession);
+					await authService.setSession(parsed);
+					const {
+						data: { session: retrySession },
+					} = await authService.getSession();
+					if (isMounted) {
+						await handleAuthStateChange(retrySession, controller.signal);
+						setInitialised(true);
+					}
+					return;
+				}
+			}
+
+			if (!initialSession && isTrusted) {
+				const storedToken = window.localStorage.getItem('sb-auth-token');
+				if (storedToken) {
+					const parsed = JSON.parse(storedToken);
 					await authService.setSession(parsed);
 					const {
 						data: { session: retrySession },
@@ -139,8 +163,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 		const {
 			data: { subscription },
-		} = authService.onAuthStateChange((event, currentSession) => {
+		} = authService.onAuthStateChange(async (event, currentSession) => {
 			if (event === 'SIGNED_OUT') {
+				const isTrusted = window.localStorage.getItem('trust_device') === 'true';
+
+				if (isTrusted && !isVoluntarySignOutRef.current) {
+					try {
+						const storedToken = window.localStorage.getItem('sb-auth-token');
+						if (storedToken) {
+							const parsed = JSON.parse(storedToken);
+							await authService.setSession(parsed);
+						}
+					} catch {
+						// Recovery failed, but React state remains intact
+					}
+					return;
+				}
+
 				abortControllerRef.current?.abort();
 				abortControllerRef.current = null;
 				setSuppressSessionBroadcast(false);
@@ -184,9 +223,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 	const signOut = useCallback(async () => {
 		const trustDevice = window.localStorage.getItem('trust_device');
+		isVoluntarySignOutRef.current = true;
 		try {
 			await authService.signOut();
 		} finally {
+			isVoluntarySignOutRef.current = false;
 			setSuppressSessionBroadcast(false);
 			lastUserId.current = null;
 			setProfile(null);
@@ -203,20 +244,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	useVisibilityReconnect({
 		enabled: !!user,
 		onVisible: async () => {
-			const {
-				data: { user: currentUser },
-			} = await authService.getCurrentUser();
+			const isTrusted = window.localStorage.getItem('trust_device') === 'true';
+
+			if (isTrusted && !navigator.onLine) {
+				await refreshProfile();
+				reconnectProfileChannel();
+				return;
+			}
+
+			let currentUser: User | null = null;
+			for (let attempt = 0; attempt < 3; attempt++) {
+				if (attempt > 0) {
+					await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+				}
+				const result = await authService.getCurrentUser();
+				currentUser = result.data?.user ?? null;
+				if (currentUser) {
+					break;
+				}
+			}
 
 			if (!currentUser) {
+				if (isTrusted) {
+					await refreshProfile();
+					reconnectProfileChannel();
+					return;
+				}
+
 				await authService.signOut();
 				lastUserId.current = null;
 				setSession(null);
 				setUser(null);
 				setProfile(null);
-				const trustDevice = window.localStorage.getItem('trust_device');
+				const storedTrustDevice = window.localStorage.getItem('trust_device');
 				window.localStorage.clear();
 				window.sessionStorage.clear();
-				if (trustDevice === 'true') {
+				if (storedTrustDevice === 'true') {
 					window.localStorage.setItem('trust_device', 'true');
 				}
 				window.location.href = '/login?reason=session_expired';

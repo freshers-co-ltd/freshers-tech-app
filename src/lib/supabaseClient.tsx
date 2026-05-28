@@ -35,6 +35,9 @@ const getAuthChannel = (): BroadcastChannel => {
 				}
 			}
 			if (event.data.type === 'LOGOUT') {
+				if (window.localStorage.getItem('trust_device') === 'true') {
+					return;
+				}
 				window.sessionStorage.removeItem(STORAGE_KEY);
 				if (window.location.pathname !== '/login') {
 					window.location.href = '/login';
@@ -68,6 +71,9 @@ const getAuthStorage = () => {
 			}
 		},
 		removeItem: (key: string) => {
+			if (window.localStorage.getItem('trust_device') === 'true') {
+				return;
+			}
 			window.localStorage.removeItem(key);
 			window.sessionStorage.removeItem(key);
 			getAuthChannel().postMessage({ type: 'LOGOUT' });
