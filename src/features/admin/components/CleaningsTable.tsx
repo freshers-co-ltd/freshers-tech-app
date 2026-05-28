@@ -3,16 +3,15 @@
 import { ArrowUpDown, Eye, Pencil, UserPlus } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useCallback, useMemo, useState } from 'react';
-import { CleaningDialogs } from '@/components/CleaningDialogs';
+import { CleaningDialogs } from '@/features/cleanings/components/CleaningDialogs';
 import { DataTable } from '@/components/DataTable';
 import { EntityBadge } from '@/components/EntityBadge';
 import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DICT } from '@/dictionary';
-import { AssignCleanerDialog } from '@/features/admin/components/AssignCleanerDialog';
-
 import { cleaningService as adminCleaningService } from '@/features/admin/services/cleaningService';
+import { AssignCleanerDialog } from '@/features/admin/components/AssignCleanerDialog';
 import type { AdminCleaning } from '@/features/admin/types';
 import type { UserRole } from '@/features/auth/types';
 import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
@@ -307,6 +306,7 @@ export function CleaningsTable({
 						{formatDate(cleaning.scheduled_start, { variant: 'time' })}
 					</p>
 				</div>
+
 				<div className="flex flex-col gap-3 shrink-0">
 					<div className="flex gap-1">
 						<Tooltip>

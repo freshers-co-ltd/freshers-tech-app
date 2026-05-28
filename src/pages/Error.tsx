@@ -33,7 +33,7 @@ export function ErrorPage() {
 	const [imgError, setImgError] = useState(false);
 
 	return (
-		<main className="h-screen p-6 flex-col-center bg-slate-50 ">
+		<main className="h-screen p-6 flex-col-center bg-muted ">
 			<div className="flex h-full w-full max-h-[90dvh] flex-col-center">
 				{errorCode && !imgError && (
 					<img

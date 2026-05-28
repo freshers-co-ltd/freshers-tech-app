@@ -120,28 +120,28 @@ export function AdminUsersPage() {
 
 			<div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
 				<Stat>
-					<StatIndicator variant="icon" className="text-blue-600">
+					<StatIndicator variant="icon" className="text-primary-light">
 						<Users />
 					</StatIndicator>
 					<StatValue>{totalCount}</StatValue>
 					<StatLabel>Total Users</StatLabel>
 				</Stat>
 				<Stat>
-					<StatIndicator variant="icon" className="text-green-600">
+					<StatIndicator variant="icon" className="text-success">
 						<User />
 					</StatIndicator>
 					<StatValue>{onlineCount}</StatValue>
 					<StatLabel>Online</StatLabel>
 				</Stat>
 				<Stat>
-					<StatIndicator variant="icon" className="text-yellow-500">
+					<StatIndicator variant="icon" className="text-warning">
 						<ClockFading />
 					</StatIndicator>
 					<StatValue>{recentlyOnline}</StatValue>
 					<StatLabel>Recently Online (7d)</StatLabel>
 				</Stat>
 				<Stat>
-					<StatIndicator variant="icon" className="text-red-600">
+					<StatIndicator variant="icon" className="text-destructive">
 						<ShieldBan />
 					</StatIndicator>
 					<StatValue>{bannedCount}</StatValue>

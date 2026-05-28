@@ -29,7 +29,7 @@ import { useCleaningsRealtime } from './hooks/useCleaningsRealtime';
 interface CleaningContextType {
 	cleanings: CleaningRequest[];
 	isLoading: boolean;
-	fetchCleanings: () => Promise<void>;
+	fetchCleanings: (signal?: AbortSignal, skipLoadingState?: boolean) => Promise<void>;
 	upsertCleaning: (
 		payload: CreateCleaningRequestPayload | (UpdateCleaningRequestPayload & { id: string }),
 	) => Promise<{ success: boolean; data?: CleaningRequest }>;
@@ -57,21 +57,28 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const { user, profile } = useAuth();
 	const abortControllerRef = useRef<AbortController | null>(null);
+	const lastUserIdRef = useRef<string | null>(null);
 
 	const operations = useCleaningsOperations(setCleanings);
 
 	const fetchCleanings = useCallback(
-		async (signal?: AbortSignal) => {
+		async (signal?: AbortSignal, skipLoadingState = false) => {
 			if (!user) {
 				setCleanings([]);
 				setIsLoading(false);
 				return;
 			}
 
-			setIsLoading(true);
+			if (!skipLoadingState) {
+				setIsLoading(true);
+			}
+
 			const { data, error } = await cleaningsService.getCleaningRequests();
 
 			if (signal?.aborted) {
+				if (!skipLoadingState) {
+					setIsLoading(false);
+				}
 				return;
 			}
 
@@ -81,16 +88,21 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 				setCleanings(data);
 			}
 
-			setIsLoading(false);
+			if (!skipLoadingState) {
+				setIsLoading(false);
+			}
 		},
 		[user],
 	);
 
 	useEffect(() => {
 		if (user && profile) {
+			const isUserChange = user.id !== lastUserIdRef.current;
+			lastUserIdRef.current = user.id;
+
 			abortControllerRef.current?.abort();
 			abortControllerRef.current = new AbortController();
-			fetchCleanings(abortControllerRef.current.signal);
+			fetchCleanings(abortControllerRef.current.signal, !isUserChange);
 		}
 
 		return () => {
@@ -107,7 +119,6 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 	useVisibilityReconnect({
 		enabled: !!user && !!profile,
 		onVisible: async () => {
-			await fetchCleanings();
 			reconnectChannel();
 		},
 	});

@@ -251,10 +251,7 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 						</FileInput>
 						<FileUploaderContent className="flex flex-wrap gap-2 mt-2 w-full">
 							{mainImage?.map((file, i) => (
-								<FileUploaderItem
-									key={`${file.name}-${file.lastModified}-${i}`}
-									index={i}
-									className="p-0 overflow-hidden border rounded-md size-20">
+								<FileUploaderItem key={`${file.name}-${file.lastModified}-${i}`} index={i}>
 									<img
 										src={URL.createObjectURL(file)}
 										alt="Preview"
@@ -296,10 +293,7 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 						</FileInput>
 						<FileUploaderContent className="flex flex-wrap gap-2 mt-2 w-full">
 							{extraImages?.map((file, i) => (
-								<FileUploaderItem
-									key={`${file.name}-${file.lastModified}-${i}`}
-									index={i}
-									className="p-0 overflow-hidden border rounded-md size-20">
+								<FileUploaderItem key={`${file.name}-${file.lastModified}-${i}`} index={i}>
 									<img
 										src={URL.createObjectURL(file)}
 										alt="Preview"

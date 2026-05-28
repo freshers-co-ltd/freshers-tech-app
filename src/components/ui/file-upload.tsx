@@ -333,7 +333,7 @@ export const FileUploaderItem = forwardRef<
 		<div
 			ref={ref}
 			className={cn(
-				'h-7 p-1 border rounded-md justify-between overflow-hidden  w-full cursor-pointer relative hover:bg-primary-foreground',
+				'border rounded-md justify-between overflow-hidden p-0 size-20 cursor-pointer relative hover:bg-primary-background',
 				className,
 				isSelected ? 'bg-muted' : '',
 			)}
@@ -393,7 +393,7 @@ export const FileInput = forwardRef<HTMLDivElement, FileInputProps>(
 					{...rootProps}>
 					{children}
 					{dropzoneState.isDragActive && (
-						<div className="absolute inset-0 flex items-center justify-center rounded-lg bg-primary-foreground/60 backdrop-blur-xs">
+						<div className="absolute inset-0 flex items-center justify-center rounded-lg bg-primary-background/60 backdrop-blur-xs">
 							<p className="font-medium text-primary">Drop an image here.</p>
 						</div>
 					)}

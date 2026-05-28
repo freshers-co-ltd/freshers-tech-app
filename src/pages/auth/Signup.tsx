@@ -47,7 +47,7 @@ export function SignupPage() {
 										'group flex flex-col items-start p-4 md:p-8 bg-card border-2 border-border rounded-xl md:rounded-2xl transition-all duration-300 w-full',
 										'hover:border-primary hover:shadow-lg xl:hover:-translate-y-1 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring',
 									)}>
-									<div className="p-3 text-primary transition-colors md:p-4 rounded-lg md:rounded-xl bg-muted group-hover:bg-primary group-hover:text-primary-foreground -translate-x-1.25 -translate-y-1.25">
+									<div className="p-3 text-primary transition-colors md:p-4 rounded-lg md:rounded-xl bg-muted group-hover:bg-primary group-hover:text-primary-background -translate-x-1.25 -translate-y-1.25">
 										<role.icon className="size-6 md:size-8" />
 									</div>
 

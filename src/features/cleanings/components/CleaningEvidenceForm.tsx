@@ -142,10 +142,7 @@ export function CleaningEvidenceForm({ onSubmit, onCancel }: CleaningEvidenceFor
 						</FileInput>
 						<FileUploaderContent className="flex flex-row flex-wrap items-center gap-2 mt-2">
 							{files?.map((file, i) => (
-								<FileUploaderItem
-									key={`${file.name}-${file.lastModified}-${i}`}
-									index={i}
-									className="p-0 overflow-hidden border rounded-md size-20">
+								<FileUploaderItem key={`${file.name}-${file.lastModified}-${i}`} index={i}>
 									{file.type.startsWith('image/') ? (
 										<img
 											src={URL.createObjectURL(file)}

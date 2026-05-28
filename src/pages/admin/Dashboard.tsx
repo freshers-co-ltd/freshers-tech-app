@@ -15,13 +15,13 @@ export function AdminDashboardPage() {
 			label: dict.STATS.COMPLETED_THIS_MONTH,
 			value: isLoading ? '-' : stats?.completedCleaningsMtd?.toString() || '0',
 			icon: Sparkles,
-			iconColor: 'text-yellow-400',
+			iconColor: 'text-warning-light',
 		},
 		{
 			label: dict.STATS.IN_PROGRESS,
 			value: isLoading ? '-' : stats?.cleaningsInProgress?.toString() || '0',
 			icon: BrushCleaning,
-			iconColor: 'text-blue-600',
+			iconColor: 'text-primary-light',
 		},
 		{
 			label: dict.STATS.AVG_COMPLETION_TIME,
@@ -31,13 +31,13 @@ export function AdminDashboardPage() {
 					? formatHours(stats.avgCompletionHours)
 					: '0 hours',
 			icon: Clock,
-			iconColor: 'text-orange-500',
+			iconColor: 'text-[color-mix(in_oklch,var(--color-warning),var(--color-destructive))]',
 		},
 		{
 			label: dict.STATS.TOTAL_PROPERTIES,
 			value: isLoading ? '-' : stats?.totalProperties?.toString() || '0',
 			icon: Home,
-			iconColor: 'text-purple-600',
+			iconColor: 'text-[color-mix(in_oklch,var(--color-primary),var(--color-destructive))]',
 		},
 	];
 

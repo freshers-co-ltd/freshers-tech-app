@@ -62,7 +62,7 @@ export function CleaningTaskList({
 										)}
 									</span>
 									{task.is_completed && (
-										<CheckCircle2 className="size-3.5 text-green-500 shrink-0 ml-2" />
+										<CheckCircle2 className="size-3.5 text-success shrink-0 ml-2" />
 									)}
 								</div>
 							</>

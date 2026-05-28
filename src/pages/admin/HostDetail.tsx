@@ -191,28 +191,28 @@ export function AdminHostDetailPage() {
 			label: dict.STATS.TOTAL_REQUESTED,
 			value: stats?.total || 0,
 			icon: ClipboardList,
-			iconColor: 'text-purple-600',
+			iconColor: 'text-[color-mix(in_oklch,var(--color-primary),var(--color-destructive))]',
 		},
 		{
 			id: 'requested',
 			label: dict.STATS.PENDING_REQUESTED,
 			value: stats?.requested || 0,
 			icon: CalendarClock,
-			iconColor: 'text-yellow-600',
+			iconColor: 'text-warning',
 		},
 		{
 			id: 'pending',
 			label: dict.STATS.PENDING_CONFIRMED,
 			value: stats?.confirmed || 0,
 			icon: BadgeCheck,
-			iconColor: 'text-green-600',
+			iconColor: 'text-success',
 		},
 		{
 			id: 'in-progress',
 			label: dict.STATS.IN_PROGRESS,
 			value: stats?.in_progress || 0,
 			icon: BrushCleaning,
-			iconColor: 'text-blue-600',
+			iconColor: 'text-primary-light',
 		},
 	];
 

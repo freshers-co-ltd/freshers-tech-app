@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { NotificationList } from '@/components/NotificationList';
+import { NotificationList } from '@/features/notifications/components/NotificationList';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { DICT } from '@/dictionary';

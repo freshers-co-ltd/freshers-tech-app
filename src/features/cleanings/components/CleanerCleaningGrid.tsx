@@ -67,7 +67,7 @@ export function CleanerCleaningGrid({ onView }: CleanerCleaningGridProps) {
 					</Select>
 
 					<Select value={sortBy} onValueChange={setSortBy}>
-						<SelectTrigger className="h-10 w-full sm:w-48">
+						<SelectTrigger className="h-10 w-fit min-w-max max-w-full">
 							<div className="flex items-center gap-2">
 								<ArrowDownUp className="h-4 w-4 text-muted-foreground" />
 								<SelectValue placeholder={DICT.COMMON.LABELS.SORT} />

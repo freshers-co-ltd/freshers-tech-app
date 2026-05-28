@@ -53,7 +53,7 @@ export function Navigation() {
 								className={cn(
 									'flex items-center gap-2 px-5 py-2.5 text-sm font-bold transition-all rounded-lg',
 									location.pathname.startsWith(item.path)
-										? 'bg-primary text-primary-foreground shadow-md'
+										? 'bg-primary text-primary-background shadow-md'
 										: 'text-muted-foreground hover:bg-muted',
 								)}>
 								<item.icon className="size-4" />

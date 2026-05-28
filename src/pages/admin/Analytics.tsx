@@ -92,29 +92,29 @@ export function AdminAnalyticsPage() {
 	const barChartConfig = {
 		cleanings: {
 			label: 'Cleanings',
-			color: 'hsl(var(--primary))',
+			color: 'color-mix(in oklch, var(--color-blue), var(--color-blue-border) 75%)',
 		},
 	};
 
 	const lineChartConfig = {
 		gross: {
 			label: 'Gross Revenue',
-			color: 'var(--color-chart-2)',
+			color: 'color-mix(in oklch, var(--color-yellow), var(--color-yellow-border) 80%)',
 		},
 		net: {
 			label: 'Net Revenue',
-			color: 'var(--color-chart-3)',
+			color: 'color-mix(in oklch, var(--color-green), var(--color-green-border) 70%)',
 		},
 	};
 
 	const areaChartConfig = {
 		hosts: {
 			label: dict.CHARTS.HOSTS,
-			color: 'var(--color-chart-3)',
+			color: 'color-mix(in oklch, var(--color-purple), var(--color-purple-border))',
 		},
 		cleaners: {
 			label: dict.CHARTS.CLEANERS,
-			color: 'var(--color-chart-4)',
+			color: 'color-mix(in oklch, var(--color-blue), var(--color-blue-border))',
 		},
 	};
 
@@ -138,8 +138,6 @@ export function AdminAnalyticsPage() {
 		value: item.count,
 	}));
 
-	// const isloading = true;
-
 	return (
 		<main className="max-width-container p-2 md:p-8">
 			<header className="mb-6">
@@ -154,7 +152,7 @@ export function AdminAnalyticsPage() {
 					<h2 className="text-xl font-semibold mb-2">Month to Date</h2>
 					<div className="flex-1 grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
 						<Stat>
-							<StatIndicator variant="icon" className="text-yellow-400">
+							<StatIndicator variant="icon" className="text-warning-light">
 								<Sparkles />
 							</StatIndicator>
 							<StatValue>{revenueMetrics?.completed_count?.toString() ?? '0'}</StatValue>
@@ -162,7 +160,7 @@ export function AdminAnalyticsPage() {
 						</Stat>
 
 						<Stat>
-							<StatIndicator variant="icon" className="text-red-600">
+							<StatIndicator variant="icon" className="text-destructive">
 								<CalendarX />
 							</StatIndicator>
 							<StatValue>{revenueMetrics?.cancelled_count?.toString() ?? '0'}</StatValue>
@@ -170,7 +168,9 @@ export function AdminAnalyticsPage() {
 						</Stat>
 
 						<Stat>
-							<StatIndicator variant="icon" className="text-orange-500">
+							<StatIndicator
+								variant="icon"
+								className="text-[color-mix(in_oklch,var(--color-warning),var(--color-destructive))]">
 								<Clock />
 							</StatIndicator>
 							<StatValue>

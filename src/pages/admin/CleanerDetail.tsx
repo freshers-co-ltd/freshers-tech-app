@@ -112,28 +112,28 @@ export function AdminCleanerDetailPage() {
 			label: dict.STATS.TOTAL_ASSIGNED,
 			value: stats?.total_assigned || 0,
 			icon: ClipboardList,
-			iconColor: 'text-purple-600',
+			iconColor: 'text-[color-mix(in_oklch,var(--color-primary),var(--color-destructive))]',
 		},
 		{
 			id: 'current-assigned',
 			label: dict.STATS.CURRENT_ASSIGNED,
 			value: stats?.confirmed || 0,
 			icon: BrushCleaning,
-			iconColor: 'text-blue-600',
+			iconColor: 'text-primary-light',
 		},
 		{
 			id: 'completed',
 			label: dict.STATS.COMPLETED,
 			value: stats?.completed || 0,
 			icon: Sparkles,
-			iconColor: 'text-yellow-400',
+			iconColor: 'text-warning-light',
 		},
 		{
 			id: 'avg-completion',
 			label: dict.STATS.AVG_COMPLETION,
 			value: stats?.avg_completion_hours ? formatHours(stats.avg_completion_hours) : '0 hours',
 			icon: Clock,
-			iconColor: 'text-orange-500',
+			iconColor: 'text-[color-mix(in_oklch,var(--color-warning),var(--color-destructive))]',
 		},
 	];
 

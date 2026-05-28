@@ -15,7 +15,7 @@ export interface NotificationContextType {
 	isConnected: boolean;
 	preferences: NotificationPreferences | null;
 	pushEnabled: boolean | null;
-	fetchNotifications: () => Promise<void>;
+	fetchNotifications: (skipLoadingState?: boolean) => Promise<void>;
 	fetchUnreadCount: () => Promise<void>;
 	fetchPreferences: () => Promise<void>;
 	updatePreferences: (
@@ -38,25 +38,33 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 	const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
 	const [channel, setChannel] = useState<ReturnType<typeof supabase.channel> | null>(null);
 
-	const fetchNotifications = useCallback(async () => {
-		if (!user) {
-			setNotifications([]);
-			setIsLoading(false);
-			return;
-		}
+	const fetchNotifications = useCallback(
+		async (skipLoadingState = false) => {
+			if (!user) {
+				setNotifications([]);
+				setIsLoading(false);
+				return;
+			}
 
-		setIsLoading(true);
-		const { data, error } = await notificationsService.getNotifications(user.id, { limit: 20 });
+			if (!skipLoadingState) {
+				setIsLoading(true);
+			}
 
-		if (error) {
-			toast.error(error);
-			setNotifications([]);
-		} else if (data) {
-			setNotifications(data);
-		}
+			const { data, error } = await notificationsService.getNotifications(user.id, { limit: 20 });
 
-		setIsLoading(false);
-	}, [user]);
+			if (error) {
+				toast.error(error);
+				setNotifications([]);
+			} else if (data) {
+				setNotifications(data);
+			}
+
+			if (!skipLoadingState) {
+				setIsLoading(false);
+			}
+		},
+		[user],
+	);
 
 	const fetchUnreadCount = useCallback(async () => {
 		if (!user) {
@@ -226,7 +234,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 	useVisibilityReconnect({
 		enabled: !!user,
 		onVisible: async () => {
-			await Promise.all([fetchNotifications(), fetchUnreadCount()]);
+			await Promise.all([fetchNotifications(true), fetchUnreadCount()]);
 			if (!channel || channel.state !== 'joined') {
 				subscribe();
 			}

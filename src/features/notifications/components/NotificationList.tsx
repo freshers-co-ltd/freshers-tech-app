@@ -22,21 +22,21 @@ interface NotificationListProps {
 const getNotificationIcon = (type: NotificationType) => {
 	switch (type) {
 		case 'cleaning_requested':
-			return <BellRing className="size-5 text-blue-500" />;
+			return <BellRing className="size-5 text-primary-light" />;
 		case 'cleaning_confirmed':
-			return <CalendarCheck className="size-5 text-green-500" />;
+			return <CalendarCheck className="size-5 text-success" />;
 		case 'cleaning_started':
-			return <BrushCleaning className="size-5 text-blue-500" />;
+			return <BrushCleaning className="size-5 text-primary-light" />;
 		case 'cleaning_completed':
-			return <Sparkles className="size-5 text-yellow-400" />;
+			return <Sparkles className="size-5 text-warning-light" />;
 		case 'cleaning_cancelled':
-			return <CalendarX className="size-5 text-red-500" />;
+			return <CalendarX className="size-5 text-destructive-light" />;
 		case 'cleaning_assigned':
-			return <BrushCleaning className="size-5 text-blue-500" />;
+			return <BrushCleaning className="size-5 text-primary-light" />;
 		case 'cleaning_reassigned':
-			return <UserPen className="size-5 text-yellow-500" />;
+			return <UserPen className="size-5 text-warning-light" />;
 		case 'cleaning_updated':
-			return <SquarePen className="size-5 text-yellow-400" />;
+			return <SquarePen className="size-5 text-warning-light" />;
 		default:
 			return <Clock className="size-5 text-muted-foreground" />;
 	}

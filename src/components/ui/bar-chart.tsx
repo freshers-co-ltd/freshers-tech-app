@@ -36,11 +36,7 @@ export function BarChartComponent({
 	trend,
 	showTrend = true,
 	trendLabel,
-	// className kept for API compatibility but not used in this component
 }: BarChartProps) {
-	console.log('DEBUG bar-chart: config', config);
-	console.log('DEBUG bar-chart: fill', config[valueKey]?.color);
-
 	return (
 		<div className="flex flex-col">
 			{(title || subtitle) && (
@@ -67,7 +63,7 @@ export function BarChartComponent({
 						/>
 						<YAxis axisLine={false} tickLine={false} tickMargin={10} width={32} />
 						<ChartTooltip content={<ChartTooltipContent hideLabel />} cursor={false} />
-						<Bar dataKey={valueKey} radius={8} fill={`var(--color-chart-1)`}>
+						<Bar dataKey={valueKey} radius={8} fill={`var(--color-${valueKey})`}>
 							<LabelList fontSize={12} offset={12} position="top" />
 						</Bar>
 					</BarChart>

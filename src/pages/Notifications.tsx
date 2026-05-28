@@ -2,7 +2,7 @@
 
 import { Bell, CheckCheck } from 'lucide-react';
 import { Loading } from '@/components/Loading';
-import { NotificationList } from '@/components/NotificationList';
+import { NotificationList } from '@/features/notifications/components/NotificationList';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { DICT } from '@/dictionary';

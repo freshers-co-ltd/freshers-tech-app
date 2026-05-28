@@ -7,7 +7,7 @@ type LogoProps = {
 export function Logo({ className }: LogoProps) {
 	return (
 		<div className={cn('text-2xl font-black tracking-tight text-primary', className)}>
-			FRESHERS<span className="text-amber-300">CO</span>
+			FRESHERS<span className="text-secondary">CO</span>
 		</div>
 	);
 }

@@ -124,11 +124,11 @@ export const Toaster = () => {
 						title: 'text-[15px] font-bold leading-none',
 						description: 'text-[13px] font-medium leading-snug text-black/80',
 
-						success: 'bg-green-50 border-green-400 text-green-600',
-						error: 'bg-red-50 border-red-400 text-red-600',
-						info: 'bg-blue-50 border-blue-400 text-blue-600',
-						warning: 'bg-yellow-50 border-yellow-400 text-yellow-500',
-						loading: 'bg-muted border-muted-foreground text-muted-foreground',
+						success: 'bg-success-background border-success-light text-success',
+						error: 'bg-destructive-background border-destructive-light text-destructive',
+						info: 'bg-primary-background border-primary-light text-primary',
+						warning: 'bg-warning-background border-warning-light text-warning',
+						loading: 'bg-neutral-background border-neutral-light text-neutral',
 
 						icon: 'flex-center size-7 flex-shrink-0',
 						loader:
@@ -140,11 +140,11 @@ export const Toaster = () => {
 					},
 				}}
 				icons={{
-					success: <CheckCircle2 className="size-7" />,
-					error: <AlertCircle className="size-7 text-red-600" />,
-					info: <Info className="size-7 text-blue-600" />,
-					warning: <AlertTriangle className="size-7 text-yellow-500" />,
-					loading: <Loader2 className="animate-spin" />,
+					success: <CheckCircle2 className="size-7 text-success" />,
+					error: <AlertCircle className="size-7 text-destructive" />,
+					info: <Info className="size-7 text-primary" />,
+					warning: <AlertTriangle className="size-7 text-warning" />,
+					loading: <Loader2 className="animate-spin text-neutral" />,
 				}}
 			/>
 		</>

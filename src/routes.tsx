@@ -185,6 +185,10 @@ const routesConfig: RouteObject[] = [
 				),
 				children: [
 					{
+						index: true,
+						element: <Navigate to="dashboard" replace />,
+					},
+					{
 						path: 'dashboard',
 						element: lazyLoad(() => import('@/pages/host/Dashboard'), 'HostDashboardPage'),
 					},
@@ -215,6 +219,10 @@ const routesConfig: RouteObject[] = [
 				),
 				children: [
 					{
+						index: true,
+						element: <Navigate to="dashboard" replace />,
+					},
+					{
 						path: 'dashboard',
 						element: lazyLoad(() => import('@/pages/cleaner/Dashboard'), 'CleanerDashboardPage'),
 					},
@@ -240,6 +248,10 @@ const routesConfig: RouteObject[] = [
 					</ProtectedRoute>
 				),
 				children: [
+					{
+						index: true,
+						element: <Navigate to="dashboard" replace />,
+					},
 					{
 						path: 'dashboard',
 						element: lazyLoad(() => import('@/pages/admin/Dashboard'), 'AdminDashboardPage'),

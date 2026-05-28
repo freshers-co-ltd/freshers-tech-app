@@ -16,26 +16,25 @@ export function HostDashboardPage() {
 			label: dict.STATS.CONFIRMED,
 			value: isLoading ? '-' : stats.upcoming,
 			icon: Calendar,
-			iconColor: 'text-green-600',
+			iconColor: 'text-success',
 		},
-
 		{
 			label: dict.STATS.IN_PROGRESS,
 			value: isLoading ? '-' : stats.inProgress,
 			icon: BrushCleaning,
-			iconColor: 'text-blue-600',
+			iconColor: 'text-primary-light',
 		},
 		{
 			label: dict.STATS.REQUESTED,
 			value: isLoading ? '-' : stats.requested,
 			icon: ClipboardList,
-			iconColor: 'text-yellow-400',
+			iconColor: 'text-warning',
 		},
 		{
 			label: dict.STATS.PROPERTIES,
 			value: isLoading ? '-' : stats.totalProperties,
 			icon: Home,
-			iconColor: 'text-purple-600',
+			iconColor: 'text-[color-mix(in_oklch,var(--color-primary),var(--color-destructive))]',
 		},
 	];
 

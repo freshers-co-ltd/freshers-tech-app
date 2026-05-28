@@ -6,11 +6,11 @@ import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import { cn } from '@/lib/utils';
 
 const DEFAULT_COLORS = [
-	'var(--color-chart-1)',
-	'var(--color-chart-2)',
-	'var(--color-chart-3)',
-	'var(--color-chart-4)',
-	'var(--color-chart-5)',
+	'color-mix(in oklch, var(--color-purple), var(--color-purple-border))',
+	'color-mix(in oklch, var(--color-blue), var(--color-blue-border))',
+	'color-mix(in oklch, var(--color-yellow), var(--color-yellow-border) 80%)',
+	'color-mix(in oklch, var(--color-green), var(--color-green-border) 70%)',
+	'color-mix(in oklch, var(--color-red), var(--color-red-border) 70%)',
 ];
 
 export interface PieChartData {
@@ -50,7 +50,9 @@ export function PieChartComponent({
 			acc[entry.name] = {
 				label: formatLabels ? formatLabel(entry.name) : entry.name,
 				color:
-					entry.fill ?? DEFAULT_COLORS[index % DEFAULT_COLORS.length] ?? 'var(--color-chart-1)',
+					entry.fill ??
+					DEFAULT_COLORS[index % DEFAULT_COLORS.length] ??
+					'color-mix(in oklch, var(--color-purple), var(--color-purple-border))',
 			};
 			return acc;
 		},
@@ -83,7 +85,7 @@ export function PieChartComponent({
 									fill={
 										entry.fill ??
 										DEFAULT_COLORS[index % DEFAULT_COLORS.length] ??
-										'var(--color-chart-1)'
+										'color-mix(in oklch, var(--color-purple), var(--color-purple-border))'
 									}
 								/>
 							))}
@@ -101,7 +103,7 @@ export function PieChartComponent({
 									backgroundColor:
 										entry.fill ??
 										DEFAULT_COLORS[index % DEFAULT_COLORS.length] ??
-										'var(--color-chart-1)',
+										'color-mix(in oklch, var(--color-purple), var(--color-purple-border))',
 								}}
 							/>
 							<span className="text-sm text-muted-foreground">

@@ -14,25 +14,25 @@ export function CleanerDashboardPage() {
 			label: dict.STATS.ASSIGNED,
 			value: isLoading ? '-' : stats.assigned,
 			icon: Clock,
-			iconColor: 'text-purple-600',
+			iconColor: 'text-[color-mix(in_oklch,var(--color-primary),var(--color-destructive))]',
 		},
 		{
 			label: dict.STATS.ACTIVE,
 			value: isLoading ? '-' : stats.active,
 			icon: BrushCleaning,
-			iconColor: 'text-blue-600',
+			iconColor: 'text-primary-light',
 		},
 		{
 			label: dict.STATS.COMPLETED,
 			value: isLoading ? '-' : stats.completed,
 			icon: Sparkles,
-			iconColor: 'text-yellow-400',
+			iconColor: 'text-warning-light',
 		},
 		{
 			label: dict.STATS.TOTAL_EARNINGS,
 			value: isLoading ? '-' : `£${stats.totalEarnings.toFixed(2)}`,
 			icon: Banknote,
-			iconColor: 'text-green-600',
+			iconColor: 'text-success',
 		},
 	];
 
