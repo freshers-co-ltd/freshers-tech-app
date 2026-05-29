@@ -79,24 +79,6 @@ EXECUTE FUNCTION public.enforce_profiles_immutability ();
 
 REVOKE EXECUTE ON FUNCTION public.enforce_profiles_immutability() FROM PUBLIC, anon, authenticated;
 
-CREATE POLICY "Users can view their own profile and admins can view all" ON public.profiles FOR
-SELECT
-    TO authenticated USING (
-        public.is_not_banned ()
-        AND (
-            (
-                (
-                    SELECT
-                        auth.jwt ()
-                ) -> 'app_metadata' ->> 'role'
-            ) = 'admin'
-            OR (
-                SELECT
-                    auth.uid ()
-            ) = id
-        )
-    );
-
 CREATE POLICY "Users can update their own profile and admins can update all" ON public.profiles FOR
 UPDATE TO authenticated USING (
     public.is_not_banned ()
@@ -130,17 +112,6 @@ WITH
                     auth.uid ()
             ) = id
         )
-    );
-
-CREATE POLICY "Users can update own last_seen_at" ON public.profiles FOR
-UPDATE TO authenticated USING (
-    public.is_not_banned ()
-    AND id = auth.uid ()
-)
-WITH
-    CHECK (
-        public.is_not_banned ()
-        AND id = auth.uid ()
     );
 
 CREATE
@@ -234,14 +205,14 @@ WITH
     CHECK (
         public.is_not_banned ()
         AND bucket_id = 'avatars'
-        AND (STORAGE.foldername (NAME)) [1] = auth.uid ()::TEXT
+        AND (STORAGE.foldername (NAME)) [1] = (SELECT auth.uid ())::TEXT
     );
 
 CREATE POLICY "Users can update their own avatar" ON STORAGE.objects FOR
 UPDATE TO authenticated USING (
     public.is_not_banned ()
     AND bucket_id = 'avatars'
-    AND (STORAGE.foldername (NAME)) [1] = auth.uid ()::TEXT
+    AND (STORAGE.foldername (NAME)) [1] = (SELECT auth.uid ())::TEXT
 )
 WITH
     CHECK (public.is_not_banned ());

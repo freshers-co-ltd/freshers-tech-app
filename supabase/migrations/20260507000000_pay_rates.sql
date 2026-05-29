@@ -9,7 +9,7 @@ CREATE TABLE cleaner_pay_config (
 ALTER TABLE cleaner_pay_config ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Admin full access to cleaner_pay_config" ON cleaner_pay_config FOR ALL TO authenticated USING (
-  (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+  ((SELECT auth.jwt()) -> 'app_metadata' ->> 'role') = 'admin'
 );
 
 INSERT INTO cleaner_pay_config (hourly_rate, target_times) 
@@ -22,7 +22,10 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  RETURN QUERY SELECT c.hourly_rate, c.target_times, c.bathroom_time, c.updated_at FROM cleaner_pay_config c WHERE c.id = 1;
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
+    RETURN QUERY SELECT c.hourly_rate, c.target_times, c.bathroom_time, c.updated_at FROM cleaner_pay_config c WHERE c.id = 1;
 END;
 $$;
 
@@ -37,7 +40,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') != 'admin') THEN
+  IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
     RAISE EXCEPTION 'Unauthorised: Only admins can perform this action';
   END IF;
   

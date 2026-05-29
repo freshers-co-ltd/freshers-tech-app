@@ -29,6 +29,9 @@ OR REPLACE FUNCTION public.admin_get_users (
 SET
     search_path = public AS $$
 BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
     RETURN QUERY
     SELECT 
         p.id,
@@ -116,6 +119,9 @@ OR REPLACE FUNCTION public.admin_get_host_detail (
 SET
     search_path = public AS $$
 BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
     RETURN QUERY
     SELECT
         p.id,
@@ -241,6 +247,9 @@ OR REPLACE FUNCTION public.admin_get_cleaner_detail (p_cleaner_id UUID) RETURNS 
 SET
     search_path = public AS $$
 BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
     RETURN QUERY
     SELECT 
         p.id,
@@ -346,6 +355,9 @@ OR REPLACE FUNCTION public.admin_get_all_cleanings (
 SET
     search_path = public AS $$
 BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
     RETURN QUERY
     SELECT 
         c.id, c.host_id, c.property_id, c.cleaner_id, c.status::TEXT,
@@ -387,6 +399,9 @@ SET
     search_path = public AS $$
 DECLARE v_status public.cleaning_status;
 BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
     SELECT status INTO v_status FROM public.cleanings WHERE id = p_cleaning_id AND deleted_at IS NULL;
     IF v_status::TEXT IN ('in_progress', 'completed') THEN RAISE EXCEPTION 'Unassignment blocked'; END IF;
     UPDATE public.cleanings SET cleaner_id = NULL, updated_at = now() WHERE id = p_cleaning_id;
@@ -399,6 +414,9 @@ SET
     search_path = public AS $$
 DECLARE v_status public.cleaning_status;
 BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
     SELECT status INTO v_status FROM public.cleanings WHERE id = p_cleaning_id AND deleted_at IS NULL;
     IF v_status NOT IN ('requested', 'confirmed') THEN
         RAISE EXCEPTION 'Can only assign or reassign cleaner to requested or confirmed cleanings';
@@ -428,8 +446,8 @@ DECLARE v_cleaning_id UUID;
     v_property_type TEXT;
     v_bedrooms INT;
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin') THEN
-        RAISE EXCEPTION 'Unauthorized' USING ERRCODE = 'P0001';
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM public.properties WHERE id = p_property_id AND host_id = p_host_id AND deleted_at IS NULL) THEN
@@ -457,6 +475,9 @@ OR REPLACE FUNCTION public.admin_update_standard_tasks (p_tasks JSONB, p_tasks_t
 SET
     search_path = public AS $$
 BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
     IF array_length(p_tasks_to_delete, 1) > 0 THEN
         DELETE FROM public.standard_tasks WHERE id = ANY(p_tasks_to_delete);
     END IF;
@@ -486,6 +507,9 @@ OR REPLACE FUNCTION public.admin_get_available_cleaners () RETURNS TABLE (id UUI
 SET
     search_path = public AS $$
 BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
     RETURN QUERY
     SELECT 
         p.id, p.full_name, p.avatar_url,
@@ -631,6 +655,9 @@ OR REPLACE FUNCTION public.admin_get_audit_logs (
 ) SECURITY DEFINER
 SET search_path = public AS $$
 BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
     RETURN QUERY SELECT al.id, al.actor_id, al.target_id, al.target_table, al.action_type, al.old_data, al.new_data, al.created_at, COALESCE(p.full_name, 'System')
     FROM public.audit_logs al LEFT JOIN public.profiles p ON al.actor_id = p.id
     WHERE (p_target_table IS NULL OR al.target_table = p_target_table)
@@ -650,6 +677,9 @@ OR REPLACE FUNCTION public.admin_get_cleanings_count (
 ) RETURNS INT LANGUAGE plpgsql SECURITY DEFINER
 SET search_path = public AS $$
 BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
     RETURN (SELECT count(*)::INT FROM public.cleanings c
     LEFT JOIN public.profiles hp ON c.host_id = hp.id
     LEFT JOIN public.profiles cp ON c.cleaner_id = cp.id
@@ -666,6 +696,9 @@ OR REPLACE FUNCTION public.admin_get_users_count (p_role TEXT DEFAULT NULL, p_se
 SET
     search_path = public AS $$
 BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
     RETURN (
         SELECT count(*)::INT 
         FROM public.profiles p
@@ -691,6 +724,9 @@ OR REPLACE FUNCTION public.admin_get_user_stats () RETURNS TABLE (
 SET
     search_path = public AS $$
 BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
     RETURN QUERY SELECT 
         count(*)::INT,
         count(*) FILTER (WHERE au.banned_until IS NOT NULL)::INT,
@@ -713,7 +749,7 @@ SET
     search_path = auth,
     public AS $$
 BEGIN
-  IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') != 'admin') THEN
+  IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
     RAISE EXCEPTION 'Unauthorised: Only admins can perform this action';
   END IF;
 
@@ -784,8 +820,8 @@ OR REPLACE FUNCTION public.admin_update_property_price (p_property_id UUID, p_pr
 SET
     search_path = public AS $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin') THEN
-        RAISE EXCEPTION 'Unauthorized';
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
     END IF;
 
     UPDATE properties SET price_per_cleaning = p_price WHERE id = p_property_id;
@@ -870,8 +906,8 @@ CREATE OR REPLACE FUNCTION public.admin_update_cleaning (
 ) RETURNS UUID SECURITY DEFINER
 SET search_path = public AS $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin') THEN
-        RAISE EXCEPTION 'Unauthorized' USING ERRCODE = 'P0001';
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
     END IF;
 
     UPDATE public.cleanings

@@ -21,6 +21,9 @@ OR REPLACE FUNCTION public.admin_get_revenue_metrics (p_months INT DEFAULT 1) RE
 SET
     search_path = public AS $$
 BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
     RETURN QUERY
     WITH current_month AS (
         SELECT 
@@ -78,6 +81,9 @@ OR REPLACE FUNCTION public.admin_get_monthly_stats (p_months INT DEFAULT 6) RETU
 SET
     search_path = public AS $$
 BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
     RETURN QUERY
     SELECT 
         TO_CHAR(DATE_TRUNC('month', c.scheduled_start), 'Mon YYYY') AS month,
@@ -98,6 +104,9 @@ OR REPLACE FUNCTION public.admin_get_user_growth_by_month (p_months INT DEFAULT 
 SET
     search_path = public AS $$
 BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
     RETURN QUERY
     SELECT 
         TO_CHAR(DATE_TRUNC('month', au.created_at), 'Mon YYYY') AS month,
@@ -116,6 +125,9 @@ OR REPLACE FUNCTION public.admin_get_active_cleanings () RETURNS TABLE (status T
 SET
     search_path = public AS $$
 BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
     RETURN QUERY
     SELECT 
         c.status::TEXT AS status,
@@ -136,6 +148,9 @@ OR REPLACE FUNCTION public.admin_get_cleanings_over_time (
 SET
     search_path = public AS $$
 BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
     RETURN QUERY
     SELECT 
         TO_CHAR(DATE_TRUNC('month', c.created_at), 'Mon YYYY') AS date,
@@ -156,6 +171,9 @@ OR REPLACE FUNCTION public.admin_get_revenue_over_time (
 SET
     search_path = public AS $$
 BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
     RETURN QUERY
     SELECT 
         TO_CHAR(DATE_TRUNC('month', c.scheduled_start), 'Mon YYYY') AS date,
@@ -179,6 +197,9 @@ OR REPLACE FUNCTION public.admin_get_user_growth (
 SET
     search_path = public AS $$
 BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
     RETURN QUERY
     SELECT 
         TO_CHAR(DATE_TRUNC('month', p.created_at), 'Mon YYYY') AS date,
@@ -199,6 +220,9 @@ OR REPLACE FUNCTION public.admin_get_cleaning_status_breakdown (
 SET
     search_path = public AS $$
 BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
     RETURN QUERY
     SELECT 
         c.status::TEXT AS status,
@@ -227,6 +251,9 @@ OR REPLACE FUNCTION public.admin_get_platform_stats_trend (p_period_days INT DEF
 SET
     search_path = public AS $$
 BEGIN
+    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
+    END IF;
     RETURN QUERY
     WITH periods AS (
         SELECT 

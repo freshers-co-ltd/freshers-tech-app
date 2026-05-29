@@ -211,26 +211,26 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view their own notifications" ON public.notifications FOR
 SELECT
     TO authenticated USING (
-        user_id = auth.uid ()
+        user_id = (SELECT auth.uid ())
         AND EXISTS (
             SELECT
                 1
             FROM
                 public.profiles
             WHERE
-                id = auth.uid ()
+                id = (SELECT auth.uid ())
                 AND public.is_not_banned ()
         )
     );
 
 CREATE POLICY "Users can update their own notifications" ON public.notifications FOR
-UPDATE TO authenticated USING (user_id = auth.uid ())
+UPDATE TO authenticated USING (user_id = (SELECT auth.uid ()))
 WITH
-    CHECK (user_id = auth.uid ());
+    CHECK (user_id = (SELECT auth.uid ()));
 
 CREATE POLICY "System can insert notifications" ON public.notifications FOR INSERT TO authenticated
 WITH
-    CHECK (user_id = auth.uid ());
+    CHECK (user_id = (SELECT auth.uid ()));
 
 CREATE TABLE
     public.notification_preferences (
@@ -245,12 +245,12 @@ ALTER TABLE public.notification_preferences ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view their own preferences" ON public.notification_preferences FOR
 SELECT
-    TO authenticated USING (user_id = auth.uid ());
+    TO authenticated USING (user_id = (SELECT auth.uid ()));
 
 CREATE POLICY "Users can update their own preferences" ON public.notification_preferences FOR
-UPDATE TO authenticated USING (user_id = auth.uid ())
+UPDATE TO authenticated USING (user_id = (SELECT auth.uid ()))
 WITH
-    CHECK (user_id = auth.uid ());
+    CHECK (user_id = (SELECT auth.uid ()));
 
 CREATE
 OR REPLACE FUNCTION public.get_or_create_notification_preferences () RETURNS UUID LANGUAGE plpgsql SECURITY DEFINER
@@ -290,6 +290,10 @@ SET search_path = public AS $$
 DECLARE
     v_notification_id UUID;
 BEGIN
+    IF p_user_id != auth.uid() AND ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
+        RAISE EXCEPTION 'Unauthorised: Cannot create notifications for other users' USING ERRCODE = 'P0001';
+    END IF;
+
     INSERT INTO notifications (user_id, type, title, message, data, link)
     VALUES (p_user_id, p_type, p_title, p_message, p_data, p_link)
     RETURNING id INTO v_notification_id;
@@ -562,7 +566,7 @@ ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users manage own push subscriptions"
     ON public.push_subscriptions
     FOR ALL
-    USING (user_id = auth.uid());
+    USING (user_id = (SELECT auth.uid()));
 
 ALTER PUBLICATION supabase_realtime
 ADD TABLE public.push_subscriptions;

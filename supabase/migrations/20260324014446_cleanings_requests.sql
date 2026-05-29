@@ -66,9 +66,9 @@ ALTER TABLE public.standard_tasks ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Admins can do everything and hosts can view standard tasks" ON public.standard_tasks FOR ALL TO authenticated USING (
     public.is_not_banned ()
     AND (
-        (auth.jwt () -> 'app_metadata' ->> 'role' = 'admin')
+        ((SELECT auth.jwt ()) -> 'app_metadata' ->> 'role' = 'admin')
         OR (
-            (auth.jwt () -> 'app_metadata' ->> 'role' = 'host')
+            ((SELECT auth.jwt ()) -> 'app_metadata' ->> 'role' = 'host')
             AND is_active = true
         )
     )
@@ -76,7 +76,7 @@ CREATE POLICY "Admins can do everything and hosts can view standard tasks" ON pu
 WITH
     CHECK (
         public.is_not_banned ()
-        AND (auth.jwt () -> 'app_metadata' ->> 'role' = 'admin')
+        AND ((SELECT auth.jwt ()) -> 'app_metadata' ->> 'role' = 'admin')
     );
 
 CREATE TABLE
