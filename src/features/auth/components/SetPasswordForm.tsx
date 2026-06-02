@@ -12,7 +12,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { PasswordInput } from '@/components/ui/password-input';
 import { DICT } from '@/dictionary';
 import { authService } from '@/features/auth/authService';
-import { setSuppressSessionBroadcast, supabase } from '@/lib/supabaseClient';
+import { setSuppressSessionBroadcast } from '@/lib/supabaseClient';
 import { cn } from '@/lib/utils';
 
 const setPasswordSchema = z
@@ -53,7 +53,7 @@ export function SetPasswordForm({ className, ...props }: React.ComponentProps<'f
 			const refreshToken = params.get('refresh_token');
 
 			if (accessToken && refreshToken) {
-				const { error } = await supabase.auth.setSession({
+				const { error } = await authService.setSession({
 					access_token: accessToken,
 					refresh_token: refreshToken,
 				});

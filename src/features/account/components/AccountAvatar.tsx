@@ -11,7 +11,6 @@ import {
 	mediaService,
 	mimeTypesToAccept,
 } from '@/lib/mediaService';
-import { supabase } from '@/lib/supabaseClient';
 import { cn } from '@/lib/utils';
 
 export function AccountAvatar() {
@@ -78,10 +77,10 @@ export function AccountAvatar() {
 			return;
 		}
 		setIsRemoving(true);
-		const { data: files } = await supabase.storage.from('avatars').list(user.id);
+		const { data: files } = await mediaService.listFiles(user.id, 'avatars');
 		if (files && files.length > 0) {
-			const pathsToDelete = files.map((f) => `${user.id}/${f.name}`);
-			await supabase.storage.from('avatars').remove(pathsToDelete);
+			const pathsToDelete = files.map((f: { name: string }) => `${user.id}/${f.name}`);
+			await mediaService.deleteMedia(pathsToDelete, 'avatars');
 		}
 		const { error: updateError } = await authService.updateProfile(user.id, {
 			avatar_url: null,

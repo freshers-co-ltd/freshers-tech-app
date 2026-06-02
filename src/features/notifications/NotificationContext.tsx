@@ -3,8 +3,7 @@
 import { createContext, type ReactNode, useCallback, useEffect, useState } from 'react';
 import { toast } from '@/components/Toast';
 import { useAuth } from '@/features/auth/AuthContext';
-import { useVisibilityReconnect } from '@/hooks/useVisibilityReconnect';
-import { supabase } from '@/lib/supabaseClient';
+import { useNotificationRealtime } from './hooks/useNotificationRealtime';
 import { notificationsService } from './notificationsService';
 import type { Notification, NotificationPreferences } from './types';
 
@@ -23,8 +22,6 @@ export interface NotificationContextType {
 	) => Promise<void>;
 	markAsRead: (id: string) => Promise<void>;
 	markAllAsRead: () => Promise<void>;
-	subscribe: () => void;
-	unsubscribe: () => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -36,7 +33,23 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 	const [isLoading, setIsLoading] = useState(true);
 	const [isConnected, setIsConnected] = useState(false);
 	const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
-	const [channel, setChannel] = useState<ReturnType<typeof supabase.channel> | null>(null);
+
+	useNotificationRealtime({
+		userId: user?.id,
+		onInsert: useCallback((notification: Notification) => {
+			setNotifications((prev) => [notification, ...prev]);
+			setUnreadCount((prev) => prev + 1);
+		}, []),
+		onUpdate: useCallback((notification: Notification) => {
+			setNotifications((prev) => prev.map((n) => (n.id === notification.id ? notification : n)));
+			if (notification.is_read) {
+				setUnreadCount((prev) => Math.max(0, prev - 1));
+			}
+		}, []),
+		onConnectionChange: useCallback((connected: boolean) => {
+			setIsConnected(connected);
+		}, []),
+	});
 
 	const fetchNotifications = useCallback(
 		async (skipLoadingState = false) => {
@@ -112,26 +125,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
 	const pushEnabled = preferences?.push_enabled ?? null;
 
-	const updateBadge = useCallback((count: number) => {
-		if ('setAppBadge' in navigator) {
-			if (count > 0) {
-				navigator
-					.setAppBadge(count)
-					.then(() => {})
-					.catch((err) => {
-						console.error('[Badge] Error setting badge:', err);
-					});
-			} else {
-				navigator
-					.clearAppBadge()
-					.then(() => {})
-					.catch((err) => {
-						console.error('[Badge] Error clearing badge:', err);
-					});
-			}
-		}
-	}, []);
-
 	const markAsRead = useCallback(async (id: string) => {
 		const { success } = await notificationsService.markAsRead(id);
 		if (success) {
@@ -152,94 +145,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 		}
 	}, [user]);
 
-	const subscribe = useCallback(() => {
-		if (!user || channel) {
-			return;
-		}
-
-		const newChannel = supabase
-			.channel('notifications')
-			.on(
-				'postgres_changes',
-				{
-					event: 'INSERT',
-					schema: 'public',
-					table: 'notifications',
-					filter: `user_id=eq.${user.id}`,
-				},
-				(payload: { new: Notification }) => {
-					const newNotification = payload.new;
-					setNotifications((prev) => [newNotification, ...prev]);
-					setUnreadCount((prev) => prev + 1);
-				},
-			)
-			.on(
-				'postgres_changes',
-				{
-					event: 'UPDATE',
-					schema: 'public',
-					table: 'notifications',
-					filter: `user_id=eq.${user.id}`,
-				},
-				(payload: { new: Notification }) => {
-					const updatedNotification = payload.new;
-					setNotifications((prev) =>
-						prev.map((n) => (n.id === updatedNotification.id ? updatedNotification : n)),
-					);
-					if (updatedNotification.is_read) {
-						setUnreadCount((prev) => Math.max(0, prev - 1));
-					}
-				},
-			)
-			.subscribe((status: string, err?: unknown) => {
-				if (err) {
-				}
-				setIsConnected(status === 'SUBSCRIBED');
-			});
-
-		setChannel(newChannel);
-	}, [user, channel]);
-
-	const unsubscribe = useCallback(() => {
-		if (channel) {
-			supabase.removeChannel(channel);
-			setChannel(null);
-			setIsConnected(false);
-		}
-	}, [channel]);
-
 	useEffect(() => {
 		if (user) {
 			fetchNotifications();
 			fetchUnreadCount();
 			fetchPreferences();
-			subscribe();
 		}
-
-		return () => {
-			unsubscribe();
-		};
-	}, [user, fetchNotifications, fetchUnreadCount, fetchPreferences, subscribe, unsubscribe]);
-
-	useEffect(() => {
-		updateBadge(unreadCount);
-	}, [unreadCount, updateBadge]);
-
-	useEffect(() => {
-		return () => {
-			updateBadge(0);
-		};
-	}, [updateBadge]);
-
-	useVisibilityReconnect({
-		enabled: !!user,
-		onVisible: async () => {
-			await Promise.all([fetchNotifications(true), fetchUnreadCount()]);
-			if (!channel || channel.state !== 'joined') {
-				subscribe();
-			}
-		},
-	});
+	}, [user, fetchNotifications, fetchUnreadCount, fetchPreferences]);
 
 	return (
 		<NotificationContext.Provider
@@ -256,8 +168,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 				updatePreferences,
 				markAsRead,
 				markAllAsRead,
-				subscribe,
-				unsubscribe,
 			}}>
 			{children}
 		</NotificationContext.Provider>

@@ -50,6 +50,12 @@ export async function getBucketConfig(bucketName: string): Promise<BucketConfig>
 }
 
 export const mediaService = {
+	async listFiles(
+		folderId: string,
+		bucket: StorageBucket,
+	): Promise<{ data: { name: string }[] | null; error: unknown }> {
+		return supabase.storage.from(bucket).list(folderId);
+	},
 	getMediaUrl(path: string | null, bucket: StorageBucket): string {
 		if (!path || path === 'Placeholder' || path.trim() === '') {
 			return '/placeholder-image.webp';
@@ -83,8 +89,12 @@ export const mediaService = {
 		return { path: filePath, error: null };
 	},
 
-	async deleteMedia(path: string, bucket: StorageBucket): Promise<{ error: string | null }> {
-		const { error } = await supabase.storage.from(bucket).remove([path]);
+	async deleteMedia(
+		path: string | string[],
+		bucket: StorageBucket,
+	): Promise<{ error: string | null }> {
+		const paths = Array.isArray(path) ? path : [path];
+		const { error } = await supabase.storage.from(bucket).remove(paths);
 		if (error) {
 			return { error: error.message };
 		}

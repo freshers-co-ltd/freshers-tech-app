@@ -16,18 +16,6 @@ interface PushPayload {
 }
 
 function extractPushPayload(reqBody: Record<string, unknown>): PushPayload | null {
-  // Format 1: Direct call (from frontend or manual test)
-  if (reqBody.userId && reqBody.title) {
-    return {
-      userId: reqBody.userId as string,
-      title: reqBody.title as string,
-      body: reqBody.body as string | undefined,
-      data: reqBody.data as Record<string, unknown> | undefined,
-    };
-  }
-
-  // Format 2: Supabase Dashboard Webhook
-  // Payload structure: { type, table, record: { user_id, title, message, data, link }, old_record }
   const record = reqBody.record as Record<string, unknown> | undefined;
   if (record) {
     const userId = record.user_id as string | undefined;
@@ -49,6 +37,15 @@ function extractPushPayload(reqBody: Record<string, unknown>): PushPayload | nul
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
+  }
+
+  const WEBHOOK_SECRET = Deno.env.get('WEBHOOK_SECRET');
+  if (!WEBHOOK_SECRET || req.headers.get('Webhook-secret') !== WEBHOOK_SECRET) {
+    console.warn('[Push] Unauthorized call — missing or invalid webhook secret');
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 
   try {

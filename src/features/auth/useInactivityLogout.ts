@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabaseClient';
+import { authService } from '@/features/auth/authService';
 
 /**
  * Hook that automatically logs out the user after a period of inactivity.
@@ -20,7 +20,7 @@ export function useInactivityLogout(timeoutMs = 30 * 60 * 1000) {
 
 	const logout = useCallback(async () => {
 		navigate('/login?reason=inactivity', { replace: true });
-		await supabase.auth.signOut();
+		await authService.signOut();
 	}, [navigate]);
 
 	const resetTimer = useCallback(() => {

@@ -13,11 +13,12 @@ import { toast } from '@/components/Toast';
 import { useAuth } from '@/features/auth/AuthContext';
 import { propertyService } from '@/features/properties/propertyService';
 import type { Property, PropertyInsert } from '@/features/properties/types';
+import { useVisibilityReconnect } from '@/hooks/useVisibilityReconnect';
 
 interface PropertyContextType {
 	properties: Property[];
 	isLoading: boolean;
-	fetchProperties: () => Promise<void>;
+	fetchProperties: (signal?: AbortSignal, skipLoadingState?: boolean) => Promise<void>;
 	upsertProperty: (property: PropertyInsert) => Promise<{ success: boolean; data?: Property }>;
 	deleteProperty: (id: string, hard?: boolean) => Promise<{ success: boolean }>;
 }
@@ -31,17 +32,23 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 	const abortControllerRef = useRef<AbortController | null>(null);
 
 	const fetchProperties = useCallback(
-		async (signal?: AbortSignal) => {
+		async (signal?: AbortSignal, skipLoadingState = false) => {
 			if (!user) {
 				setProperties([]);
 				setIsLoading(false);
 				return;
 			}
 
-			setIsLoading(true);
+			if (!skipLoadingState) {
+				setIsLoading(true);
+			}
+
 			const { data, error } = await propertyService.getProperties();
 
 			if (signal?.aborted) {
+				if (!skipLoadingState) {
+					setIsLoading(false);
+				}
 				return;
 			}
 
@@ -51,7 +58,9 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 				setProperties(data);
 			}
 
-			setIsLoading(false);
+			if (!skipLoadingState) {
+				setIsLoading(false);
+			}
 		},
 		[user],
 	);
@@ -69,6 +78,13 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 			abortControllerRef.current?.abort();
 		};
 	}, [user, profile, fetchProperties]);
+
+	useVisibilityReconnect({
+		enabled: !!user && profile?.role === 'host',
+		onVisible: async () => {
+			await fetchProperties(undefined, true);
+		},
+	});
 
 	const upsertProperty = async (property: PropertyInsert) => {
 		const { data, error } = await propertyService.upsertProperty(property);
