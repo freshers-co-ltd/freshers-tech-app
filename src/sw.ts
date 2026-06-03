@@ -20,28 +20,34 @@ interface PushNotificationData {
 }
 
 self.addEventListener('push', async (event: PushEvent) => {
-	console.log('[SW] Push event received', event);
-	console.log('[SW] Notification permission:', Notification.permission);
-	console.log('[SW] Registration:', self.registration);
+	const devLog = (...args: unknown[]) => {
+		if (import.meta.env.DEV) {
+			console.log('[SW]', ...args);
+		}
+	};
+
+	devLog('Push event received', event);
+	devLog('Notification permission:', Notification.permission);
+	devLog('Registration:', self.registration);
 
 	let data: PushNotificationData;
 
 	try {
 		const rawData = event.data?.json();
-		console.log('[SW] Raw push data:', rawData);
+		devLog('Raw push data:', rawData);
 		data = rawData ?? {
 			title: 'Cleaner Hire',
 			body: 'You have a new notification',
 		};
 	} catch (e) {
-		console.log('[SW] Failed to parse push data:', e);
+		devLog('Failed to parse push data:', e);
 		data = {
 			title: 'Cleaner Hire',
 			body: 'You have a new notification',
 		};
 	}
 
-	console.log('[SW] Parsed notification data:', data);
+	devLog('Parsed notification data:', data);
 
 	const options: NotificationOptions = {
 		body: data.body,
@@ -51,23 +57,23 @@ self.addEventListener('push', async (event: PushEvent) => {
 		tag: 'cleaner-hire-notification',
 	};
 
-	console.log('[SW] Showing notification with options:', options);
+	devLog('Showing notification with options:', options);
 
 	event.waitUntil(
 		(async () => {
 			try {
 				const result = await self.registration.showNotification(data.title, options);
-				console.log('[SW] Notification shown successfully:', result);
+				devLog('Notification shown successfully:', result);
 
 				const unreadCount = data.data?.unreadCount as number | undefined;
 				if (unreadCount !== undefined && unreadCount > 0) {
 					if ('setAppBadge' in navigator) {
-						console.log('[SW] Setting badge count:', unreadCount);
+						devLog('Setting badge count:', unreadCount);
 						await navigator.setAppBadge(unreadCount);
 					}
 				} else {
 					if ('setAppBadge' in navigator) {
-						console.log('[SW] Clearing badge');
+						devLog('Clearing badge');
 						await navigator.clearAppBadge();
 					}
 				}
@@ -115,7 +121,13 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
 });
 
 self.addEventListener('pushsubscriptionchange', (event: PushSubscriptionChangeEvent) => {
-	console.log('[SW] Push subscription changed:', event);
+	const devLog = (...args: unknown[]) => {
+		if (import.meta.env.DEV) {
+			console.log('[SW]', ...args);
+		}
+	};
+
+	devLog('Push subscription changed:', event);
 
 	event.waitUntil(
 		(async () => {
@@ -123,7 +135,7 @@ self.addEventListener('pushsubscriptionchange', (event: PushSubscriptionChangeEv
 				const clients = await self.clients.matchAll({ type: 'window' });
 
 				if (clients.length === 0) {
-					console.log('[SW] No clients available to handle subscription update');
+					devLog('No clients available to handle subscription update');
 					return;
 				}
 
@@ -134,7 +146,7 @@ self.addEventListener('pushsubscriptionchange', (event: PushSubscriptionChangeEv
 					});
 				}
 
-				console.log('[SW] Notified clients about subscription expiration');
+				devLog('Notified clients about subscription expiration');
 			} catch (err) {
 				console.error('[SW] Error handling subscription change:', err);
 			}

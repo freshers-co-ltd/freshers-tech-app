@@ -9,6 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { DICT } from '@/dictionary';
 import type { UserRole } from '@/features/auth/types';
+import { useCleanerPayConfig } from '@/features/cleanings/CleanerPayContext';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
 import { CleaningActionButtons } from '@/features/cleanings/components/CleaningActionButtons';
 import { CleaningEvidenceForm } from '@/features/cleanings/components/CleaningEvidenceForm';
@@ -16,7 +17,6 @@ import { CleaningReportView } from '@/features/cleanings/components/CleaningRepo
 import { CleaningRequestDetails } from '@/features/cleanings/components/CleaningrequestDetails';
 import { CleaningTaskList } from '@/features/cleanings/components/CleaningTaskList';
 import { useCleanerCleanings } from '@/features/cleanings/hooks/useCleanerCleanings';
-import { useCleanerPayConfig } from '@/features/cleanings/hooks/useCleanerPayConfig';
 import { useClockInOut } from '@/features/cleanings/hooks/useClockInOut';
 import { useEvidenceSubmission } from '@/features/cleanings/hooks/useEvidenceSubmission';
 import { useTaskSync } from '@/features/cleanings/hooks/useTaskSync';

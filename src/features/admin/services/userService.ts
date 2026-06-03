@@ -1,5 +1,6 @@
 'use client';
 
+import { z } from 'zod';
 import type {
 	AdminCleanerDetail,
 	AdminHostDetail,
@@ -12,6 +13,72 @@ import type {
 import type { UserRole } from '@/features/auth/types';
 import { type ActionResult, mapDatabaseError } from '@/lib/serviceUtils';
 import { supabase } from '@/lib/supabaseClient';
+
+function validateSingle<T>(
+	schema: z.ZodTypeAny,
+	data: unknown,
+	label: string,
+): { valid: true; data: T } | { valid: false; error: string } {
+	const result = schema.safeParse(data);
+	if (!result.success) {
+		if (import.meta.env.DEV) {
+			console.error(`[${label}] RPC response validation failed:`, result.error.issues);
+		}
+		return { valid: false, error: `Invalid ${label} response` };
+	}
+	return { valid: true, data: result.data as T };
+}
+
+function validateArray<T>(
+	schema: z.ZodTypeAny,
+	data: unknown,
+	label: string,
+): { valid: true; data: T[] } | { valid: false; error: string } {
+	const result = z.array(schema).safeParse(data);
+	if (!result.success) {
+		if (import.meta.env.DEV) {
+			console.error(`[${label}] RPC response validation failed:`, result.error.issues);
+		}
+		return { valid: false, error: `Invalid ${label} response` };
+	}
+	return { valid: true, data: result.data as T[] };
+}
+
+const AdminUserSchema = z.object({
+	id: z.string(),
+	email: z.string().nullable(),
+	full_name: z.string().nullable(),
+	role: z.string(),
+	is_verified: z.boolean().nullable(),
+	avatar_url: z.string().nullable(),
+	banned_until: z.string().nullable(),
+	created_at: z.string().nullable(),
+	last_sign_in_at: z.string().nullable(),
+	last_seen_at: z.string().nullable(),
+	is_online: z.boolean(),
+	last_sign_in_text: z.string().nullable().optional(),
+});
+
+const AdminHostDetailSchema = AdminUserSchema.extend({
+	properties: z.array(z.record(z.string(), z.unknown())),
+	cleanings: z.array(z.record(z.string(), z.unknown())),
+	cleaning_stats: z.object({
+		total: z.number(),
+		requested: z.number(),
+		confirmed: z.number(),
+		in_progress: z.number(),
+	}),
+});
+
+const AdminCleanerDetailSchema = AdminUserSchema.extend({
+	assigned_cleanings: z.array(z.record(z.string(), z.unknown())),
+	cleaner_stats: z.object({
+		total_assigned: z.number(),
+		completed: z.number(),
+		confirmed: z.number(),
+		avg_completion_hours: z.number().nullable(),
+	}),
+});
 
 export const userService = {
 	async getUsers(
@@ -36,7 +103,11 @@ export const userService = {
 			return { data: null, error: mapDatabaseError(error) };
 		}
 
-		return { data: (data ?? []) as unknown as AdminUser[], error: null };
+		const users = validateArray<AdminUser>(AdminUserSchema, data ?? [], 'AdminUser');
+		if (!users.valid) {
+			return { data: null, error: users.error };
+		}
+		return { data: users.data, error: null };
 	},
 
 	async getUsersCount(filters: UserFilters = {}): Promise<ActionResult<number>> {
@@ -73,7 +144,15 @@ export const userService = {
 			return { data: null, error: 'User not found' };
 		}
 
-		return { data: data[0] as unknown as AdminHostDetail, error: null };
+		const hostDetail = validateSingle<AdminHostDetail>(
+			AdminHostDetailSchema,
+			data[0],
+			'AdminHostDetail',
+		);
+		if (!hostDetail.valid) {
+			return { data: null, error: hostDetail.error };
+		}
+		return { data: hostDetail.data, error: null };
 	},
 
 	async updatePropertyPrice(propertyId: string, price: number): Promise<ActionResult<void>> {
@@ -102,7 +181,15 @@ export const userService = {
 			return { data: null, error: 'Cleaner not found' };
 		}
 
-		return { data: data[0] as unknown as AdminCleanerDetail, error: null };
+		const cleanerDetail = validateSingle<AdminCleanerDetail>(
+			AdminCleanerDetailSchema,
+			data[0],
+			'AdminCleanerDetail',
+		);
+		if (!cleanerDetail.valid) {
+			return { data: null, error: cleanerDetail.error };
+		}
+		return { data: cleanerDetail.data, error: null };
 	},
 
 	async banUser(userId: string): Promise<ActionResult<void>> {

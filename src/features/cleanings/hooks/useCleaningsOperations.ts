@@ -120,9 +120,9 @@ export function useCleaningsOperations(setCleanings: Dispatch<SetStateAction<Cle
 	};
 
 	const updateTasksBatch = async (cleaningId: string, updates: TaskUpdate[]) => {
-		let snapshot: CleaningRequest[] = [];
+		const snapshotRef: { current: CleaningRequest[] } = { current: [] };
 		setCleanings((prev) => {
-			snapshot = prev;
+			snapshotRef.current = prev;
 			return prev.map((c) => {
 				if (c.id === cleaningId) {
 					return {
@@ -144,7 +144,27 @@ export function useCleaningsOperations(setCleanings: Dispatch<SetStateAction<Cle
 		const errors = results.filter((r) => r.error);
 
 		if (errors.length > 0) {
-			setCleanings(snapshot);
+			const failedIds = new Set(updates.filter((_, i) => results[i]?.error).map((u) => u.id));
+			setCleanings((prev) =>
+				prev.map((c) => {
+					if (c.id !== cleaningId) {
+						return c;
+					}
+					return {
+						...c,
+						tasks: c.tasks?.map((t) => {
+							if (failedIds.has(t.id)) {
+								return (
+									snapshotRef.current
+										.find((s) => s.id === cleaningId)
+										?.tasks?.find((st) => st.id === t.id) ?? t
+								);
+							}
+							return t;
+						}),
+					};
+				}),
+			);
 			toast.error('Some tasks failed to save.');
 			return { success: false };
 		}

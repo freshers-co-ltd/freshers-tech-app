@@ -1,5 +1,6 @@
 'use client';
 
+import { z } from 'zod';
 import type {
 	AuditFilters,
 	AuditLogEntry,
@@ -12,6 +13,85 @@ import type {
 } from '@/features/admin/types';
 import { type ActionResult, mapDatabaseError } from '@/lib/serviceUtils';
 import { supabase } from '@/lib/supabaseClient';
+
+function validateSingle<T>(
+	schema: z.ZodTypeAny,
+	data: unknown,
+	label: string,
+): { valid: true; data: T } | { valid: false; error: string } {
+	const result = schema.safeParse(data);
+	if (!result.success) {
+		if (import.meta.env.DEV) {
+			console.error(`[${label}] RPC response validation failed:`, result.error.issues);
+		}
+		return { valid: false, error: `Invalid ${label} response` };
+	}
+	return { valid: true, data: result.data as T };
+}
+
+function validateArray<T>(
+	schema: z.ZodTypeAny,
+	data: unknown,
+	label: string,
+): { valid: true; data: T[] } | { valid: false; error: string } {
+	const result = z.array(schema).safeParse(data);
+	if (!result.success) {
+		if (import.meta.env.DEV) {
+			console.error(`[${label}] RPC response validation failed:`, result.error.issues);
+		}
+		return { valid: false, error: `Invalid ${label} response` };
+	}
+	return { valid: true, data: result.data as T[] };
+}
+
+const UserStatsSchema = z.object({
+	total_users: z.number(),
+	banned_users: z.number(),
+	hosts_count: z.number(),
+	cleaners_count: z.number(),
+	admins_count: z.number(),
+	new_users_this_month: z.number(),
+	new_users_last_month: z.number(),
+	recently_online: z.number(),
+	online_now: z.number(),
+});
+
+const RevenueMetricsSchema = z.object({
+	completed_count: z.number(),
+	cancelled_count: z.number(),
+	pending_count: z.number(),
+	in_progress_count: z.number(),
+	revenue_current: z.number(),
+	revenue_last_month: z.number(),
+	avg_completion_hours: z.number(),
+	revenue_change_pct: z.number(),
+	completed_change_pct: z.number(),
+	gross_revenue_current: z.number(),
+	net_revenue_current: z.number(),
+	gross_revenue_last_month: z.number(),
+	net_revenue_last_month: z.number(),
+	gross_revenue_change_pct: z.number(),
+	net_revenue_change_pct: z.number(),
+});
+
+const MonthlyStatsSchema = z.object({
+	month: z.string(),
+	cleanings: z.number(),
+	revenue: z.number(),
+	gross: z.number(),
+	net: z.number(),
+});
+
+const UserGrowthByMonthSchema = z.object({
+	month: z.string(),
+	hosts: z.number(),
+	cleaners: z.number(),
+});
+
+const StatusBreakdownSchema = z.object({
+	status: z.string(),
+	count: z.number(),
+});
 
 type RpcParams = Record<string, unknown>;
 
@@ -51,7 +131,7 @@ export const analyticsService = {
 			return { data: null, error: mapDatabaseError(error) };
 		}
 
-		return { data: (data ?? []) as AuditLogEntry[], error: null };
+		return { data: (data ?? []) as unknown as AuditLogEntry[], error: null };
 	},
 
 	async getUserStats(): Promise<ActionResult<UserStats>> {
@@ -65,7 +145,11 @@ export const analyticsService = {
 			return { data: null, error: 'No stats available' };
 		}
 
-		return { data: data[0] as unknown as UserStats, error: null };
+		const userStats = validateSingle<UserStats>(UserStatsSchema, data[0], 'UserStats');
+		if (!userStats.valid) {
+			return { data: null, error: userStats.error };
+		}
+		return { data: userStats.data, error: null };
 	},
 
 	async getRevenueMetrics(): Promise<ActionResult<RevenueMetrics>> {
@@ -83,7 +167,15 @@ export const analyticsService = {
 			return { data: null, error: 'No revenue data available' };
 		}
 
-		return { data: data[0] as unknown as RevenueMetrics, error: null };
+		const revenueMetrics = validateSingle<RevenueMetrics>(
+			RevenueMetricsSchema,
+			data[0],
+			'RevenueMetrics',
+		);
+		if (!revenueMetrics.valid) {
+			return { data: null, error: revenueMetrics.error };
+		}
+		return { data: revenueMetrics.data, error: null };
 	},
 
 	async getMonthlyStats(): Promise<ActionResult<MonthlyStats[]>> {
@@ -97,7 +189,15 @@ export const analyticsService = {
 			return { data: null, error: mapDatabaseError(error) };
 		}
 
-		return { data: (data ?? []) as unknown as MonthlyStats[], error: null };
+		const monthlyStats = validateArray<MonthlyStats>(
+			MonthlyStatsSchema,
+			data ?? [],
+			'MonthlyStats',
+		);
+		if (!monthlyStats.valid) {
+			return { data: null, error: monthlyStats.error };
+		}
+		return { data: monthlyStats.data, error: null };
 	},
 
 	async getUserGrowthByMonth(): Promise<ActionResult<UserGrowthByMonth[]>> {
@@ -111,7 +211,15 @@ export const analyticsService = {
 			return { data: null, error: mapDatabaseError(error) };
 		}
 
-		return { data: (data ?? []) as unknown as UserGrowthByMonth[], error: null };
+		const userGrowth = validateArray<UserGrowthByMonth>(
+			UserGrowthByMonthSchema,
+			data ?? [],
+			'UserGrowthByMonth',
+		);
+		if (!userGrowth.valid) {
+			return { data: null, error: userGrowth.error };
+		}
+		return { data: userGrowth.data, error: null };
 	},
 
 	async getActiveCleanings(): Promise<ActionResult<StatusBreakdown[]>> {
@@ -122,7 +230,15 @@ export const analyticsService = {
 			return { data: null, error: mapDatabaseError(error) };
 		}
 
-		return { data: (data ?? []) as unknown as StatusBreakdown[], error: null };
+		const activeCleanings = validateArray<StatusBreakdown>(
+			StatusBreakdownSchema,
+			data ?? [],
+			'StatusBreakdown',
+		);
+		if (!activeCleanings.valid) {
+			return { data: null, error: activeCleanings.error };
+		}
+		return { data: activeCleanings.data, error: null };
 	},
 
 	async getCleaningsOverTime(): Promise<ActionResult<MonthlyStats[]>> {
@@ -133,7 +249,15 @@ export const analyticsService = {
 			return { data: null, error: mapDatabaseError(error) };
 		}
 
-		return { data: (data ?? []) as unknown as MonthlyStats[], error: null };
+		const cleaningsOverTime = validateArray<MonthlyStats>(
+			MonthlyStatsSchema,
+			data ?? [],
+			'MonthlyStats',
+		);
+		if (!cleaningsOverTime.valid) {
+			return { data: null, error: cleaningsOverTime.error };
+		}
+		return { data: cleaningsOverTime.data, error: null };
 	},
 
 	async getRevenueOverTime(): Promise<ActionResult<MonthlyStats[]>> {
@@ -144,6 +268,14 @@ export const analyticsService = {
 			return { data: null, error: mapDatabaseError(error) };
 		}
 
-		return { data: (data ?? []) as unknown as MonthlyStats[], error: null };
+		const revenueOverTime = validateArray<MonthlyStats>(
+			MonthlyStatsSchema,
+			data ?? [],
+			'MonthlyStats',
+		);
+		if (!revenueOverTime.valid) {
+			return { data: null, error: revenueOverTime.error };
+		}
+		return { data: revenueOverTime.data, error: null };
 	},
 };

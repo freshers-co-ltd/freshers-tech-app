@@ -19,18 +19,24 @@ export function useBucketConfig(
 
 	useEffect(() => {
 		let cancelled = false;
-		getBucketConfig(bucketName).then((config) => {
-			if (cancelled) {
-				return;
-			}
-			setBucketConfig({
-				maxSize: config.fileSizeLimit,
-				accept:
-					config.allowedMimeTypes.length > 0
-						? mimeTypesToAccept(config.allowedMimeTypes)
-						: fallbackAccept,
+		getBucketConfig(bucketName)
+			.then((config) => {
+				if (cancelled) {
+					return;
+				}
+				setBucketConfig({
+					maxSize: config.fileSizeLimit,
+					accept:
+						config.allowedMimeTypes.length > 0
+							? mimeTypesToAccept(config.allowedMimeTypes)
+							: fallbackAccept,
+				});
+			})
+			.catch((err) => {
+				if (import.meta.env.DEV) {
+					console.error('[Bucket] Failed to fetch bucket config', err);
+				}
 			});
-		});
 		return () => {
 			cancelled = true;
 		};

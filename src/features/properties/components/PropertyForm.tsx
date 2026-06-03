@@ -26,6 +26,7 @@ import { useAuth } from '@/features/auth/AuthContext';
 import { usePropertyImageUpload } from '@/features/properties/hooks/usePropertyImageUpload';
 import type { Property, PropertyInsert } from '@/features/properties/types';
 import { propertyTypeValues } from '@/features/properties/types';
+import { useObjectUrls } from '@/hooks/useObjectUrls';
 
 const POSTCODE_REGEX = /^[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}$/i;
 
@@ -86,6 +87,9 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 		bucketConfig,
 		uploadImages,
 	} = usePropertyImageUpload(initialData);
+
+	const mainImageUrls = useObjectUrls(mainImage);
+	const extraImageUrls = useObjectUrls(extraImages);
 
 	const form = useForm<PropertyFormInput, undefined, PropertyFormValues>({
 		resolver: zodResolver(propertySchema),
@@ -252,11 +256,7 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 						<FileUploaderContent className="flex flex-wrap gap-2 mt-2 w-full">
 							{mainImage?.map((file, i) => (
 								<FileUploaderItem key={`${file.name}-${file.lastModified}-${i}`} index={i}>
-									<img
-										src={URL.createObjectURL(file)}
-										alt="Preview"
-										className="object-cover size-20"
-									/>
+									<img src={mainImageUrls[i]} alt="Preview" className="object-cover size-20" />
 								</FileUploaderItem>
 							))}
 						</FileUploaderContent>
@@ -294,11 +294,7 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 						<FileUploaderContent className="flex flex-wrap gap-2 mt-2 w-full">
 							{extraImages?.map((file, i) => (
 								<FileUploaderItem key={`${file.name}-${file.lastModified}-${i}`} index={i}>
-									<img
-										src={URL.createObjectURL(file)}
-										alt="Preview"
-										className="object-cover size-20"
-									/>
+									<img src={extraImageUrls[i]} alt="Preview" className="object-cover size-20" />
 								</FileUploaderItem>
 							))}
 						</FileUploaderContent>

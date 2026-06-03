@@ -137,7 +137,6 @@ export interface PlatformStats {
 
 export interface UserStats {
 	total_users: number;
-	online_users: number;
 	banned_users: number;
 	hosts_count: number;
 	cleaners_count: number;

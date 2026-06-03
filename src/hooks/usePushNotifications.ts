@@ -78,13 +78,17 @@ export function usePushNotifications(): UsePushNotificationsResult {
 				});
 
 				if (error) {
-					console.error('[Push] Error saving subscription:', error);
+					if (import.meta.env.DEV) {
+						console.error('[Push] Error saving subscription:', error);
+					}
 					return { success: false, error: error.message };
 				}
 
 				return { success: true, error: null };
 			} catch (err) {
-				console.error('[Push] Error subscribing:', err);
+				if (import.meta.env.DEV) {
+					console.error('[Push] Error subscribing:', err);
+				}
 				const message = err instanceof Error ? err.message : 'Failed to subscribe';
 				return { success: false, error: message };
 			} finally {
@@ -111,13 +115,17 @@ export function usePushNotifications(): UsePushNotificationsResult {
 					.delete()
 					.eq('endpoint', subscription.endpoint);
 				if (error) {
-					console.error('[Push] Error removing subscription:', error);
+					if (import.meta.env.DEV) {
+						console.error('[Push] Error removing subscription:', error);
+					}
 				}
 			}
 
 			return { success: true, error: null };
 		} catch (err) {
-			console.error('[Push] Error unsubscribing:', err);
+			if (import.meta.env.DEV) {
+				console.error('[Push] Error unsubscribing:', err);
+			}
 			const message = err instanceof Error ? err.message : 'Failed to unsubscribe';
 			return { success: false, error: message };
 		} finally {
@@ -138,12 +146,17 @@ export function usePushNotifications(): UsePushNotificationsResult {
 				.maybeSingle();
 
 			if (error) {
-				console.error('[Push] Error checking subscription:', error);
+				if (import.meta.env.DEV) {
+					console.error('[Push] Error checking subscription:', error);
+				}
 				return false;
 			}
 
 			return !!data;
 		} catch {
+			if (import.meta.env.DEV) {
+				console.error('[Push] Error checking subscription');
+			}
 			return false;
 		}
 	}, []);
@@ -154,7 +167,9 @@ export function usePushNotifications(): UsePushNotificationsResult {
 			const pushSubscription = await registration.pushManager.getSubscription();
 
 			if (!pushSubscription) {
-				console.log('[Push] No active subscription found, need to re-subscribe');
+				if (import.meta.env.DEV) {
+					console.log('[Push] No active subscription found, need to re-subscribe');
+				}
 				return false;
 			}
 
@@ -165,7 +180,9 @@ export function usePushNotifications(): UsePushNotificationsResult {
 				.maybeSingle();
 
 			if (!dbSub) {
-				console.log('[Push] Subscription in DB not found, need to re-subscribe');
+				if (import.meta.env.DEV) {
+					console.log('[Push] Subscription in DB not found, need to re-subscribe');
+				}
 				return false;
 			}
 
@@ -173,17 +190,23 @@ export function usePushNotifications(): UsePushNotificationsResult {
 			const currentEndpoint = pushSubscription.endpoint;
 
 			if (dbEndpoint !== currentEndpoint) {
-				console.log('[Push] Endpoint mismatch, need to re-subscribe', {
-					dbEndpoint,
-					currentEndpoint,
-				});
+				if (import.meta.env.DEV) {
+					console.log('[Push] Endpoint mismatch, need to re-subscribe', {
+						dbEndpoint,
+						currentEndpoint,
+					});
+				}
 				return false;
 			}
 
-			console.log('[Push] Subscription is valid');
+			if (import.meta.env.DEV) {
+				console.log('[Push] Subscription is valid');
+			}
 			return true;
 		} catch (err) {
-			console.error('[Push] Error validating subscription:', err);
+			if (import.meta.env.DEV) {
+				console.error('[Push] Error validating subscription:', err);
+			}
 			return false;
 		}
 	}, []);
@@ -193,7 +216,9 @@ export function usePushNotifications(): UsePushNotificationsResult {
 			const isValid = await validateSubscription(userId);
 
 			if (!isValid) {
-				console.log('[Push] Auto re-subscribing due to invalid subscription');
+				if (import.meta.env.DEV) {
+					console.log('[Push] Auto re-subscribing due to invalid subscription');
+				}
 				await subscribe(userId);
 			}
 		},

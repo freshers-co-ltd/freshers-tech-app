@@ -51,11 +51,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		[],
 	);
 
+	const profileRef = useRef(profile);
+	profileRef.current = profile;
+
 	const handleAuthStateChange = useCallback(
 		async (currentSession: Session | null, signal?: AbortSignal) => {
 			const currentUser = currentSession?.user ?? null;
 
-			if (currentUser?.id === lastUserId.current && profile !== null) {
+			if (currentUser?.id === lastUserId.current && profileRef.current !== null) {
 				return;
 			}
 
@@ -65,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			lastUserId.current = currentUser?.id ?? null;
 
 			if (currentUser) {
-				if (!profile || profile.id !== currentUser.id) {
+				if (!profileRef.current || profileRef.current.id !== currentUser.id) {
 					const metadata = currentUser.user_metadata;
 					const rawRole = metadata?.role;
 					const userRole: UserRole =
@@ -93,7 +96,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			}
 			setLoading(false);
 		},
-		[fetchProfile, profile],
+		[fetchProfile],
 	);
 
 	useEffect(() => {
@@ -124,7 +127,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			if (!initialSession && !isTrusted) {
 				const syncedSession = window.sessionStorage.getItem('sb-auth-token');
 				if (syncedSession) {
-					const parsed = JSON.parse(syncedSession);
+					let parsed: { access_token: string; refresh_token: string } | null = null;
+					try {
+						parsed = JSON.parse(syncedSession);
+					} catch {
+						if (import.meta.env.DEV) {
+							console.error('[Auth] Failed to parse session token');
+						}
+						parsed = null;
+					}
+					if (!parsed) {
+						return;
+					}
 					await authService.setSession(parsed);
 					const {
 						data: { session: retrySession },
@@ -140,7 +154,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			if (!initialSession && isTrusted) {
 				const storedToken = window.localStorage.getItem('sb-auth-token');
 				if (storedToken) {
-					const parsed = JSON.parse(storedToken);
+					let parsed: { access_token: string; refresh_token: string } | null = null;
+					try {
+						parsed = JSON.parse(storedToken);
+					} catch {
+						if (import.meta.env.DEV) {
+							console.error('[Auth] Failed to parse trusted session token');
+						}
+						parsed = null;
+					}
+					if (!parsed) {
+						return;
+					}
 					await authService.setSession(parsed);
 					const {
 						data: { session: retrySession },
@@ -175,7 +200,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 							await authService.setSession(parsed);
 						}
 					} catch {
-						// Recovery failed, but React state remains intact
+						if (import.meta.env.DEV) {
+							console.error('[Auth] Failed to recover session after sign-out');
+						}
 					}
 					return;
 				}
@@ -222,7 +249,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	}, [user, fetchProfile]);
 
 	const signOut = useCallback(async () => {
-		const trustDevice = window.localStorage.getItem('trust_device');
 		isVoluntarySignOutRef.current = true;
 		try {
 			await authService.signOut();
@@ -233,11 +259,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			setProfile(null);
 			setUser(null);
 			setSession(null);
-			window.localStorage.clear();
+			['sb-auth-token', 'vapidPublicKey', 'trust_device'].forEach((key) => {
+				window.localStorage.removeItem(key);
+			});
 			window.sessionStorage.clear();
-			if (trustDevice === 'true') {
-				window.localStorage.setItem('trust_device', 'true');
-			}
 		}
 	}, []);
 

@@ -71,12 +71,12 @@ const getAuthStorage = () => {
 			}
 		},
 		removeItem: (key: string) => {
-			if (window.localStorage.getItem('trust_device') === 'true') {
-				return;
-			}
+			const isTrusted = window.localStorage.getItem('trust_device') === 'true';
 			window.localStorage.removeItem(key);
 			window.sessionStorage.removeItem(key);
-			getAuthChannel().postMessage({ type: 'LOGOUT' });
+			if (!isTrusted) {
+				getAuthChannel().postMessage({ type: 'LOGOUT' });
+			}
 		},
 	};
 };

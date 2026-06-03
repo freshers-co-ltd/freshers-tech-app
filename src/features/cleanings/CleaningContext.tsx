@@ -6,6 +6,7 @@ import {
 	useCallback,
 	useContext,
 	useEffect,
+	useMemo,
 	useRef,
 	useState,
 } from 'react';
@@ -123,27 +124,27 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 		},
 	});
 
-	return (
-		<CleaningContext.Provider
-			value={{
-				cleanings,
-				isLoading,
-				fetchCleanings,
-				upsertCleaning: operations.upsertCleaning,
-				updateCleaning: operations.updateCleaning,
-				deleteCleaning: operations.deleteCleaning,
-				insertTask: operations.insertTask,
-				updateTask: operations.updateTask,
-				updateTasksBatch: operations.updateTasksBatch,
-				deleteTask: operations.deleteTask,
-				addEvidence: operations.addEvidence,
-				deleteEvidence: operations.deleteEvidence,
-				upsertReport: operations.upsertReport,
-				createCleaning: operations.upsertCleaning,
-			}}>
-			{children}
-		</CleaningContext.Provider>
+	const contextValue = useMemo(
+		() => ({
+			cleanings,
+			isLoading,
+			fetchCleanings,
+			upsertCleaning: operations.upsertCleaning,
+			updateCleaning: operations.updateCleaning,
+			deleteCleaning: operations.deleteCleaning,
+			insertTask: operations.insertTask,
+			updateTask: operations.updateTask,
+			updateTasksBatch: operations.updateTasksBatch,
+			deleteTask: operations.deleteTask,
+			addEvidence: operations.addEvidence,
+			deleteEvidence: operations.deleteEvidence,
+			upsertReport: operations.upsertReport,
+			createCleaning: operations.upsertCleaning,
+		}),
+		[cleanings, isLoading, fetchCleanings, operations],
 	);
+
+	return <CleaningContext.Provider value={contextValue}>{children}</CleaningContext.Provider>;
 }
 
 export const useCleanings = () => {

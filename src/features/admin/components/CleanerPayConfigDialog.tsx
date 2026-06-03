@@ -109,7 +109,7 @@ export function CleanerPayConfigDialog({ open, onOpenChange }: CleanerPayConfigD
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="max-w-screen-md sm:max-w-lg">
+			<DialogContent className="max-w-3xl sm:max-w-lg">
 				<DialogHeader>
 					<DialogTitle>Cleaner Pay Rates</DialogTitle>
 					<DialogDescription>
@@ -128,21 +128,6 @@ export function CleanerPayConfigDialog({ open, onOpenChange }: CleanerPayConfigD
 								step="0.01"
 								value={config.hourly_rate}
 								onChange={(e) => updateHourlyRate(e.target.value)}
-								className="flex-1"
-							/>
-						</div>
-					</div>
-
-					<div className="space-y-2">
-						<Label htmlFor="bathroomTime">Time per additional bathroom (hours)</Label>
-						<div className="flex items-center gap-2">
-							<Input
-								id="bathroomTime"
-								type="number"
-								step="0.5"
-								min="0"
-								value={config.bathroom_time}
-								onChange={(e) => updateBathroomTime(e.target.value)}
 								className="flex-1"
 							/>
 						</div>
@@ -197,6 +182,21 @@ export function CleanerPayConfigDialog({ open, onOpenChange }: CleanerPayConfigD
 								/>
 							</div>
 						</div>
+					</div>
+				</div>
+
+				<div className="space-y-2">
+					<Label htmlFor="bathroomTime">Time per additional bathroom (hours)</Label>
+					<div className="flex items-center gap-2">
+						<Input
+							id="bathroomTime"
+							type="number"
+							step="0.5"
+							min="0"
+							value={config.bathroom_time}
+							onChange={(e) => updateBathroomTime(e.target.value)}
+							className="flex-1"
+						/>
 					</div>
 				</div>
 

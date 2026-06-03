@@ -78,7 +78,9 @@ export function AdminAnalyticsPage() {
 			setActiveCleanings(activeResult.data || []);
 		}
 
-		console.log('DEBUG: raw revenue', revenueResult.data);
+		if (import.meta.env.DEV) {
+			console.log('raw revenue', revenueResult.data);
+		}
 
 		setLoading(false);
 	}, []);

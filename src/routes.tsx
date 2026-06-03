@@ -1,4 +1,4 @@
-import { type ComponentType, lazy, type ReactElement, Suspense } from 'react';
+import type { ReactElement } from 'react';
 import {
 	createBrowserRouter,
 	Navigate,
@@ -11,6 +11,7 @@ import { useAuth } from '@/features/auth/AuthContext';
 import type { UserRole } from '@/features/auth/types';
 import { AppLayout } from '@/layouts/AppLayout';
 import { AuthLayout } from '@/layouts/AuthLayout';
+import { lazyLoad } from '@/lib/LazyLoad';
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPassword';
 import { LoginPage } from '@/pages/auth/Login';
 import { SetPasswordPage } from '@/pages/auth/SetPassword';
@@ -21,26 +22,6 @@ const ROLE_DASHBOARDS: Record<UserRole, string> = {
 	host: '/host/dashboard',
 	cleaner: '/cleaner/dashboard',
 	admin: '/admin/dashboard',
-};
-
-export const lazyLoad = <T extends Record<string, unknown>, U extends string>(
-	importFn: () => Promise<{ [K in U]: ComponentType<T> }>,
-	name: U,
-): ReactElement => {
-	const LazyComponent = lazy(async () => {
-		const module = await importFn();
-		const Component = module[name];
-		if (!Component) {
-			throw new Error(`Component "${name}" not found in module.`);
-		}
-		return { default: Component as ComponentType<T> };
-	});
-
-	return (
-		<Suspense fallback={<Loading />}>
-			<LazyComponent {...({} as T)} />
-		</Suspense>
-	);
 };
 
 export interface NavigationState {

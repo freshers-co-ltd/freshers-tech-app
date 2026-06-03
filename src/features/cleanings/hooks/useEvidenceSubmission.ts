@@ -40,23 +40,28 @@ export function useEvidenceSubmission({
 		try {
 			await handleSyncTasks();
 
-			for (const file of files) {
-				const { path, error: uploadError } = await mediaService.uploadMedia(
-					cleaning.id,
-					file,
-					'cleaning-media',
-				);
-				if (uploadError) {
-					throw new Error(uploadError);
-				}
-				if (path) {
-					await addEvidence({
-						cleaning_id: cleaning.id,
-						uploader_id: cleaning.cleaner_id,
-						media_url: path,
-						type: file.type.startsWith('video') ? 'video' : 'image',
-					});
-				}
+			const uploadResults = await Promise.allSettled(
+				files.map((file) => mediaService.uploadMedia(cleaning.id, file, 'cleaning-media')),
+			);
+
+			const successfulUploads = uploadResults
+				.map((r, i) =>
+					r.status === 'fulfilled' && r.value.path ? { file: files[i], path: r.value.path } : null,
+				)
+				.filter((r): r is { file: File; path: string } => r !== null);
+
+			const failedCount = uploadResults.filter((r) => r.status === 'rejected').length;
+			if (failedCount > 0) {
+				toast.error(`${failedCount} file(s) failed to upload.`);
+			}
+
+			for (const { file, path } of successfulUploads) {
+				await addEvidence({
+					cleaning_id: cleaning.id,
+					uploader_id: cleaning.cleaner_id,
+					media_url: path,
+					type: file.type.startsWith('video') ? 'video' : 'image',
+				});
 			}
 
 			await upsertReport({

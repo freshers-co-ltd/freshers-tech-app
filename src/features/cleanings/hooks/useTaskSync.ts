@@ -20,14 +20,18 @@ interface UseTaskSyncResult {
 
 export function useTaskSync({ cleaning, updateTasksBatch }: UseTaskSyncOptions): UseTaskSyncResult {
 	const [localTasks, setLocalTasks] = useState<CleaningTask[]>(cleaning.tasks || []);
+	const [hasLocalChanges, setHasLocalChanges] = useState(false);
 
 	const tasksRef = useRef<CleaningTask[]>(cleaning.tasks || []);
 	const localTasksRef = useRef(localTasks);
 
 	useEffect(() => {
+		if (hasLocalChanges) {
+			return;
+		}
 		setLocalTasks(cleaning.tasks || []);
 		tasksRef.current = cleaning.tasks || [];
-	}, [cleaning.tasks]);
+	}, [cleaning.tasks, hasLocalChanges]);
 
 	useEffect(() => {
 		localTasksRef.current = localTasks;
@@ -51,6 +55,7 @@ export function useTaskSync({ cleaning, updateTasksBatch }: UseTaskSyncOptions):
 		if (updates.length > 0) {
 			try {
 				await updateTasksBatch(cleaning.id, updates);
+				setHasLocalChanges(false);
 			} catch (error) {
 				console.error(error);
 			}
@@ -62,6 +67,7 @@ export function useTaskSync({ cleaning, updateTasksBatch }: UseTaskSyncOptions):
 			if (cleaning.status !== CLEANING_STATUS.IN_PROGRESS) {
 				return;
 			}
+			setHasLocalChanges(true);
 			setLocalTasks((prev) =>
 				prev.map((t) => (t.id === taskId ? { ...t, is_completed: !t.is_completed } : t)),
 			);

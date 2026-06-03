@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { VideoThumbnail } from '@/components/VideoThumbnail';
 import { DICT } from '@/dictionary';
 import { useBucketConfig } from '@/hooks/useBucketConfig';
+import { useObjectUrls } from '@/hooks/useObjectUrls';
 
 const evidenceSchema = z.object({
 	broken_items_report: z.string().optional(),
@@ -74,6 +75,8 @@ export function CleaningEvidenceForm({ onSubmit, onCancel }: CleaningEvidenceFor
 		'image/*': ['.jpg', '.jpeg', '.png'],
 		'video/*': ['.mp4', '.mov'],
 	});
+
+	const previewUrls = useObjectUrls(files);
 
 	const form = useForm<EvidenceFormValues>({
 		resolver: zodResolver(evidenceSchema),
@@ -144,13 +147,9 @@ export function CleaningEvidenceForm({ onSubmit, onCancel }: CleaningEvidenceFor
 							{files?.map((file, i) => (
 								<FileUploaderItem key={`${file.name}-${file.lastModified}-${i}`} index={i}>
 									{file.type.startsWith('image/') ? (
-										<img
-											src={URL.createObjectURL(file)}
-											alt="preview"
-											className="object-cover size-20"
-										/>
+										<img src={previewUrls[i]} alt="preview" className="object-cover size-20" />
 									) : (
-										<VideoThumbnail src={URL.createObjectURL(file)} className="size-20" />
+										<VideoThumbnail src={previewUrls[i] ?? ''} className="size-20" />
 									)}
 								</FileUploaderItem>
 							))}

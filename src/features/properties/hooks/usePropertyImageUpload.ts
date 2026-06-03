@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { toast } from '@/components/Toast';
 import type { Property } from '@/features/properties/types';
 import { useBucketConfig } from '@/hooks/useBucketConfig';
 import { mediaService } from '@/lib/mediaService';
@@ -54,6 +55,11 @@ export function usePropertyImageUpload(initialData?: Property) {
 					mediaService.uploadMedia(userId, file, 'property-media'),
 				);
 				const results = await Promise.allSettled(uploadPromises);
+
+				const failures = results.filter((r) => r.status === 'rejected').length;
+				if (failures > 0) {
+					toast.error(`${failures} image(s) failed to upload.`);
+				}
 
 				const newPaths = results
 					.map((res) => (res.status === 'fulfilled' && res.value.path ? res.value.path : null))
