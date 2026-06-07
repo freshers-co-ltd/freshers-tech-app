@@ -222,9 +222,11 @@ export function AdminUsersPage() {
 				onBanOpenChange={(o) => !o && dialogs.close()}
 				onUnbanOpenChange={(o) => !o && dialogs.close()}
 				onResetPasswordOpenChange={(o) => !o && dialogs.close()}
+				onDeleteUserOpenChange={(o) => !o && dialogs.close()}
 				onConfirmBan={handleBanConfirm}
 				onConfirmUnban={handleUnbanConfirm}
 				onConfirmResetPassword={handleResetPasswordConfirm}
+				onConfirmDeleteUser={() => {}}
 			/>
 		</main>
 	);

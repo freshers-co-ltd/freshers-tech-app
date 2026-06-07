@@ -8,12 +8,15 @@ interface AdminActionDialogsProps {
 	banOpen: boolean;
 	unbanOpen: boolean;
 	resetPasswordOpen: boolean;
+	deleteUserOpen: boolean;
 	onBanOpenChange: (open: boolean) => void;
 	onUnbanOpenChange: (open: boolean) => void;
 	onResetPasswordOpenChange: (open: boolean) => void;
+	onDeleteUserOpenChange: (open: boolean) => void;
 	onConfirmBan: () => void;
 	onConfirmUnban: () => void;
 	onConfirmResetPassword: () => void;
+	onConfirmDeleteUser: () => void;
 }
 
 export function AdminActionDialogs({
@@ -21,12 +24,15 @@ export function AdminActionDialogs({
 	banOpen,
 	unbanOpen,
 	resetPasswordOpen,
+	deleteUserOpen,
 	onBanOpenChange,
 	onUnbanOpenChange,
 	onResetPasswordOpenChange,
+	onDeleteUserOpenChange,
 	onConfirmBan,
 	onConfirmUnban,
 	onConfirmResetPassword,
+	onConfirmDeleteUser,
 }: AdminActionDialogsProps) {
 	const dict = DICT.ADMIN.USERS;
 	const userName = selectedUser.name || 'this user';
@@ -59,6 +65,16 @@ export function AdminActionDialogs({
 				description={dict.PASSWORD_RESET.MESSAGE.replace('{name}', userName)}
 				confirmText={dict.PASSWORD_RESET.BUTTON_SUBMIT}
 				onConfirm={onConfirmResetPassword}
+			/>
+
+			<ConfirmActionDialog
+				open={deleteUserOpen}
+				onOpenChange={onDeleteUserOpenChange}
+				title={dict.DELETE_USER.TITLE}
+				description={dict.DELETE_USER.MESSAGE.replace('{name}', userName)}
+				confirmText={dict.DELETE_USER.BUTTON_SUBMIT}
+				onConfirm={onConfirmDeleteUser}
+				variant="destructive"
 			/>
 		</>
 	);

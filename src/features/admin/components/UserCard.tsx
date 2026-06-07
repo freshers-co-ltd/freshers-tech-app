@@ -1,6 +1,6 @@
 'use client';
 
-import { Calendar, Clock, KeyRound, Mail, ShieldBan, ShieldCheck } from 'lucide-react';
+import { Calendar, Clock, KeyRound, Mail, ShieldBan, ShieldCheck, Trash2 } from 'lucide-react';
 import { EntityBadge } from '@/components/EntityBadge';
 import { UserAvatar } from '@/components/UserAvatar';
 import { Button } from '@/components/ui/button';
@@ -17,14 +17,17 @@ interface UserCardProps {
 		created_at: string | null;
 		last_sign_in_text?: string | null;
 		is_online: boolean;
+		deleted_at: string | null;
 	};
 	onResetPassword: () => void;
 	onBan?: () => void;
 	onUnban?: () => void;
+	onDeleteUser?: () => void;
 }
 
-export function UserCard({ user, onResetPassword, onBan, onUnban }: UserCardProps) {
+export function UserCard({ user, onResetPassword, onBan, onUnban, onDeleteUser }: UserCardProps) {
 	const isBanned = !!user.banned_until;
+	const isDeleted = !!user.deleted_at;
 
 	return (
 		<div className="w-full p-4 space-y-4">
@@ -63,26 +66,34 @@ export function UserCard({ user, onResetPassword, onBan, onUnban }: UserCardProp
 				</p>
 			</div>
 
-			<div className="flex flex-col md:flex-row gap-2 md:ml-1">
-				<Button variant="outline" size="sm" onClick={onResetPassword}>
-					<KeyRound className="size-4 mr-1" />
-					Reset Password
-				</Button>
-				{isBanned && onUnban ? (
-					<Button variant="outline" size="sm" onClick={onUnban}>
-						<ShieldCheck className="size-4 mr-1" />
-						Unban
+			{!isDeleted && (
+				<div className="flex flex-col md:flex-row gap-2 md:ml-1">
+					<Button variant="outline" size="sm" onClick={onResetPassword}>
+						<KeyRound className="size-4 mr-1" />
+						Reset Password
 					</Button>
-				) : (
-					!isBanned &&
-					onBan && (
-						<Button variant="destructive" size="sm" onClick={onBan}>
-							<ShieldBan className="size-4 mr-1" />
-							Ban User
+					{isBanned && onUnban ? (
+						<Button variant="outline" size="sm" onClick={onUnban}>
+							<ShieldCheck className="size-4 mr-1" />
+							Unban
 						</Button>
-					)
-				)}
-			</div>
+					) : (
+						!isBanned &&
+						onBan && (
+							<Button variant="destructive" size="sm" onClick={onBan}>
+								<ShieldBan className="size-4 mr-1" />
+								Ban User
+							</Button>
+						)
+					)}
+					{onDeleteUser && (
+						<Button variant="destructive" size="sm" onClick={onDeleteUser}>
+							<Trash2 className="size-4 mr-1" />
+							Delete User
+						</Button>
+					)}
+				</div>
+			)}
 		</div>
 	);
 }

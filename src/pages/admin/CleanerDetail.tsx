@@ -2,7 +2,7 @@
 
 import { BrushCleaning, ClipboardList, Clock, Sparkles } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { DICT } from '@/dictionary';
 import { CleaningsTable } from '@/features/admin/components/CleaningsTable';
 import { useAdminUsers } from '@/features/admin/hooks/useAdminUsers';
@@ -16,6 +16,7 @@ import { formatHours } from '@/lib/utils';
 
 export function AdminCleanerDetailPage() {
 	const { id } = useParams<{ id: string }>();
+	const navigate = useNavigate();
 	const { cleaner, loading, refresh } = useCleanerDetail(id);
 	const { handleResetPassword, handleBan, handleUnban } = useAdminUsers();
 	const [availableCleaners, setAvailableCleaners] = useState<
@@ -74,6 +75,18 @@ export function AdminCleanerDetailPage() {
 		}
 		return handleUnban(cleaner.id, refresh);
 	}, [cleaner, handleUnban, refresh]);
+
+	const onDeleteUser = useCallback(async () => {
+		if (!cleaner) {
+			return { error: 'No user loaded' };
+		}
+		const result = await userService.purgeUserPii(cleaner.id);
+		if (result.error) {
+			return { error: result.error };
+		}
+		navigate('/admin/users');
+		return { error: null };
+	}, [cleaner, navigate]);
 
 	if (!cleaner) {
 		return null;
@@ -145,6 +158,7 @@ export function AdminCleanerDetailPage() {
 			onResetPassword={onResetPassword}
 			onBan={onBan}
 			onUnban={onUnban}
+			onDeleteUser={onDeleteUser}
 			stats={statsConfig}
 			sections={[
 				{

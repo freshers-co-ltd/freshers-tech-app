@@ -9,7 +9,8 @@ CREATE TABLE
         full_name TEXT,
         avatar_url TEXT,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-        last_seen_at TIMESTAMP WITH TIME ZONE
+        last_seen_at TIMESTAMP WITH TIME ZONE,
+        deleted_at TIMESTAMP WITH TIME ZONE
     );
 
 CREATE UNIQUE INDEX profiles_email_idx ON public.profiles (email);
@@ -61,7 +62,7 @@ BEGIN
     IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IN ('host', 'cleaner')) THEN
         IF (
             NEW.id IS DISTINCT FROM OLD.id OR
-            NEW.email IS DISTINCT FROM OLD.email OR
+            (NEW.email IS DISTINCT FROM OLD.email AND NEW.deleted_at IS NULL) OR
             NEW.role IS DISTINCT FROM OLD.role OR
             NEW.is_verified IS DISTINCT FROM OLD.is_verified
         ) THEN
@@ -171,7 +172,7 @@ SELECT
 
 ALTER VIEW public.profiles_public SET (security_invoker = true);
 
-GRANT SELECT (id, full_name, avatar_url, role) ON public.profiles TO authenticated;
+GRANT SELECT (id, full_name, avatar_url, role, deleted_at) ON public.profiles TO authenticated;
 
 CREATE POLICY "Public profile info visible to authenticated" ON public.profiles
     FOR SELECT

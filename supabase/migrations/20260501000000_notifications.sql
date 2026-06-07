@@ -14,12 +14,10 @@ CREATE TYPE public.notification_type AS ENUM(
 
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 
-CREATE OR REPLACE FUNCTION public.notify_cleaning_reminders()
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
+CREATE
+OR REPLACE FUNCTION public.notify_cleaning_reminders () RETURNS void LANGUAGE plpgsql SECURITY DEFINER
+SET
+    search_path = public AS $$
 DECLARE
     rec RECORD;
 BEGIN
@@ -64,12 +62,10 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.notify_cleaning_starting_soon()
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
+CREATE
+OR REPLACE FUNCTION public.notify_cleaning_starting_soon () RETURNS void LANGUAGE plpgsql SECURITY DEFINER
+SET
+    search_path = public AS $$
 DECLARE
     rec RECORD;
 BEGIN
@@ -113,12 +109,10 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.notify_missed_clockin()
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
+CREATE
+OR REPLACE FUNCTION public.notify_missed_clockin () RETURNS void LANGUAGE plpgsql SECURITY DEFINER
+SET
+    search_path = public AS $$
 DECLARE
     rec RECORD;
     v_admin_id UUID;
@@ -211,26 +205,47 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view their own notifications" ON public.notifications FOR
 SELECT
     TO authenticated USING (
-        user_id = (SELECT auth.uid ())
+        user_id = (
+            SELECT
+                auth.uid ()
+        )
         AND EXISTS (
             SELECT
                 1
             FROM
                 public.profiles
             WHERE
-                id = (SELECT auth.uid ())
+                id = (
+                    SELECT
+                        auth.uid ()
+                )
                 AND public.is_not_banned ()
         )
     );
 
 CREATE POLICY "Users can update their own notifications" ON public.notifications FOR
-UPDATE TO authenticated USING (user_id = (SELECT auth.uid ()))
+UPDATE TO authenticated USING (
+    user_id = (
+        SELECT
+            auth.uid ()
+    )
+)
 WITH
-    CHECK (user_id = (SELECT auth.uid ()));
+    CHECK (
+        user_id = (
+            SELECT
+                auth.uid ()
+        )
+    );
 
 CREATE POLICY "System can insert notifications" ON public.notifications FOR INSERT TO authenticated
 WITH
-    CHECK (user_id = (SELECT auth.uid ()));
+    CHECK (
+        user_id = (
+            SELECT
+                auth.uid ()
+        )
+    );
 
 CREATE TABLE
     public.notification_preferences (
@@ -245,16 +260,32 @@ ALTER TABLE public.notification_preferences ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view their own preferences" ON public.notification_preferences FOR
 SELECT
-    TO authenticated USING (user_id = (SELECT auth.uid ()));
+    TO authenticated USING (
+        user_id = (
+            SELECT
+                auth.uid ()
+        )
+    );
 
 CREATE POLICY "Users can update their own preferences" ON public.notification_preferences FOR
-UPDATE TO authenticated USING (user_id = (SELECT auth.uid ()))
+UPDATE TO authenticated USING (
+    user_id = (
+        SELECT
+            auth.uid ()
+    )
+)
 WITH
-    CHECK (user_id = (SELECT auth.uid ()));
+    CHECK (
+        user_id = (
+            SELECT
+                auth.uid ()
+        )
+    );
 
 CREATE
 OR REPLACE FUNCTION public.get_or_create_notification_preferences () RETURNS UUID LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public AS $$
+SET
+    search_path = public AS $$
 DECLARE
     v_user_id UUID;
     v_pref_id UUID;
@@ -274,8 +305,14 @@ BEGIN
 END;
 $$;
 
-REVOKE EXECUTE ON FUNCTION public.get_or_create_notification_preferences() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.get_or_create_notification_preferences() TO authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.get_or_create_notification_preferences ()
+FROM
+    PUBLIC,
+    anon;
+
+GRANT
+EXECUTE ON FUNCTION public.get_or_create_notification_preferences () TO authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.create_notification_for_user (
@@ -286,7 +323,8 @@ OR REPLACE FUNCTION public.create_notification_for_user (
     p_data JSONB DEFAULT '{}',
     p_link TEXT DEFAULT NULL
 ) RETURNS UUID LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public AS $$
+SET
+    search_path = public AS $$
 DECLARE
     v_notification_id UUID;
 BEGIN
@@ -302,8 +340,14 @@ BEGIN
 END;
 $$;
 
-REVOKE EXECUTE ON FUNCTION public.create_notification_for_user FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.create_notification_for_user TO authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.create_notification_for_user
+FROM
+    PUBLIC,
+    anon;
+
+GRANT
+EXECUTE ON FUNCTION public.create_notification_for_user TO authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.handle_cleaning_notifications () RETURNS TRIGGER SECURITY DEFINER
@@ -510,22 +554,48 @@ OR
 UPDATE ON public.cleanings FOR EACH ROW
 EXECUTE FUNCTION public.handle_cleaning_notifications ();
 
-REVOKE EXECUTE ON FUNCTION public.handle_cleaning_notifications() FROM PUBLIC, anon, authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.handle_cleaning_notifications ()
+FROM
+    PUBLIC,
+    anon,
+    authenticated;
 
-SELECT cron.schedule('cleaning-reminder-check', '0 * * * *', 'SELECT public.notify_cleaning_reminders()');
+SELECT
+    cron.schedule ('cleaning-reminder-check', '0 * * * *', 'SELECT public.notify_cleaning_reminders()');
 
-SELECT cron.schedule('cleaning-starting-soon-check', '*/5 * * * *', 'SELECT public.notify_cleaning_starting_soon()');
+SELECT
+    cron.schedule ('cleaning-starting-soon-check', '*/5 * * * *', 'SELECT public.notify_cleaning_starting_soon()');
 
-SELECT cron.schedule('cleaning-missed-clockin-check', '*/10 * * * *', 'SELECT public.notify_missed_clockin()');
+SELECT
+    cron.schedule ('cleaning-missed-clockin-check', '*/10 * * * *', 'SELECT public.notify_missed_clockin()');
 
-REVOKE EXECUTE ON FUNCTION public.notify_cleaning_reminders() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.notify_cleaning_reminders() TO authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.notify_cleaning_reminders ()
+FROM
+    PUBLIC,
+    anon;
 
-REVOKE EXECUTE ON FUNCTION public.notify_cleaning_starting_soon() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.notify_cleaning_starting_soon() TO authenticated;
+GRANT
+EXECUTE ON FUNCTION public.notify_cleaning_reminders () TO authenticated;
 
-REVOKE EXECUTE ON FUNCTION public.notify_missed_clockin() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.notify_missed_clockin() TO authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.notify_cleaning_starting_soon ()
+FROM
+    PUBLIC,
+    anon;
+
+GRANT
+EXECUTE ON FUNCTION public.notify_cleaning_starting_soon () TO authenticated;
+
+REVOKE
+EXECUTE ON FUNCTION public.notify_missed_clockin ()
+FROM
+    PUBLIC,
+    anon;
+
+GRANT
+EXECUTE ON FUNCTION public.notify_missed_clockin () TO authenticated;
 
 BEGIN;
 
@@ -553,62 +623,27 @@ ADD TABLE public.notifications;
 ALTER PUBLICATION supabase_realtime
 ADD TABLE public.notification_preferences;
 
-CREATE TABLE public.push_subscriptions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    subscription JSONB NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+CREATE TABLE
+    public.push_subscriptions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+        user_id UUID NOT NULL REFERENCES auth.users (id) ON DELETE CASCADE,
+        subscription JSONB NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
 
 ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users manage own push subscriptions"
-    ON public.push_subscriptions
-    FOR ALL
-    USING (user_id = (SELECT auth.uid()));
+CREATE POLICY "Users manage own push subscriptions" ON public.push_subscriptions FOR ALL USING (
+    user_id = (
+        SELECT
+            auth.uid ()
+    )
+);
 
 ALTER PUBLICATION supabase_realtime
 ADD TABLE public.push_subscriptions;
 
 COMMENT ON TABLE public.push_subscriptions IS '@omit';
-
-CREATE OR REPLACE FUNCTION public.delete_expired_evidence()
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-    rec RECORD;
-BEGIN
-    FOR rec IN
-        SELECT em.id, em.media_url
-        FROM public.evidence_media em
-        JOIN public.cleanings c ON em.cleaning_id = c.id
-        WHERE c.status = 'completed'
-          AND c.clock_out_time IS NOT NULL
-          AND c.clock_out_time < NOW() - INTERVAL '14 days'
-          AND em.deleted_at IS NULL
-    LOOP
-        DELETE FROM storage.objects
-        WHERE bucket_id = 'cleaning-media'
-          AND name = rec.media_url;
-
-        UPDATE public.evidence_media
-        SET deleted_at = NOW()
-        WHERE id = rec.id;
-    END LOOP;
-END;
-$$;
-
-REVOKE EXECUTE ON FUNCTION public.delete_expired_evidence() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.delete_expired_evidence() TO authenticated;
-
-SELECT cron.schedule(
-    'cleanup-expired-evidence',
-    '0 3 * * *',
-    'SELECT public.delete_expired_evidence()'
-);
 
 COMMIT;

@@ -1267,7 +1267,6 @@ INSERT INTO
         clock_out_time
     )
 VALUES
-    -- Historical completed cleanings (5-6 months ago)
     (
         'c0000000-0000-0000-0000-000000000001',
         '00000000-0000-0000-0000-000000000002',
@@ -1312,7 +1311,6 @@ VALUES
         NOW() - INTERVAL '150 days' + INTERVAL '14 hours',
         NOW() - INTERVAL '150 days' + INTERVAL '16 hours'
     ),
-    -- 3-4 months ago
     (
         'c0000000-0000-0000-0000-000000000005',
         '00000000-0000-0000-0000-000000000004',
@@ -1379,7 +1377,6 @@ VALUES
         NOW() - INTERVAL '105 days' + INTERVAL '14 hours',
         NOW() - INTERVAL '105 days' + INTERVAL '16 hours'
     ),
-    -- 1-2 months ago
     (
         'c0000000-0000-0000-0000-000000000011',
         '00000000-0000-0000-0000-000000000018',
@@ -1402,7 +1399,6 @@ VALUES
         NOW() - INTERVAL '80 days' + INTERVAL '10 hours',
         NOW() - INTERVAL '80 days' + INTERVAL '12 hours'
     ),
-    -- Current month (0-30 days)
     (
         'c0000000-0000-0000-0000-000000000013',
         '00000000-0000-0000-0000-000000000002',
@@ -1513,7 +1509,6 @@ VALUES
         NOW() - INTERVAL '3 days' + INTERVAL '9 hours',
         NOW() - INTERVAL '3 days' + INTERVAL '12 hours'
     ),
-    -- Last few days / today
     (
         'c0000000-0000-0000-0000-000000000023',
         '00000000-0000-0000-0000-000000000002',
@@ -1547,7 +1542,6 @@ VALUES
         NOW() - INTERVAL '12 hours' + INTERVAL '14 hours',
         NOW() - INTERVAL '12 hours' + INTERVAL '16 hours'
     ),
-    -- In progress (started today)
     (
         'c0000000-0000-0000-0000-000000000026',
         '00000000-0000-0000-0000-000000000008',
@@ -1570,7 +1564,6 @@ VALUES
         NOW() - INTERVAL '1 hour',
         NULL
     ),
-    -- Confirmed (accepted, scheduled for future)
     (
         'c0000000-0000-0000-0000-000000000028',
         '00000000-0000-0000-0000-000000000012',
@@ -1604,7 +1597,6 @@ VALUES
         NULL,
         NULL
     ),
-    -- Requested (no cleaner assigned yet)
     (
         'c0000000-0000-0000-0000-000000000031',
         '00000000-0000-0000-0000-000000000018',
@@ -1671,7 +1663,6 @@ VALUES
         NULL,
         NULL
     ),
-    -- Some cancelled bookings (spread across past months)
     (
         'c0000000-0000-0000-0000-000000000037',
         '00000000-0000-0000-0000-000000000010',
@@ -1705,7 +1696,6 @@ VALUES
         NULL,
         NULL
     ),
-    -- More confirmed (future dates)
     (
         'c0000000-0000-0000-0000-000000000040',
         '00000000-0000-0000-0000-000000000018',
@@ -1849,7 +1839,7 @@ VALUES
     ('c0000000-0000-0000-0000-000000000009', 'Organise utility cupboard', TRUE, TRUE),
     ('c0000000-0000-0000-0000-000000000010', 'Clean bicycle', TRUE, TRUE);
 
--- 9. EVIDENCE MEDIA (For some completed jobs)
+-- 9. EVIDENCE MEDIA
 INSERT INTO
     public.evidence_media (
         cleaning_id,
@@ -1900,7 +1890,6 @@ VALUES
         'dddddddd-dddd-dddd-dddd-dddddddddddd/video-high.mp4',
         'video'
     ),
-    -- More evidence for other completed cleanings
     (
         'c0000000-0000-0000-0000-000000000001',
         '00000000-0000-0000-0000-000000000003',

@@ -1,5 +1,6 @@
 'use client';
 
+import { User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
@@ -25,13 +26,14 @@ const fontSizeClasses = {
 };
 
 export function UserAvatar({ src, fallbackName, size = 'md', className }: UserAvatarProps) {
-	const initial = fallbackName?.charAt(0).toUpperCase() || '?';
+	const firstChar = fallbackName?.charAt(0) ?? '';
+	const isValidInitial = /^[A-Za-z]$/.test(firstChar);
 
 	return (
 		<Avatar className={cn(sizeClasses[size], className)}>
 			<AvatarImage src={src || undefined} className="object-cover" />
 			<AvatarFallback className={cn(fontSizeClasses[size], 'font-medium bg-muted')}>
-				{initial}
+				{isValidInitial ? firstChar.toUpperCase() : <User className="size-1/2" />}
 			</AvatarFallback>
 		</Avatar>
 	);

@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, type ReactNode, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
 import { cleaningsService } from '@/features/cleanings/services/cleaningsService';
 import type { CleanerPayConfig } from '@/features/cleanings/types';
 
@@ -13,19 +13,19 @@ const CleanerPayContext = createContext<CleanerPayContextValue | null>(null);
 
 export function CleanerPayProvider({ children }: { children: ReactNode }) {
 	const [config, setConfig] = useState<CleanerPayConfig | null>(null);
-	const fetchPromiseRef = useRef<Promise<void> | null>(null);
 
 	useEffect(() => {
+		let cancelled = false;
 		const fetchConfig = async () => {
 			const result = await cleaningsService.getCleanerPayConfig();
-			if (result.data) {
+			if (!cancelled && result.data) {
 				setConfig(result.data);
 			}
 		};
-
-		if (!fetchPromiseRef.current) {
-			fetchPromiseRef.current = fetchConfig();
-		}
+		fetchConfig();
+		return () => {
+			cancelled = true;
+		};
 	}, []);
 
 	const refresh = async () => {

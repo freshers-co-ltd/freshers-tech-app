@@ -1,7 +1,10 @@
 'use client';
 
-import { Globe, LogOut, Mail, Send, Settings, Shield, User } from 'lucide-react';
+import { Globe, LogOut, Mail, Send, Settings, Shield, Trash2, User } from 'lucide-react';
+import { useState } from 'react';
+import { ConfirmActionDialog } from '@/components/ConfirmActionDialog';
 import { Loading } from '@/components/Loading';
+import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { DICT } from '@/dictionary';
@@ -10,9 +13,11 @@ import { PersonalInfoForm } from '@/features/account/components/PersonalInfoForm
 import { NotificationPreferencesForm } from '@/features/account/components/PreferencesForm';
 import { SecurityForm } from '@/features/account/components/SecurityForm';
 import { useAuth } from '@/features/auth/AuthContext';
+import { supabase } from '@/lib/supabaseClient';
 
 export function AccountPage() {
-	const { loading, signOut } = useAuth();
+	const { loading, signOut, user } = useAuth();
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
 	if (loading) {
 		return <Loading />;
@@ -136,15 +141,42 @@ export function AccountPage() {
 							</div>
 						</div>
 					</section>
-					<div className="pt-4 flex flex-col gap-6">
-						<Button
-							variant="destructive"
-							className="w-full sm:w-fit font-medium"
-							onClick={() => signOut()}>
+					<div className="max-w-2xl pt-4 flex flex-col gap-4 sm:flex-row sm:justify-between">
+						<Button variant="destructive" className="w-full sm:w-fit" onClick={() => signOut()}>
 							<LogOut className="mr-1 size-4" />
 							{dict.BUTTON_SIGN_OUT}
 						</Button>
+						<Button
+							variant="destructive"
+							className="w-full sm:w-fit"
+							onClick={() => setDeleteDialogOpen(true)}>
+							<Trash2 className="mr-1 size-4" />
+							{dict.BUTTON_DELETE_ACCOUNT}
+						</Button>
 					</div>
+
+					<ConfirmActionDialog
+						open={deleteDialogOpen}
+						onOpenChange={setDeleteDialogOpen}
+						title={dict.DELETE_ACCOUNT.TITLE}
+						description={dict.DELETE_ACCOUNT.MESSAGE}
+						confirmText={dict.DELETE_ACCOUNT.BUTTON_SUBMIT}
+						onConfirm={async () => {
+							if (!user) {
+								return;
+							}
+							const { error } = await supabase.rpc('purge_user_pii', {
+								p_user_id: user.id,
+							});
+							if (error) {
+								toast.error(dict.DELETE_ACCOUNT.TOAST_ERROR);
+								return;
+							}
+							toast.success(dict.DELETE_ACCOUNT.TOAST_SUCCESS);
+							await signOut();
+						}}
+						variant="destructive"
+					/>
 				</main>
 			</div>
 		</main>

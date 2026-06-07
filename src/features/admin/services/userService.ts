@@ -57,6 +57,7 @@ const AdminUserSchema = z.object({
 	last_seen_at: z.string().nullable(),
 	is_online: z.boolean(),
 	last_sign_in_text: z.string().nullable().optional(),
+	deleted_at: z.string().nullable(),
 });
 
 const AdminHostDetailSchema = AdminUserSchema.extend({
@@ -223,11 +224,11 @@ export const userService = {
 	async resetPassword(userId: string): Promise<ActionResult<void>> {
 		const { data: profile, error: profileError } = await supabase
 			.from('profiles')
-			.select('email')
+			.select('email, deleted_at')
 			.eq('id', userId)
 			.single();
 
-		if (profileError || !profile?.email) {
+		if (profileError || !profile?.email || profile.deleted_at) {
 			return { data: null, error: 'User email not found' };
 		}
 
@@ -262,6 +263,18 @@ export const userService = {
 
 		if (!response.ok || result.error) {
 			return { data: null, error: result.error || 'Failed to invite user' };
+		}
+
+		return { data: undefined, error: null };
+	},
+
+	async purgeUserPii(userId: string): Promise<ActionResult<void>> {
+		const { error } = await supabase.rpc('purge_user_pii', {
+			p_user_id: userId,
+		});
+
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
 		}
 
 		return { data: undefined, error: null };

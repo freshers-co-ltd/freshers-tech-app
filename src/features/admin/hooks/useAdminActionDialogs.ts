@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export type DialogType = 'ban' | 'unban' | 'resetPassword' | null;
+export type DialogType = 'ban' | 'unban' | 'resetPassword' | 'deleteUser' | null;
 
 export function useAdminActionDialogs() {
 	const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -27,6 +27,12 @@ export function useAdminActionDialogs() {
 		setActiveDialog('resetPassword');
 	};
 
+	const openDeleteUser = (userId: string, name: string) => {
+		setSelectedUserId(userId);
+		setSelectedUserName(name);
+		setActiveDialog('deleteUser');
+	};
+
 	const close = () => {
 		setActiveDialog(null);
 		setSelectedUserId(null);
@@ -38,9 +44,11 @@ export function useAdminActionDialogs() {
 		banOpen: activeDialog === 'ban',
 		unbanOpen: activeDialog === 'unban',
 		resetPasswordOpen: activeDialog === 'resetPassword',
+		deleteUserOpen: activeDialog === 'deleteUser',
 		openBan,
 		openUnban,
 		openResetPassword,
+		openDeleteUser,
 		close,
 	};
 }

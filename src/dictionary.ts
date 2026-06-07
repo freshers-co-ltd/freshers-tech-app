@@ -354,6 +354,15 @@ export const DICT = {
 	},
 	ACCOUNT: {
 		BUTTON_SIGN_OUT: 'Sign out',
+		BUTTON_DELETE_ACCOUNT: 'Delete Account',
+		DELETE_ACCOUNT: {
+			TITLE: 'Delete Account',
+			MESSAGE:
+				'This will permanently delete all your personal data including your name, email, saved addresses, and access codes. You will be signed out and cannot log back in. This action cannot be undone.',
+			BUTTON_SUBMIT: 'Delete My Account',
+			TOAST_SUCCESS: 'Account deleted',
+			TOAST_ERROR: 'Failed to delete account',
+		},
 		TITLE: 'Account Settings',
 		PERSONAL: {
 			TITLE: 'Personal Information',
@@ -426,6 +435,14 @@ export const DICT = {
 				BUTTON_SUBMIT: 'Unban User',
 				TOAST_SUCCESS: 'User unbanned',
 				TOAST_ERROR: 'Failed to unban user',
+			},
+			DELETE_USER: {
+				TITLE: 'Delete User',
+				MESSAGE:
+					"This will permanently delete {name}'s personal data. This action cannot be undone.",
+				BUTTON_SUBMIT: 'Delete User',
+				TOAST_SUCCESS: 'User deleted',
+				TOAST_ERROR: 'Failed to delete user',
 			},
 		},
 		CLEANINGS: {

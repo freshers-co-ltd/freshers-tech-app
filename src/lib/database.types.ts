@@ -358,6 +358,7 @@ export type Database = {
 			profiles: {
 				Row: {
 					avatar_url: string | null;
+					deleted_at: string | null;
 					email: string | null;
 					full_name: string | null;
 					id: string;
@@ -368,6 +369,7 @@ export type Database = {
 				};
 				Insert: {
 					avatar_url?: string | null;
+					deleted_at?: string | null;
 					email?: string | null;
 					full_name?: string | null;
 					id: string;
@@ -378,6 +380,7 @@ export type Database = {
 				};
 				Update: {
 					avatar_url?: string | null;
+					deleted_at?: string | null;
 					email?: string | null;
 					full_name?: string | null;
 					id?: string;
@@ -923,6 +926,14 @@ export type Database = {
 					p_stocks_included?: boolean;
 				};
 				Returns: string;
+			};
+			purge_user_pii: {
+				Args: { p_user_id: string };
+				Returns: undefined;
+			};
+			purge_soft_deleted_records: {
+				Args: never;
+				Returns: undefined;
 			};
 			update_user_presence: { Args: never; Returns: undefined };
 		};

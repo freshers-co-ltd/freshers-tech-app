@@ -2,7 +2,7 @@
 
 import { BadgeCheck, BrushCleaning, CalendarClock, ClipboardList, Plus } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Loading } from '@/components/Loading';
 import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,7 @@ import { UserDetailLayout } from '@/layouts/UserDetailLayout';
 
 export function AdminHostDetailPage() {
 	const { id } = useParams<{ id: string }>();
+	const navigate = useNavigate();
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 	const [editingProperty, setEditingProperty] = useState<Property | null>(null);
 	const [propertiesSortField, setPropertiesSortField] = useState<string>('address_line_1');
@@ -103,6 +104,18 @@ export function AdminHostDetailPage() {
 		}
 		return handleUnban(host.id, refresh);
 	}, [host, handleUnban, refresh]);
+
+	const onDeleteUser = useCallback(async () => {
+		if (!host) {
+			return { error: 'No user loaded' };
+		}
+		const result = await userService.purgeUserPii(host.id);
+		if (result.error) {
+			return { error: result.error };
+		}
+		navigate('/admin/users');
+		return { error: null };
+	}, [host, navigate]);
 
 	const handleCreateCleaning = async (values: CleaningFormValues) => {
 		if (!id) {
@@ -224,6 +237,7 @@ export function AdminHostDetailPage() {
 			onResetPassword={onResetPassword}
 			onBan={onBan}
 			onUnban={onUnban}
+			onDeleteUser={onDeleteUser}
 			stats={statsConfig}
 			sections={[
 				{

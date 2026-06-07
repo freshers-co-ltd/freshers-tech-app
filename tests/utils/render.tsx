@@ -4,6 +4,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { createMemoryRouter, type RouteObject, RouterProvider } from 'react-router-dom';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthProvider } from '@/features/auth/AuthContext';
+import { CleanerPayProvider } from '@/features/cleanings/CleanerPayContext';
 import { CleaningProvider } from '@/features/cleanings/CleaningContext';
 import { NotificationProvider } from '@/features/notifications/NotificationContext';
 import { PropertyProvider } from '@/features/properties/PropertyContext';
@@ -30,17 +31,19 @@ function AllProviders({
 		<AuthProvider>
 			<NotificationProvider>
 				<PropertyProvider>
-					<CleaningProvider>
-						<TooltipProvider>
-							{router ? (
-								<NuqsAdapter>
-									<RouterProvider router={router} />
-								</NuqsAdapter>
-							) : (
-								children
-							)}
-						</TooltipProvider>
-					</CleaningProvider>
+					<CleanerPayProvider>
+						<CleaningProvider>
+							<TooltipProvider>
+								{router ? (
+									<NuqsAdapter>
+										<RouterProvider router={router} />
+									</NuqsAdapter>
+								) : (
+									children
+								)}
+							</TooltipProvider>
+						</CleaningProvider>
+					</CleanerPayProvider>
 				</PropertyProvider>
 			</NotificationProvider>
 		</AuthProvider>

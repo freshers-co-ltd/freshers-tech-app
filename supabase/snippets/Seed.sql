@@ -912,26 +912,6 @@ VALUES
 SET
     session_replication_role = 'origin';
 
--- 5. STANDARD TASKS
-INSERT INTO
-    public.standard_tasks (description)
-VALUES
-    ('Vacuum all carpets'),
-    ('Mop hard floors'),
-    ('Clean bathroom surfaces'),
-    ('Change bed linens'),
-    ('Dust all surfaces'),
-    ('Clean kitchen appliances'),
-    ('Wipe down countertops'),
-    ('Clean mirrors and glass'),
-    ('Empty trash bins'),
-    ('Replace towels'),
-    ('Clean toilet and sanitize'),
-    ('Wash dishes or load dishwasher'),
-    ('Sweep and mop entrance'),
-    ('Clean window sills'),
-    ('Launder and fold clothes');
-
 -- 6. PROPERTIES
 INSERT INTO
     public.properties (
@@ -944,7 +924,8 @@ INSERT INTO
         bedrooms,
         bathrooms,
         main_image_url,
-        extra_images_urls
+        extra_images_urls,
+        price_per_cleaning
     )
 VALUES
     (
@@ -962,7 +943,8 @@ VALUES
             '00000000-0000-0000-0000-000000000002/property-1-img-3.jpg',
             '00000000-0000-0000-0000-000000000002/property-1-img-4.jpg',
             '00000000-0000-0000-0000-000000000002/property-1-img-5.jpg'
-        ]
+        ],
+        70.00
     ),
     (
         '22222222-2222-2222-2222-222222222222',
@@ -979,7 +961,8 @@ VALUES
             '00000000-0000-0000-0000-000000000002/property-2-img-3.jpg',
             '00000000-0000-0000-0000-000000000002/property-2-img-4.jpg',
             '00000000-0000-0000-0000-000000000002/property-2-img-5.jpg'
-        ]
+        ],
+        85.00
     ),
     (
         '33333333-3333-3333-3333-333333333333',
@@ -995,7 +978,8 @@ VALUES
             '00000000-0000-0000-0000-000000000004/property-3-img-2.jpg',
             '00000000-0000-0000-0000-000000000004/property-3-img-3.jpg',
             '00000000-0000-0000-0000-000000000004/property-3-img-4.jpg'
-        ]
+        ],
+        85.00
     ),
     (
         '44444444-4444-4444-4444-444444444444',
@@ -1010,7 +994,8 @@ VALUES
         ARRAY[
             '00000000-0000-0000-0000-000000000004/property-4-img-2.jpg',
             '00000000-0000-0000-0000-000000000004/property-4-img-3.jpg'
-        ]
+        ],
+        100.00
     ),
     (
         '55555555-5555-5555-5555-555555555555',
@@ -1026,7 +1011,8 @@ VALUES
             '00000000-0000-0000-0000-000000000006/property-5-img-2.jpg',
             '00000000-0000-0000-0000-000000000006/property-5-img-3.jpg',
             '00000000-0000-0000-0000-000000000006/property-5-img-4.jpg'
-        ]
+        ],
+        70.00
     ),
     (
         '66666666-6666-6666-6666-666666666666',
@@ -1041,7 +1027,8 @@ VALUES
         ARRAY[
             '00000000-0000-0000-0000-000000000006/property-6-img-2.jpg',
             '00000000-0000-0000-0000-000000000006/property-6-img-3.jpg'
-        ]
+        ],
+        85.00
     ),
     (
         '77777777-7777-7777-7777-777777777777',
@@ -1057,7 +1044,8 @@ VALUES
             '00000000-0000-0000-0000-000000000008/property-7-img-2.jpg',
             '00000000-0000-0000-0000-000000000008/property-7-img-3.jpg',
             '00000000-0000-0000-0000-000000000008/property-7-img-4.jpg'
-        ]
+        ],
+        85.00
     ),
     (
         '88888888-8888-8888-8888-888888888888',
@@ -1072,7 +1060,8 @@ VALUES
         ARRAY[
             '00000000-0000-0000-0000-000000000008/property-8-img-2.jpg',
             '00000000-0000-0000-0000-000000000008/property-8-img-3.jpg'
-        ]
+        ],
+        120.00
     ),
     (
         '99999999-9999-9999-9999-999999999999',
@@ -1087,7 +1076,8 @@ VALUES
         ARRAY[
             '00000000-0000-0000-0000-000000000010/property-9-img-2.jpg',
             '00000000-0000-0000-0000-000000000010/property-9-img-3.jpg'
-        ]
+        ],
+        70.00
     ),
     (
         'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
@@ -1103,7 +1093,8 @@ VALUES
             '00000000-0000-0000-0000-000000000010/property-10-img-2.jpg',
             '00000000-0000-0000-0000-000000000010/property-10-img-3.jpg',
             '00000000-0000-0000-0000-000000000010/property-10-img-4.jpg'
-        ]
+        ],
+        100.00
     ),
     (
         'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
@@ -1118,7 +1109,8 @@ VALUES
         ARRAY[
             '00000000-0000-0000-0000-000000000012/property-11-img-2.jpg',
             '00000000-0000-0000-0000-000000000012/property-11-img-3.jpg'
-        ]
+        ],
+        85.00
     ),
     (
         'cccccccc-cccc-cccc-cccc-cccccccccccc',
@@ -1134,7 +1126,8 @@ VALUES
             '00000000-0000-0000-0000-000000000012/property-12-img-2.jpg',
             '00000000-0000-0000-0000-000000000012/property-12-img-3.jpg',
             '00000000-0000-0000-0000-000000000012/property-12-img-4.jpg'
-        ]
+        ],
+        85.00
     ),
     (
         'dddddddd-dddd-dddd-dddd-dddddddddddd',
@@ -1146,7 +1139,8 @@ VALUES
         1,
         1,
         '00000000-0000-0000-0000-000000000014/property-13-img-1.jpg',
-        ARRAY['00000000-0000-0000-0000-000000000014/property-13-img-2.jpg']
+        ARRAY['00000000-0000-0000-0000-000000000014/property-13-img-2.jpg'],
+        70.00
     ),
     (
         'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
@@ -1161,7 +1155,8 @@ VALUES
         ARRAY[
             '00000000-0000-0000-0000-000000000014/property-14-img-2.jpg',
             '00000000-0000-0000-0000-000000000014/property-14-img-3.jpg'
-        ]
+        ],
+        120.00
     ),
     (
         'ffffffff-ffff-ffff-ffff-ffffffffffff',
@@ -1173,7 +1168,8 @@ VALUES
         0,
         1,
         '00000000-0000-0000-0000-000000000016/property-15-img-1.jpg',
-        ARRAY['00000000-0000-0000-0000-000000000016/property-15-img-2.jpg']
+        ARRAY['00000000-0000-0000-0000-000000000016/property-15-img-2.jpg'],
+        60.00
     ),
     (
         '11111111-1111-1111-1111-111111111112',
@@ -1188,7 +1184,8 @@ VALUES
         ARRAY[
             '00000000-0000-0000-0000-000000000016/property-16-img-2.jpg',
             '00000000-0000-0000-0000-000000000016/property-16-img-3.jpg'
-        ]
+        ],
+        100.00
     ),
     (
         '11111111-1111-1111-1111-111111111113',
@@ -1203,7 +1200,8 @@ VALUES
         ARRAY[
             '00000000-0000-0000-0000-000000000018/property-17-img-2.jpg',
             '00000000-0000-0000-0000-000000000018/property-17-img-3.jpg'
-        ]
+        ],
+        85.00
     ),
     (
         '11111111-1111-1111-1111-111111111114',
@@ -1219,7 +1217,8 @@ VALUES
             '00000000-0000-0000-0000-000000000018/property-18-img-2.jpg',
             '00000000-0000-0000-0000-000000000018/property-18-img-3.jpg',
             '00000000-0000-0000-0000-000000000018/property-18-img-4.jpg'
-        ]
+        ],
+        85.00
     ),
     (
         '11111111-1111-1111-1111-111111111115',
@@ -1234,7 +1233,8 @@ VALUES
         ARRAY[
             '00000000-0000-0000-0000-000000000020/property-19-img-2.jpg',
             '00000000-0000-0000-0000-000000000020/property-19-img-3.jpg'
-        ]
+        ],
+        70.00
     ),
     (
         '11111111-1111-1111-1111-111111111116',
@@ -1250,7 +1250,8 @@ VALUES
             '00000000-0000-0000-0000-000000000020/property-20-img-2.jpg',
             '00000000-0000-0000-0000-000000000020/property-20-img-3.jpg',
             '00000000-0000-0000-0000-000000000020/property-20-img-4.jpg'
-        ]
+        ],
+        100.00
     );
 
 INSERT INTO
@@ -1261,13 +1262,11 @@ INSERT INTO
         cleaner_id,
         status,
         scheduled_start,
-        service_cost,
-        instructions,
+        information,
         clock_in_time,
         clock_out_time
     )
 VALUES
-    -- Historical completed cleanings (5-6 months ago)
     (
         'c0000000-0000-0000-0000-000000000001',
         '00000000-0000-0000-0000-000000000002',
@@ -1275,8 +1274,7 @@ VALUES
         '00000000-0000-0000-0000-000000000003',
         'completed',
         NOW() - INTERVAL '165 days',
-        45.00,
-        'Standard clean before move-in.',
+        'Keys in lockbox at front door. Code: 4321.',
         NOW() - INTERVAL '165 days' + INTERVAL '10 hours',
         NOW() - INTERVAL '165 days' + INTERVAL '12 hours'
     ),
@@ -1287,8 +1285,7 @@ VALUES
         '00000000-0000-0000-0000-000000000005',
         'completed',
         NOW() - INTERVAL '160 days',
-        40.00,
-        'Please focus on kitchen.',
+        NULL,
         NOW() - INTERVAL '160 days' + INTERVAL '9 hours',
         NOW() - INTERVAL '160 days' + INTERVAL '11 hours'
     ),
@@ -1299,8 +1296,7 @@ VALUES
         '00000000-0000-0000-0000-000000000003',
         'completed',
         NOW() - INTERVAL '155 days',
-        60.00,
-        'Check-out clean needed.',
+        'Park in visitor bay #12. Entry code: 7722.',
         NOW() - INTERVAL '155 days' + INTERVAL '8 hours',
         NOW() - INTERVAL '155 days' + INTERVAL '11 hours'
     ),
@@ -1311,12 +1307,10 @@ VALUES
         '00000000-0000-0000-0000-000000000007',
         'completed',
         NOW() - INTERVAL '150 days',
-        35.00,
-        'Quick turn-around clean.',
+        'Ring bell for caretaker to let you in.',
         NOW() - INTERVAL '150 days' + INTERVAL '14 hours',
         NOW() - INTERVAL '150 days' + INTERVAL '16 hours'
     ),
-    -- 3-4 months ago
     (
         'c0000000-0000-0000-0000-000000000005',
         '00000000-0000-0000-0000-000000000004',
@@ -1324,8 +1318,7 @@ VALUES
         '00000000-0000-0000-0000-000000000009',
         'completed',
         NOW() - INTERVAL '120 days',
-        55.00,
-        'Deep clean required before event.',
+        'Spare keys under the third rock to the left of the gate.',
         NOW() - INTERVAL '120 days' + INTERVAL '9 hours',
         NOW() - INTERVAL '120 days' + INTERVAL '13 hours'
     ),
@@ -1336,8 +1329,7 @@ VALUES
         '00000000-0000-0000-0000-000000000005',
         'completed',
         NOW() - INTERVAL '110 days',
-        50.00,
-        'Regular weekly clean.',
+        'Enter via rear garden gate - front door is rarely used.',
         NOW() - INTERVAL '110 days' + INTERVAL '10 hours',
         NOW() - INTERVAL '110 days' + INTERVAL '12 hours'
     ),
@@ -1348,8 +1340,7 @@ VALUES
         '00000000-0000-0000-0000-000000000011',
         'completed',
         NOW() - INTERVAL '100 days',
-        40.00,
-        'Studio apartment, quick clean.',
+        NULL,
         NOW() - INTERVAL '100 days' + INTERVAL '11 hours',
         NOW() - INTERVAL '100 days' + INTERVAL '13 hours'
     ),
@@ -1360,8 +1351,7 @@ VALUES
         '00000000-0000-0000-0000-000000000007',
         'completed',
         NOW() - INTERVAL '95 days',
-        45.00,
-        'Balcony needs attention too.',
+        'Parking available on driveway. Do not block the garage.',
         NOW() - INTERVAL '95 days' + INTERVAL '9 hours',
         NOW() - INTERVAL '95 days' + INTERVAL '12 hours'
     ),
@@ -1372,8 +1362,7 @@ VALUES
         '00000000-0000-0000-0000-000000000013',
         'completed',
         NOW() - INTERVAL '90 days',
-        35.00,
-        'Small flat, regular clean.',
+        'Key safe code: 5582. Please leave keys in safe when done.',
         NOW() - INTERVAL '90 days' + INTERVAL '10 hours',
         NOW() - INTERVAL '90 days' + INTERVAL '12 hours'
     ),
@@ -1384,12 +1373,10 @@ VALUES
         '00000000-0000-0000-0000-000000000015',
         'completed',
         NOW() - INTERVAL '105 days',
-        30.00,
-        'Studio clean.',
+        NULL,
         NOW() - INTERVAL '105 days' + INTERVAL '14 hours',
         NOW() - INTERVAL '105 days' + INTERVAL '16 hours'
     ),
-    -- 1-2 months ago
     (
         'c0000000-0000-0000-0000-000000000011',
         '00000000-0000-0000-0000-000000000018',
@@ -1397,8 +1384,7 @@ VALUES
         '00000000-0000-0000-0000-000000000019',
         'completed',
         NOW() - INTERVAL '85 days',
-        45.00,
-        'Pre-tenancy clean.',
+        'Access code at reception desk. Bring ID.',
         NOW() - INTERVAL '85 days' + INTERVAL '9 hours',
         NOW() - INTERVAL '85 days' + INTERVAL '12 hours'
     ),
@@ -1409,12 +1395,10 @@ VALUES
         '00000000-0000-0000-0000-000000000011',
         'completed',
         NOW() - INTERVAL '80 days',
-        40.00,
-        'Sea view apartment.',
+        NULL,
         NOW() - INTERVAL '80 days' + INTERVAL '10 hours',
         NOW() - INTERVAL '80 days' + INTERVAL '12 hours'
     ),
-    -- Current month (0-30 days)
     (
         'c0000000-0000-0000-0000-000000000013',
         '00000000-0000-0000-0000-000000000002',
@@ -1422,8 +1406,7 @@ VALUES
         '00000000-0000-0000-0000-000000000003',
         'completed',
         NOW() - INTERVAL '28 days',
-        45.00,
-        'Monthly deep clean.',
+        NULL,
         NOW() - INTERVAL '28 days' + INTERVAL '9 hours',
         NOW() - INTERVAL '28 days' + INTERVAL '13 hours'
     ),
@@ -1434,8 +1417,7 @@ VALUES
         '00000000-0000-0000-0000-000000000005',
         'completed',
         NOW() - INTERVAL '25 days',
-        40.00,
-        'Post-guest clean.',
+        'Gate code: 7711. Park in space #3 marked "Visitor".',
         NOW() - INTERVAL '25 days' + INTERVAL '11 hours',
         NOW() - INTERVAL '25 days' + INTERVAL '14 hours'
     ),
@@ -1446,8 +1428,7 @@ VALUES
         '00000000-0000-0000-0000-000000000007',
         'completed',
         NOW() - INTERVAL '22 days',
-        35.00,
-        'Seaside cottage refresh.',
+        NULL,
         NOW() - INTERVAL '22 days' + INTERVAL '10 hours',
         NOW() - INTERVAL '22 days' + INTERVAL '12 hours'
     ),
@@ -1458,8 +1439,7 @@ VALUES
         '00000000-0000-0000-0000-000000000009',
         'completed',
         NOW() - INTERVAL '18 days',
-        70.00,
-        'Large house deep clean.',
+        'Use side entrance. Dog in back garden - do not let out.',
         NOW() - INTERVAL '18 days' + INTERVAL '8 hours',
         NOW() - INTERVAL '18 days' + INTERVAL '14 hours'
     ),
@@ -1470,8 +1450,7 @@ VALUES
         '00000000-0000-0000-0000-000000000011',
         'completed',
         NOW() - INTERVAL '15 days',
-        55.00,
-        'Beach house clean before guests.',
+        'Keys with neighbour at #42.',
         NOW() - INTERVAL '15 days' + INTERVAL '9 hours',
         NOW() - INTERVAL '15 days' + INTERVAL '12 hours'
     ),
@@ -1482,8 +1461,7 @@ VALUES
         '00000000-0000-0000-0000-000000000013',
         'completed',
         NOW() - INTERVAL '12 days',
-        50.00,
-        'Weekly clean.',
+        'On-street parking free on this road. No permit needed.',
         NOW() - INTERVAL '12 days' + INTERVAL '10 hours',
         NOW() - INTERVAL '12 days' + INTERVAL '13 hours'
     ),
@@ -1494,8 +1472,7 @@ VALUES
         '00000000-0000-0000-0000-000000000015',
         'completed',
         NOW() - INTERVAL '10 days',
-        75.00,
-        'Month-end deep clean.',
+        NULL,
         NOW() - INTERVAL '10 days' + INTERVAL '8 hours',
         NOW() - INTERVAL '10 days' + INTERVAL '13 hours'
     ),
@@ -1506,8 +1483,7 @@ VALUES
         '00000000-0000-0000-0000-000000000019',
         'completed',
         NOW() - INTERVAL '8 days',
-        55.00,
-        'Standard weekly service.',
+        'Enter via main lobby, take lift.',
         NOW() - INTERVAL '8 days' + INTERVAL '10 hours',
         NOW() - INTERVAL '8 days' + INTERVAL '13 hours'
     ),
@@ -1518,8 +1494,7 @@ VALUES
         '00000000-0000-0000-0000-000000000011',
         'completed',
         NOW() - INTERVAL '5 days',
-        50.00,
-        'Coastal way regular clean.',
+        'Security code: 4499. Please reset the alarm once inside.',
         NOW() - INTERVAL '5 days' + INTERVAL '11 hours',
         NOW() - INTERVAL '5 days' + INTERVAL '14 hours'
     ),
@@ -1530,12 +1505,10 @@ VALUES
         '00000000-0000-0000-0000-000000000013',
         'completed',
         NOW() - INTERVAL '3 days',
-        60.00,
-        'Meadow drive clean.',
+        NULL,
         NOW() - INTERVAL '3 days' + INTERVAL '9 hours',
         NOW() - INTERVAL '3 days' + INTERVAL '12 hours'
     ),
-    -- Last few days / today
     (
         'c0000000-0000-0000-0000-000000000023',
         '00000000-0000-0000-0000-000000000002',
@@ -1543,8 +1516,7 @@ VALUES
         '00000000-0000-0000-0000-000000000003',
         'completed',
         NOW() - INTERVAL '1 day',
-        60.00,
-        'Check-out clean for new tenant.',
+        'Leave cleaning supplies in the cupboard under the stairs.',
         NOW() - INTERVAL '1 day' + INTERVAL '9 hours',
         NOW() - INTERVAL '1 day' + INTERVAL '12 hours'
     ),
@@ -1555,8 +1527,7 @@ VALUES
         '00000000-0000-0000-0000-000000000005',
         'completed',
         NOW() - INTERVAL '2 days',
-        55.00,
-        'Monthly service clean.',
+        NULL,
         NOW() - INTERVAL '2 days' + INTERVAL '10 hours',
         NOW() - INTERVAL '2 days' + INTERVAL '13 hours'
     ),
@@ -1567,12 +1538,10 @@ VALUES
         '00000000-0000-0000-0000-000000000007',
         'completed',
         NOW() - INTERVAL '12 hours',
-        35.00,
-        'Regular fortnightly clean.',
+        'Keypad at back door. Code: 3388. Turn off before leaving.',
         NOW() - INTERVAL '12 hours' + INTERVAL '14 hours',
         NOW() - INTERVAL '12 hours' + INTERVAL '16 hours'
     ),
-    -- In progress (started today)
     (
         'c0000000-0000-0000-0000-000000000026',
         '00000000-0000-0000-0000-000000000008',
@@ -1580,8 +1549,7 @@ VALUES
         '00000000-0000-0000-0000-000000000009',
         'in_progress',
         NOW() - INTERVAL '2 hours',
-        50.00,
-        'Marina view weekly clean.',
+        NULL,
         NOW() - INTERVAL '2 hours',
         NULL
     ),
@@ -1592,12 +1560,10 @@ VALUES
         '00000000-0000-0000-0000-000000000011',
         'in_progress',
         NOW() - INTERVAL '1 hour',
-        40.00,
-        'Central flat in progress.',
+        'Let yourself in with the code. Door code: 2233.',
         NOW() - INTERVAL '1 hour',
         NULL
     ),
-    -- Confirmed (accepted, scheduled for future)
     (
         'c0000000-0000-0000-0000-000000000028',
         '00000000-0000-0000-0000-000000000012',
@@ -1605,8 +1571,7 @@ VALUES
         '00000000-0000-0000-0000-000000000013',
         'confirmed',
         NOW() + INTERVAL '1 day',
-        45.00,
-        'Tomorrow confirmed.',
+        'Park in the multi-storey on Market St. Bring change for the meter.',
         NULL,
         NULL
     ),
@@ -1617,8 +1582,7 @@ VALUES
         '00000000-0000-0000-0000-000000000015',
         'confirmed',
         NOW() + INTERVAL '2 days',
-        35.00,
-        'West end flat future.',
+        NULL,
         NULL,
         NULL
     ),
@@ -1629,12 +1593,10 @@ VALUES
         '00000000-0000-0000-0000-000000000019',
         'confirmed',
         NOW() + INTERVAL '3 days',
-        30.00,
-        'Studio scheduled.',
+        'Use stairs - lift is broken. 5th floor.',
         NULL,
         NULL
     ),
-    -- Requested (no cleaner assigned yet)
     (
         'c0000000-0000-0000-0000-000000000031',
         '00000000-0000-0000-0000-000000000018',
@@ -1642,8 +1604,7 @@ VALUES
         NULL,
         'requested',
         NOW() + INTERVAL '4 days',
-        45.00,
-        'Looking for cleaner.',
+        'Alarm will be off. Code to re-arm: 6644.',
         NULL,
         NULL
     ),
@@ -1654,8 +1615,7 @@ VALUES
         NULL,
         'requested',
         NOW() + INTERVAL '5 days',
-        40.00,
-        'Seaview tower needed.',
+        NULL,
         NULL,
         NULL
     ),
@@ -1666,8 +1626,7 @@ VALUES
         NULL,
         'requested',
         NOW() + INTERVAL '6 days',
-        45.00,
-        'Key under blue pot.',
+        'Key is with concierge on ground floor. Collect before starting.',
         NULL,
         NULL
     ),
@@ -1678,8 +1637,7 @@ VALUES
         NULL,
         'requested',
         NOW() + INTERVAL '7 days',
-        40.00,
-        'Need cleaner assignment.',
+        NULL,
         NULL,
         NULL
     ),
@@ -1690,8 +1648,7 @@ VALUES
         NULL,
         'requested',
         NOW() + INTERVAL '8 days',
-        35.00,
-        'Beach cottage next week.',
+        'Wheelie bins are collected on Thursday - please move them back.',
         NULL,
         NULL
     ),
@@ -1702,12 +1659,10 @@ VALUES
         NULL,
         'requested',
         NOW() + INTERVAL '9 days',
-        70.00,
-        'Large house clean.',
+        'Cat is indoors - please do not let it outside.',
         NULL,
         NULL
     ),
-    -- Some cancelled bookings (spread across past months)
     (
         'c0000000-0000-0000-0000-000000000037',
         '00000000-0000-0000-0000-000000000010',
@@ -1715,8 +1670,7 @@ VALUES
         '00000000-0000-0000-0000-000000000011',
         'cancelled',
         NOW() - INTERVAL '60 days',
-        55.00,
-        'Was booked but cancelled.',
+        NULL,
         NULL,
         NULL
     ),
@@ -1727,8 +1681,7 @@ VALUES
         '00000000-0000-0000-0000-000000000013',
         'cancelled',
         NOW() - INTERVAL '100 days',
-        50.00,
-        'Guests cancelled.',
+        'Gate access code: 5511. Do not leave driveway gate open.',
         NULL,
         NULL
     ),
@@ -1739,12 +1692,10 @@ VALUES
         '00000000-0000-0000-0000-000000000015',
         'cancelled',
         NOW() - INTERVAL '130 days',
-        35.00,
-        'Booking cancelled by host.',
+        'Please text when finished so I can lock up remotely.',
         NULL,
         NULL
     ),
-    -- More confirmed (future dates)
     (
         'c0000000-0000-0000-0000-000000000040',
         '00000000-0000-0000-0000-000000000018',
@@ -1752,8 +1703,7 @@ VALUES
         '00000000-0000-0000-0000-000000000019',
         'confirmed',
         NOW() + INTERVAL '10 days',
-        50.00,
-        'Coastal way confirmed.',
+        NULL,
         NULL,
         NULL
     ),
@@ -1764,8 +1714,7 @@ VALUES
         '00000000-0000-0000-0000-000000000011',
         'confirmed',
         NOW() + INTERVAL '11 days',
-        60.00,
-        'Meadow drive booked.',
+        'Use side entrance.',
         NULL,
         NULL
     ),
@@ -1776,8 +1725,7 @@ VALUES
         '00000000-0000-0000-0000-000000000003',
         'confirmed',
         NOW() + INTERVAL '12 days',
-        60.00,
-        'Ocean view confirmed.',
+        'Park in the visitor bay. Code for gate: 7722.',
         NULL,
         NULL
     ),
@@ -1788,8 +1736,7 @@ VALUES
         '00000000-0000-0000-0000-000000000005',
         'confirmed',
         NOW() + INTERVAL '13 days',
-        55.00,
-        'Garden lane confirmed.',
+        'Code for key safe: 5582. Please return keys to safe when done.',
         NULL,
         NULL
     ),
@@ -1800,12 +1747,10 @@ VALUES
         '00000000-0000-0000-0000-000000000007',
         'confirmed',
         NOW() + INTERVAL '14 days',
-        35.00,
-        'High street scheduled.',
+        NULL,
         NULL,
         NULL
     ),
-    -- Keep original seed data too
     (
         'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
         '00000000-0000-0000-0000-000000000002',
@@ -1813,7 +1758,6 @@ VALUES
         NULL,
         'requested',
         NOW() + INTERVAL '2 days',
-        45.00,
         'Key is under the blue pot.',
         NULL,
         NULL
@@ -1825,8 +1769,7 @@ VALUES
         '00000000-0000-0000-0000-000000000003',
         'confirmed',
         NOW() + INTERVAL '1 day',
-        30.00,
-        'Please focus on the balcony.',
+        NULL,
         NULL,
         NULL
     ),
@@ -1837,8 +1780,7 @@ VALUES
         '00000000-0000-0000-0000-000000000003',
         'in_progress',
         NOW() - INTERVAL '1 hour',
-        45.00,
-        'Standard clean plus oven.',
+        NULL,
         NOW() - INTERVAL '45 minutes',
         NULL
     ),
@@ -1849,8 +1791,7 @@ VALUES
         '00000000-0000-0000-0000-000000000003',
         'completed',
         NOW() - INTERVAL '1 day',
-        60.00,
-        'Check-out clean.',
+        'Park in the visitor bay. Code for gate: 7722.',
         NOW() - INTERVAL '26 hours',
         NOW() - INTERVAL '23 hours'
     );
@@ -1898,7 +1839,7 @@ VALUES
     ('c0000000-0000-0000-0000-000000000009', 'Organise utility cupboard', TRUE, TRUE),
     ('c0000000-0000-0000-0000-000000000010', 'Clean bicycle', TRUE, TRUE);
 
--- 9. EVIDENCE MEDIA (For some completed jobs)
+-- 9. EVIDENCE MEDIA
 INSERT INTO
     public.evidence_media (
         cleaning_id,
@@ -1937,7 +1878,18 @@ VALUES
         'dddddddd-dddd-dddd-dddd-dddddddddddd/cleaning-5.jpg',
         'image'
     ),
-    -- More evidence for other completed cleanings
+    (
+        'dddddddd-dddd-dddd-dddd-dddddddddddd',
+        '00000000-0000-0000-0000-000000000003',
+        'dddddddd-dddd-dddd-dddd-dddddddddddd/video-low.mp4',
+        'video'
+    ),
+    (
+        'dddddddd-dddd-dddd-dddd-dddddddddddd',
+        '00000000-0000-0000-0000-000000000003',
+        'dddddddd-dddd-dddd-dddd-dddddddddddd/video-high.mp4',
+        'video'
+    ),
     (
         'c0000000-0000-0000-0000-000000000001',
         '00000000-0000-0000-0000-000000000003',

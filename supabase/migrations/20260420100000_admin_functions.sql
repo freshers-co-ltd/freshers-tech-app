@@ -24,6 +24,7 @@ OR REPLACE FUNCTION public.admin_get_users (
     total_cleanings INT,
     completed_cleanings INT,
     last_sign_in_text TEXT,
+    deleted_at TIMESTAMP WITH TIME ZONE,
     total_user_count INT
 ) SECURITY DEFINER
 SET
@@ -58,13 +59,14 @@ BEGIN
             WHEN MAX(au.last_sign_in_at) > now() - interval '1 year' THEN 'Past year'
             ELSE 'More than a year ago'
         END as last_sign_in_text,
-        (SELECT count(*)::INT FROM public.profiles p2 WHERE (p_role IS NULL OR p2.role::TEXT = p_role) AND (p_search IS NULL OR p2.full_name ILIKE '%' || p_search || '%' OR p2.email ILIKE '%' || p_search || '%'))
+        p.deleted_at,
+        (SELECT count(*)::INT FROM public.profiles p2 WHERE p2.deleted_at IS NULL AND (p_role IS NULL OR p2.role::TEXT = p_role) AND (p_search IS NULL OR p2.full_name ILIKE '%' || p_search || '%' OR p2.email ILIKE '%' || p_search || '%'))
     FROM public.profiles p
     LEFT JOIN auth.users au ON au.id = p.id
-    WHERE 
-        (p_role IS NULL OR p.role::TEXT = p_role)
+    WHERE p.deleted_at IS NULL
+        AND (p_role IS NULL OR p.role::TEXT = p_role)
         AND (p_search IS NULL OR p.full_name ILIKE '%' || p_search || '%' OR p.email ILIKE '%' || p_search || '%')
-    GROUP BY p.id, p.email, p.full_name, p.role, p.is_verified, p.avatar_url, p.last_seen_at, au.banned_until
+    GROUP BY p.id, p.email, p.full_name, p.role, p.is_verified, p.avatar_url, p.last_seen_at, p.deleted_at, au.banned_until
     ORDER BY
         CASE WHEN p_sort_field = 'name' AND p_sort_direction = 'asc' THEN p.full_name END ASC NULLS FIRST,
         CASE WHEN p_sort_field = 'name' AND p_sort_direction = 'desc' THEN p.full_name END DESC NULLS LAST,
@@ -112,6 +114,7 @@ OR REPLACE FUNCTION public.admin_get_host_detail (
     last_sign_in_text TEXT,
     is_online BOOLEAN,
     last_seen_at TIMESTAMP WITH TIME ZONE,
+    deleted_at TIMESTAMP WITH TIME ZONE,
     properties JSONB,
     cleanings JSONB,
     cleaning_stats JSONB
@@ -145,6 +148,7 @@ BEGIN
         END AS last_sign_in_text,
         p.last_seen_at IS NOT NULL AND p.last_seen_at > now() - interval '5 minutes' as is_online,
         p.last_seen_at,
+        p.deleted_at,
         (
             SELECT jsonb_agg(row ORDER BY
                 CASE WHEN p_properties_sort_direction = 'asc' THEN
@@ -223,7 +227,7 @@ BEGIN
         )
     FROM public.profiles p
     LEFT JOIN auth.users au ON au.id = p.id
-    WHERE p.id = p_host_id;
+    WHERE p.id = p_host_id AND p.deleted_at IS NULL;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -241,6 +245,7 @@ OR REPLACE FUNCTION public.admin_get_cleaner_detail (p_cleaner_id UUID) RETURNS 
     last_sign_in_text TEXT,
     is_online BOOLEAN,
     last_seen_at TIMESTAMP WITH TIME ZONE,
+    deleted_at TIMESTAMP WITH TIME ZONE,
     assigned_cleanings JSONB,
     cleaner_stats JSONB
 ) SECURITY DEFINER
@@ -273,6 +278,7 @@ BEGIN
         END AS last_sign_in_text,
         p.last_seen_at IS NOT NULL AND p.last_seen_at > now() - interval '5 minutes' as is_online,
         p.last_seen_at,
+        p.deleted_at,
         (
             SELECT jsonb_agg(row)
             FROM (
@@ -316,7 +322,7 @@ BEGIN
         )
     FROM public.profiles p
     LEFT JOIN auth.users au ON au.id = p.id
-    WHERE p.id = p_cleaner_id;
+    WHERE p.id = p_cleaner_id AND p.deleted_at IS NULL;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -421,7 +427,7 @@ BEGIN
     IF v_status NOT IN ('requested', 'confirmed') THEN
         RAISE EXCEPTION 'Can only assign or reassign cleaner to requested or confirmed cleanings';
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = p_cleaner_id AND role = 'cleaner') THEN
+    IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = p_cleaner_id AND role = 'cleaner' AND deleted_at IS NULL) THEN
         RAISE EXCEPTION 'Invalid cleaner ID';
     END IF;
 
@@ -516,7 +522,7 @@ BEGIN
         (SELECT count(*)::INT FROM public.cleanings c WHERE c.cleaner_id = p.id AND c.status IN ('confirmed', 'in_progress') AND c.deleted_at IS NULL),
         COALESCE((SELECT avg(EXTRACT(EPOCH FROM (c.clock_out_time - c.clock_in_time)) / 3600) FROM public.cleanings c WHERE c.cleaner_id = p.id AND c.status = 'completed' AND c.clock_out_time IS NOT NULL AND c.deleted_at IS NULL), 0)
     FROM public.profiles p
-    WHERE p.role = 'cleaner'
+    WHERE p.role = 'cleaner' AND p.deleted_at IS NULL
     ORDER BY p.full_name;
 END;
 $$ LANGUAGE plpgsql;
@@ -538,7 +544,7 @@ SELECT
         FROM
             public.profiles
         WHERE
-            role = 'host'
+            role = 'host' AND deleted_at IS NULL
     ) AS total_hosts,
     (
         SELECT
@@ -546,7 +552,7 @@ SELECT
         FROM
             public.profiles
         WHERE
-            role = 'cleaner'
+            role = 'cleaner' AND deleted_at IS NULL
     ) AS total_cleaners,
     (
         SELECT
@@ -632,7 +638,9 @@ SELECT
 
 COMMENT ON VIEW public.platform_stats IS '@omit';
 
-ALTER VIEW public.platform_stats SET (security_invoker = true);
+ALTER VIEW public.platform_stats
+SET
+    (security_invoker = true);
 
 CREATE
 OR REPLACE FUNCTION public.admin_get_audit_logs (
@@ -653,7 +661,8 @@ OR REPLACE FUNCTION public.admin_get_audit_logs (
     created_at TIMESTAMP WITH TIME ZONE,
     actor_name TEXT
 ) SECURITY DEFINER
-SET search_path = public AS $$
+SET
+    search_path = public AS $$
 BEGIN
     IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
         RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
@@ -675,7 +684,8 @@ OR REPLACE FUNCTION public.admin_get_cleanings_count (
     p_host_id UUID DEFAULT NULL,
     p_search TEXT DEFAULT NULL
 ) RETURNS INT LANGUAGE plpgsql SECURITY DEFINER
-SET search_path = public AS $$
+SET
+    search_path = public AS $$
 BEGIN
     IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
         RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
@@ -702,8 +712,8 @@ BEGIN
     RETURN (
         SELECT count(*)::INT 
         FROM public.profiles p
-        WHERE 
-            (p_role IS NULL OR p.role::TEXT = p_role)
+        WHERE p.deleted_at IS NULL
+            AND (p_role IS NULL OR p.role::TEXT = p_role)
             AND (p_search IS NULL OR p.full_name ILIKE '%' || p_search || '%' OR p.email ILIKE '%' || p_search || '%')
     );
 END;
@@ -739,7 +749,8 @@ BEGIN
         count(*) FILTER (WHERE p.last_seen_at > now() - interval '5 minutes')::INT
     FROM public.profiles p
     LEFT JOIN auth.users au ON au.id = p.id
-    LEFT JOIN auth.identities ai ON ai.provider = 'email' AND ai.user_id::UUID = p.id::UUID;
+    LEFT JOIN auth.identities ai ON ai.provider = 'email' AND ai.user_id::UUID = p.id::UUID
+    WHERE p.deleted_at IS NULL;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -751,6 +762,10 @@ SET
 BEGIN
   IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
     RAISE EXCEPTION 'Unauthorised: Only admins can perform this action';
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM public.profiles WHERE id = target_user_id AND deleted_at IS NOT NULL) THEN
+    RAISE EXCEPTION 'Cannot perform action on a deleted user';
   END IF;
 
   IF is_banned THEN
@@ -774,7 +789,8 @@ $$ LANGUAGE plpgsql;
 
 CREATE
 OR REPLACE FUNCTION public.set_cleaner_pay_on_cleaning_insert () RETURNS TRIGGER
-SET search_path = public AS $$
+SET
+    search_path = public AS $$
 DECLARE
     v_property_type TEXT;
     v_bedrooms INT;
@@ -813,7 +829,12 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_set_cleaner_pay_on_cleaning_insert BEFORE INSERT ON public.cleanings FOR EACH ROW
 EXECUTE FUNCTION public.set_cleaner_pay_on_cleaning_insert ();
 
-REVOKE EXECUTE ON FUNCTION public.set_cleaner_pay_on_cleaning_insert() FROM PUBLIC, anon, authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.set_cleaner_pay_on_cleaning_insert ()
+FROM
+    PUBLIC,
+    anon,
+    authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.admin_update_property_price (p_property_id UUID, p_price NUMERIC) RETURNS VOID SECURITY DEFINER
@@ -830,7 +851,8 @@ $$ LANGUAGE plpgsql;
 
 CREATE
 OR REPLACE FUNCTION public.set_service_cost_on_cleaning_insert () RETURNS TRIGGER
-SET search_path = public AS $$
+SET
+    search_path = public AS $$
 DECLARE
     v_price NUMERIC;
 BEGIN
@@ -846,65 +868,167 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trigger_set_service_cost_on_cleaning_insert BEFORE INSERT ON public.cleanings FOR EACH ROW
 EXECUTE FUNCTION public.set_service_cost_on_cleaning_insert ();
 
-REVOKE EXECUTE ON FUNCTION public.set_service_cost_on_cleaning_insert() FROM PUBLIC, anon, authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.set_service_cost_on_cleaning_insert ()
+FROM
+    PUBLIC,
+    anon,
+    authenticated;
 
-REVOKE EXECUTE ON FUNCTION public.admin_get_users FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_get_users TO authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.admin_get_users
+FROM
+    PUBLIC,
+    anon;
 
-REVOKE EXECUTE ON FUNCTION public.update_user_presence() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.update_user_presence() TO authenticated;
+GRANT
+EXECUTE ON FUNCTION public.admin_get_users TO authenticated;
 
-REVOKE EXECUTE ON FUNCTION public.admin_get_host_detail FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_get_host_detail TO authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.update_user_presence ()
+FROM
+    PUBLIC,
+    anon;
 
-REVOKE EXECUTE ON FUNCTION public.admin_get_cleaner_detail FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_get_cleaner_detail TO authenticated;
+GRANT
+EXECUTE ON FUNCTION public.update_user_presence () TO authenticated;
 
-REVOKE EXECUTE ON FUNCTION public.admin_get_all_cleanings FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_get_all_cleanings TO authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.admin_get_host_detail
+FROM
+    PUBLIC,
+    anon;
 
-REVOKE EXECUTE ON FUNCTION public.admin_unassign_cleaner(uuid) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_unassign_cleaner(uuid) TO authenticated;
+GRANT
+EXECUTE ON FUNCTION public.admin_get_host_detail TO authenticated;
 
-REVOKE EXECUTE ON FUNCTION public.admin_assign_cleaner(uuid, uuid) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_assign_cleaner(uuid, uuid) TO authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.admin_get_cleaner_detail
+FROM
+    PUBLIC,
+    anon;
 
-REVOKE EXECUTE ON FUNCTION public.admin_create_cleaning_for_host FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_create_cleaning_for_host TO authenticated;
+GRANT
+EXECUTE ON FUNCTION public.admin_get_cleaner_detail TO authenticated;
 
-REVOKE EXECUTE ON FUNCTION public.admin_update_standard_tasks(jsonb, uuid[]) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_update_standard_tasks(jsonb, uuid[]) TO authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.admin_get_all_cleanings
+FROM
+    PUBLIC,
+    anon;
 
+GRANT
+EXECUTE ON FUNCTION public.admin_get_all_cleanings TO authenticated;
 
-REVOKE EXECUTE ON FUNCTION public.admin_get_available_cleaners() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_get_available_cleaners() TO authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.admin_unassign_cleaner (uuid)
+FROM
+    PUBLIC,
+    anon;
 
-REVOKE EXECUTE ON FUNCTION public.admin_get_audit_logs FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_get_audit_logs TO authenticated;
+GRANT
+EXECUTE ON FUNCTION public.admin_unassign_cleaner (uuid) TO authenticated;
 
-REVOKE EXECUTE ON FUNCTION public.admin_get_cleanings_count FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_get_cleanings_count TO authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.admin_assign_cleaner (uuid, uuid)
+FROM
+    PUBLIC,
+    anon;
 
-REVOKE EXECUTE ON FUNCTION public.admin_get_users_count FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_get_users_count TO authenticated;
+GRANT
+EXECUTE ON FUNCTION public.admin_assign_cleaner (uuid, uuid) TO authenticated;
 
-REVOKE EXECUTE ON FUNCTION public.admin_get_user_stats() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_get_user_stats() TO authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.admin_create_cleaning_for_host
+FROM
+    PUBLIC,
+    anon;
 
-REVOKE EXECUTE ON FUNCTION public.admin_ban_user(uuid, boolean) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_ban_user(uuid, boolean) TO authenticated;
+GRANT
+EXECUTE ON FUNCTION public.admin_create_cleaning_for_host TO authenticated;
 
-REVOKE EXECUTE ON FUNCTION public.admin_update_property_price(uuid, numeric) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_update_property_price(uuid, numeric) TO authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.admin_update_standard_tasks (jsonb, uuid[])
+FROM
+    PUBLIC,
+    anon;
 
-CREATE OR REPLACE FUNCTION public.admin_update_cleaning (
+GRANT
+EXECUTE ON FUNCTION public.admin_update_standard_tasks (jsonb, uuid[]) TO authenticated;
+
+REVOKE
+EXECUTE ON FUNCTION public.admin_get_available_cleaners ()
+FROM
+    PUBLIC,
+    anon;
+
+GRANT
+EXECUTE ON FUNCTION public.admin_get_available_cleaners () TO authenticated;
+
+REVOKE
+EXECUTE ON FUNCTION public.admin_get_audit_logs
+FROM
+    PUBLIC,
+    anon;
+
+GRANT
+EXECUTE ON FUNCTION public.admin_get_audit_logs TO authenticated;
+
+REVOKE
+EXECUTE ON FUNCTION public.admin_get_cleanings_count
+FROM
+    PUBLIC,
+    anon;
+
+GRANT
+EXECUTE ON FUNCTION public.admin_get_cleanings_count TO authenticated;
+
+REVOKE
+EXECUTE ON FUNCTION public.admin_get_users_count
+FROM
+    PUBLIC,
+    anon;
+
+GRANT
+EXECUTE ON FUNCTION public.admin_get_users_count TO authenticated;
+
+REVOKE
+EXECUTE ON FUNCTION public.admin_get_user_stats ()
+FROM
+    PUBLIC,
+    anon;
+
+GRANT
+EXECUTE ON FUNCTION public.admin_get_user_stats () TO authenticated;
+
+REVOKE
+EXECUTE ON FUNCTION public.admin_ban_user (uuid, boolean)
+FROM
+    PUBLIC,
+    anon;
+
+GRANT
+EXECUTE ON FUNCTION public.admin_ban_user (uuid, boolean) TO authenticated;
+
+REVOKE
+EXECUTE ON FUNCTION public.admin_update_property_price (uuid, numeric)
+FROM
+    PUBLIC,
+    anon;
+
+GRANT
+EXECUTE ON FUNCTION public.admin_update_property_price (uuid, numeric) TO authenticated;
+
+CREATE
+OR REPLACE FUNCTION public.admin_update_cleaning (
     p_cleaning_id UUID,
     p_custom_tasks TEXT[],
     p_information TEXT,
     p_scheduled_start TIMESTAMPTZ,
     p_stocks_included BOOLEAN DEFAULT FALSE
 ) RETURNS UUID SECURITY DEFINER
-SET search_path = public AS $$
+SET
+    search_path = public AS $$
 BEGIN
     IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
         RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
@@ -931,7 +1055,74 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-REVOKE EXECUTE ON FUNCTION public.admin_update_cleaning FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.admin_update_cleaning TO authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.admin_update_cleaning
+FROM
+    PUBLIC,
+    anon;
+
+GRANT
+EXECUTE ON FUNCTION public.admin_update_cleaning TO authenticated;
+
+CREATE
+OR REPLACE FUNCTION public.purge_user_pii (p_user_id UUID) RETURNS void LANGUAGE plpgsql SECURITY DEFINER
+SET
+    search_path = public, extensions AS $$
+BEGIN
+    IF (SELECT auth.uid()) != p_user_id
+       AND ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin')
+    THEN
+        RAISE EXCEPTION 'Unauthorised: Only admins or the user themselves can purge PII' USING ERRCODE = 'P0001';
+    END IF;
+
+    UPDATE public.profiles
+    SET email = encode(gen_random_bytes(3), 'hex') || '@deleted',
+        full_name = '[Deleted User]',
+        avatar_url = NULL,
+        last_seen_at = NULL,
+        deleted_at = now()
+    WHERE id = p_user_id;
+
+    UPDATE auth.users
+    SET
+      email = encode(gen_random_bytes(3), 'hex') || '@deleted',
+      banned_until = NOW() + INTERVAL '100 years',
+      raw_app_meta_data = COALESCE(raw_app_meta_data, '{}'::jsonb) || JSONB_BUILD_OBJECT('banned_until', (NOW() + INTERVAL '100 years')::TEXT),
+      raw_user_meta_data = COALESCE(raw_user_meta_data, '{}'::jsonb) || '{"full_name": "[Deleted User]", "avatar_url": null}'::jsonb
+    WHERE id = p_user_id;
+
+    DELETE FROM auth.refresh_tokens
+    WHERE user_id = p_user_id::TEXT;
+
+    UPDATE public.properties
+    SET address_line_1 = '[Deleted]',
+        address_line_2 = NULL,
+        town_city = '[Deleted]',
+        postcode = '[Deleted]',
+        main_image_url = '[deleted]'
+    WHERE host_id = p_user_id;
+
+    UPDATE public.cleanings
+    SET information = '[Deleted]'
+    WHERE host_id = p_user_id OR cleaner_id = p_user_id;
+
+    DELETE FROM public.notifications WHERE user_id = p_user_id;
+    DELETE FROM public.notification_preferences WHERE user_id = p_user_id;
+    DELETE FROM public.push_subscriptions WHERE user_id = p_user_id;
+
+    INSERT INTO public.audit_logs (actor_id, target_id, target_table, action_type, new_data)
+    VALUES ((SELECT auth.uid()), p_user_id, 'user_account', 'PURGE_USER_PII',
+            jsonb_build_object('purged_at', now()));
+END;
+$$;
+
+REVOKE
+EXECUTE ON FUNCTION public.purge_user_pii (UUID)
+FROM
+    PUBLIC,
+    anon;
+
+GRANT
+EXECUTE ON FUNCTION public.purge_user_pii (UUID) TO authenticated;
 
 COMMIT;

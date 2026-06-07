@@ -56,6 +56,7 @@ export type AdminUser = {
 	last_seen_at: string | null;
 	is_online: boolean;
 	last_sign_in_text?: string | null;
+	deleted_at: string | null;
 };
 
 export interface AdminHostDetail extends AdminUser {

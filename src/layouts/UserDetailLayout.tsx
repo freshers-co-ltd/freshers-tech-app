@@ -41,6 +41,7 @@ interface UserDetailLayoutProps {
 	onResetPassword?: () => Promise<{ error: string | null }>;
 	onBan?: () => Promise<{ error: string | null }>;
 	onUnban?: () => Promise<{ error: string | null }>;
+	onDeleteUser?: () => Promise<{ error: string | null }>;
 }
 
 export function UserDetailLayout({
@@ -53,6 +54,7 @@ export function UserDetailLayout({
 	onResetPassword,
 	onBan,
 	onUnban,
+	onDeleteUser,
 }: UserDetailLayoutProps) {
 	const dict = DICT.ADMIN.USERS;
 	const detail = DICT.ADMIN.USERS.DETAIL;
@@ -128,6 +130,25 @@ export function UserDetailLayout({
 		dialogs.close();
 	};
 
+	const handleDeleteUser = () => {
+		if (onDeleteUser) {
+			dialogs.openDeleteUser(user.id, user.full_name || '');
+		}
+	};
+
+	const handleDeleteUserConfirm = async () => {
+		if (!onDeleteUser) {
+			return;
+		}
+		const result = await onDeleteUser();
+		if (result?.error) {
+			toast.error(result.error || dict.DELETE_USER.TOAST_ERROR);
+		} else {
+			toast.success(dict.DELETE_USER.TOAST_SUCCESS);
+		}
+		dialogs.close();
+	};
+
 	if (isLoading) {
 		return (
 			<main className="max-width-container">
@@ -156,6 +177,7 @@ export function UserDetailLayout({
 						onResetPassword={handleResetPasswordClick}
 						onBan={handleBan}
 						onUnban={handleUnban}
+						onDeleteUser={handleDeleteUser}
 					/>
 				</Card>
 
@@ -206,9 +228,11 @@ export function UserDetailLayout({
 				onBanOpenChange={(o) => !o && dialogs.close()}
 				onUnbanOpenChange={(o) => !o && dialogs.close()}
 				onResetPasswordOpenChange={(o) => !o && dialogs.close()}
+				onDeleteUserOpenChange={(o) => !o && dialogs.close()}
 				onConfirmBan={handleBanConfirm}
 				onConfirmUnban={handleUnbanConfirm}
 				onConfirmResetPassword={handleResetPasswordConfirm}
+				onConfirmDeleteUser={handleDeleteUserConfirm}
 			/>
 		</main>
 	);
