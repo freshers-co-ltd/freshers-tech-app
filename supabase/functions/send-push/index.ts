@@ -62,8 +62,6 @@ Deno.serve(async (req: Request) => {
 
     webPush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
 
-    console.log('[Push] VAPID configured:', { subject: vapidSubject, hasPublicKey: !!vapidPublicKey, hasPrivateKey: !!vapidPrivateKey });
-
     const reqBody = await req.json();
     const pushPayload = extractPushPayload(reqBody);
 
@@ -75,7 +73,6 @@ Deno.serve(async (req: Request) => {
     }
 
     const { userId, title, body, data, link } = pushPayload;
-    console.log('[Push] Received request:', { userId, title, body, data, link });
 
     if (!userId || !title) {
       return new Response(JSON.stringify({ error: 'Missing userId or title' }), {
@@ -91,11 +88,9 @@ Deno.serve(async (req: Request) => {
       .select('subscription, id')
       .eq('user_id', userId);
 
-    console.log('[Push] Subscriptions found:', { count: subscriptions?.length, error: fetchError });
+    console.log('[Push] Subscriptions found:', subscriptions?.length ?? 0);
 
     if (fetchError || !subscriptions) throw fetchError || new Error("No data");
-
-    console.log('[Push] First subscription endpoint:', subscriptions[0]?.subscription?.endpoint);
 
     const { count: unreadCount } = await supabaseAdmin
       .from('notifications')
@@ -117,16 +112,10 @@ Deno.serve(async (req: Request) => {
     const results = await Promise.all(
       subscriptions.map(async (sub) => {
         try {
-          const response = await webPush.sendNotification(sub.subscription, payload);
-          console.log(`[Push] Sent successfully to sub ${sub.id}:`, response.statusCode);
-          return { success: true, statusCode: response.statusCode };
+          await webPush.sendNotification(sub.subscription, payload);
+          return { success: true };
         } catch (err: unknown) {
           const error = err as { statusCode?: number; message?: string; body?: string };
-          console.error(`[Push] Error for sub ${sub.id}:`, {
-            statusCode: error.statusCode,
-            message: error.message,
-            body: error.body,
-          });
 
           if (error.statusCode === 410 || error.statusCode === 404) {
             await supabaseAdmin.from('push_subscriptions').delete().eq('id', sub.id);
@@ -138,18 +127,19 @@ Deno.serve(async (req: Request) => {
     );
 
     const successful = results.filter((r) => r.success).length;
+    const failed = results.filter((r) => !r.success).length;
+
+    if (failed > 0) {
+      console.error(`[Push] Failed to send ${failed}/${results.length} notifications`);
+    }
 
     return new Response(JSON.stringify({ sent: successful, total: subscriptions.length }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
     } catch (error) {
-    const err = error as { statusCode?: number; message?: string; body?: string };
-    console.error('[Push] Error:', {
-      statusCode: err.statusCode,
-      body: err.body,
-      message: err.message,
-    });
+    const err = error as { message?: string };
+    console.error('[Push] Fatal error:', err.message);
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

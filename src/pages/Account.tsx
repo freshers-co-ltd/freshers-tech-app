@@ -1,7 +1,8 @@
 'use client';
 
-import { Globe, LogOut, Mail, Send, Settings, Shield, Trash2, User } from 'lucide-react';
+import { FileText, Globe, LogOut, Mail, Send, Settings, Shield, Trash2, User } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog';
 import { Loading } from '@/components/Loading';
 import { toast } from '@/components/Toast';
@@ -67,6 +68,14 @@ export function AccountPage() {
 								{dict.CONTACT.TITLE}
 							</Button>
 						</a>
+						<Link to="/privacy">
+							<Button
+								variant="ghost"
+								className="justify-start font-medium text-muted-foreground w-full">
+								<FileText className="mr-1 size-4" />
+								{dict.CONTACT.PRIVACY.TITLE}
+							</Button>
+						</Link>
 					</nav>
 				</aside>
 
@@ -137,6 +146,19 @@ export function AccountPage() {
 											{dict.CONTACT.WEBSITE.SUBTITLE}
 										</span>
 									</a>
+								</Button>
+								<Button
+									variant="outline"
+									className="h-auto py-4 flex-col items-start gap-2"
+									asChild>
+									<Link to="/privacy">
+										<div className="flex items-center gap-2 font-semibold">
+											<FileText className="size-4" /> {dict.CONTACT.PRIVACY.TITLE}
+										</div>
+										<span className="text-xs font-normal text-muted-foreground">
+											{dict.CONTACT.PRIVACY.SUBTITLE}
+										</span>
+									</Link>
 								</Button>
 							</div>
 						</div>

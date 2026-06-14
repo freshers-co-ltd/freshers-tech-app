@@ -256,7 +256,12 @@ export const userService = {
 				'Content-Type': 'application/json',
 				Authorization: `Bearer ${session?.access_token}`,
 			},
-			body: JSON.stringify({ email, role, full_name: fullName }),
+			body: JSON.stringify({
+				email,
+				role,
+				full_name: fullName,
+				origin: window.location.origin,
+			}),
 		});
 
 		const result = await response.json();

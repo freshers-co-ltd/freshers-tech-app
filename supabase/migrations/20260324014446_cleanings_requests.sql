@@ -1059,3 +1059,31 @@ $$ LANGUAGE plpgsql;
 REVOKE EXECUTE ON FUNCTION public.soft_delete_cleaning_report FROM PUBLIC, anon;
 GRANT
     EXECUTE ON FUNCTION public.soft_delete_cleaning_report TO authenticated;
+
+DROP POLICY IF EXISTS "Public profile info visible to authenticated" ON public.profiles;
+
+CREATE POLICY "Users can view profiles based on cleaning relationship" ON public.profiles
+    FOR SELECT
+    TO authenticated
+    USING (
+        public.is_not_banned ()
+        AND (
+            id = (SELECT auth.uid ())
+            OR ((SELECT auth.jwt ()) -> 'app_metadata' ->> 'role') = 'admin'
+            OR EXISTS (
+                SELECT 1
+                FROM public.cleanings c
+                WHERE c.deleted_at IS NULL
+                AND (
+                    (
+                        c.host_id = (SELECT auth.uid ())
+                        AND c.cleaner_id = profiles.id
+                    )
+                    OR (
+                        c.cleaner_id = (SELECT auth.uid ())
+                        AND c.host_id = profiles.id
+                    )
+                )
+            )
+        )
+    );

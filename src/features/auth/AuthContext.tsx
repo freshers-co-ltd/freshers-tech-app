@@ -46,6 +46,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			if (error) {
 				console.error('Failed to fetch profile:', error);
 			}
+			if (data && !data.email) {
+				const {
+					data: { user },
+				} = await authService.getCurrentUser();
+				data.email = user?.email ?? '';
+			}
 			return data;
 		},
 		[],
@@ -108,9 +114,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			await initAuthSync();
 
 			const hash = window.location.hash || '';
-			const isRecoveryFlow = hash.includes('type=recovery') || hash.includes('type=invite');
+			const isInviteFlow = window.location.pathname === '/set-password';
+			const isRecoveryFlow = hash.includes('type=recovery');
+
+			if (isInviteFlow) {
+				setSuppressSessionBroadcast(true);
+				setLoading(false);
+				setInitialised(true);
+				return;
+			}
+
 			if (isRecoveryFlow) {
 				setSuppressSessionBroadcast(true);
+				const params = new URLSearchParams(hash.substring(1));
+				const accessToken = params.get('access_token');
+				const refreshToken = params.get('refresh_token');
+				if (accessToken && refreshToken) {
+					await authService.setSession({
+						access_token: accessToken,
+						refresh_token: refreshToken,
+					});
+				}
 			}
 
 			let {

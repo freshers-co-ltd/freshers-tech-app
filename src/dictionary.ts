@@ -32,7 +32,7 @@ export const DICT = {
 			VIEW_DETAILS: 'View Details',
 		},
 		LABELS: {
-            ADMIN: 'Admin',
+			ADMIN: 'Admin',
 			ADDRESS: 'Address',
 			ADDRESS_LINE_1: 'Address Line 1',
 			ADDRESS_LINE_2: 'Address Line 2 (Optional)',
@@ -347,12 +347,12 @@ export const DICT = {
 			MESSAGE: "This will permanently cancel the cleaning and you won't be charged.",
 			TITLE: 'Cancel cleaning request?',
 		},
-        ASSIGN_CLEANER: { 
-            TITLE: 'Assign Cleaner', 
-            SELECT: 'Select a cleaner',
-            TOAST_SUCCESS: 'Cleaner assigned',
-            TOAST_ERROR: 'Please select a cleaner',
-        },
+		ASSIGN_CLEANER: {
+			TITLE: 'Assign Cleaner',
+			SELECT: 'Select a cleaner',
+			TOAST_SUCCESS: 'Cleaner assigned',
+			TOAST_ERROR: 'Please select a cleaner',
+		},
 	},
 	ACCOUNT: {
 		BUTTON_SIGN_OUT: 'Sign out',
@@ -425,11 +425,11 @@ export const DICT = {
 				TOAST_SUCCESS: 'Password reset email sent',
 				TOAST_ERROR: 'Failed to send password reset email',
 			},
-            INVITE_USER: { 
-                TITLE: 'Invite New User',
-                MESSAGE: 'Send an invitation link to a new user',
-                BUTTON_SUBMIT: 'Send Invite',
-            },
+			INVITE_USER: {
+				TITLE: 'Invite New User',
+				MESSAGE: 'Send an invitation link to a new user',
+				BUTTON_SUBMIT: 'Send Invite',
+			},
 			BAN_USER: {
 				TITLE: 'Ban User',
 				MESSAGE: 'Are you sure you want to ban {name}? They will no longer be able to sign in.',

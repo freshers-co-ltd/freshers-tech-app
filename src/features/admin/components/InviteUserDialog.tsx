@@ -18,8 +18,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
-import type { UserRole } from '@/features/auth/types';
 import { DICT } from '@/dictionary';
+import type { UserRole } from '@/features/auth/types';
 
 export interface InviteUserDialogProps {
 	open: boolean;
@@ -102,7 +102,11 @@ export function InviteUserDialog({ open, onOpenChange, onInvite }: InviteUserDia
 							{DICT.COMMON.ACTIONS.CANCEL}
 						</Button>
 						<Button onClick={handleSubmit} disabled={loading || !email || !fullName}>
-							{loading ? <Loader2 className="size-4 animate-spin" /> : DICT.ADMIN.USERS.INVITE_USER.BUTTON_SUBMIT}
+							{loading ? (
+								<Loader2 className="size-4 animate-spin" />
+							) : (
+								DICT.ADMIN.USERS.INVITE_USER.BUTTON_SUBMIT
+							)}
 						</Button>
 					</div>
 				</div>

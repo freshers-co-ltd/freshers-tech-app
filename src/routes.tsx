@@ -135,14 +135,21 @@ const routesConfig: RouteObject[] = [
 							{ path: 'login', element: <LoginPage /> },
 							{ path: 'signup', element: <SignupPage /> },
 							{ path: 'forgot-password', element: <ForgotPasswordPage /> },
-							{ path: 'set-password', element: <SetPasswordPage /> },
 						],
 					},
 				],
 			},
 			{
+				path: 'set-password',
+				element: <SetPasswordPage />,
+			},
+			{
 				path: 'auth/callback',
 				element: lazyLoad(() => import('@/pages/auth/Callback'), 'AuthCallback'),
+			},
+			{
+				path: 'privacy',
+				element: lazyLoad(() => import('@/pages/Privacy'), 'PrivacyPage'),
 			},
 			{
 				element: (

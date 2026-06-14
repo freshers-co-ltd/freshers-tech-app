@@ -77,6 +77,10 @@ export function SetPasswordForm({ className, ...props }: React.ComponentProps<'f
 
 		const { error } = await authService.updatePassword(data.password);
 
+		if (!error) {
+			await authService.updateUserMetadata({ password_set: true });
+		}
+
 		setIsProcessing(false);
 
 		if (error) {
@@ -130,7 +134,7 @@ export function SetPasswordForm({ className, ...props }: React.ComponentProps<'f
 					control={form.control}
 					render={({ field, fieldState }) => (
 						<Field>
-							<FieldLabel htmlFor="password"> {DICT.COMMON.LABELS.NEW_PASSWORD} </FieldLabel>
+							<FieldLabel htmlFor="password"> {DICT.COMMON.LABELS.PASSWORD} </FieldLabel>
 							<PasswordInput
 								{...field}
 								id="password"
@@ -161,6 +165,12 @@ export function SetPasswordForm({ className, ...props }: React.ComponentProps<'f
 						</Field>
 					)}
 				/>
+				<p className="text-center text-sm text-muted-foreground">
+					{DICT.AUTH.PRIVACY.PRIVACY_NOTICE_LABEL}{' '}
+					<a href="/privacy" target="_blank" rel="noopener noreferrer" className="link">
+						{DICT.AUTH.PRIVACY.PRIVACY_NOTICE_LINK}
+					</a>
+				</p>
 				<Button type="submit" disabled={form.formState.isSubmitting || isProcessing}>
 					{isProcessing || form.formState.isSubmitting
 						? DICT.AUTH.SET_PASSWORD.BUTTON_SUBMITTING
