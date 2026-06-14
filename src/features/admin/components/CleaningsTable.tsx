@@ -104,7 +104,7 @@ export function CleaningsTable({
 
 	const handleAssignCleaner = useCallback(async (): Promise<boolean> => {
 		if (!selectedCleaningId || !selectedCleanerId) {
-			toast.error(DICT.COMMON.TOASTS.PLEASE_SELECT_CLEANER);
+			toast.error(DICT.CLEANINGS.ASSIGN_CLEANER.TOAST_ERROR);
 			return false;
 		}
 		const result = await adminCleaningService.assignCleaner(selectedCleaningId, selectedCleanerId);
@@ -112,7 +112,7 @@ export function CleaningsTable({
 			toast.error(result.error);
 			return false;
 		}
-		toast.success(DICT.COMMON.TOASTS.CLEANER_ASSIGNED);
+		toast.success(DICT.CLEANINGS.ASSIGN_CLEANER.TOAST_SUCCESS);
 		setIsAssignModalOpen(false);
 		onRefresh?.();
 		return true;

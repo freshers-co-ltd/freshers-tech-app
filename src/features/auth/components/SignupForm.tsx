@@ -288,6 +288,12 @@ export function SignupForm({ className, selectedRole, ...props }: SignupFormProp
 				/>
 
 				<div className="flex flex-col gap-4 mt-2">
+					<p className="text-center text-sm text-muted-foreground">
+						{DICT.AUTH.PRIVACY.PRIVACY_NOTICE_LABEL}{' '}
+						<a href="/privacy" target="_blank" rel="noopener noreferrer" className="link">
+							{DICT.AUTH.PRIVACY.PRIVACY_NOTICE_LINK}
+						</a>
+					</p>
 					<Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
 						{form.formState.isSubmitting
 							? DICT.AUTH.SIGNUP.BUTTON_SUBMITTING

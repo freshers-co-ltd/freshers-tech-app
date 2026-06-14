@@ -50,16 +50,16 @@ export function AssignCleanerDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>{DICT.COMMON.DIALOGS.ASSIGN_CLEANER.TITLE}</DialogTitle>
+					<DialogTitle>{DICT.CLEANINGS.ASSIGN_CLEANER.TITLE}</DialogTitle>
 					<DialogDescription>Select which cleaner to assign</DialogDescription>
 				</DialogHeader>
 				<div className="space-y-4">
 					<Select value={selectedCleanerId} onValueChange={onSelectCleaner}>
 						<SelectTrigger className="w-full">
 							<SelectValue
-								placeholder={DICT.COMMON.DIALOGS.ASSIGN_CLEANER.SELECT}
+								placeholder={DICT.CLEANINGS.ASSIGN_CLEANER.SELECT}
 								className={displayValue ? 'text-foreground' : ''}>
-								{displayValue || DICT.COMMON.DIALOGS.ASSIGN_CLEANER.SELECT}
+								{displayValue || DICT.CLEANINGS.ASSIGN_CLEANER.SELECT}
 							</SelectValue>
 						</SelectTrigger>
 						<SelectContent emptyMessage="No available cleaners">

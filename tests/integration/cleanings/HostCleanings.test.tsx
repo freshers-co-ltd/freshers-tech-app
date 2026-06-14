@@ -104,8 +104,6 @@ describe('Host Cleanings Page', () => {
 			create_cleaning_request: { data: 'cleaning_456' },
 		});
 
-		// Render CleaningForm directly with initialData to avoid Select interaction.
-		// We need RouterProvider for useNavigate(), so we pass a route.
 		const formElement = (
 			<CleaningForm
 				initialData={initialCleaning}
@@ -119,30 +117,22 @@ describe('Host Cleanings Page', () => {
 			initialEntries: ['/host/cleanings'],
 		});
 
-		// Step 2 is shown first (because initialData is provided)
-		// Wait for standard tasks to load
 		expect(await screen.findByText('Vacuum')).toBeInTheDocument();
 
-		// Add a custom task
 		await user.click(screen.getByRole('button', { name: /add task/i }));
 		const taskInput = screen.getByPlaceholderText(/e\.g\./i);
 		await user.type(taskInput, 'Clean the windows');
 
-		// Advance to step 3
 		await user.click(screen.getByRole('button', { name: /service details/i }));
 
-		// Step 3: Open the date picker and select a future day
 		await user.click(screen.getByTestId('date-picker'));
 		const dayButton = await screen.findByRole('gridcell', { name: /25/i });
 		await user.click(dayButton);
 
-		// Close the date picker popover
 		await user.keyboard('{Escape}');
 
-		// Submit the form
 		await user.click(screen.getByRole('button', { name: /update cleaning request/i }));
 
-		// Verify the form submitted exactly once with the correct values
 		await waitFor(() => {
 			expect(onSubmit).toHaveBeenCalledOnce();
 		});
@@ -180,10 +170,9 @@ describe('Host Cleanings Page', () => {
 
 		expect(await screen.findByRole('dialog')).toBeInTheDocument();
 
-		// Find and click the delete button inside the detail view
 		const deleteButton = screen.getByRole('button', { name: /delete/i });
 		await user.click(deleteButton);
 
-		expect(await screen.findByText(DICT.COMMON.DIALOGS.DELETE_CLEANING.TITLE)).toBeInTheDocument();
+		expect(await screen.findByText(DICT.CLEANINGS.DELETE.TITLE)).toBeInTheDocument();
 	});
 });

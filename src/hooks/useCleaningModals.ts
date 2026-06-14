@@ -64,7 +64,7 @@ export function useCleaningModals({
 				setViewingCleaning(data);
 			})
 			.catch(() => {
-				toast.error(DICT.COMMON.TOASTS.FAILED_TO_LOAD_CLEANING);
+				toast.error(DICT.CLEANINGS.DETAIL.TOAST_ERROR);
 			})
 			.finally(() => {
 				setIsViewLoading(false);
@@ -83,7 +83,7 @@ export function useCleaningModals({
 				setEditingCleaning(data);
 			})
 			.catch(() => {
-				toast.error(DICT.COMMON.TOASTS.FAILED_TO_LOAD_CLEANING_EDIT);
+				toast.error(DICT.CLEANINGS.EDIT.TOAST_ERROR);
 			})
 			.finally(() => {
 				setIsEditLoading(false);

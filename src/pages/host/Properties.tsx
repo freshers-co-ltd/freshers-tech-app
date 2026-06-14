@@ -77,8 +77,8 @@ export function HostPropertiesPage() {
 			deletingId={modal.deletingId}
 			onDeleteCancel={() => modal.setDeletingId(null)}
 			onDeleteConfirm={handleDelete}
-			deleteTitle={DICT.COMMON.DIALOGS.DELETE_PROPERTY.TITLE}
-			deleteMessage={DICT.COMMON.DIALOGS.DELETE_PROPERTY.MESSAGE}
+			deleteTitle={DICT.PROPERTIES.DELETE.TITLE}
+			deleteMessage={DICT.PROPERTIES.DELETE.MESSAGE}
 		/>
 	);
 }

@@ -10,7 +10,6 @@ export const DICT = {
 			CANCEL: 'Cancel',
 			CLOSE: 'Close',
 			CANCEL_CLEANING: 'Cancel Cleaning',
-			CHANGE_STATUS: 'Change Status',
 			CONFIRM: 'Confirm',
 			CREATE: 'Create',
 			CREATE_CLEANING: 'Create Cleaning Request',
@@ -33,6 +32,7 @@ export const DICT = {
 			VIEW_DETAILS: 'View Details',
 		},
 		LABELS: {
+            ADMIN: 'Admin',
 			ADDRESS: 'Address',
 			ADDRESS_LINE_1: 'Address Line 1',
 			ADDRESS_LINE_2: 'Address Line 2 (Optional)',
@@ -105,30 +105,13 @@ export const DICT = {
 			TOWN_REQUIRED: 'Town or City is required',
 		},
 		LOADING: { MESSAGE: 'Please wait...', TITLE: 'Loading' },
-		DIALOGS: {
-			DELETE: { MESSAGE: 'This action cannot be undone.', TITLE: 'Delete?' },
-			DELETE_PROPERTY: {
-				MESSAGE: 'This will permanently remove the property and all associated cleaning history.',
-				TITLE: 'Delete property?',
-			},
-			DELETE_CLEANING: {
-				MESSAGE: "This will permanently cancel the cleaning and you won't be charged.",
-				TITLE: 'Cancel cleaning request?',
-			},
-			INVITE: { TITLE: 'Invite New User' },
-			ASSIGN_CLEANER: { TITLE: 'Assign Cleaner', SELECT: 'Select a cleaner' },
-			CHANGE_STATUS: { TITLE: 'Change Status', SELECT: 'Select new status' },
-		},
-		TOASTS: {
-			CLEANER_ASSIGNED: 'Cleaner assigned',
-			PLEASE_SELECT_CLEANER: 'Please select a cleaner',
-			FAILED_TO_LOAD_CLEANING: 'Failed to load cleaning details',
-			FAILED_TO_LOAD_CLEANING_EDIT: 'Failed to load cleaning for editing',
-			FAILED_TO_LOAD_TASKS: 'Failed to load tasks',
-		},
 		CURRENCY: '£',
 	},
 	AUTH: {
+		PRIVACY: {
+			PRIVACY_NOTICE_LABEL: 'By creating an account, you agree to our',
+			PRIVACY_NOTICE_LINK: 'Privacy Notice',
+		},
 		LOGIN: {
 			ALT_IMAGE: 'Cleaners ready to work',
 			ALT_LOGO: 'Freshers Co logo',
@@ -260,7 +243,14 @@ export const DICT = {
 			MESSAGE: 'Enter details about your property to save them',
 			TITLE: 'Save new property',
 		},
-		EDIT: { MESSAGE: 'Edit details about your property to save them', TITLE: 'Edit property' },
+		EDIT: {
+			MESSAGE: 'Edit details about your property to save them',
+			TITLE: 'Edit property',
+		},
+		DELETE: {
+			MESSAGE: 'This will permanently remove the property and all associated cleaning history.',
+			TITLE: 'Delete property?',
+		},
 		THUMBNAIL: 'Thumbnail',
 		FOCUS_IMAGE: 'Property focus',
 		FULLSCREEN_VIEW: 'Fullscreen view of property images',
@@ -298,6 +288,7 @@ export const DICT = {
 			TOILETRIES_RESTOCK: 'Toiletries Restock',
 			RESTOCK_INCLUDED: 'Included',
 			RESTOCK_NOT_INCLUDED: 'Not Included',
+			TOAST_ERROR: 'Failed to load cleaning details',
 		},
 		SEARCH: {
 			PLACEHOLDER: 'Search by address...',
@@ -350,7 +341,18 @@ export const DICT = {
 			BUTTON_SUBMIT: 'Update cleaning request',
 			BUTTON_SUBMITTING: 'Updating cleaning request...',
 			TOAST_SUCCESS: 'Cleaning request updated successfully',
+			TOAST_ERROR: 'Failed to load cleaning for editing',
 		},
+		DELETE: {
+			MESSAGE: "This will permanently cancel the cleaning and you won't be charged.",
+			TITLE: 'Cancel cleaning request?',
+		},
+        ASSIGN_CLEANER: { 
+            TITLE: 'Assign Cleaner', 
+            SELECT: 'Select a cleaner',
+            TOAST_SUCCESS: 'Cleaner assigned',
+            TOAST_ERROR: 'Please select a cleaner',
+        },
 	},
 	ACCOUNT: {
 		BUTTON_SIGN_OUT: 'Sign out',
@@ -400,6 +402,7 @@ export const DICT = {
 			SUBTITLE: 'Contact our support team or access our website.',
 			SUPPORT: { TITLE: 'Contact Support', SUBTITLE: 'Get help with any issues.' },
 			WEBSITE: { TITLE: 'Visit Website', SUBTITLE: 'Learn more about our services.' },
+			PRIVACY: { TITLE: 'Privacy Notice', SUBTITLE: 'Review our privacy policy.' },
 		},
 		TOASTS: {},
 	},
@@ -422,6 +425,11 @@ export const DICT = {
 				TOAST_SUCCESS: 'Password reset email sent',
 				TOAST_ERROR: 'Failed to send password reset email',
 			},
+            INVITE_USER: { 
+                TITLE: 'Invite New User',
+                MESSAGE: 'Send an invitation link to a new user',
+                BUTTON_SUBMIT: 'Send Invite',
+            },
 			BAN_USER: {
 				TITLE: 'Ban User',
 				MESSAGE: 'Are you sure you want to ban {name}? They will no longer be able to sign in.',

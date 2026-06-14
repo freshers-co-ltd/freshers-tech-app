@@ -97,10 +97,8 @@ export function CleaningDialogs({
 			<AlertDialog open={!!deletingId} onOpenChange={(open) => !open && onDeleteCancel()}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>{DICT.COMMON.DIALOGS.DELETE_CLEANING.TITLE}</AlertDialogTitle>
-						<AlertDialogDescription>
-							{DICT.COMMON.DIALOGS.DELETE_CLEANING.MESSAGE}
-						</AlertDialogDescription>
+						<AlertDialogTitle>{DICT.CLEANINGS.DELETE.TITLE}</AlertDialogTitle>
+						<AlertDialogDescription>{DICT.CLEANINGS.DELETE.MESSAGE}</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
 						<AlertDialogCancel>{DICT.COMMON.ACTIONS.BACK}</AlertDialogCancel>

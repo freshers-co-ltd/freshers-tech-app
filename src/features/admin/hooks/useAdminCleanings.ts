@@ -192,7 +192,7 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 
 	const handleAssignCleaner = useCallback(async (): Promise<boolean> => {
 		if (!selectedCleaning || !selectedCleaner) {
-			toast.error(DICT.COMMON.TOASTS.PLEASE_SELECT_CLEANER);
+			toast.error(DICT.CLEANINGS.ASSIGN_CLEANER.TOAST_ERROR);
 			return false;
 		}
 		const result = await cleaningService.assignCleaner(selectedCleaning, selectedCleaner);
@@ -200,7 +200,7 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 			toast.error(result.error);
 			return false;
 		}
-		toast.success(DICT.COMMON.TOASTS.CLEANER_ASSIGNED);
+		toast.success(DICT.CLEANINGS.ASSIGN_CLEANER.TOAST_SUCCESS);
 		setIsAssignModalOpen(false);
 		await refetchCurrentPage();
 		return true;

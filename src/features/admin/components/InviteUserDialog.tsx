@@ -19,6 +19,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import type { UserRole } from '@/features/auth/types';
+import { DICT } from '@/dictionary';
 
 export interface InviteUserDialogProps {
 	open: boolean;
@@ -60,12 +61,12 @@ export function InviteUserDialog({ open, onOpenChange, onInvite }: InviteUserDia
 		<Dialog open={open} onOpenChange={handleOpenChange}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Invite New User</DialogTitle>
-					<DialogDescription>Send an invitation to a new user</DialogDescription>
+					<DialogTitle>{DICT.ADMIN.USERS.INVITE_USER.TITLE}</DialogTitle>
+					<DialogDescription>{DICT.ADMIN.USERS.INVITE_USER.MESSAGE}</DialogDescription>
 				</DialogHeader>
 				<div className="space-y-4">
 					<div>
-						<span className="text-sm font-medium block mb-2">Email</span>
+						<span className="text-sm font-medium block mb-2">{DICT.COMMON.LABELS.EMAIL}</span>
 						<Input
 							id="invite-email"
 							type="email"
@@ -75,7 +76,7 @@ export function InviteUserDialog({ open, onOpenChange, onInvite }: InviteUserDia
 						/>
 					</div>
 					<div>
-						<span className="text-sm font-medium block mb-2">Full Name</span>
+						<span className="text-sm font-medium block mb-2">{DICT.COMMON.LABELS.NAME}</span>
 						<Input
 							id="invite-name"
 							value={fullName}
@@ -90,18 +91,18 @@ export function InviteUserDialog({ open, onOpenChange, onInvite }: InviteUserDia
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
-								<SelectItem value="host">Host</SelectItem>
-								<SelectItem value="cleaner">Cleaner</SelectItem>
-								<SelectItem value="admin">Admin</SelectItem>
+								<SelectItem value="host">{DICT.COMMON.LABELS.HOST}</SelectItem>
+								<SelectItem value="cleaner">{DICT.COMMON.LABELS.CLEANER}</SelectItem>
+								<SelectItem value="admin">{DICT.COMMON.LABELS.ADMIN}</SelectItem>
 							</SelectContent>
 						</Select>
 					</div>
 					<div className="flex justify-end gap-2">
 						<Button variant="outline" onClick={() => onOpenChange(false)}>
-							Cancel
+							{DICT.COMMON.ACTIONS.CANCEL}
 						</Button>
 						<Button onClick={handleSubmit} disabled={loading || !email || !fullName}>
-							{loading ? <Loader2 className="size-4 animate-spin" /> : 'Send Invite'}
+							{loading ? <Loader2 className="size-4 animate-spin" /> : DICT.ADMIN.USERS.INVITE_USER.BUTTON_SUBMIT}
 						</Button>
 					</div>
 				</div>

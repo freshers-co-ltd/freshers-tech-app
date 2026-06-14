@@ -75,8 +75,8 @@ export function HostCleaningsPage() {
 			deletingId={modal.deletingId}
 			onDeleteCancel={() => modal.setDeletingId(null)}
 			onDeleteConfirm={handleDelete}
-			deleteTitle={DICT.COMMON.DIALOGS.DELETE_CLEANING.TITLE}
-			deleteMessage={DICT.COMMON.DIALOGS.DELETE_CLEANING.MESSAGE}
+			deleteTitle={DICT.CLEANINGS.DELETE.TITLE}
+			deleteMessage={DICT.CLEANINGS.DELETE.MESSAGE}
 		/>
 	);
 }
