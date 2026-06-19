@@ -7,6 +7,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const rateLimits = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(key: string, maxRequests: number, windowMs: number): boolean {
+  const now = Date.now();
+  const entry = rateLimits.get(key);
+  if (!entry || now > entry.resetAt) {
+    rateLimits.set(key, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+  entry.count++;
+  return entry.count <= maxRequests;
+}
+
 interface PushPayload {
   userId: string;
   title: string;
@@ -37,6 +50,14 @@ function extractPushPayload(reqBody: Record<string, unknown>): PushPayload | nul
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
+  }
+
+  const clientIp = req.headers.get('x-forwarded-for') ?? 'unknown';
+  if (!checkRateLimit(`push:${clientIp}`, 10, 60_000)) {
+    return new Response(JSON.stringify({ error: 'Too many requests' }), {
+      status: 429,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 
   const WEBHOOK_SECRET = Deno.env.get('WEBHOOK_SECRET');
@@ -140,7 +161,7 @@ Deno.serve(async (req: Request) => {
     } catch (error) {
     const err = error as { message?: string };
     console.error('[Push] Fatal error:', err.message);
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

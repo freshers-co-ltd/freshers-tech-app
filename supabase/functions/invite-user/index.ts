@@ -4,6 +4,19 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const DEFAULT_ORIGIN = 'http://localhost:5173';
 
+const rateLimits = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(key: string, maxRequests: number, windowMs: number): boolean {
+  const now = Date.now();
+  const entry = rateLimits.get(key);
+  if (!entry || now > entry.resetAt) {
+    rateLimits.set(key, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+  entry.count++;
+  return entry.count <= maxRequests;
+}
+
 function getAllowedOrigin(req: Request): string {
 	const allowed = Deno.env.get('CORS_ORIGIN') || DEFAULT_ORIGIN;
 	const requestOrigin = req.headers.get('Origin');
@@ -27,6 +40,14 @@ serve(async (req: Request) => {
 
 	if (req.method === 'OPTIONS') {
 		return new Response('ok', { headers: corsHeaders(origin) });
+	}
+
+	const clientIp = req.headers.get('x-forwarded-for') ?? 'unknown';
+	if (!checkRateLimit(`invite:${clientIp}`, 5, 60_000)) {
+		return new Response(JSON.stringify({ error: 'Too many requests' }), {
+			status: 429,
+			headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' },
+		});
 	}
 
 	try {
@@ -89,7 +110,8 @@ serve(async (req: Request) => {
 		})
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : 'Unknown error';
-		return new Response(JSON.stringify({ error: message }), {
+		console.error('[Invite] Fatal error:', message);
+		return new Response(JSON.stringify({ error: 'Internal server error' }), {
 			status: 500,
 			headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' }
 		})
