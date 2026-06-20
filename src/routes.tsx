@@ -14,6 +14,8 @@ import { AuthLayout } from '@/layouts/AuthLayout';
 import { lazyLoad } from '@/lib/LazyLoad';
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPassword';
 import { LoginPage } from '@/pages/auth/Login';
+import { MfaChallengePage } from '@/pages/auth/MfaChallenge';
+import { MfaEnrollPage } from '@/pages/auth/MfaEnroll';
 import { SetPasswordPage } from '@/pages/auth/SetPassword';
 import { SignupPage } from '@/pages/auth/Signup';
 import { ErrorPage } from '@/pages/Error';
@@ -36,7 +38,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
-	const { user, profile, loading } = useAuth();
+	const { user, profile, loading, mfaAction } = useAuth();
 	const location = useLocation();
 
 	if (loading) {
@@ -53,6 +55,14 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
 
 	if (allowedRoles && !allowedRoles.includes(profile.role as UserRole)) {
 		return <Navigate to="/error/403" replace />;
+	}
+
+	if (mfaAction === 'enroll' && location.pathname !== '/mfa-enroll') {
+		return <Navigate to="/mfa-enroll" replace />;
+	}
+
+	if (mfaAction === 'challenge' && location.pathname !== '/mfa-challenge') {
+		return <Navigate to="/mfa-challenge" replace />;
 	}
 
 	return children ? (children as ReactElement) : <Outlet />;
@@ -142,6 +152,23 @@ const routesConfig: RouteObject[] = [
 			{
 				path: 'set-password',
 				element: <SetPasswordPage />,
+			},
+			{
+				element: (
+					<ProtectedRoute>
+						<Outlet />
+					</ProtectedRoute>
+				),
+				children: [
+					{
+						path: 'mfa-enroll',
+						element: <MfaEnrollPage />,
+					},
+					{
+						path: 'mfa-challenge',
+						element: <MfaChallengePage />,
+					},
+				],
 			},
 			{
 				path: 'auth/callback',

@@ -17,7 +17,7 @@ import { useAuth } from '@/features/auth/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
 
 export function AccountPage() {
-	const { loading, signOut, user } = useAuth();
+	const { loading, signOut, user, profile } = useAuth();
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
 	if (loading) {
@@ -99,6 +99,16 @@ export function AccountPage() {
 						<Separator />
 						<div className="max-w-2xl">
 							<SecurityForm />
+							{profile?.role === 'admin' && (
+								<div className="mt-6 rounded-md border p-4">
+									<h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+										{DICT.AUTH.MFA.ACCOUNT_STATUS.TITLE}
+									</h3>
+									<p className="mt-1 text-sm text-muted-foreground">
+										{DICT.AUTH.MFA.ACCOUNT_STATUS.ACTIVE}
+									</p>
+								</div>
+							)}
 						</div>
 					</section>
 

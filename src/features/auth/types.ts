@@ -16,3 +16,8 @@ export interface AuthActionResult {
 	user?: import('@supabase/supabase-js').User | null;
 	needsConfirmation?: boolean;
 }
+
+export interface MfaStatus {
+	enrolled: boolean;
+	verified: boolean;
+}

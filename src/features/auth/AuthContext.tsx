@@ -23,8 +23,10 @@ export interface AuthContextType {
 	session: Session | null;
 	loading: boolean;
 	initialised: boolean;
+	mfaAction: 'enroll' | 'challenge' | null;
 	refreshProfile: () => Promise<void>;
 	signOut: () => Promise<void>;
+	resolveMfaAction: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,10 +37,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const [profile, setProfile] = useState<Profile | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [initialised, setInitialised] = useState(false);
+	const [mfaAction, setMfaAction] = useState<'enroll' | 'challenge' | null>(null);
 
 	const lastUserId = useRef<string | null>(null);
 	const abortControllerRef = useRef<AbortController | null>(null);
 	const isVoluntarySignOutRef = useRef(false);
+	const mfaResolvingRef = useRef(false);
 
 	const fetchProfile = useCallback(
 		async (userId: string, signal?: AbortSignal): Promise<Profile | null> => {
@@ -290,6 +294,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		}
 	}, []);
 
+	useEffect(() => {
+		if (!initialised || !profile) {
+			return;
+		}
+		if (profile.role !== 'admin') {
+			return;
+		}
+
+		let cancelled = false;
+
+		authService.checkMfaStatus().then(({ data }) => {
+			if (cancelled || mfaResolvingRef.current) {
+				return;
+			}
+			if (!data?.enrolled) {
+				setMfaAction('enroll');
+			} else if (!data?.verified) {
+				setMfaAction('challenge');
+			}
+		});
+
+		return () => {
+			cancelled = true;
+		};
+	}, [initialised, profile]);
+
+	const resolveMfaAction = useCallback(() => {
+		mfaResolvingRef.current = true;
+		setMfaAction(null);
+		setTimeout(() => {
+			mfaResolvingRef.current = false;
+		}, 2000);
+	}, []);
+
 	useVisibilityReconnect({
 		enabled: !!user,
 		onVisible: async () => {
@@ -348,8 +386,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 				session,
 				loading,
 				initialised,
+				mfaAction,
 				refreshProfile,
 				signOut,
+				resolveMfaAction,
 			}}>
 			{children}
 		</AuthContext.Provider>

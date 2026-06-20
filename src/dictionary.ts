@@ -198,6 +198,37 @@ export const DICT = {
 			TITLE_SUCCESS: 'Account Created!',
 			TOAST_SUCCESS: 'Password created successfully',
 		},
+		MFA: {
+			ENROLLMENT: {
+				TITLE: 'Set Up Two-Factor Authentication',
+				MANDATORY_MESSAGE:
+					'Your admin account requires two-factor authentication. Scan the QR code below with your authenticator app, then enter the 6-digit code to verify.',
+				QR_INSTRUCTION: 'Scan this QR code with Google Authenticator, Authy, or any TOTP app.',
+				CODE_LABEL: 'Verification Code',
+				CODE_PLACEHOLDER: '000000',
+				BUTTON_VERIFY: 'Verify & Enable',
+				BUTTON_VERIFYING: 'Verifying...',
+				LOADING: 'Preparing setup...',
+				ERROR_ENROLL: 'Failed to setup MFA. Please try again.',
+				ERROR_VERIFY: 'Invalid code. Please try again.',
+				SUCCESS_TOAST: 'Two-factor authentication enabled.',
+			},
+			CHALLENGE: {
+				TITLE: 'Two-Factor Authentication Required',
+				MESSAGE: 'Enter the 6-digit code from your authenticator app.',
+				CODE_LABEL: 'Authentication Code',
+				CODE_PLACEHOLDER: '000000',
+				BUTTON_VERIFY: 'Verify',
+				BUTTON_VERIFYING: 'Verifying...',
+				ERROR: 'Invalid code. Please try again.',
+				SUCCESS_TOAST: 'Verified successfully.',
+			},
+			ACCOUNT_STATUS: {
+				TITLE: 'Two-Factor Authentication',
+				ACTIVE: 'Two-factor authentication is active.',
+				NOT_ACTIVE: 'Two-factor authentication is not active.',
+			},
+		},
 	},
 	DASHBOARD: {
 		TITLE: 'Welcome back',
