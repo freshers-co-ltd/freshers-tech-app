@@ -489,7 +489,6 @@ export const DICT = {
 			MESSAGE: 'Manage cleaning requests',
 			STATUS_OPTIONS: {
 				ALL: 'All Statuses',
-				DRAFT: 'Draft',
 				REQUESTED: 'Requested',
 				CONFIRMED: 'Confirmed',
 				IN_PROGRESS: 'In Progress',

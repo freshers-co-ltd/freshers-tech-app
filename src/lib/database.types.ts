@@ -938,13 +938,7 @@ export type Database = {
 			update_user_presence: { Args: never; Returns: undefined };
 		};
 		Enums: {
-			cleaning_status:
-				| 'draft'
-				| 'requested'
-				| 'confirmed'
-				| 'in_progress'
-				| 'completed'
-				| 'cancelled';
+			cleaning_status: 'requested' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
 			media_type: 'image' | 'video';
 			notification_type:
 				| 'cleaning_requested'
@@ -1630,7 +1624,7 @@ export type CompositeTypes<
 export const Constants = {
 	public: {
 		Enums: {
-			cleaning_status: ['draft', 'requested', 'confirmed', 'in_progress', 'completed', 'cancelled'],
+			cleaning_status: ['requested', 'confirmed', 'in_progress', 'completed', 'cancelled'],
 			media_type: ['image', 'video'],
 			notification_type: [
 				'cleaning_requested',

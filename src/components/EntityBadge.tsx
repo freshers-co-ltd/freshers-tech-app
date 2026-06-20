@@ -14,7 +14,6 @@ interface EntityBadgeProps {
 }
 
 const CLEANING_STYLES: Record<CleaningStatus, string> = {
-	draft: 'bg-gray-background text-gray border-gray-border',
 	requested: 'bg-blue-background text-blue border-blue-border',
 	confirmed: 'bg-purple-background text-purple border-purple-border',
 	in_progress: 'bg-yellow-background text-yellow border-yellow-border',

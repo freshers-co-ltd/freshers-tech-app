@@ -1,4 +1,4 @@
-CREATE TYPE public.cleaning_status AS ENUM('draft', 'requested', 'confirmed', 'in_progress', 'completed', 'cancelled');
+CREATE TYPE public.cleaning_status AS ENUM('requested', 'confirmed', 'in_progress', 'completed', 'cancelled');
 
 CREATE TYPE public.media_type AS ENUM('image', 'video');
 
@@ -85,7 +85,7 @@ CREATE TABLE
         host_id UUID NOT NULL REFERENCES public.profiles (id) ON DELETE RESTRICT,
         property_id UUID NOT NULL REFERENCES public.properties (id) ON DELETE RESTRICT,
         cleaner_id UUID REFERENCES public.profiles (id) ON DELETE SET NULL,
-        status public.cleaning_status NOT NULL DEFAULT 'draft',
+        status public.cleaning_status NOT NULL DEFAULT 'requested',
         scheduled_start TIMESTAMPTZ NOT NULL,
         service_cost NUMERIC(10, 2),
         cleaner_pay NUMERIC(10, 2),
@@ -149,10 +149,7 @@ WITH
                     SELECT
                         auth.uid ()
                 )
-                AND (
-                    status = 'draft'::public.cleaning_status
-                    OR status = 'requested'::public.cleaning_status
-                )
+                AND status = 'requested'::public.cleaning_status
                 AND cleaner_id IS NULL
                 AND clock_in_time IS NULL
                 AND clock_out_time IS NULL
@@ -176,7 +173,7 @@ UPDATE TO authenticated USING (
                     SELECT
                         auth.uid ()
                 )
-                AND status IN ('draft', 'requested', 'confirmed')
+                AND status IN ('requested', 'confirmed')
             )
             OR (
                 cleaner_id = (
@@ -293,7 +290,7 @@ WITH
                             SELECT
                                 auth.uid ()
                         )
-                        AND cleanings.status IN ('draft', 'requested', 'confirmed')
+                        AND cleanings.status IN ('requested', 'confirmed')
                         AND cleanings.deleted_at IS NULL
                 )
                 AND is_completed = FALSE
@@ -947,7 +944,7 @@ BEGIN
         END IF;
 
         SELECT status INTO v_status FROM public.cleanings WHERE id = p_cleaning_id;
-        IF v_status NOT IN ('draft', 'completed', 'cancelled') THEN
+        IF v_status NOT IN ('completed', 'cancelled') THEN
             RAISE EXCEPTION 'Soft delete not allowed for this status. Use cancel instead.' USING ERRCODE = 'P0001';
         END IF;
     END IF;
@@ -981,7 +978,7 @@ BEGIN
 
     SELECT status INTO v_status FROM public.cleanings WHERE id = p_cleaning_id;
 
-    IF v_status NOT IN ('draft', 'requested') THEN
+    IF v_status != 'requested' THEN
         RAISE EXCEPTION 'Cannot cancel a cleaning that is already in progress, confirmed, or completed' USING ERRCODE = 'P0001';
     END IF;
 

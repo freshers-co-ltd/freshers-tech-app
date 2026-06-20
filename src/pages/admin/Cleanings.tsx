@@ -80,7 +80,6 @@ export function AdminCleaningsPage() {
 
 	const statusOptions = [
 		{ label: statusDict.ALL, value: 'all' },
-		{ label: statusDict.DRAFT, value: CLEANING_STATUS.DRAFT },
 		{ label: statusDict.REQUESTED, value: CLEANING_STATUS.REQUESTED },
 		{ label: statusDict.CONFIRMED, value: CLEANING_STATUS.CONFIRMED },
 		{ label: statusDict.IN_PROGRESS, value: CLEANING_STATUS.IN_PROGRESS },

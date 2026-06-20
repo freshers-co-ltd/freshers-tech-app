@@ -21,14 +21,12 @@ export type CleaningTask = {
 };
 
 export const CLEANING_STATUS: {
-	readonly DRAFT: CleaningStatus;
 	readonly REQUESTED: CleaningStatus;
 	readonly CONFIRMED: CleaningStatus;
 	readonly IN_PROGRESS: CleaningStatus;
 	readonly COMPLETED: CleaningStatus;
 	readonly CANCELLED: CleaningStatus;
 } = {
-	DRAFT: 'draft',
 	REQUESTED: 'requested',
 	CONFIRMED: 'confirmed',
 	IN_PROGRESS: 'in_progress',
@@ -38,8 +36,8 @@ export const CLEANING_STATUS: {
 
 export const STATUS_GROUPS = {
 	ALL: Object.values(CLEANING_STATUS),
-	CAN_CANCEL: [CLEANING_STATUS.DRAFT, CLEANING_STATUS.REQUESTED],
-	CAN_EDIT: [CLEANING_STATUS.DRAFT, CLEANING_STATUS.REQUESTED, CLEANING_STATUS.CONFIRMED],
+	CAN_CANCEL: [CLEANING_STATUS.REQUESTED],
+	CAN_EDIT: [CLEANING_STATUS.REQUESTED, CLEANING_STATUS.CONFIRMED],
 	CAN_EDIT_RESTRICTED: [CLEANING_STATUS.CONFIRMED],
 	CLEANER_VIEW: [
 		CLEANING_STATUS.CONFIRMED,
