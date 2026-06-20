@@ -94,12 +94,13 @@ export const DICT = {
 			IMAGE_REQUIRED: 'A main image is required',
 			NUMBER_INVALID: 'Must be a valid number',
 			NAME_MIN: 'Full name must be at least 2 characters',
-			PASSWORD_HINT: 'At least 8 characters, including a number and a symbol',
+			PASSWORD_HINT: 'At least 8 characters, including an uppercase letter, a number, and a symbol',
 			PASSWORD_INCORRECT: 'The current password is incorrect.',
 			PASSWORD_MIN: 'Password must be at least 8 characters long',
 			PASSWORD_NUMBER: 'Password must contain at least one number',
 			PASSWORD_REQUIRED: 'Password is required',
 			PASSWORD_SPECIAL: 'Password must contain at least one special character',
+			PASSWORD_UPPERCASE: 'Password must contain at least one uppercase letter',
 			PASSWORDS_MATCH: "Passwords don't match",
 			POSTCODE_INVALID: 'Enter a valid UK postcode',
 			TOWN_REQUIRED: 'Town or City is required',
@@ -617,6 +618,8 @@ export const DICT = {
 			USER_NOT_FOUND: 'No account found with this email.',
 			UNAUTHORISED: 'You do not have permission to perform this action.',
 			USER_BANNED: 'Your account has been banned. Please contact support for more information.',
+			ACCOUNT_LOCKED:
+				'Account locked due to too many failed login attempts. Try again later or reset your password.',
 		},
 		HTTP: {
 			DEFAULT_TITLE: 'Oops! An unexpected error has occurred.',

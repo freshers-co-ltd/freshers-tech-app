@@ -1,6 +1,6 @@
 CREATE TYPE public.user_role AS ENUM('cleaner', 'host', 'admin');
 
-CREATE TABLE
+    CREATE TABLE
     public.profiles (
         id UUID REFERENCES auth.users ON DELETE RESTRICT NOT NULL PRIMARY KEY,
         email TEXT,
@@ -10,7 +10,9 @@ CREATE TABLE
         avatar_url TEXT,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         last_seen_at TIMESTAMP WITH TIME ZONE,
-        deleted_at TIMESTAMP WITH TIME ZONE
+        deleted_at TIMESTAMP WITH TIME ZONE,
+        failed_login_attempts INTEGER DEFAULT 0,
+        locked_until TIMESTAMP WITH TIME ZONE
     );
 
 CREATE UNIQUE INDEX profiles_email_idx ON public.profiles (email);
@@ -189,7 +191,9 @@ BEGIN
   SET
     email = NEW.email,
     full_name = NEW.raw_user_meta_data->>'full_name',
-    avatar_url = NEW.raw_user_meta_data->>'avatar_url'
+    avatar_url = NEW.raw_user_meta_data->>'avatar_url',
+    failed_login_attempts = 0,
+    locked_until = NULL
   WHERE id = NEW.id;
   RETURN NEW;
 END;
@@ -218,3 +222,58 @@ UPDATE TO authenticated USING (
 )
 WITH
     CHECK (public.is_not_banned ());
+
+CREATE
+OR REPLACE FUNCTION public.get_login_lock_status (p_email TEXT)
+RETURNS TABLE (is_locked BOOLEAN, locked_until TIMESTAMP WITH TIME ZONE) SECURITY DEFINER
+SET
+    search_path = public AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        p.locked_until IS NOT NULL AND p.locked_until > NOW(),
+        p.locked_until
+    FROM public.profiles p
+    WHERE p.email = p_email;
+
+    IF NOT FOUND THEN
+        RETURN NEXT;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+REVOKE EXECUTE ON FUNCTION public.get_login_lock_status(TEXT) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_login_lock_status(TEXT) TO anon, authenticated;
+
+CREATE
+OR REPLACE FUNCTION public.record_login_attempt (p_email TEXT, p_success BOOLEAN)
+RETURNS TABLE (is_locked BOOLEAN) SECURITY DEFINER
+SET
+    search_path = public AS $$
+BEGIN
+    IF p_success THEN
+        UPDATE public.profiles
+        SET failed_login_attempts = 0,
+            locked_until = NULL
+        WHERE email = p_email;
+    ELSE
+        UPDATE public.profiles
+        SET failed_login_attempts = COALESCE(failed_login_attempts, 0) + 1,
+            locked_until = CASE
+                WHEN COALESCE(failed_login_attempts, 0) + 1 >= 5
+                THEN NOW() + INTERVAL '24 hours'
+                ELSE locked_until
+            END
+        WHERE email = p_email;
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        p.locked_until IS NOT NULL AND p.locked_until > NOW()
+    FROM public.profiles p
+    WHERE p.email = p_email;
+END;
+$$ LANGUAGE plpgsql;
+
+REVOKE EXECUTE ON FUNCTION public.record_login_attempt(TEXT, BOOLEAN) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.record_login_attempt(TEXT, BOOLEAN) TO anon, authenticated;

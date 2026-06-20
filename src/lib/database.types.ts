@@ -360,10 +360,12 @@ export type Database = {
 					avatar_url: string | null;
 					deleted_at: string | null;
 					email: string | null;
+					failed_login_attempts: number | null;
 					full_name: string | null;
 					id: string;
 					is_verified: boolean | null;
 					last_seen_at: string | null;
+					locked_until: string | null;
 					role: Database['public']['Enums']['user_role'];
 					updated_at: string | null;
 				};
@@ -371,10 +373,12 @@ export type Database = {
 					avatar_url?: string | null;
 					deleted_at?: string | null;
 					email?: string | null;
+					failed_login_attempts?: number | null;
 					full_name?: string | null;
 					id: string;
 					is_verified?: boolean | null;
 					last_seen_at?: string | null;
+					locked_until?: string | null;
 					role?: Database['public']['Enums']['user_role'];
 					updated_at?: string | null;
 				};
@@ -382,10 +386,12 @@ export type Database = {
 					avatar_url?: string | null;
 					deleted_at?: string | null;
 					email?: string | null;
+					failed_login_attempts?: number | null;
 					full_name?: string | null;
 					id?: string;
 					is_verified?: boolean | null;
 					last_seen_at?: string | null;
+					locked_until?: string | null;
 					role?: Database['public']['Enums']['user_role'];
 					updated_at?: string | null;
 				};
@@ -645,6 +651,7 @@ export type Database = {
 					banned_until: string;
 					cleaner_stats: Json;
 					created_at: string;
+					deleted_at: string;
 					email: string;
 					full_name: string;
 					id: string;
@@ -691,6 +698,7 @@ export type Database = {
 					cleaning_stats: Json;
 					cleanings: Json;
 					created_at: string;
+					deleted_at: string;
 					email: string;
 					full_name: string;
 					id: string;
@@ -757,15 +765,6 @@ export type Database = {
 					revenue: number;
 				}[];
 			};
-			admin_get_standard_tasks: {
-				Args: never;
-				Returns: {
-					created_at: string;
-					description: string;
-					id: string;
-					is_active: boolean;
-				}[];
-			};
 			admin_get_user_growth: {
 				Args: { p_end_date?: string; p_start_date?: string };
 				Returns: {
@@ -810,6 +809,7 @@ export type Database = {
 					banned_until: string;
 					completed_cleanings: number;
 					created_at: string;
+					deleted_at: string;
 					email: string;
 					full_name: string;
 					id: string;
@@ -850,6 +850,10 @@ export type Database = {
 				Args: { p_tasks: Json; p_tasks_to_delete: string[] };
 				Returns: undefined;
 			};
+			cleanup_unconfirmed_users: {
+				Args: { days_threshold?: number };
+				Returns: number;
+			};
 			create_cleaning_request: {
 				Args: {
 					p_custom_tasks: string[];
@@ -871,6 +875,7 @@ export type Database = {
 				};
 				Returns: string;
 			};
+			delete_expired_evidence: { Args: never; Returns: undefined };
 			get_cleaner_pay_config: {
 				Args: never;
 				Returns: {
@@ -878,6 +883,13 @@ export type Database = {
 					hourly_rate: number;
 					target_times: Json;
 					updated_at: string;
+				}[];
+			};
+			get_login_lock_status: {
+				Args: { p_email: string };
+				Returns: {
+					is_locked: boolean;
+					locked_until: string;
 				}[];
 			};
 			get_or_create_notification_preferences: { Args: never; Returns: string };
@@ -889,6 +901,14 @@ export type Database = {
 			notify_cleaning_reminders: { Args: never; Returns: undefined };
 			notify_cleaning_starting_soon: { Args: never; Returns: undefined };
 			notify_missed_clockin: { Args: never; Returns: undefined };
+			purge_soft_deleted_records: { Args: never; Returns: undefined };
+			purge_user_pii: { Args: { p_user_id: string }; Returns: undefined };
+			record_login_attempt: {
+				Args: { p_email: string; p_success: boolean };
+				Returns: {
+					is_locked: boolean;
+				}[];
+			};
 			soft_delete_cleaning: {
 				Args: { p_cleaning_id: string };
 				Returns: undefined;
@@ -926,14 +946,6 @@ export type Database = {
 					p_stocks_included?: boolean;
 				};
 				Returns: string;
-			};
-			purge_user_pii: {
-				Args: { p_user_id: string };
-				Returns: undefined;
-			};
-			purge_soft_deleted_records: {
-				Args: never;
-				Returns: undefined;
 			};
 			update_user_presence: { Args: never; Returns: undefined };
 		};

@@ -21,16 +21,53 @@ const mapAuthError = (error: AuthError): string => {
 	}
 };
 
+const getLoginLockStatus = async (email: string): Promise<{ is_locked: boolean }> => {
+	const { data, error } = await supabase.rpc('get_login_lock_status', {
+		p_email: email,
+	});
+
+	if (error || !data || data.length === 0) {
+		return { is_locked: false };
+	}
+
+	return { is_locked: data[0]?.is_locked ?? false };
+};
+
+const recordLoginAttempt = async (
+	email: string,
+	success: boolean,
+): Promise<{ is_locked: boolean }> => {
+	const { data, error } = await supabase.rpc('record_login_attempt', {
+		p_email: email,
+		p_success: success,
+	});
+
+	if (error || !data || data.length === 0) {
+		return { is_locked: false };
+	}
+
+	return { is_locked: data[0]?.is_locked ?? false };
+};
+
 export const authService = {
 	async signIn(credentials: { email: string; password: string }): Promise<AuthActionResult> {
+		const { is_locked } = await getLoginLockStatus(credentials.email);
+
+		if (is_locked) {
+			return { error: DICT.ERRORS.AUTH.ACCOUNT_LOCKED };
+		}
+
 		const { data, error } = await supabase.auth.signInWithPassword({
 			email: credentials.email,
 			password: credentials.password,
 		});
 
 		if (error) {
+			await recordLoginAttempt(credentials.email, false);
 			return { error: mapAuthError(error) };
 		}
+
+		await recordLoginAttempt(credentials.email, true);
 
 		return {
 			error: null,

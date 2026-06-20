@@ -23,6 +23,7 @@ const signupSchema = z
 		password: z
 			.string()
 			.min(8, DICT.COMMON.VALIDATION.PASSWORD_MIN)
+			.regex(/[A-Z]/, { message: DICT.COMMON.VALIDATION.PASSWORD_UPPERCASE })
 			.regex(/[0-9]/, { message: DICT.COMMON.VALIDATION.PASSWORD_NUMBER })
 			.regex(/[^a-zA-Z0-9]/, { message: DICT.COMMON.VALIDATION.PASSWORD_SPECIAL }),
 		confirmPassword: z.string(),

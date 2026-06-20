@@ -43,6 +43,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const abortControllerRef = useRef<AbortController | null>(null);
 	const isVoluntarySignOutRef = useRef(false);
 	const mfaResolvingRef = useRef(false);
+	const authReadyRef = useRef(false);
 
 	const fetchProfile = useCallback(
 		async (userId: string, signal?: AbortSignal): Promise<Profile | null> => {
@@ -139,6 +140,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 						refresh_token: refreshToken,
 					});
 				}
+				window.history.replaceState(null, '', '/update-password');
 			}
 
 			let {
@@ -174,6 +176,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 					if (isMounted) {
 						await handleAuthStateChange(retrySession, controller.signal);
 						setInitialised(true);
+						authReadyRef.current = true;
 					}
 					return;
 				}
@@ -201,6 +204,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 					if (isMounted) {
 						await handleAuthStateChange(retrySession, controller.signal);
 						setInitialised(true);
+						authReadyRef.current = true;
 					}
 					return;
 				}
@@ -209,6 +213,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			if (isMounted) {
 				await handleAuthStateChange(initialSession, controller.signal);
 				setInitialised(true);
+				authReadyRef.current = true;
 			}
 		};
 
@@ -244,7 +249,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 				setProfile(null);
 				setLoading(false);
 			} else if (
-				event === 'INITIAL_SESSION' ||
+				(event === 'INITIAL_SESSION' && authReadyRef.current) ||
 				event === 'SIGNED_IN' ||
 				(event === 'TOKEN_REFRESHED' && currentSession?.user?.id !== lastUserId.current)
 			) {

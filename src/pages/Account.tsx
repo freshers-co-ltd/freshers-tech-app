@@ -86,7 +86,7 @@ export function AccountPage() {
 							<p className="text-sm text-muted-foreground">{dict.PERSONAL.SUBTITLE}</p>
 						</div>
 						<Separator />
-						<div className="max-w-2xl">
+						<div>
 							<PersonalInfoForm />
 						</div>
 					</section>
@@ -97,7 +97,7 @@ export function AccountPage() {
 							<p className="text-sm text-muted-foreground">{dict.SECURITY.SUBTITLE}</p>
 						</div>
 						<Separator />
-						<div className="max-w-2xl">
+						<div>
 							<SecurityForm />
 							{profile?.role === 'admin' && (
 								<div className="mt-6 rounded-md border p-4">
@@ -118,7 +118,7 @@ export function AccountPage() {
 							<p className="text-sm text-muted-foreground">{dict.PREFERENCES.SUBTITLE}</p>
 						</div>
 						<Separator />
-						<div className="max-w-2xl mb-8 md:scroll-mt-22 scroll-mt-20">
+						<div className="mb-8 md:scroll-mt-22 scroll-mt-20">
 							<NotificationPreferencesForm />
 						</div>
 					</section>
@@ -129,8 +129,8 @@ export function AccountPage() {
 							<p className="text-sm text-muted-foreground">{dict.CONTACT.SUBTITLE}</p>
 						</div>
 						<Separator />
-						<div className="max-w-2xl space-y-8">
-							<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+						<div className="space-y-8">
+							<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 								<Button
 									variant="outline"
 									className="h-auto py-4 flex-col items-start gap-2"
@@ -173,7 +173,7 @@ export function AccountPage() {
 							</div>
 						</div>
 					</section>
-					<div className="max-w-2xl pt-4 flex flex-col gap-4 sm:flex-row sm:justify-between">
+					<div className="pt-4 flex flex-col gap-4 sm:flex-row sm:justify-between">
 						<Button variant="destructive" className="w-full sm:w-fit" onClick={() => signOut()}>
 							<LogOut className="mr-1 size-4" />
 							{dict.BUTTON_SIGN_OUT}
