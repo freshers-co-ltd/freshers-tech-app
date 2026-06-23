@@ -22,9 +22,6 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-    IF ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin') THEN
-        RAISE EXCEPTION 'Unauthorised: Only admins can perform this action' USING ERRCODE = 'P0001';
-    END IF;
     RETURN QUERY SELECT c.hourly_rate, c.target_times, c.bathroom_time, c.updated_at FROM cleaner_pay_config c WHERE c.id = 1;
 END;
 $$;

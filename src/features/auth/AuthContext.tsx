@@ -119,8 +119,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			await initAuthSync();
 
 			const hash = window.location.hash || '';
+			const search = window.location.search || '';
 			const isInviteFlow = window.location.pathname === '/set-password';
-			const isRecoveryFlow = hash.includes('type=recovery');
+			const isPkceRecoveryFlow =
+				search.includes('type=recovery') ||
+				hash.includes('type=recovery') ||
+				(search.includes('code=') && window.location.pathname === '/update-password');
 
 			if (isInviteFlow) {
 				setSuppressSessionBroadcast(true);
@@ -129,18 +133,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 				return;
 			}
 
-			if (isRecoveryFlow) {
+			if (isPkceRecoveryFlow) {
 				setSuppressSessionBroadcast(true);
-				const params = new URLSearchParams(hash.substring(1));
-				const accessToken = params.get('access_token');
-				const refreshToken = params.get('refresh_token');
-				if (accessToken && refreshToken) {
-					await authService.setSession({
-						access_token: accessToken,
-						refresh_token: refreshToken,
-					});
+				if (isMounted) {
+					setLoading(false);
+					setInitialised(true);
 				}
-				window.history.replaceState(null, '', '/update-password');
+				return;
 			}
 
 			let {

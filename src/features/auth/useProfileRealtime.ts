@@ -16,6 +16,10 @@ export function useProfileRealtime(
 	onProfileUpdateRef.current = onProfileUpdate;
 
 	useEffect(() => {
+		if (import.meta.env.DEV) {
+			return;
+		}
+
 		if (!userId) {
 			if (profileChannelRef.current) {
 				supabase.removeChannel(profileChannelRef.current);
@@ -63,6 +67,10 @@ export function useProfileRealtime(
 	}, [userId]);
 
 	const reconnect = () => {
+		if (import.meta.env.DEV) {
+			return;
+		}
+
 		if (!profileChannelRef.current || profileChannelRef.current.state !== 'joined') {
 			const currentUserId = userId;
 			if (!currentUserId) {

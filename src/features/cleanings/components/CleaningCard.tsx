@@ -10,7 +10,7 @@ import { DICT } from '@/dictionary';
 import type { CleaningRequest } from '@/features/cleanings/types';
 import { CLEANING_STATUS, STATUS_GROUPS } from '@/features/cleanings/types';
 import { mediaService } from '@/lib/mediaService';
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatPostcode } from '@/lib/utils';
 
 interface CleaningCardProps {
 	cleaning: CleaningRequest;
@@ -30,7 +30,7 @@ export const CleaningCard = memo(
 		}, [cleaning.property?.main_image_url]);
 
 		const formattedPostcode = useMemo(() => {
-			return cleaning.property?.postcode?.toUpperCase();
+			return cleaning.property?.postcode ? formatPostcode(cleaning.property.postcode) : undefined;
 		}, [cleaning.property?.postcode]);
 
 		const canEdit = useMemo(() => {

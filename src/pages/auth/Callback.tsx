@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Loading } from '@/components/Loading';
 import { toast } from '@/components/Toast';
 import { DICT } from '@/dictionary';
-import { supabase } from '@/lib/supabaseClient';
+import { authService } from '@/features/auth/authService';
 
 export const AuthCallback = () => {
 	const navigate = useNavigate();
@@ -31,7 +31,7 @@ export const AuthCallback = () => {
 			}
 
 			if (code) {
-				const { error } = await supabase.auth.exchangeCodeForSession(code);
+				const { error } = await authService.exchangeCodeForSession(code);
 				if (error) {
 					toast.error(DICT.ERRORS.AUTH.LINK_EXPIRED);
 					navigate('/login', { replace: true });
@@ -41,7 +41,7 @@ export const AuthCallback = () => {
 				return;
 			}
 
-			const { data } = await supabase.auth.getSession();
+			const { data } = await authService.getSession();
 			navigate(data.session ? '/dashboard' : '/login', { replace: true });
 		};
 

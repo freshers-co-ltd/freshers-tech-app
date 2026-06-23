@@ -22,31 +22,39 @@ const mapAuthError = (error: AuthError): string => {
 };
 
 const getLoginLockStatus = async (email: string): Promise<{ is_locked: boolean }> => {
-	const { data, error } = await supabase.rpc('get_login_lock_status', {
-		p_email: email,
-	});
+	try {
+		const { data, error } = await supabase.rpc('get_login_lock_status', {
+			p_email: email,
+		});
 
-	if (error || !data || data.length === 0) {
+		if (error || !data || data.length === 0) {
+			return { is_locked: false };
+		}
+
+		return { is_locked: data[0]?.is_locked ?? false };
+	} catch {
 		return { is_locked: false };
 	}
-
-	return { is_locked: data[0]?.is_locked ?? false };
 };
 
 const recordLoginAttempt = async (
 	email: string,
 	success: boolean,
 ): Promise<{ is_locked: boolean }> => {
-	const { data, error } = await supabase.rpc('record_login_attempt', {
-		p_email: email,
-		p_success: success,
-	});
+	try {
+		const { data, error } = await supabase.rpc('record_login_attempt', {
+			p_email: email,
+			p_success: success,
+		});
 
-	if (error || !data || data.length === 0) {
+		if (error || !data || data.length === 0) {
+			return { is_locked: false };
+		}
+
+		return { is_locked: data[0]?.is_locked ?? false };
+	} catch {
 		return { is_locked: false };
 	}
-
-	return { is_locked: data[0]?.is_locked ?? false };
 };
 
 export const authService = {
@@ -215,6 +223,10 @@ export const authService = {
 		});
 
 		return { error: error ? mapAuthError(error) : null };
+	},
+
+	async exchangeCodeForSession(code: string) {
+		return supabase.auth.exchangeCodeForSession(code);
 	},
 
 	async getSession() {

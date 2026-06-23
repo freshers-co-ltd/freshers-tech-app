@@ -159,6 +159,10 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 	}, []);
 
 	const setupChannel = useCallback(() => {
+		if (import.meta.env.DEV) {
+			return;
+		}
+
 		if (cleaningChannelRef.current) {
 			return;
 		}

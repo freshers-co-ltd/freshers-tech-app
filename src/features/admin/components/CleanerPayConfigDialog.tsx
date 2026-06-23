@@ -1,9 +1,7 @@
 'use client';
 
 import { Banknote, Loader2 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
 import { Loading } from '@/components/Loading';
-import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import {
 	Dialog,
@@ -14,8 +12,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { cleaningsService } from '@/features/cleanings/services/cleaningsService';
-import type { CleanerPayConfig } from '@/features/cleanings/types';
+import { useCleanerPayConfigDialog } from '@/features/admin/hooks/useCleanerPayConfigDialog';
+import { useCleanerPayConfig } from '@/features/cleanings/CleanerPayContext';
 
 interface CleanerPayConfigDialogProps {
 	open: boolean;
@@ -23,76 +21,16 @@ interface CleanerPayConfigDialogProps {
 }
 
 export function CleanerPayConfigDialog({ open, onOpenChange }: CleanerPayConfigDialogProps) {
-	const [config, setConfig] = useState<CleanerPayConfig | null>(null);
-	const [loading, setLoading] = useState(false);
-	const [saving, setSaving] = useState(false);
-
-	const fetchConfig = useCallback(async () => {
-		setLoading(true);
-		const result = await cleaningsService.getCleanerPayConfig();
-		if (result.error) {
-			toast.error(result.error);
-		} else {
-			setConfig(result.data ?? null);
-		}
-		setLoading(false);
-	}, []);
-
-	useEffect(() => {
-		if (open) {
-			fetchConfig();
-		}
-	}, [open, fetchConfig]);
-
-	const handleSave = async () => {
-		if (!config) {
-			return;
-		}
-
-		setSaving(true);
-		const result = await cleaningsService.updateCleanerPayConfig(config);
-		setSaving(false);
-
-		if (result.error) {
-			toast.error(result.error);
-		} else {
-			toast.success('Pay rates updated successfully');
-			onOpenChange(false);
-		}
-	};
-
-	const updateHourlyRate = (value: string) => {
-		if (!config) {
-			return;
-		}
-		const rate = parseFloat(value);
-		if (!Number.isNaN(rate)) {
-			setConfig({ ...config, hourly_rate: rate });
-		}
-	};
-
-	const updateBathroomTime = (value: string) => {
-		if (!config) {
-			return;
-		}
-		const hours = parseFloat(value);
-		if (!Number.isNaN(hours)) {
-			setConfig({ ...config, bathroom_time: hours });
-		}
-	};
-
-	const updateTargetTime = (key: keyof CleanerPayConfig['target_times'], value: string) => {
-		if (!config) {
-			return;
-		}
-		const hours = parseFloat(value);
-		if (!Number.isNaN(hours)) {
-			setConfig({
-				...config,
-				target_times: { ...config.target_times, [key]: hours },
-			});
-		}
-	};
+	const { refresh } = useCleanerPayConfig();
+	const {
+		config,
+		loading,
+		saving,
+		updateHourlyRate,
+		updateBathroomTime,
+		updateTargetTime,
+		handleSave,
+	} = useCleanerPayConfigDialog({ open, onOpenChange, onSuccess: refresh });
 
 	if (!config) {
 		return (

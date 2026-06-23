@@ -37,6 +37,10 @@ export function useNotificationRealtime({
 			return;
 		}
 
+		if (import.meta.env.DEV) {
+			return;
+		}
+
 		const newChannel = supabase
 			.channel('notifications-realtime')
 			.on(
@@ -64,7 +68,7 @@ export function useNotificationRealtime({
 				},
 			)
 			.subscribe((status: string, err?: unknown) => {
-				if (err) {
+				if (err && import.meta.env.PROD) {
 					console.error('[Notifications] Channel error', { status, error: err });
 				}
 				onConnectionChangeRef.current?.(status === 'SUBSCRIBED');

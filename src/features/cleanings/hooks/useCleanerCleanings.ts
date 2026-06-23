@@ -1,13 +1,11 @@
 'use client';
 
 import { useCallback, useMemo } from 'react';
-import { useAuth } from '@/features/auth/AuthContext';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
 import { CLEANING_STATUS } from '@/features/cleanings/types';
 import { useResourceModals } from '@/hooks/useResourceModals';
 
 export function useCleanerCleanings() {
-	const { user } = useAuth();
 	const {
 		cleanings,
 		isLoading,
@@ -24,14 +22,9 @@ export function useCleanerCleanings() {
 		[cleanings, modal.viewId],
 	);
 
-	const cleanerCleanings = useMemo(
-		() => cleanings.filter((c) => c.cleaner_id === user?.id),
-		[cleanings, user?.id],
-	);
-
 	const activeCleaning = useMemo(
-		() => cleanerCleanings.find((c) => c.status === CLEANING_STATUS.IN_PROGRESS),
-		[cleanerCleanings],
+		() => cleanings.find((c) => c.status === CLEANING_STATUS.IN_PROGRESS),
+		[cleanings],
 	);
 
 	const handleClockIn = useCallback(
@@ -55,7 +48,7 @@ export function useCleanerCleanings() {
 	);
 
 	return {
-		cleanings: cleanerCleanings,
+		cleanings,
 		isLoading,
 		viewingCleaning,
 		activeCleaning,

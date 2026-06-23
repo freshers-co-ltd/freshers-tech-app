@@ -150,7 +150,7 @@ BEGIN
         p.last_seen_at,
         p.deleted_at,
         (
-            SELECT jsonb_agg(row ORDER BY
+            SELECT COALESCE(jsonb_agg(row ORDER BY
                 CASE WHEN p_properties_sort_direction = 'asc' THEN
                     CASE p_properties_sort_field
                         WHEN 'address_line_1' THEN (row->>'address_line_1')::text
@@ -175,7 +175,7 @@ BEGIN
                         ELSE (row->>'created_at')::text
                     END
                 END DESC NULLS LAST
-            )
+            ), '[]'::jsonb)
             FROM (
                 SELECT jsonb_build_object(
                     'id', pr.id,
@@ -194,7 +194,7 @@ BEGIN
             ) AS props
         ),
         (
-            SELECT jsonb_agg(row)
+            SELECT COALESCE(jsonb_agg(row), '[]'::jsonb)
             FROM (
                 SELECT
                     c.id,
@@ -280,7 +280,7 @@ BEGIN
         p.last_seen_at,
         p.deleted_at,
         (
-            SELECT jsonb_agg(row)
+            SELECT COALESCE(jsonb_agg(row), '[]'::jsonb)
             FROM (
                 SELECT 
                     c.id,
@@ -544,7 +544,8 @@ SELECT
         FROM
             public.profiles
         WHERE
-            role = 'host' AND deleted_at IS NULL
+            role = 'host'
+            AND deleted_at IS NULL
     ) AS total_hosts,
     (
         SELECT
@@ -552,7 +553,8 @@ SELECT
         FROM
             public.profiles
         WHERE
-            role = 'cleaner' AND deleted_at IS NULL
+            role = 'cleaner'
+            AND deleted_at IS NULL
     ) AS total_cleaners,
     (
         SELECT
@@ -1067,7 +1069,8 @@ EXECUTE ON FUNCTION public.admin_update_cleaning TO authenticated;
 CREATE
 OR REPLACE FUNCTION public.purge_user_pii (p_user_id UUID) RETURNS void LANGUAGE plpgsql SECURITY DEFINER
 SET
-    search_path = public, extensions AS $$
+    search_path = public,
+    extensions AS $$
 BEGIN
     IF (SELECT auth.uid()) != p_user_id
        AND ((SELECT auth.jwt() -> 'app_metadata' ->> 'role') IS DISTINCT FROM 'admin')
@@ -1104,7 +1107,7 @@ BEGIN
 
     UPDATE public.cleanings
     SET information = '[Deleted]'
-    WHERE host_id = p_user_id OR cleaner_id = p_user_id;
+    WHERE host_id = p_user_id;
 
     DELETE FROM public.notifications WHERE user_id = p_user_id;
     DELETE FROM public.notification_preferences WHERE user_id = p_user_id;

@@ -54,6 +54,10 @@ export function useCleanerDetail(cleanerId: string | undefined): UseCleanerDetai
 	}, []);
 
 	useEffect(() => {
+		if (import.meta.env.DEV) {
+			return;
+		}
+
 		if (!cleanerId) {
 			cleanupChannel();
 			return;

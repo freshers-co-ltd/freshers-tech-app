@@ -154,6 +154,10 @@ const routesConfig: RouteObject[] = [
 				element: <SetPasswordPage />,
 			},
 			{
+				path: 'update-password',
+				element: lazyLoad(() => import('@/pages/auth/ResetPassword'), 'ResetPasswordPage'),
+			},
+			{
 				element: (
 					<ProtectedRoute>
 						<Outlet />
@@ -177,19 +181,6 @@ const routesConfig: RouteObject[] = [
 			{
 				path: 'privacy',
 				element: lazyLoad(() => import('@/pages/Privacy'), 'PrivacyPage'),
-			},
-			{
-				element: (
-					<ProtectedRoute>
-						<AuthLayout />
-					</ProtectedRoute>
-				),
-				children: [
-					{
-						path: 'update-password',
-						element: lazyLoad(() => import('@/pages/auth/ResetPassword'), 'ResetPasswordPage'),
-					},
-				],
 			},
 			{
 				path: '/host',

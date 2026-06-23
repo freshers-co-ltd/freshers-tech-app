@@ -61,7 +61,7 @@ const getAuthStorage = () => {
 			return window.localStorage.getItem(key) || window.sessionStorage.getItem(key);
 		},
 		setItem: (key: string, value: string) => {
-			if (isTrusted()) {
+			if (isTrusted() || key.includes('-code-verifier')) {
 				window.localStorage.setItem(key, value);
 			} else {
 				window.sessionStorage.setItem(key, value);
@@ -87,6 +87,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 		storage: getAuthStorage(),
 		autoRefreshToken: true,
 		detectSessionInUrl: false,
+		flowType: 'pkce',
 		storageKey: STORAGE_KEY,
 	},
 });

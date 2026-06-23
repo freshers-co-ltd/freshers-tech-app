@@ -68,6 +68,10 @@ export function useHostDetail(
 	}, []);
 
 	useEffect(() => {
+		if (import.meta.env.DEV) {
+			return;
+		}
+
 		if (!hostId) {
 			cleanupChannel();
 			return;

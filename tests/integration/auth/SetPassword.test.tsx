@@ -45,11 +45,11 @@ describe('SetPassword Feature', () => {
 		renderSetPassword();
 
 		await waitFor(() => {
-			expect(screen.getByLabelText(/new password/i)).toBeInTheDocument();
+			expect(screen.getByLabelText('Password')).toBeInTheDocument();
 		});
 
-		await user.type(screen.getByLabelText(/new password/i), 'Password123!');
-		await user.type(screen.getByLabelText(/confirm password/i), 'Password123!');
+		await user.type(screen.getByLabelText('Password'), 'Password123!');
+		await user.type(screen.getByLabelText('Confirm Password'), 'Password123!');
 		await user.click(screen.getByRole('button', { name: /create password/i }));
 
 		await waitFor(() => {
@@ -81,11 +81,11 @@ describe('SetPassword Feature', () => {
 		renderSetPassword();
 
 		await waitFor(() => {
-			expect(screen.getByLabelText(/new password/i)).toBeInTheDocument();
+			expect(screen.getByLabelText('Password')).toBeInTheDocument();
 		});
 
-		await user.type(screen.getByLabelText(/new password/i), 'Password123!');
-		await user.type(screen.getByLabelText(/confirm password/i), 'DifferentPass123!');
+		await user.type(screen.getByLabelText('Password'), 'Password123!');
+		await user.type(screen.getByLabelText('Confirm Password'), 'DifferentPass123!');
 		await user.click(screen.getByRole('button', { name: /create password/i }));
 
 		await waitFor(() => {

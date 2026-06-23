@@ -58,7 +58,7 @@ export function CleaningDetailView({
 		updateTasksBatch,
 	});
 
-	const cleanerPayConfig = useCleanerPayConfig();
+	const { config: cleanerPayConfig } = useCleanerPayConfig();
 	const hourlyRate = !isHost ? (cleanerPayConfig?.hourly_rate ?? null) : null;
 
 	const estimatedHours =

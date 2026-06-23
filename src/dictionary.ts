@@ -400,14 +400,12 @@ export const DICT = {
 		TITLE: 'Account Settings',
 		PERSONAL: {
 			TITLE: 'Personal Information',
-			SUBTITLE: 'Update your display name and email address.',
 			BUTTON_SUBMIT: 'Save Changes',
 			TOAST_EMAIL: 'Check your new email for a confirmation link.',
 			TOAST_SUCCESS: 'Profile updated successfully.',
 		},
 		SECURITY: {
 			TITLE: 'Security',
-			SUBTITLE: 'Change your password to keep your account secure.',
 			BUTTON_SUBMIT: 'Update Password',
 			LABEL_CONFIRM_PASSWORD: 'Confirm New Password',
 			LABEL_CURRENT_PASSWORD: 'Current Password',
@@ -417,7 +415,6 @@ export const DICT = {
 		},
 		PREFERENCES: {
 			TITLE: 'Preferences',
-			SUBTITLE: 'Control how the application behaves and notifies you.',
 			PUSH_NOTIFICATIONS: {
 				TITLE: 'Push Notifications',
 				SUBTITLE: 'Receive notifications even when the app is closed.',
@@ -431,7 +428,6 @@ export const DICT = {
 		},
 		CONTACT: {
 			TITLE: 'Contact',
-			SUBTITLE: 'Contact our support team or access our website.',
 			SUPPORT: { TITLE: 'Contact Support', SUBTITLE: 'Get help with any issues.' },
 			WEBSITE: { TITLE: 'Visit Website', SUBTITLE: 'Learn more about our services.' },
 			PRIVACY: { TITLE: 'Privacy Notice', SUBTITLE: 'Review our privacy policy.' },
@@ -602,6 +598,8 @@ export const DICT = {
 			BUTTON_SUBMITTING: 'Enabling...',
 			MESSAGE_ERROR: 'Failed to set up push notifications.',
 			MESSAGE_SUCCESS: 'Notifications enabled',
+			MESSAGE_BLOCKED:
+				'Push notifications are blocked. Please enable them in your browser settings.',
 		},
 	},
 	ERRORS: {

@@ -2,7 +2,6 @@
 
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import {
 	Dialog,
@@ -13,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { userService } from '@/features/admin/services/userService';
+import { usePropertyPriceDialog } from '@/features/admin/hooks/usePropertyPriceDialog';
 
 interface PropertyPriceDialogProps {
 	open: boolean;
@@ -32,8 +31,14 @@ export function PropertyPriceDialog({
 	currentPrice,
 	onSuccess,
 }: PropertyPriceDialogProps) {
-	const [saving, setSaving] = useState(false);
 	const [price, setPrice] = useState(currentPrice?.toString() || '');
+	const { saving, handleSave: savePrice } = usePropertyPriceDialog({
+		propertyId,
+		onSuccess: () => {
+			onSuccess?.();
+			handleOpen(false);
+		},
+	});
 
 	const handleOpen = (isOpen: boolean) => {
 		if (!isOpen) {
@@ -43,23 +48,7 @@ export function PropertyPriceDialog({
 	};
 
 	const handleSave = async () => {
-		const priceValue = parseFloat(price);
-		if (Number.isNaN(priceValue) || priceValue <= 0) {
-			toast.error('Please enter a valid price greater than 0');
-			return;
-		}
-
-		setSaving(true);
-		const result = await userService.updatePropertyPrice(propertyId, priceValue);
-		setSaving(false);
-
-		if (result.error) {
-			toast.error(result.error);
-		} else {
-			toast.success('Property price updated successfully');
-			onSuccess?.();
-			handleOpen(false);
-		}
+		await savePrice(price);
 	};
 
 	return (

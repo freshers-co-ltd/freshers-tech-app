@@ -15,46 +15,55 @@ BEGIN
 INSERT INTO public.standard_tasks (description) VALUES ('Vacuum all carpets');
 EXCEPTION WHEN unique_violation THEN NULL;
 END $$;
+
 DO $$
 BEGIN
 INSERT INTO public.standard_tasks (description) VALUES ('Mop hard floors');
 EXCEPTION WHEN unique_violation THEN NULL;
 END $$;
+
 DO $$
 BEGIN
 INSERT INTO public.standard_tasks (description) VALUES ('Clean bathroom surfaces');
 EXCEPTION WHEN unique_violation THEN NULL;
 END $$;
+
 DO $$
 BEGIN
 INSERT INTO public.standard_tasks (description) VALUES ('Change bed linens');
 EXCEPTION WHEN unique_violation THEN NULL;
 END $$;
+
 DO $$
 BEGIN
 INSERT INTO public.standard_tasks (description) VALUES ('Dust all surfaces');
 EXCEPTION WHEN unique_violation THEN NULL;
 END $$;
+
 DO $$
 BEGIN
 INSERT INTO public.standard_tasks (description) VALUES ('Clean kitchen appliances');
 EXCEPTION WHEN unique_violation THEN NULL;
 END $$;
+
 DO $$
 BEGIN
 INSERT INTO public.standard_tasks (description) VALUES ('Wipe down countertops');
 EXCEPTION WHEN unique_violation THEN NULL;
 END $$;
+
 DO $$
 BEGIN
 INSERT INTO public.standard_tasks (description) VALUES ('Clean mirrors and glass');
 EXCEPTION WHEN unique_violation THEN NULL;
 END $$;
+
 DO $$
 BEGIN
 INSERT INTO public.standard_tasks (description) VALUES ('Empty trash bins');
 EXCEPTION WHEN unique_violation THEN NULL;
 END $$;
+
 DO $$
 BEGIN
 INSERT INTO public.standard_tasks (description) VALUES ('Clean toilet and sanitize');
@@ -66,9 +75,19 @@ ALTER TABLE public.standard_tasks ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Admins can do everything and hosts can view standard tasks" ON public.standard_tasks FOR ALL TO authenticated USING (
     public.is_not_banned ()
     AND (
-        ((SELECT auth.jwt ()) -> 'app_metadata' ->> 'role' = 'admin')
+        (
+            (
+                SELECT
+                    auth.jwt ()
+            ) -> 'app_metadata' ->> 'role' = 'admin'
+        )
         OR (
-            ((SELECT auth.jwt ()) -> 'app_metadata' ->> 'role' = 'host')
+            (
+                (
+                    SELECT
+                        auth.jwt ()
+                ) -> 'app_metadata' ->> 'role' = 'host'
+            )
             AND is_active = true
         )
     )
@@ -76,7 +95,12 @@ CREATE POLICY "Admins can do everything and hosts can view standard tasks" ON pu
 WITH
     CHECK (
         public.is_not_banned ()
-        AND ((SELECT auth.jwt ()) -> 'app_metadata' ->> 'role' = 'admin')
+        AND (
+            (
+                SELECT
+                    auth.jwt ()
+            ) -> 'app_metadata' ->> 'role' = 'admin'
+        )
     );
 
 CREATE TABLE
@@ -89,7 +113,7 @@ CREATE TABLE
         scheduled_start TIMESTAMPTZ NOT NULL,
         service_cost NUMERIC(10, 2),
         cleaner_pay NUMERIC(10, 2),
-information TEXT,
+        information TEXT,
         stocks_included BOOLEAN DEFAULT FALSE NOT NULL,
         clock_in_time TIMESTAMPTZ,
         clock_out_time TIMESTAMPTZ,
@@ -298,6 +322,39 @@ WITH
         )
     );
 
+CREATE POLICY "Cleaners can update task completion" ON public.cleaning_tasks FOR
+UPDATE TO authenticated USING (
+    public.is_not_banned ()
+    AND deleted_at IS NULL
+    AND EXISTS (
+        SELECT
+            1
+        FROM
+            public.cleanings
+        WHERE
+            cleanings.id = cleaning_tasks.cleaning_id
+            AND cleanings.deleted_at IS NULL
+            AND cleanings.cleaner_id = auth.uid ()
+            AND cleanings.status = 'in_progress'
+    )
+)
+WITH
+    CHECK (
+        public.is_not_banned ()
+        AND deleted_at IS NULL
+        AND EXISTS (
+            SELECT
+                1
+            FROM
+                public.cleanings
+            WHERE
+                cleanings.id = cleaning_tasks.cleaning_id
+                AND cleanings.deleted_at IS NULL
+                AND cleanings.cleaner_id = auth.uid ()
+                AND cleanings.status = 'in_progress'
+        )
+    );
+
 CREATE POLICY "Admins can delete cleaning tasks" ON public.cleaning_tasks FOR DELETE TO authenticated USING (
     public.is_not_banned ()
     AND (
@@ -474,9 +531,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-REVOKE EXECUTE ON FUNCTION public.create_cleaning_request FROM PUBLIC, anon;
+REVOKE
+EXECUTE ON FUNCTION public.create_cleaning_request
+FROM
+    PUBLIC,
+    anon;
+
 GRANT
-    EXECUTE ON FUNCTION public.create_cleaning_request TO authenticated;
+EXECUTE ON FUNCTION public.create_cleaning_request TO authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.update_cleaning_request (
@@ -504,9 +566,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-REVOKE EXECUTE ON FUNCTION public.update_cleaning_request FROM PUBLIC, anon;
+REVOKE
+EXECUTE ON FUNCTION public.update_cleaning_request
+FROM
+    PUBLIC,
+    anon;
+
 GRANT
-    EXECUTE ON FUNCTION public.update_cleaning_request TO authenticated;
+EXECUTE ON FUNCTION public.update_cleaning_request TO authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.handle_cleaning_status_transitions () RETURNS TRIGGER SECURITY DEFINER
@@ -536,7 +603,12 @@ CREATE TRIGGER on_cleaning_timestamp_update BEFORE
 UPDATE ON public.cleanings FOR EACH ROW
 EXECUTE FUNCTION public.handle_cleaning_status_transitions ();
 
-REVOKE EXECUTE ON FUNCTION public.handle_cleaning_status_transitions() FROM PUBLIC, anon, authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.handle_cleaning_status_transitions ()
+FROM
+    PUBLIC,
+    anon,
+    authenticated;
 
 CREATE POLICY "Cleaners can upload evidence to assigned cleaning folders" ON STORAGE.objects FOR INSERT TO authenticated
 WITH
@@ -777,7 +849,12 @@ AFTER
 UPDATE OF deleted_at ON public.properties FOR EACH ROW
 EXECUTE FUNCTION public.handle_soft_cascade_delete ();
 
-REVOKE EXECUTE ON FUNCTION public.handle_soft_cascade_delete() FROM PUBLIC, anon, authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.handle_soft_cascade_delete ()
+FROM
+    PUBLIC,
+    anon,
+    authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.enforce_cleaning_immutability () RETURNS TRIGGER SECURITY DEFINER
@@ -817,7 +894,12 @@ CREATE TRIGGER trigger_cleaning_immutability BEFORE
 UPDATE ON public.cleanings FOR EACH ROW
 EXECUTE FUNCTION public.enforce_cleaning_immutability ();
 
-REVOKE EXECUTE ON FUNCTION public.enforce_cleaning_immutability() FROM PUBLIC, anon, authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.enforce_cleaning_immutability ()
+FROM
+    PUBLIC,
+    anon,
+    authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.enforce_cleaning_tasks_immutability () RETURNS TRIGGER SECURITY DEFINER
@@ -851,7 +933,12 @@ CREATE TRIGGER trigger_cleaning_tasks_immutability BEFORE
 UPDATE ON public.cleaning_tasks FOR EACH ROW
 EXECUTE FUNCTION public.enforce_cleaning_tasks_immutability ();
 
-REVOKE EXECUTE ON FUNCTION public.enforce_cleaning_tasks_immutability() FROM PUBLIC, anon, authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.enforce_cleaning_tasks_immutability ()
+FROM
+    PUBLIC,
+    anon,
+    authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.enforce_evidence_media_immutability () RETURNS TRIGGER SECURITY DEFINER
@@ -887,7 +974,12 @@ CREATE TRIGGER trigger_evidence_media_immutability BEFORE
 UPDATE ON public.evidence_media FOR EACH ROW
 EXECUTE FUNCTION public.enforce_evidence_media_immutability ();
 
-REVOKE EXECUTE ON FUNCTION public.enforce_evidence_media_immutability() FROM PUBLIC, anon, authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.enforce_evidence_media_immutability ()
+FROM
+    PUBLIC,
+    anon,
+    authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.enforce_cleaning_reports_immutability () RETURNS TRIGGER SECURITY DEFINER
@@ -921,7 +1013,12 @@ CREATE TRIGGER trigger_cleaning_reports_immutability BEFORE
 UPDATE ON public.cleaning_reports FOR EACH ROW
 EXECUTE FUNCTION public.enforce_cleaning_reports_immutability ();
 
-REVOKE EXECUTE ON FUNCTION public.enforce_cleaning_reports_immutability() FROM PUBLIC, anon, authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.enforce_cleaning_reports_immutability ()
+FROM
+    PUBLIC,
+    anon,
+    authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.soft_delete_cleaning (p_cleaning_id UUID) RETURNS VOID SECURITY DEFINER
@@ -956,9 +1053,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-REVOKE EXECUTE ON FUNCTION public.soft_delete_cleaning FROM PUBLIC, anon;
+REVOKE
+EXECUTE ON FUNCTION public.soft_delete_cleaning
+FROM
+    PUBLIC,
+    anon;
+
 GRANT
-    EXECUTE ON FUNCTION public.soft_delete_cleaning TO authenticated;
+EXECUTE ON FUNCTION public.soft_delete_cleaning TO authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.host_cancel_cleaning (p_cleaning_id UUID) RETURNS VOID SECURITY DEFINER
@@ -986,9 +1088,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-REVOKE EXECUTE ON FUNCTION public.host_cancel_cleaning FROM PUBLIC, anon;
+REVOKE
+EXECUTE ON FUNCTION public.host_cancel_cleaning
+FROM
+    PUBLIC,
+    anon;
+
 GRANT
-    EXECUTE ON FUNCTION public.host_cancel_cleaning TO authenticated;
+EXECUTE ON FUNCTION public.host_cancel_cleaning TO authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.soft_delete_cleaning_task (p_task_id UUID) RETURNS VOID SECURITY DEFINER
@@ -1009,9 +1116,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-REVOKE EXECUTE ON FUNCTION public.soft_delete_cleaning_task FROM PUBLIC, anon;
+REVOKE
+EXECUTE ON FUNCTION public.soft_delete_cleaning_task
+FROM
+    PUBLIC,
+    anon;
+
 GRANT
-    EXECUTE ON FUNCTION public.soft_delete_cleaning_task TO authenticated;
+EXECUTE ON FUNCTION public.soft_delete_cleaning_task TO authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.soft_delete_evidence_media (p_evidence_id UUID) RETURNS VOID SECURITY DEFINER
@@ -1031,9 +1143,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-REVOKE EXECUTE ON FUNCTION public.soft_delete_evidence_media FROM PUBLIC, anon;
+REVOKE
+EXECUTE ON FUNCTION public.soft_delete_evidence_media
+FROM
+    PUBLIC,
+    anon;
+
 GRANT
-    EXECUTE ON FUNCTION public.soft_delete_evidence_media TO authenticated;
+EXECUTE ON FUNCTION public.soft_delete_evidence_media TO authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.soft_delete_cleaning_report (p_report_id UUID) RETURNS VOID SECURITY DEFINER
@@ -1053,34 +1170,55 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-REVOKE EXECUTE ON FUNCTION public.soft_delete_cleaning_report FROM PUBLIC, anon;
+REVOKE
+EXECUTE ON FUNCTION public.soft_delete_cleaning_report
+FROM
+    PUBLIC,
+    anon;
+
 GRANT
-    EXECUTE ON FUNCTION public.soft_delete_cleaning_report TO authenticated;
+EXECUTE ON FUNCTION public.soft_delete_cleaning_report TO authenticated;
 
 DROP POLICY IF EXISTS "Public profile info visible to authenticated" ON public.profiles;
 
-CREATE POLICY "Users can view profiles based on cleaning relationship" ON public.profiles
-    FOR SELECT
-    TO authenticated
-    USING (
+CREATE POLICY "Users can view profiles based on cleaning relationship" ON public.profiles FOR
+SELECT
+    TO authenticated USING (
         public.is_not_banned ()
         AND (
-            id = (SELECT auth.uid ())
-            OR ((SELECT auth.jwt ()) -> 'app_metadata' ->> 'role') = 'admin'
+            id = (
+                SELECT
+                    auth.uid ()
+            )
+            OR (
+                (
+                    SELECT
+                        auth.jwt ()
+                ) -> 'app_metadata' ->> 'role'
+            ) = 'admin'
             OR EXISTS (
-                SELECT 1
-                FROM public.cleanings c
-                WHERE c.deleted_at IS NULL
-                AND (
-                    (
-                        c.host_id = (SELECT auth.uid ())
-                        AND c.cleaner_id = profiles.id
+                SELECT
+                    1
+                FROM
+                    public.cleanings c
+                WHERE
+                    c.deleted_at IS NULL
+                    AND (
+                        (
+                            c.host_id = (
+                                SELECT
+                                    auth.uid ()
+                            )
+                            AND c.cleaner_id = profiles.id
+                        )
+                        OR (
+                            c.cleaner_id = (
+                                SELECT
+                                    auth.uid ()
+                            )
+                            AND c.host_id = profiles.id
+                        )
                     )
-                    OR (
-                        c.cleaner_id = (SELECT auth.uid ())
-                        AND c.host_id = profiles.id
-                    )
-                )
             )
         )
     );

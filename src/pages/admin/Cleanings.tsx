@@ -18,6 +18,7 @@ import { CleaningsTable } from '@/features/admin/components/CleaningsTable';
 import { StandardTasksDialog } from '@/features/admin/components/StandardTasksDialog';
 import { useAdminCleanings } from '@/features/admin/hooks/useAdminCleanings';
 import { cleaningService as adminCleaningService } from '@/features/admin/services/cleaningService';
+import { useCleanings } from '@/features/cleanings/CleaningContext';
 import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
 import { cleaningsService } from '@/features/cleanings/services/cleaningsService';
 import { CLEANING_STATUS } from '@/features/cleanings/types';
@@ -48,6 +49,8 @@ export function AdminCleaningsPage() {
 		onPageChange,
 	} = useAdminCleanings();
 
+	const { fetchCleanings } = useCleanings();
+
 	const [isStandardTasksOpen, setIsStandardTasksOpen] = useState(false);
 	const [isPayConfigOpen, setIsPayConfigOpen] = useState(false);
 
@@ -61,22 +64,32 @@ export function AdminCleaningsPage() {
 		return result.data || null;
 	}, []);
 
-	const handleUpsert = useCallback(async (data: CleaningFormValues, existingId?: string) => {
-		if (!existingId) {
-			return;
-		}
+	const handleUpsert = useCallback(
+		async (data: CleaningFormValues, existingId?: string) => {
+			if (!existingId) {
+				return;
+			}
 
-		const result = await adminCleaningService.updateCleaning(existingId, {
-			information: data.information || '',
-			scheduled_start: data.scheduled_start.toISOString(),
-			stocks_included: data.stocks_included,
-			custom_tasks: data.custom_tasks?.map((t) => t.description) || [],
-		});
+			const result = await adminCleaningService.updateCleaning(existingId, {
+				information: data.information || '',
+				scheduled_start: data.scheduled_start.toISOString(),
+				stocks_included: data.stocks_included,
+				custom_tasks: data.custom_tasks?.map((t) => t.description) || [],
+			});
 
-		if (result.error) {
-			throw new Error(result.error);
-		}
-	}, []);
+			if (result.error) {
+				throw new Error(result.error);
+			}
+
+			await fetchCleanings();
+		},
+		[fetchCleanings],
+	);
+
+	const refreshAll = useCallback(async () => {
+		await refresh();
+		await fetchCleanings();
+	}, [refresh, fetchCleanings]);
 
 	const statusOptions = [
 		{ label: statusDict.ALL, value: 'all' },
@@ -192,7 +205,7 @@ export function AdminCleaningsPage() {
 					}
 					setPage(1);
 				}}
-				onRefresh={refresh}
+				onRefresh={refreshAll}
 				allData={allData}
 				hasMore={hasMore}
 				onLoadMore={loadMore}

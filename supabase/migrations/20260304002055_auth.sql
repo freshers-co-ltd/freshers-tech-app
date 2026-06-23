@@ -66,8 +66,7 @@ BEGIN
             NEW.id IS DISTINCT FROM OLD.id OR
             (NEW.email IS DISTINCT FROM OLD.email AND NEW.deleted_at IS NULL) OR
             NEW.role IS DISTINCT FROM OLD.role OR
-            NEW.is_verified IS DISTINCT FROM OLD.is_verified OR
-            NEW.created_at IS DISTINCT FROM OLD.created_at
+            NEW.is_verified IS DISTINCT FROM OLD.is_verified
         ) THEN
             RAISE EXCEPTION 'Immutable column violation' USING ERRCODE = '42501';
         END IF;
@@ -187,6 +186,9 @@ OR REPLACE FUNCTION public.handle_user_update () RETURNS TRIGGER SECURITY DEFINE
 SET
     search_path = public AS $$
 BEGIN
+  IF NEW.email LIKE '%@deleted' THEN
+    RETURN NEW;
+  END IF;
   UPDATE public.profiles
   SET
     email = NEW.email,

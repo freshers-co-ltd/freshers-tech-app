@@ -40,7 +40,7 @@ const normaliseCleaningRequest = (item: RawCleaningRequestQueryResult): Cleaning
 };
 
 export const cleaningRequestService = {
-	async getCleaningRequests(): Promise<ActionResult<CleaningRequest[]>> {
+	async getCleaningRequests(role?: string): Promise<ActionResult<CleaningRequest[]>> {
 		const {
 			data: { user },
 		} = await supabase.auth.getUser();
@@ -49,9 +49,8 @@ export const cleaningRequestService = {
 			return { data: [], error: 'Not authenticated' };
 		}
 
-		const { data, error } = await supabase
-			.from('cleanings')
-			.select(`
+		let query = supabase.from('cleanings').select(
+			`
                 *,
                 property:properties (*),
                 cleaner:profiles_public!cleanings_cleaner_id_fkey (
@@ -70,8 +69,16 @@ export const cleaningRequestService = {
                     low_supplies_report,
                     created_at
                 )
-            `)
-			.order('created_at', { ascending: false });
+            `,
+		);
+
+		if (role === 'host') {
+			query = query.eq('host_id', user.id);
+		} else if (role === 'cleaner') {
+			query = query.eq('cleaner_id', user.id);
+		}
+
+		const { data, error } = await query.order('created_at', { ascending: false });
 
 		if (error) {
 			return { data: null, error: mapDatabaseError(error) };

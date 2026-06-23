@@ -89,7 +89,11 @@ export function NotificationPreferencesForm() {
 						)}
 						<div className="space-y-0.5">
 							<p className="text-sm font-medium">{dict.PUSH_NOTIFICATIONS.TITLE}</p>
-							<p className="text-xs text-muted-foreground">{dict.PUSH_NOTIFICATIONS.SUBTITLE}</p>
+							<p className="text-xs text-muted-foreground">
+								{permissionState === 'denied'
+									? dict.TOAST_BLOCKED
+									: dict.PUSH_NOTIFICATIONS.SUBTITLE}
+							</p>
 						</div>
 					</div>
 					<Switch

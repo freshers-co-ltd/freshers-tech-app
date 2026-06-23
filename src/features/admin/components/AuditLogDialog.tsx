@@ -1,8 +1,6 @@
 'use client';
 
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
-import type { DateRange } from 'react-day-picker';
 import { Loading } from '@/components/Loading';
 import { Button } from '@/components/ui/button';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
@@ -14,70 +12,31 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { AuditLogEntryComponent } from '@/features/admin/components/AuditLogEntry';
-import { analyticsService } from '@/features/admin/services/analyticsService';
-import type { AuditFilters, AuditLogEntry } from '@/features/admin/types';
+import { useAuditLogDialog } from '@/features/admin/hooks/useAuditLogDialog';
 
 interface AuditLogDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 }
 
-const PAGE_SIZE = 20;
-
 const TARGET_TABLE_OPTIONS = ['cleanings', 'properties', 'profiles', 'bookings', 'users'];
 
 const ACTION_TYPE_OPTIONS = ['INSERT', 'UPDATE', 'DELETE'];
 
 export function AuditLogDialog({ open, onOpenChange }: AuditLogDialogProps) {
-	const [logs, setLogs] = useState<AuditLogEntry[]>([]);
-	const [loading, setLoading] = useState(false);
-	const [page, setPage] = useState(1);
-	const [filters, setFilters] = useState<AuditFilters>({});
-	const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-
-	const fetchLogs = useCallback(async () => {
-		setLoading(true);
-		const result = await analyticsService.getAuditLogs(
-			filters,
-			page,
-			PAGE_SIZE,
-			dateRange?.from ? dateRange.from.toISOString() : null,
-			dateRange?.to ? dateRange.to.toISOString() : null,
-		);
-		if (result.data) {
-			setLogs(result.data);
-		}
-		setLoading(false);
-	}, [filters, page, dateRange]);
-
-	useEffect(() => {
-		if (open) {
-			fetchLogs();
-		}
-	}, [open, fetchLogs]);
-
-	const handleFilterChange = (key: keyof AuditFilters, value: string) => {
-		setFilters((prev) => ({ ...prev, [key]: value === 'all' ? undefined : value }));
-		setPage(1);
-	};
-
-	const handlePrevPage = () => {
-		if (page > 1) {
-			setPage((p) => p - 1);
-		}
-	};
-
-	const handleNextPage = () => {
-		if (logs.length === PAGE_SIZE) {
-			setPage((p) => p + 1);
-		}
-	};
-
-	const handleClearFilters = () => {
-		setFilters({});
-		setDateRange(undefined);
-		setPage(1);
-	};
+	const {
+		logs,
+		loading,
+		page,
+		filters,
+		dateRange,
+		pageSize,
+		handleFilterChange,
+		handleDateRangeChange,
+		handlePrevPage,
+		handleNextPage,
+		handleClearFilters,
+	} = useAuditLogDialog({ open });
 
 	if (!open) {
 		return null;
@@ -132,13 +91,7 @@ export function AuditLogDialog({ open, onOpenChange }: AuditLogDialogProps) {
 						</SelectContent>
 					</Select>
 
-					<DatePickerWithRange
-						value={dateRange}
-						onChange={(range) => {
-							setDateRange(range);
-							setPage(1);
-						}}
-					/>
+					<DatePickerWithRange value={dateRange} onChange={handleDateRangeChange} />
 
 					<Button variant="outline" size="sm" onClick={handleClearFilters}>
 						Clear
@@ -170,7 +123,7 @@ export function AuditLogDialog({ open, onOpenChange }: AuditLogDialogProps) {
 							variant="outline"
 							size="sm"
 							onClick={handleNextPage}
-							disabled={logs.length < PAGE_SIZE}>
+							disabled={logs.length < pageSize}>
 							Next
 							<ChevronRight className="h-4 w-4" />
 						</Button>

@@ -27,6 +27,7 @@ import { usePropertyImageUpload } from '@/features/properties/hooks/usePropertyI
 import type { Property, PropertyInsert } from '@/features/properties/types';
 import { propertyTypeValues } from '@/features/properties/types';
 import { useObjectUrls } from '@/hooks/useObjectUrls';
+import { formatPostcode } from '@/lib/utils';
 
 const POSTCODE_REGEX = /^[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}$/i;
 
@@ -37,12 +38,7 @@ const propertySchema = z.object({
 	postcode: z
 		.string()
 		.regex(POSTCODE_REGEX, DICT.COMMON.VALIDATION.POSTCODE_INVALID)
-		.transform((val) => {
-			const cleaned = val.replace(/\s+/g, '').toUpperCase();
-			const incode = cleaned.slice(-3);
-			const outcode = cleaned.slice(0, -3);
-			return `${outcode} ${incode}`;
-		}),
+		.transform((val) => formatPostcode(val.replace(/\s+/g, ''))),
 	type: z.enum(propertyTypeValues),
 	bedrooms: z.coerce.number().min(0, DICT.COMMON.VALIDATION.NUMBER_INVALID),
 	bathrooms: z.coerce.number().min(0, DICT.COMMON.VALIDATION.NUMBER_INVALID),

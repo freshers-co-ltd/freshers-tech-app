@@ -9,6 +9,7 @@ import { useAdminUsers } from '@/features/admin/hooks/useAdminUsers';
 import { useCleanerDetail } from '@/features/admin/hooks/useCleanerDetail';
 import { cleaningService as adminCleaningService } from '@/features/admin/services/cleaningService';
 import { userService } from '@/features/admin/services/userService';
+import { useCleanings } from '@/features/cleanings/CleaningContext';
 import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
 import { cleaningsService } from '@/features/cleanings/services/cleaningsService';
 import { UserDetailLayout } from '@/layouts/UserDetailLayout';
@@ -18,6 +19,7 @@ export function AdminCleanerDetailPage() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
 	const { cleaner, loading, refresh } = useCleanerDetail(id);
+	const { fetchCleanings } = useCleanings();
 	const { handleResetPassword, handleBan, handleUnban } = useAdminUsers();
 	const [availableCleaners, setAvailableCleaners] = useState<
 		{ id: string; full_name: string | null }[]
@@ -50,10 +52,14 @@ export function AdminCleanerDetailPage() {
 			if (result.error) {
 				throw new Error(result.error);
 			}
-			refresh();
+			await Promise.all([refresh(), fetchCleanings()]);
 		},
-		[refresh],
+		[refresh, fetchCleanings],
 	);
+
+	const refreshAll = useCallback(async () => {
+		await Promise.all([refresh(), fetchCleanings()]);
+	}, [refresh, fetchCleanings]);
 
 	const onResetPassword = useCallback(async () => {
 		if (!cleaner) {
@@ -172,7 +178,7 @@ export function AdminCleanerDetailPage() {
 							excludeCleaner={true}
 							hideHostCost={true}
 							emptyMessage={dict.EMPTY}
-							onRefresh={refresh}
+							onRefresh={refreshAll}
 							pageSize={10}
 							totalCount={cleanings.length}
 							availableCleaners={availableCleaners}

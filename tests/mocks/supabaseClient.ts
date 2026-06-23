@@ -104,6 +104,12 @@ export const supabase = mockSupabase;
 
 export const setSuppressSessionBroadcast = vi.fn();
 
+export function triggerAuthEvent(event: string, session: unknown) {
+	if (authCallback) {
+		authCallback(event, session);
+	}
+}
+
 export function resetSupabaseMocks() {
 	authCallback = null;
 }

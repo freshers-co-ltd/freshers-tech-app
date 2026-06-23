@@ -13,8 +13,8 @@ import { AccountAvatar } from '@/features/account/components/AccountAvatar';
 import { PersonalInfoForm } from '@/features/account/components/PersonalInfoForm';
 import { NotificationPreferencesForm } from '@/features/account/components/PreferencesForm';
 import { SecurityForm } from '@/features/account/components/SecurityForm';
+import { userService } from '@/features/admin/services/userService';
 import { useAuth } from '@/features/auth/AuthContext';
-import { supabase } from '@/lib/supabaseClient';
 
 export function AccountPage() {
 	const { loading, signOut, user, profile } = useAuth();
@@ -83,7 +83,6 @@ export function AccountPage() {
 					<section id="personal-info" className="space-y-4 mb-8 md:scroll-mt-22 scroll-mt-20">
 						<div>
 							<h2 className="text-xl font-semibold">{dict.PERSONAL.TITLE}</h2>
-							<p className="text-sm text-muted-foreground">{dict.PERSONAL.SUBTITLE}</p>
 						</div>
 						<Separator />
 						<div>
@@ -94,7 +93,6 @@ export function AccountPage() {
 					<section id="security" className="space-y-4 mb-8 md:scroll-mt-22 scroll-mt-20">
 						<div>
 							<h2 className="text-xl font-semibold">{dict.SECURITY.TITLE}</h2>
-							<p className="text-sm text-muted-foreground">{dict.SECURITY.SUBTITLE}</p>
 						</div>
 						<Separator />
 						<div>
@@ -115,7 +113,6 @@ export function AccountPage() {
 					<section id="settings" className="space-y-4 mb-8 md:scroll-mt-22 scroll-mt-20">
 						<div>
 							<h2 className="text-xl font-semibold">{dict.PREFERENCES.TITLE}</h2>
-							<p className="text-sm text-muted-foreground">{dict.PREFERENCES.SUBTITLE}</p>
 						</div>
 						<Separator />
 						<div className="mb-8 md:scroll-mt-22 scroll-mt-20">
@@ -126,7 +123,6 @@ export function AccountPage() {
 					<section id="support" className="space-y-4 mb-8 md:scroll-mt-22 scroll-mt-20">
 						<div>
 							<h2 className="text-xl font-semibold">{dict.CONTACT.TITLE}</h2>
-							<p className="text-sm text-muted-foreground">{dict.CONTACT.SUBTITLE}</p>
 						</div>
 						<Separator />
 						<div className="space-y-8">
@@ -197,11 +193,9 @@ export function AccountPage() {
 							if (!user) {
 								return;
 							}
-							const { error } = await supabase.rpc('purge_user_pii', {
-								p_user_id: user.id,
-							});
+							const { error } = await userService.purgeUserPii(user.id);
 							if (error) {
-								toast.error(dict.DELETE_ACCOUNT.TOAST_ERROR);
+								toast.error(error);
 								return;
 							}
 							toast.success(dict.DELETE_ACCOUNT.TOAST_SUCCESS);

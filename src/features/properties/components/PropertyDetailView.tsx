@@ -17,6 +17,7 @@ import { useAuth } from '@/features/auth/AuthContext';
 import type { Property } from '@/features/properties/types';
 import { useCarousel } from '@/hooks/useCarousel';
 import { mediaService } from '@/lib/mediaService';
+import { formatPostcode } from '@/lib/utils';
 
 interface PropertyDetailViewProps {
 	property: Property;
@@ -62,7 +63,7 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 							<div className="flex items-center gap-1 text-muted-foreground text-sm">
 								<MapPin className="size-4 shrink-0" />
 								<span className="truncate">
-									{property.town_city}, {property.postcode.toUpperCase()}
+									{property.town_city}, {formatPostcode(property.postcode)}
 								</span>
 							</div>
 						</DialogHeader>

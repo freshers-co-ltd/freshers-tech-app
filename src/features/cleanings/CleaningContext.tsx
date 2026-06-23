@@ -74,7 +74,7 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 				setIsLoading(true);
 			}
 
-			const { data, error } = await cleaningsService.getCleaningRequests();
+			const { data, error } = await cleaningsService.getCleaningRequests(profile?.role);
 
 			if (signal?.aborted) {
 				if (!skipLoadingState) {
@@ -93,7 +93,7 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 				setIsLoading(false);
 			}
 		},
-		[user],
+		[user, profile?.role],
 	);
 
 	useEffect(() => {

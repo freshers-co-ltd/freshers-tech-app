@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { authService } from '@/features/auth/authService';
+import { pushSubscriptionsService } from '@/features/notifications/pushSubscriptionsService';
 import type { Json } from '@/lib/database.types';
-import { supabase } from '@/lib/supabaseClient';
 
 const pushConfig = {
 	vapidPublicKey: import.meta.env.VITE_VAPID_PUBLIC_KEY || '',
@@ -21,13 +22,34 @@ interface UsePushNotificationsResult {
 }
 
 export function usePushNotifications(): UsePushNotificationsResult {
+	const [isSupported, setIsSupported] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 
-	const isSupported =
-		typeof window !== 'undefined' && 'PushManager' in window && 'serviceWorker' in navigator;
+	useEffect(() => {
+		const checkSupport = async () => {
+			if (
+				typeof window !== 'undefined' &&
+				'PushManager' in window &&
+				'serviceWorker' in navigator
+			) {
+				try {
+					const registration = await navigator.serviceWorker.ready;
+					setIsSupported('pushManager' in registration);
+				} catch {
+					setIsSupported(false);
+				}
+			} else {
+				setIsSupported(false);
+			}
+		};
+		checkSupport();
+	}, []);
 
 	const getPermissionState = useCallback((): PermissionState => {
 		if (!isSupported) {
+			return 'unsupported';
+		}
+		if (typeof Notification === 'undefined') {
 			return 'unsupported';
 		}
 		return Notification.permission as PermissionState;
@@ -43,14 +65,17 @@ export function usePushNotifications(): UsePushNotificationsResult {
 		try {
 			const permission = await Notification.requestPermission();
 			return permission as PermissionState;
-		} catch (err) {
-			console.error('[Push] Error requesting permission:', err);
+		} catch {
 			return 'denied';
 		}
 	}, [isSupported]);
 
 	const subscribe = useCallback(
 		async (userId: string): Promise<{ success: boolean; error: string | null }> => {
+			if (isSubscribingRef.current) {
+				return { success: false, error: null };
+			}
+
 			if (!isSupported) {
 				return { success: false, error: 'Push notifications not supported' };
 			}
@@ -59,11 +84,17 @@ export function usePushNotifications(): UsePushNotificationsResult {
 				return { success: false, error: 'VAPID public key not configured' };
 			}
 
+			isSubscribingRef.current = true;
 			setIsLoading(true);
 			try {
 				const registration = await navigator.serviceWorker.ready;
 
 				localStorage.setItem('vapidPublicKey', pushConfig.vapidPublicKey);
+
+				const existingSub = await registration.pushManager.getSubscription();
+				if (existingSub) {
+					await existingSub.unsubscribe();
+				}
 
 				const subscription = await registration.pushManager.subscribe({
 					userVisibleOnly: true,
@@ -72,16 +103,15 @@ export function usePushNotifications(): UsePushNotificationsResult {
 
 				const subscriptionJson = subscription.toJSON() as unknown as Json;
 
-				const { error } = await supabase.from('push_subscriptions').insert({
-					user_id: userId,
-					subscription: subscriptionJson,
-				});
+				await pushSubscriptionsService.deleteByUserId(userId);
+
+				const { error } = await pushSubscriptionsService.insert(userId, subscriptionJson);
 
 				if (error) {
 					if (import.meta.env.DEV) {
 						console.error('[Push] Error saving subscription:', error);
 					}
-					return { success: false, error: error.message };
+					return { success: false, error };
 				}
 
 				return { success: true, error: null };
@@ -92,6 +122,7 @@ export function usePushNotifications(): UsePushNotificationsResult {
 				const message = err instanceof Error ? err.message : 'Failed to subscribe';
 				return { success: false, error: message };
 			} finally {
+				isSubscribingRef.current = false;
 				setIsLoading(false);
 			}
 		},
@@ -110,10 +141,7 @@ export function usePushNotifications(): UsePushNotificationsResult {
 
 			if (subscription) {
 				await subscription.unsubscribe();
-				const { error } = await supabase
-					.from('push_subscriptions')
-					.delete()
-					.eq('endpoint', subscription.endpoint);
+				const { error } = await pushSubscriptionsService.deleteByEndpoint(subscription.endpoint);
 				if (error) {
 					if (import.meta.env.DEV) {
 						console.error('[Push] Error removing subscription:', error);
@@ -139,11 +167,7 @@ export function usePushNotifications(): UsePushNotificationsResult {
 		}
 
 		try {
-			const { data, error } = await supabase
-				.from('push_subscriptions')
-				.select('id')
-				.eq('user_id', userId)
-				.maybeSingle();
+			const { data, error } = await pushSubscriptionsService.hasSubscription(userId);
 
 			if (error) {
 				if (import.meta.env.DEV) {
@@ -152,7 +176,7 @@ export function usePushNotifications(): UsePushNotificationsResult {
 				return false;
 			}
 
-			return !!data;
+			return data ?? false;
 		} catch {
 			if (import.meta.env.DEV) {
 				console.error('[Push] Error checking subscription');
@@ -173,11 +197,7 @@ export function usePushNotifications(): UsePushNotificationsResult {
 				return false;
 			}
 
-			const { data: dbSub } = await supabase
-				.from('push_subscriptions')
-				.select('subscription')
-				.eq('user_id', userId)
-				.maybeSingle();
+			const { data: dbSub } = await pushSubscriptionsService.getByUserId(userId);
 
 			if (!dbSub) {
 				if (import.meta.env.DEV) {
@@ -199,9 +219,6 @@ export function usePushNotifications(): UsePushNotificationsResult {
 				return false;
 			}
 
-			if (import.meta.env.DEV) {
-				console.log('[Push] Subscription is valid');
-			}
 			return true;
 		} catch (err) {
 			if (import.meta.env.DEV) {
@@ -211,11 +228,24 @@ export function usePushNotifications(): UsePushNotificationsResult {
 		}
 	}, []);
 
+	const lastReSubscribeRef = useRef(0);
+	const isSubscribingRef = useRef(false);
+
 	const autoReSubscribe = useCallback(
 		async (userId: string): Promise<void> => {
+			if (isSubscribingRef.current) {
+				return;
+			}
+
+			const now = Date.now();
+			if (now - lastReSubscribeRef.current < 30_000) {
+				return;
+			}
+
 			const isValid = await validateSubscription(userId);
 
 			if (!isValid) {
+				lastReSubscribeRef.current = now;
 				if (import.meta.env.DEV) {
 					console.log('[Push] Auto re-subscribing due to invalid subscription');
 				}
@@ -228,7 +258,7 @@ export function usePushNotifications(): UsePushNotificationsResult {
 	useEffect(() => {
 		const handleVisibilityChange = () => {
 			if (document.visibilityState === 'visible') {
-				const userId = supabase.auth.getUser().then(
+				const userId = authService.getCurrentUser().then(
 					({ data }) => data.user?.id,
 					() => undefined,
 				);

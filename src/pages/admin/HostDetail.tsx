@@ -22,6 +22,7 @@ import { useAdminUsers } from '@/features/admin/hooks/useAdminUsers';
 import { useHostDetail } from '@/features/admin/hooks/useHostDetail';
 import { cleaningService as adminCleaningService } from '@/features/admin/services/cleaningService';
 import { userService } from '@/features/admin/services/userService';
+import { useCleanings } from '@/features/cleanings/CleaningContext';
 import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
 import { CleaningForm } from '@/features/cleanings/components/CleaningForm';
 import { cleaningsService } from '@/features/cleanings/services/cleaningsService';
@@ -43,6 +44,8 @@ export function AdminHostDetailPage() {
 		propertiesSortField,
 		propertiesSortDirection,
 	});
+
+	const { fetchCleanings } = useCleanings();
 
 	const propertyModal = useResourceModals({ resourceName: 'property' });
 
@@ -136,7 +139,7 @@ export function AdminHostDetailPage() {
 		} else {
 			toast.success(DICT.CLEANINGS.CREATE.TOAST_SUCCESS);
 			setIsCreateModalOpen(false);
-			refresh();
+			await Promise.all([refresh(), fetchCleanings()]);
 		}
 	};
 
@@ -159,10 +162,14 @@ export function AdminHostDetailPage() {
 			if (result.error) {
 				throw new Error(result.error);
 			}
-			refresh();
+			await Promise.all([refresh(), fetchCleanings()]);
 		},
-		[refresh],
+		[refresh, fetchCleanings],
 	);
+
+	const refreshAll = useCallback(async () => {
+		await Promise.all([refresh(), fetchCleanings()]);
+	}, [refresh, fetchCleanings]);
 
 	if (!host) {
 		return null;
@@ -280,7 +287,7 @@ export function AdminHostDetailPage() {
 							excludeHost={true}
 							hideCleanerPay={true}
 							emptyMessage={dict.EMPTY_CLEANINGS}
-							onRefresh={refresh}
+							onRefresh={refreshAll}
 							pageSize={10}
 							totalCount={cleanings.length}
 							availableCleaners={availableCleaners}

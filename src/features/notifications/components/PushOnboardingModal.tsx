@@ -20,9 +20,10 @@ import { usePushNotifications } from '@/hooks/usePushNotifications';
 interface PushOnboardingModalProps {
 	isOpen: boolean;
 	onOpenChange: (open: boolean) => void;
+	onAction?: () => void;
 }
 
-export function PushOnboardingModal({ isOpen, onOpenChange }: PushOnboardingModalProps) {
+export function PushOnboardingModal({ isOpen, onOpenChange, onAction }: PushOnboardingModalProps) {
 	const { user } = useAuth();
 	const { updatePreferences } = useNotifications();
 	const { isSupported, requestPermission, subscribe } = usePushNotifications();
@@ -44,15 +45,19 @@ export function PushOnboardingModal({ isOpen, onOpenChange }: PushOnboardingModa
 
 				if (success) {
 					await updatePreferences({ push_enabled: true });
+					onAction?.();
 					toast.success(dict.MESSAGE_SUCCESS);
 					onOpenChange(false);
 				} else {
 					toast.error(subError || dict.MESSAGE_ERROR);
 				}
 			} else if (permission === 'denied') {
+				onAction?.();
+				toast.error(dict.MESSAGE_BLOCKED);
 				await updatePreferences({ push_enabled: false });
 				onOpenChange(false);
 			} else {
+				onAction?.();
 				await updatePreferences({ push_enabled: false });
 				onOpenChange(false);
 			}
@@ -68,6 +73,7 @@ export function PushOnboardingModal({ isOpen, onOpenChange }: PushOnboardingModa
 
 		try {
 			await updatePreferences({ push_enabled: false });
+			onAction?.();
 			onOpenChange(false);
 		} catch (err) {
 			const message = err instanceof Error ? err.message : DICT.ERRORS.COMMON.GENERIC;

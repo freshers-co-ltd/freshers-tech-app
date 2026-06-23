@@ -14,7 +14,11 @@ export function useHeartbeat(userId: string | undefined) {
 				return;
 			}
 
-			await supabase.rpc('update_user_presence');
+			try {
+				await supabase.rpc('update_user_presence');
+			} catch {
+				// Non-critical heartbeat; silently ignore failures
+			}
 		};
 
 		recordActivity();

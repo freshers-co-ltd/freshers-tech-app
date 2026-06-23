@@ -35,6 +35,10 @@ export function useCleaningsRealtime({
 			return;
 		}
 
+		if (import.meta.env.DEV) {
+			return;
+		}
+
 		const isCleaner = profile.role === 'cleaner';
 		const isHost = profile.role === 'host';
 
@@ -59,7 +63,7 @@ export function useCleaningsRealtime({
 				},
 			)
 			.subscribe((status: string, err?: unknown) => {
-				if (err) {
+				if (err && import.meta.env.PROD) {
 					console.error('[Cleanings] Channel error', { status, error: err });
 				}
 			});

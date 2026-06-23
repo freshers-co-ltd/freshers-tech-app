@@ -1,6 +1,11 @@
 'use client';
 
-import type { StandardTask, TaskInsert, TaskUpdate } from '@/features/cleanings/types';
+import type {
+	CleaningTask,
+	StandardTask,
+	TaskInsert,
+	TaskUpdate,
+} from '@/features/cleanings/types';
 import { type ActionResult, mapDatabaseError } from '@/lib/serviceUtils';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -19,26 +24,33 @@ export const tasksService = {
 		return { data: data ?? [], error: null };
 	},
 
-	async insertTask(payload: TaskInsert): Promise<ActionResult<void>> {
-		const { error } = await supabase.from('cleaning_tasks').insert(payload);
+	async insertTask(payload: TaskInsert): Promise<ActionResult<CleaningTask>> {
+		const { data, error } = await supabase.from('cleaning_tasks').insert(payload).select().single();
+
 		if (error) {
 			return { data: null, error: mapDatabaseError(error) };
 		}
-		return { data: undefined, error: null };
+
+		return { data, error: null };
 	},
 
-	async updateTask(payload: TaskUpdate): Promise<ActionResult<void>> {
+	async updateTask(payload: TaskUpdate): Promise<ActionResult<CleaningTask>> {
 		if (!payload.id) {
 			return { data: null, error: 'Task ID is required for updates' };
 		}
 
-		const { error } = await supabase.from('cleaning_tasks').update(payload).eq('id', payload.id);
+		const { data, error } = await supabase
+			.from('cleaning_tasks')
+			.update({ is_completed: payload.is_completed })
+			.eq('id', payload.id)
+			.select()
+			.single();
 
 		if (error) {
 			return { data: null, error: mapDatabaseError(error) };
 		}
 
-		return { data: undefined, error: null };
+		return { data, error: null };
 	},
 
 	async softDeleteTask(id: string): Promise<ActionResult<void>> {
