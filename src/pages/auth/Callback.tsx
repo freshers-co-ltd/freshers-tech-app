@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Loading } from '@/components/Loading';
 import { toast } from '@/components/Toast';
 import { DICT } from '@/dictionary';
-import { authService } from '@/features/auth/authService';
+import { authService } from '@/features/auth/services/authService';
 
 export const AuthCallback = () => {
 	const navigate = useNavigate();

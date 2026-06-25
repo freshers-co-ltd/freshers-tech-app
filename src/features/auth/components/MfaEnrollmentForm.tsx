@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { DICT } from '@/dictionary';
-import { authService } from '@/features/auth/authService';
+import { mfaService } from '@/features/auth/services/mfaService';
 
 const verifySchema = z.object({
 	code: z
@@ -43,7 +43,7 @@ export function MfaEnrollmentForm({ onComplete }: MfaEnrollmentFormProps) {
 		setQrCode('');
 		setFactorId('');
 
-		const { data, error: enrollError } = await authService.enrollMfa();
+		const { data, error: enrollError } = await mfaService.enrollMfa();
 		if (enrollError || !data) {
 			setError(enrollError || dict.ERROR_ENROLL);
 			setInitialising(false);
@@ -66,14 +66,14 @@ export function MfaEnrollmentForm({ onComplete }: MfaEnrollmentFormProps) {
 
 	const onSubmit = async (values: VerifyFormValues) => {
 		setError('');
-		const { data: challengeData, error: challengeError } = await authService.challengeMfa(factorId);
+		const { data: challengeData, error: challengeError } = await mfaService.challengeMfa(factorId);
 		if (challengeError || !challengeData) {
 			console.error('[MFA] Challenge failed:', challengeError);
 			setError(dict.ERROR_VERIFY);
 			return;
 		}
 
-		const { error: verifyError } = await authService.verifyMfaChallenge(
+		const { error: verifyError } = await mfaService.verifyMfaChallenge(
 			factorId,
 			challengeData.id,
 			values.code,
@@ -84,7 +84,7 @@ export function MfaEnrollmentForm({ onComplete }: MfaEnrollmentFormProps) {
 			return;
 		}
 
-		const { error: aalError } = await authService.waitForAal2();
+		const { error: aalError } = await mfaService.waitForAal2();
 		if (aalError) {
 			console.error('[MFA] AAL2 not confirmed after verify:', aalError);
 		}

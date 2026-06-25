@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { authService } from '@/features/auth/authService';
+import { authService } from '@/features/auth/services/authService';
 import { pushSubscriptionsService } from '@/features/notifications/pushSubscriptionsService';
 import type { Json } from '@/lib/database.types';
 

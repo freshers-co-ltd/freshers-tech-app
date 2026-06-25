@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { DICT } from '@/dictionary';
-import { authService } from '@/features/auth/authService';
+import { authService } from '@/features/auth/services/authService';
 import { cn } from '@/lib/utils';
 
 const forgotPasswordSchema = z.object({

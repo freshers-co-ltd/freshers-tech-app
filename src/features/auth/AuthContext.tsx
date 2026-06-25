@@ -10,7 +10,9 @@ import {
 	useRef,
 	useState,
 } from 'react';
-import { authService } from '@/features/auth/authService';
+import { authService } from '@/features/auth/services/authService';
+import { mfaService } from '@/features/auth/services/mfaService';
+import { profileService } from '@/features/auth/services/profileService';
 import type { Profile, UserRole } from '@/features/auth/types';
 import { useProfileRealtime } from '@/features/auth/useProfileRealtime';
 import { useVisibilityReconnect } from '@/hooks/useVisibilityReconnect';
@@ -47,7 +49,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 	const fetchProfile = useCallback(
 		async (userId: string, signal?: AbortSignal): Promise<Profile | null> => {
-			const { data, error } = await authService.getProfileWithFallback(userId, signal);
+			const { data, error } = await profileService.getProfileWithFallback(userId, signal);
 			if (error) {
 				console.error('Failed to fetch profile:', error);
 			}
@@ -308,7 +310,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 		let cancelled = false;
 
-		authService.checkMfaStatus().then(({ data }) => {
+		mfaService.checkMfaStatus().then(({ data }) => {
 			if (cancelled || mfaResolvingRef.current) {
 				return;
 			}

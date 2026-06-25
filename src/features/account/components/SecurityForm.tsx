@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { PasswordInput } from '@/components/ui/password-input';
 import { DICT } from '@/dictionary';
-import { authService } from '@/features/auth/authService';
+import { authService } from '@/features/auth/services/authService';
 
 const securitySchema = z
 	.object({

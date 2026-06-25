@@ -4,7 +4,8 @@ import { toast } from '@/components/Toast';
 import { UserAvatar } from '@/components/UserAvatar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/AuthContext';
-import { authService } from '@/features/auth/authService';
+import { authService } from '@/features/auth/services/authService';
+import { profileService } from '@/features/auth/services/profileService';
 import { mediaService } from '@/lib/mediaService';
 import { cn } from '@/lib/utils';
 
@@ -30,7 +31,7 @@ export function AccountAvatar() {
 		if (error) {
 			toast.error(error);
 		} else if (path) {
-			const { error: updateError } = await authService.updateProfile(user.id, {
+			const { error: updateError } = await profileService.updateProfile(user.id, {
 				avatar_url: path,
 			});
 
@@ -55,7 +56,7 @@ export function AccountAvatar() {
 			const pathsToDelete = files.map((f: { name: string }) => `${user.id}/${f.name}`);
 			await mediaService.deleteMedia(pathsToDelete, 'avatars');
 		}
-		const { error: updateError } = await authService.updateProfile(user.id, {
+		const { error: updateError } = await profileService.updateProfile(user.id, {
 			avatar_url: null,
 		});
 		if (updateError) {

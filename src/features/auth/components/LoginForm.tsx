@@ -18,7 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { DICT } from '@/dictionary';
-import { authService } from '@/features/auth/authService';
+import { authService } from '@/features/auth/services/authService';
 import { cn } from '@/lib/utils';
 
 const loginSchema = z.object({

@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { type AuthContextType, useAuth } from '@/features/auth/AuthContext';
-import { DashboardRedirect, PublicRoute } from '@/routes';
+import { DashboardRedirect, PublicRoute } from '@/features/auth/RouteGuards';
 
 vi.mock('@/features/auth/AuthContext', () => ({
 	useAuth: vi.fn(),

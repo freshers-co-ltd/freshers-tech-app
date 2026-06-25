@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { PasswordInput } from '@/components/ui/password-input';
 import { DICT } from '@/dictionary';
-import { authService } from '@/features/auth/authService';
+import { authService } from '@/features/auth/services/authService';
 import { setSuppressSessionBroadcast } from '@/lib/supabaseClient';
 import { cn } from '@/lib/utils';
 

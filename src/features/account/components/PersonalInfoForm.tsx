@@ -10,7 +10,8 @@ import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { DICT } from '@/dictionary';
 import { useAuth } from '@/features/auth/AuthContext';
-import { authService } from '@/features/auth/authService';
+import { authService } from '@/features/auth/services/authService';
+import { profileService } from '@/features/auth/services/profileService';
 
 const personalSchema = z.object({
 	full_name: z
@@ -48,7 +49,7 @@ export function PersonalInfoForm() {
 			}
 			toast.info(dict.TOAST_EMAIL);
 		}
-		const { error } = await authService.updateProfile(user.id, {
+		const { error } = await profileService.updateProfile(user.id, {
 			full_name: values.full_name,
 		});
 		if (error) {

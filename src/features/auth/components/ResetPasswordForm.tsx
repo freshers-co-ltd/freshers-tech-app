@@ -12,7 +12,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { PasswordInput } from '@/components/ui/password-input';
 import { DICT } from '@/dictionary';
 import { useAuth } from '@/features/auth/AuthContext';
-import { authService } from '@/features/auth/authService';
+import { authService } from '@/features/auth/services/authService';
 import { cn } from '@/lib/utils';
 
 const resetPasswordSchema = z

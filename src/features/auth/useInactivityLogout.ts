@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '@/features/auth/authService';
+import { authService } from '@/features/auth/services/authService';
 
 /**
  * Hook that automatically logs out the user after a period of inactivity.
