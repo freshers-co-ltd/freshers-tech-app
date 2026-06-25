@@ -1,41 +1,17 @@
 import { Camera, Loader2, X } from 'lucide-react';
-import { type ChangeEvent, useCallback, useEffect, useState } from 'react';
+import { type ChangeEvent, useState } from 'react';
 import { toast } from '@/components/Toast';
 import { UserAvatar } from '@/components/UserAvatar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/AuthContext';
 import { authService } from '@/features/auth/authService';
-import {
-	DEFAULT_FILE_SIZE_LIMIT,
-	getBucketConfig,
-	mediaService,
-	mimeTypesToAccept,
-} from '@/lib/mediaService';
+import { mediaService } from '@/lib/mediaService';
 import { cn } from '@/lib/utils';
 
 export function AccountAvatar() {
 	const { profile, user, refreshProfile } = useAuth();
 	const [isUploading, setIsUploading] = useState(false);
 	const [isRemoving, setIsRemoving] = useState(false);
-	const [bucketConfig, setBucketConfig] = useState({
-		maxSize: DEFAULT_FILE_SIZE_LIMIT,
-		accept: { 'image/*': [] } as Record<string, string[]>,
-	});
-
-	const fetchBucketConfig = useCallback(async () => {
-		const config = await getBucketConfig('avatars');
-		setBucketConfig({
-			maxSize: config.fileSizeLimit,
-			accept:
-				config.allowedMimeTypes.length > 0
-					? mimeTypesToAccept(config.allowedMimeTypes)
-					: { 'image/*': [] },
-		});
-	}, []);
-
-	useEffect(() => {
-		fetchBucketConfig();
-	}, [fetchBucketConfig]);
 
 	const handleUpload = async (e: ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -43,10 +19,8 @@ export function AccountAvatar() {
 			return;
 		}
 
-		if (file.size > bucketConfig.maxSize) {
-			toast.error(
-				`File size exceeds the ${Math.round(bucketConfig.maxSize / (1024 * 1024))} MB limit`,
-			);
+		if (file.size > 50 * 1024 * 1024) {
+			toast.error('File size exceeds the 50 MB limit');
 			e.target.value = '';
 			return;
 		}
@@ -56,15 +30,14 @@ export function AccountAvatar() {
 		if (error) {
 			toast.error(error);
 		} else if (path) {
-			const publicUrl = mediaService.getMediaUrl(path, 'avatars');
 			const { error: updateError } = await authService.updateProfile(user.id, {
-				avatar_url: publicUrl,
+				avatar_url: path,
 			});
 
 			if (updateError) {
 				toast.error(updateError);
 			} else {
-				await authService.updateUserMetadata({ avatar_url: publicUrl });
+				await authService.updateUserMetadata({ avatar_url: path });
 				await refreshProfile();
 				toast.success('Avatar updated');
 			}
@@ -122,7 +95,7 @@ export function AccountAvatar() {
 					<input
 						type="file"
 						className="hidden"
-						accept={Object.keys(bucketConfig.accept).join(',')}
+						accept="image/png,image/jpeg"
 						onChange={handleUpload}
 						disabled={isUploading}
 					/>

@@ -11,7 +11,17 @@ export interface BucketConfig {
 	allowedMimeTypes: string[];
 }
 
-const bucketConfigCache = new Map<string, BucketConfig>();
+const BUCKET_CONFIGS: Record<string, BucketConfig> = {
+	avatars: { fileSizeLimit: 50 * 1024 * 1024, allowedMimeTypes: ['image/png', 'image/jpeg'] },
+	'property-media': {
+		fileSizeLimit: 50 * 1024 * 1024,
+		allowedMimeTypes: ['image/png', 'image/jpeg'],
+	},
+	'cleaning-media': {
+		fileSizeLimit: 50 * 1024 * 1024,
+		allowedMimeTypes: ['image/*', 'video/*'],
+	},
+};
 
 const MIME_EXTENSION_MAP: Record<string, string[]> = {
 	'image/png': ['.png'],
@@ -31,22 +41,13 @@ export function mimeTypesToAccept(mimeTypes: string[]): Record<string, string[]>
 	return Object.fromEntries(mimeTypes.map((mime) => [mime, MIME_EXTENSION_MAP[mime] ?? []]));
 }
 
-export async function getBucketConfig(bucketName: string): Promise<BucketConfig> {
-	const cachedConfig = bucketConfigCache.get(bucketName);
-	if (cachedConfig) {
-		return cachedConfig;
-	}
-	const { data, error } = await supabase.storage.getBucket(bucketName);
-	if (error) {
-		console.error(`Failed to fetch bucket config for "${bucketName}":`, error);
-		return { fileSizeLimit: DEFAULT_FILE_SIZE_LIMIT, allowedMimeTypes: [] };
-	}
-	const config: BucketConfig = {
-		fileSizeLimit: data.file_size_limit ?? DEFAULT_FILE_SIZE_LIMIT,
-		allowedMimeTypes: data.allowed_mime_types ?? [],
-	};
-	bucketConfigCache.set(bucketName, config);
-	return config;
+export function getBucketConfig(bucketName: string): BucketConfig {
+	return (
+		BUCKET_CONFIGS[bucketName] ?? {
+			fileSizeLimit: DEFAULT_FILE_SIZE_LIMIT,
+			allowedMimeTypes: [],
+		}
+	);
 }
 
 export const mediaService = {
@@ -56,7 +57,8 @@ export const mediaService = {
 	): Promise<{ data: { name: string }[] | null; error: unknown }> {
 		return supabase.storage.from(bucket).list(folderId);
 	},
-	getMediaUrl(path: string | null, bucket: StorageBucket): string {
+
+	getMediaUrl(path: string | null, _bucket: StorageBucket): string {
 		if (!path || path === 'Placeholder' || path.trim() === '') {
 			return '/placeholder-image.webp';
 		}
@@ -65,9 +67,19 @@ export const mediaService = {
 			return path;
 		}
 
-		const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+		return '/placeholder-image.webp';
+	},
 
-		return data.publicUrl;
+	async getSignedUrl(
+		path: string,
+		bucket: StorageBucket,
+		expiresIn = 3600,
+	): Promise<string | null> {
+		const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, expiresIn);
+		if (error || !data) {
+			return null;
+		}
+		return data.signedUrl;
 	},
 
 	async uploadMedia(

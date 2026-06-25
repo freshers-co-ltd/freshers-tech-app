@@ -13,7 +13,11 @@ import { useAuth } from '@/features/auth/AuthContext';
 import { authService } from '@/features/auth/authService';
 
 const personalSchema = z.object({
-	full_name: z.string().trim().min(2, DICT.COMMON.VALIDATION.NAME_MIN),
+	full_name: z
+		.string()
+		.trim()
+		.min(2, DICT.COMMON.VALIDATION.NAME_MIN)
+		.max(50, DICT.COMMON.VALIDATION.NAME_MAX),
 	email: z.email(DICT.COMMON.VALIDATION.EMAIL_INVALID).trim(),
 });
 

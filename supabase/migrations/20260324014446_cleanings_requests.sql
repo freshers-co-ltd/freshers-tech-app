@@ -830,6 +830,46 @@ SELECT
         )
     );
 
+CREATE POLICY "Authorised users can view cleaning evidence" ON STORAGE.objects FOR
+SELECT
+    TO authenticated USING (
+        public.is_not_banned ()
+        AND bucket_id = 'cleaning-media'
+        AND EXISTS (
+            SELECT
+                1
+            FROM
+                public.cleanings c
+                LEFT JOIN public.properties p ON p.id = c.property_id
+            WHERE
+                c.id::TEXT = (STORAGE.foldername (NAME)) [1]
+                AND c.deleted_at IS NULL
+                AND (
+                    c.cleaner_id = (
+                        SELECT
+                            auth.uid ()
+                    )
+                    OR p.host_id = (
+                        SELECT
+                            auth.uid ()
+                    )
+                    OR (
+                        SELECT
+                            auth.jwt () -> 'app_metadata' ->> 'role'
+                    ) = 'admin'
+                )
+        )
+    );
+
+CREATE POLICY "Admins can manage cleaning evidence" ON STORAGE.objects FOR ALL TO authenticated USING (
+    public.is_not_banned ()
+    AND bucket_id = 'cleaning-media'
+    AND (
+        SELECT
+            auth.jwt () -> 'app_metadata' ->> 'role'
+    ) = 'admin'
+);
+
 CREATE
 OR REPLACE FUNCTION public.handle_soft_cascade_delete () RETURNS TRIGGER SECURITY DEFINER
 SET

@@ -19,7 +19,7 @@ import {
 } from 'react-dropzone';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { toast } from '@/components/Toast';
-import { mediaService } from '@/lib/mediaService';
+import { useMediaUrl } from '@/hooks/useMediaUrl';
 import { cn } from '@/lib/utils';
 import { Button } from './button';
 
@@ -272,6 +272,7 @@ export const FileUploaderContent = forwardRef<HTMLDivElement, React.HTMLAttribut
 		const isSingleImage = maxFiles === 1;
 
 		const firstExistingImage = existingImages?.[0];
+		const existingImageUrl = useMediaUrl(firstExistingImage ?? null, bucket || 'property-media');
 
 		return (
 			<div className={cn('w-full px-1')} aria-description="content file holder">
@@ -288,7 +289,7 @@ export const FileUploaderContent = forwardRef<HTMLDivElement, React.HTMLAttribut
 							key={firstExistingImage}
 							className="relative p-0 overflow-hidden border rounded-md size-20">
 							<ImageWithFallback
-								src={mediaService.getMediaUrl(firstExistingImage, bucket || 'property-media')}
+								src={existingImageUrl}
 								alt="Current"
 								className="object-cover size-20"
 							/>

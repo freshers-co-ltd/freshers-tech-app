@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { DEFAULT_FILE_SIZE_LIMIT, getBucketConfig, mimeTypesToAccept } from '@/lib/mediaService';
+import { useMemo } from 'react';
+import { getBucketConfig, mimeTypesToAccept } from '@/lib/mediaService';
 
 type BucketConfigState = {
 	maxSize: number;
@@ -12,35 +12,14 @@ export function useBucketConfig(
 	bucketName: string,
 	fallbackAccept: Record<string, string[]> = { 'image/*': ['.jpg', '.jpeg', '.png'] },
 ): BucketConfigState {
-	const [bucketConfig, setBucketConfig] = useState<BucketConfigState>({
-		maxSize: DEFAULT_FILE_SIZE_LIMIT,
-		accept: fallbackAccept,
-	});
-
-	useEffect(() => {
-		let cancelled = false;
-		getBucketConfig(bucketName)
-			.then((config) => {
-				if (cancelled) {
-					return;
-				}
-				setBucketConfig({
-					maxSize: config.fileSizeLimit,
-					accept:
-						config.allowedMimeTypes.length > 0
-							? mimeTypesToAccept(config.allowedMimeTypes)
-							: fallbackAccept,
-				});
-			})
-			.catch((err) => {
-				if (import.meta.env.DEV) {
-					console.error('[Bucket] Failed to fetch bucket config', err);
-				}
-			});
-		return () => {
-			cancelled = true;
+	return useMemo(() => {
+		const config = getBucketConfig(bucketName);
+		return {
+			maxSize: config.fileSizeLimit,
+			accept:
+				config.allowedMimeTypes.length > 0
+					? mimeTypesToAccept(config.allowedMimeTypes)
+					: fallbackAccept,
 		};
 	}, [bucketName, fallbackAccept]);
-
-	return bucketConfig;
 }

@@ -6,7 +6,7 @@ import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Property } from '@/features/properties/types';
-import { mediaService } from '@/lib/mediaService';
+import { useMediaUrl } from '@/hooks/useMediaUrl';
 import { formatPostcode } from '@/lib/utils';
 
 interface PropertyCardProps {
@@ -17,9 +17,7 @@ interface PropertyCardProps {
 }
 
 export const PropertyCard = memo(({ property, onDelete, onEdit, onView }: PropertyCardProps) => {
-	const imageUrl = useMemo(() => {
-		return mediaService.getMediaUrl(property.main_image_url || null, 'property-media');
-	}, [property.main_image_url]);
+	const imageUrl = useMediaUrl(property.main_image_url, 'property-media');
 
 	const formattedPostcode = useMemo(() => {
 		return formatPostcode(property.postcode);

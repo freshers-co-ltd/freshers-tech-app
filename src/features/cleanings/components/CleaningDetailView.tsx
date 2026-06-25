@@ -1,7 +1,7 @@
 'use client';
 
 import { MapPin } from 'lucide-react';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { EntityBadge } from '@/components/EntityBadge';
 import { FullscreenMediaCarousel } from '@/components/FullscreenMediaCarousel';
 import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -22,6 +22,7 @@ import { useEvidenceSubmission } from '@/features/cleanings/hooks/useEvidenceSub
 import { useTaskSync } from '@/features/cleanings/hooks/useTaskSync';
 import type { CleaningRequest } from '@/features/cleanings/types';
 import { CLEANING_STATUS } from '@/features/cleanings/types';
+import type { Database } from '@/lib/database.types';
 import { mediaService } from '@/lib/mediaService';
 
 interface CleaningDetailViewProps {
@@ -93,14 +94,35 @@ export function CleaningDetailView({
 		[tasks],
 	);
 
-	const evidenceMedia = useMemo(
-		() =>
-			evidence.map((item) => ({
-				url: mediaService.getMediaUrl(item.media_url, 'cleaning-media'),
+	const [evidenceMedia, setEvidenceMedia] = useState<
+		{ url: string; type: Database['public']['Enums']['media_type'] }[]
+	>([]);
+
+	useEffect(() => {
+		if (evidence.length === 0) {
+			setEvidenceMedia([]);
+			return;
+		}
+
+		let cancelled = false;
+
+		Promise.all(
+			evidence.map(async (item) => ({
+				url:
+					(await mediaService.getSignedUrl(item.media_url, 'cleaning-media')) ??
+					'/placeholder-image.webp',
 				type: item.type,
 			})),
-		[evidence],
-	);
+		).then((results) => {
+			if (!cancelled) {
+				setEvidenceMedia(results);
+			}
+		});
+
+		return () => {
+			cancelled = true;
+		};
+	}, [evidence]);
 
 	const expiryInfo = useMemo(() => {
 		if (!cleaning.clock_out_time) {

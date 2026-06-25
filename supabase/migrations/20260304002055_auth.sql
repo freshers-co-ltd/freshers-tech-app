@@ -1,6 +1,6 @@
 CREATE TYPE public.user_role AS ENUM('cleaner', 'host', 'admin');
 
-    CREATE TABLE
+CREATE TABLE
     public.profiles (
         id UUID REFERENCES auth.users ON DELETE RESTRICT NOT NULL PRIMARY KEY,
         email TEXT,
@@ -33,8 +33,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-REVOKE EXECUTE ON FUNCTION public.is_not_banned() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.is_not_banned() TO authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.is_not_banned ()
+FROM
+    PUBLIC,
+    anon;
+
+GRANT
+EXECUTE ON FUNCTION public.is_not_banned () TO authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.update_modified_column () RETURNS TRIGGER SECURITY DEFINER
@@ -50,7 +56,12 @@ CREATE TRIGGER set_profiles_updated_at BEFORE
 UPDATE ON public.profiles FOR EACH ROW
 EXECUTE FUNCTION public.update_modified_column ();
 
-REVOKE EXECUTE ON FUNCTION public.update_modified_column() FROM PUBLIC, anon, authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.update_modified_column ()
+FROM
+    PUBLIC,
+    anon,
+    authenticated;
 
 CREATE
 OR REPLACE FUNCTION public.enforce_profiles_immutability () RETURNS TRIGGER SECURITY DEFINER
@@ -80,7 +91,12 @@ CREATE TRIGGER trigger_profiles_immutability BEFORE
 UPDATE ON public.profiles FOR EACH ROW
 EXECUTE FUNCTION public.enforce_profiles_immutability ();
 
-REVOKE EXECUTE ON FUNCTION public.enforce_profiles_immutability() FROM PUBLIC, anon, authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.enforce_profiles_immutability ()
+FROM
+    PUBLIC,
+    anon,
+    authenticated;
 
 CREATE POLICY "Users can update their own profile and admins can update all" ON public.profiles FOR
 UPDATE TO authenticated USING (
@@ -156,7 +172,12 @@ CREATE TRIGGER on_auth_user_created
 AFTER INSERT ON auth.users FOR EACH ROW
 EXECUTE FUNCTION public.handle_new_user ();
 
-REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.handle_new_user ()
+FROM
+    PUBLIC,
+    anon,
+    authenticated;
 
 CREATE VIEW
     public.profiles_public AS
@@ -172,14 +193,17 @@ GRANT
 SELECT
     ON public.profiles_public TO authenticated;
 
-ALTER VIEW public.profiles_public SET (security_invoker = true);
+ALTER VIEW public.profiles_public
+SET
+    (security_invoker = true);
 
-GRANT SELECT (id, full_name, avatar_url, role, deleted_at) ON public.profiles TO authenticated;
+GRANT
+SELECT
+    (id, full_name, avatar_url, role, deleted_at) ON public.profiles TO authenticated;
 
-CREATE POLICY "Public profile info visible to authenticated" ON public.profiles
-    FOR SELECT
-    TO authenticated
-    USING (true);
+CREATE POLICY "Public profile info visible to authenticated" ON public.profiles FOR
+SELECT
+    TO authenticated USING (true);
 
 CREATE
 OR REPLACE FUNCTION public.handle_user_update () RETURNS TRIGGER SECURITY DEFINER
@@ -206,28 +230,57 @@ AFTER
 UPDATE ON auth.users FOR EACH ROW
 EXECUTE FUNCTION public.handle_user_update ();
 
-REVOKE EXECUTE ON FUNCTION public.handle_user_update() FROM PUBLIC, anon, authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.handle_user_update ()
+FROM
+    PUBLIC,
+    anon,
+    authenticated;
 
 CREATE POLICY "Users can upload their own avatar" ON STORAGE.objects FOR INSERT TO authenticated
 WITH
     CHECK (
         public.is_not_banned ()
         AND bucket_id = 'avatars'
-        AND (STORAGE.foldername (NAME)) [1] = (SELECT auth.uid ())::TEXT
+        AND (STORAGE.foldername (NAME)) [1] = (
+            SELECT
+                auth.uid ()
+        )::TEXT
     );
 
 CREATE POLICY "Users can update their own avatar" ON STORAGE.objects FOR
 UPDATE TO authenticated USING (
     public.is_not_banned ()
     AND bucket_id = 'avatars'
-    AND (STORAGE.foldername (NAME)) [1] = (SELECT auth.uid ())::TEXT
+    AND (STORAGE.foldername (NAME)) [1] = (
+        SELECT
+            auth.uid ()
+    )::TEXT
 )
 WITH
     CHECK (public.is_not_banned ());
 
+CREATE POLICY "Users can view their own avatar" ON STORAGE.objects FOR
+SELECT
+    TO authenticated USING (
+        bucket_id = 'avatars'
+        AND (STORAGE.foldername (NAME)) [1] = (
+            SELECT
+                auth.uid ()
+        )::TEXT
+    );
+
+CREATE POLICY "Users can delete their own avatar" ON STORAGE.objects FOR DELETE TO authenticated USING (
+    public.is_not_banned ()
+    AND bucket_id = 'avatars'
+    AND (STORAGE.foldername (NAME)) [1] = (
+        SELECT
+            auth.uid ()
+    )::TEXT
+);
+
 CREATE
-OR REPLACE FUNCTION public.get_login_lock_status (p_email TEXT)
-RETURNS TABLE (is_locked BOOLEAN, locked_until TIMESTAMP WITH TIME ZONE) SECURITY DEFINER
+OR REPLACE FUNCTION public.get_login_lock_status (p_email TEXT) RETURNS TABLE (is_locked BOOLEAN, locked_until TIMESTAMP WITH TIME ZONE) SECURITY DEFINER
 SET
     search_path = public AS $$
 BEGIN
@@ -244,12 +297,18 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-REVOKE EXECUTE ON FUNCTION public.get_login_lock_status(TEXT) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.get_login_lock_status(TEXT) TO anon, authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.get_login_lock_status (TEXT)
+FROM
+    PUBLIC,
+    anon;
+
+GRANT
+EXECUTE ON FUNCTION public.get_login_lock_status (TEXT) TO anon,
+authenticated;
 
 CREATE
-OR REPLACE FUNCTION public.record_login_attempt (p_email TEXT, p_success BOOLEAN)
-RETURNS TABLE (is_locked BOOLEAN) SECURITY DEFINER
+OR REPLACE FUNCTION public.record_login_attempt (p_email TEXT, p_success BOOLEAN) RETURNS TABLE (is_locked BOOLEAN) SECURITY DEFINER
 SET
     search_path = public AS $$
 BEGIN
@@ -277,5 +336,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-REVOKE EXECUTE ON FUNCTION public.record_login_attempt(TEXT, BOOLEAN) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.record_login_attempt(TEXT, BOOLEAN) TO anon, authenticated;
+REVOKE
+EXECUTE ON FUNCTION public.record_login_attempt (TEXT, BOOLEAN)
+FROM
+    PUBLIC,
+    anon;
+
+GRANT
+EXECUTE ON FUNCTION public.record_login_attempt (TEXT, BOOLEAN) TO anon,
+authenticated;

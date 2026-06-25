@@ -7,7 +7,6 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { VideoThumbnail } from '@/components/VideoThumbnail';
 import { DICT } from '@/dictionary';
 import type { CleaningRequest } from '@/features/cleanings/types';
-import { mediaService } from '@/lib/mediaService';
 
 interface CleaningReportViewProps {
 	cleaning: CleaningRequest;
@@ -66,13 +65,13 @@ export function CleaningReportView({
 									onClick={() => onMediaClick(index)}>
 									{item.type === 'image' ? (
 										<ImageWithFallback
-											src={mediaService.getMediaUrl(item.media_url, 'cleaning-media')}
+											src={evidenceMedia[index]?.url ?? item.media_url}
 											className="size-full object-cover"
 											alt="Evidence"
 										/>
 									) : (
 										<VideoThumbnail
-											src={mediaService.getMediaUrl(item.media_url, 'cleaning-media')}
+											src={evidenceMedia[index]?.url ?? item.media_url}
 											className="size-full"
 										/>
 									)}

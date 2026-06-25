@@ -94,6 +94,7 @@ export const DICT = {
 			IMAGE_REQUIRED: 'A main image is required',
 			NUMBER_INVALID: 'Must be a valid number',
 			NAME_MIN: 'Full name must be at least 2 characters',
+			NAME_MAX: 'Full name must be no more than 50 characters',
 			PASSWORD_HINT: 'At least 8 characters, including an uppercase letter, a number, and a symbol',
 			PASSWORD_INCORRECT: 'The current password is incorrect.',
 			PASSWORD_MIN: 'Password must be at least 8 characters long',

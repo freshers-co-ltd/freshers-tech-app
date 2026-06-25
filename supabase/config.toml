@@ -111,19 +111,19 @@ enabled = true
 file_size_limit = "100MiB"
 
 [storage.buckets.avatars]
-public = true
+public = false
 file_size_limit = "50MiB"
 allowed_mime_types = ["image/png", "image/jpeg"]
 objects_path = "./seed-assets/avatars"
 
 [storage.buckets.property-media]
-public = true
+public = false
 file_size_limit = "50MiB"
 allowed_mime_types = ["image/png", "image/jpeg"]
 objects_path = "./seed-assets/property-media"
 
 [storage.buckets.cleaning-media]
-public = true
+public = false
 file_size_limit = "50MiB"
 allowed_mime_types = ["image/*", "video/*"]
 objects_path = "./seed-assets/cleaning-media"

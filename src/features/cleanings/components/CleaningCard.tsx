@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DICT } from '@/dictionary';
 import type { CleaningRequest } from '@/features/cleanings/types';
 import { CLEANING_STATUS, STATUS_GROUPS } from '@/features/cleanings/types';
-import { mediaService } from '@/lib/mediaService';
+import { useMediaUrl } from '@/hooks/useMediaUrl';
 import { formatDate, formatPostcode } from '@/lib/utils';
 
 interface CleaningCardProps {
@@ -25,9 +25,7 @@ export const CleaningCard = memo(
 		const isHost = userRole === 'host';
 		const isCleaner = userRole === 'cleaner';
 
-		const imageUrl = useMemo(() => {
-			return mediaService.getMediaUrl(cleaning.property?.main_image_url || null, 'property-media');
-		}, [cleaning.property?.main_image_url]);
+		const imageUrl = useMediaUrl(cleaning.property?.main_image_url, 'property-media');
 
 		const formattedPostcode = useMemo(() => {
 			return cleaning.property?.postcode ? formatPostcode(cleaning.property.postcode) : undefined;

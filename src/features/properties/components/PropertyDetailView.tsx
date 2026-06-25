@@ -1,7 +1,7 @@
 'use client';
 
 import { Bath, Bed, MapPin, Maximize2, Pencil, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { FullscreenMediaCarousel } from '@/components/FullscreenMediaCarousel';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ import { DICT } from '@/dictionary';
 import { useAuth } from '@/features/auth/AuthContext';
 import type { Property } from '@/features/properties/types';
 import { useCarousel } from '@/hooks/useCarousel';
-import { mediaService } from '@/lib/mediaService';
+import { useMediaUrl } from '@/hooks/useMediaUrl';
 import { formatPostcode } from '@/lib/utils';
 
 interface PropertyDetailViewProps {
@@ -29,19 +29,16 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 	const { user } = useAuth();
 	const [isFullScreen, setIsFullScreen] = useState(false);
 
-	const images = useMemo(() => {
-		const rawPaths = [property.main_image_url, ...(property.extra_images_urls || [])].filter(
-			Boolean,
-		) as string[];
+	const mainImageUrl = useMediaUrl(property.main_image_url, 'property-media');
 
-		return rawPaths.map((path) => mediaService.getMediaUrl(path || null, 'property-media'));
-	}, [property]);
+	const images = [
+		mainImageUrl || '/placeholder-image.webp',
+		...(property.extra_images_urls || []).map(() => '/placeholder-image.webp' as string),
+	];
 
 	const { activeImage, setActiveImage, allImages } = useCarousel({
 		images,
-		initialImage: property.main_image_url
-			? mediaService.getMediaUrl(property.main_image_url || null, 'property-media')
-			: 'public/placeholder-image.webp',
+		initialImage: mainImageUrl || '/placeholder-image.webp',
 		isKeyboardEnabled: isFullScreen,
 	});
 

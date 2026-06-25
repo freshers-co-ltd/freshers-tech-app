@@ -18,7 +18,11 @@ import { cn } from '@/lib/utils';
 
 const signupSchema = z
 	.object({
-		name: z.string().trim().min(2, DICT.COMMON.VALIDATION.NAME_MIN),
+		name: z
+			.string()
+			.trim()
+			.min(2, DICT.COMMON.VALIDATION.NAME_MIN)
+			.max(50, DICT.COMMON.VALIDATION.NAME_MAX),
 		email: z.email(DICT.COMMON.VALIDATION.EMAIL_INVALID).trim(),
 		password: z
 			.string()
