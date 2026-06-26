@@ -58,6 +58,4 @@ jobs:
           npx supabase link --project-ref "${{ vars.SUPABASE_PROJECT_ID }}" --password "${{ secrets.SUPABASE_DB_PASSWORD }}"
           npx supabase db push
 
-          npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --yes \
-            -e VITE_PUBLIC_SUPABASE_URL=${{ vars.SUPABASE_URL }} \
-            -e VITE_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+          npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --yes

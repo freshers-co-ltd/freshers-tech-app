@@ -26,6 +26,7 @@ export function useHostCleanings() {
 				property_id: data.property_id,
 				scheduled_start: new Date(data.scheduled_start).toISOString(),
 				information: data.information ?? '',
+				stocks_included: data.stocks_included,
 				custom_tasks: data.custom_tasks.map((t) => t.description),
 			};
 

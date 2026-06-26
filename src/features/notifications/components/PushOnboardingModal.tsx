@@ -96,7 +96,7 @@ export function PushOnboardingModal({ isOpen, onOpenChange, onAction }: PushOnbo
 					<DialogDescription className="mt-2">{dict.MESSAGE}</DialogDescription>
 				</DialogHeader>
 
-				<DialogFooter className="gap-2 flex-col">
+				<DialogFooter className="gap-2 flex-col sm:flex-col">
 					<Button onClick={handleEnable} disabled={isLoading} className="w-full">
 						{isLoading ? dict.BUTTON_SUBMITTING : dict.BUTTON_SUBMIT}
 					</Button>

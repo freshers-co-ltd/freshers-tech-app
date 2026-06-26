@@ -102,6 +102,14 @@ export const authService = {
 		});
 
 		if (error) {
+			const authError = error as AuthError;
+			if (
+				authError?.code === 'user_already_exists' ||
+				authError?.code === 'P0001' ||
+				authError?.message?.includes('Signup blocked')
+			) {
+				return { error: null, user: null, needsConfirmation: true };
+			}
 			return { error: mapAuthError(error) };
 		}
 
@@ -138,9 +146,7 @@ export const authService = {
 			},
 		});
 
-		if (error) {
-			return { error: mapAuthError(error) };
-		}
+		void error;
 		return { error: null };
 	},
 

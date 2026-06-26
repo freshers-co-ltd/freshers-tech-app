@@ -387,6 +387,29 @@ $$;
 SELECT
     cron.schedule ('cleanup-unconfirmed-users', '0 2 * * *', $$ SELECT public.cleanup_unconfirmed_users(); $$);
 
+CREATE OR REPLACE FUNCTION public.prevent_existing_email_signup ()
+RETURNS TRIGGER
+SECURITY DEFINER
+SET search_path = auth, public
+AS $$
+BEGIN
+    IF TG_OP = 'UPDATE'
+       AND OLD.email_confirmed_at IS NULL
+       AND NEW.email_confirmed_at IS NULL
+       AND NEW.encrypted_password IS DISTINCT FROM OLD.encrypted_password
+    THEN
+        RAISE EXCEPTION 'Signup blocked for existing unconfirmed account'
+        USING ERRCODE = 'P0001';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER before_update_prevent_existing_email_signup
+BEFORE UPDATE ON auth.users
+FOR EACH ROW
+EXECUTE FUNCTION public.prevent_existing_email_signup ();
+
 REVOKE SELECT ON ALL TABLES IN SCHEMA public FROM anon;
 
 GRANT

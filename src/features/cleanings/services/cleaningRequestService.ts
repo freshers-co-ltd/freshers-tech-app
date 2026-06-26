@@ -130,6 +130,7 @@ export const cleaningRequestService = {
 			p_custom_tasks: payload.custom_tasks,
 			p_information: payload.information,
 			p_scheduled_start: payload.scheduled_start,
+			p_stocks_included: payload.stocks_included ?? false,
 		});
 
 		if (error) {
@@ -161,6 +162,7 @@ export const cleaningRequestService = {
 			p_custom_tasks: payload.custom_tasks,
 			p_information: payload.information,
 			p_scheduled_start: payload.scheduled_start,
+			p_stocks_included: payload.stocks_included ?? false,
 		});
 
 		if (error) {

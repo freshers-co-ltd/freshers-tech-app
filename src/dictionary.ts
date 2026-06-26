@@ -610,7 +610,7 @@ export const DICT = {
 			NETWORK: 'Server unreachable. Please check your internet connection.',
 		},
 		AUTH: {
-			USER_EXISTS: 'An account with this email already exists.',
+			USER_EXISTS: 'Signup could not be processed.',
 			INVALID_CREDENTIALS: 'Invalid email or password.',
 			EMAIL_NOT_CONFIRMED: 'Please verify your email address before logging in.',
 			LINK_EXPIRED: 'Authentication link expired.',

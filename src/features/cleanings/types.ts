@@ -71,12 +71,14 @@ export interface CreateCleaningRequestPayload {
 	custom_tasks: string[];
 	information: string;
 	scheduled_start: string;
+	stocks_included?: boolean;
 }
 
 export interface UpdateCleaningRequestPayload {
 	custom_tasks: string[];
 	information: string;
 	scheduled_start: string;
+	stocks_included?: boolean;
 }
 
 interface RawCleaningRequestQueryResult extends CleaningDetails {

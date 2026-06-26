@@ -62,7 +62,8 @@ export function formatCurrency(value: number): string {
 }
 
 export function formatPostcode(postcode: string): string {
-	return postcode.toUpperCase().replace(/^(.{3,4})/, '$1 ');
+	const cleaned = postcode.toUpperCase().replace(/\s+/g, '');
+	return cleaned.replace(/^([A-Z]{1,2}\d[A-Z\d]?)\s*(\d[A-Z]{2})$/, '$1 $2');
 }
 
 export function formatHours(hours: number, isShort: boolean = false): string {

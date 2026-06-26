@@ -24,6 +24,7 @@ import type { CleaningRequest } from '@/features/cleanings/types';
 import { CLEANING_STATUS } from '@/features/cleanings/types';
 import type { Database } from '@/lib/database.types';
 import { mediaService } from '@/lib/mediaService';
+import { formatPostcode } from '@/lib/utils';
 
 interface CleaningDetailViewProps {
 	cleaning: CleaningRequest;
@@ -151,7 +152,8 @@ export function CleaningDetailView({
 							<div className="flex items-center gap-1 text-muted-foreground text-sm">
 								<MapPin className="size-3 shrink-0" />
 								<span className="truncate">
-									{cleaning.property?.town_city}, {cleaning.property?.postcode}
+									{cleaning.property?.town_city},{' '}
+									{formatPostcode(cleaning.property?.postcode ?? '')}
 								</span>
 							</div>
 						)}

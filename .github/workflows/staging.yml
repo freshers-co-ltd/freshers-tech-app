@@ -49,9 +49,7 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          DEPLOY_URL=$(npx vercel --token ${{ secrets.VERCEL_TOKEN }} --yes\
-            -e VITE_PUBLIC_SUPABASE_URL=${{ vars.SUPABASE_URL }} \
-            -e VITE_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }})
+          DEPLOY_URL=$(npx vercel --token ${{ secrets.VERCEL_TOKEN }} --yes)
           
           echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
           
