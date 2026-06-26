@@ -197,13 +197,23 @@ ALTER VIEW public.profiles_public
 SET
     (security_invoker = true);
 
-GRANT
-SELECT
-    (id, full_name, avatar_url, role, deleted_at) ON public.profiles TO authenticated;
-
 CREATE POLICY "Public profile info visible to authenticated" ON public.profiles FOR
 SELECT
-    TO authenticated USING (true);
+    TO authenticated USING (
+        public.is_not_banned ()
+        AND (
+            id = (
+                SELECT
+                    auth.uid ()
+            )
+            OR (
+                (
+                    SELECT
+                        auth.jwt ()
+                ) -> 'app_metadata' ->> 'role'
+            ) = 'admin'
+        )
+    );
 
 CREATE
 OR REPLACE FUNCTION public.handle_user_update () RETURNS TRIGGER SECURITY DEFINER
@@ -345,3 +355,43 @@ FROM
 GRANT
 EXECUTE ON FUNCTION public.record_login_attempt (TEXT, BOOLEAN) TO anon,
 authenticated;
+
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+CREATE
+OR REPLACE FUNCTION public.cleanup_unconfirmed_users (days_threshold int DEFAULT 7) RETURNS int LANGUAGE plpgsql SECURITY DEFINER
+SET
+    search_path = public AS $$
+DECLARE
+    deleted_count int := 0;
+    ghost_record record;
+BEGIN
+    FOR ghost_record IN
+        SELECT au.id
+        FROM auth.users au
+        WHERE (au.email_confirmed_at IS NULL
+   OR (au.email_confirmed_at IS NOT NULL
+       AND (au.raw_user_meta_data->>'password_set' IS NULL
+            OR au.raw_user_meta_data->>'password_set' = 'false')))
+          AND au.created_at < now() - (days_threshold || ' days')::interval
+    LOOP
+        DELETE FROM public.profiles WHERE id = ghost_record.id;
+        DELETE FROM auth.users WHERE id = ghost_record.id;
+        deleted_count := deleted_count + 1;
+    END LOOP;
+
+    RETURN deleted_count;
+END;
+$$;
+
+SELECT
+    cron.schedule ('cleanup-unconfirmed-users', '0 2 * * *', $$ SELECT public.cleanup_unconfirmed_users(); $$);
+
+REVOKE SELECT ON ALL TABLES IN SCHEMA public FROM anon;
+
+GRANT
+SELECT
+    (id, full_name, avatar_url, role, deleted_at, is_verified) ON public.profiles TO authenticated;
+
+GRANT
+UPDATE (full_name, avatar_url) ON public.profiles TO authenticated;

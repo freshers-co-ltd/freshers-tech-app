@@ -11,8 +11,8 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/c
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { DICT } from '@/dictionary';
-import { authService } from '@/features/auth/services/authService';
 import { VerifyOtpForm } from '@/features/auth/components/VerifyOtpForm';
+import { authService } from '@/features/auth/services/authService';
 import type { AuthActionResult, UserRole } from '@/features/auth/types';
 import { cn } from '@/lib/utils';
 

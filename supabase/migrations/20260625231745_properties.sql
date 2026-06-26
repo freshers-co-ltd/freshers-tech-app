@@ -185,4 +185,12 @@ REVOKE EXECUTE ON FUNCTION public.soft_delete_property(uuid) FROM PUBLIC, anon;
 GRANT
     EXECUTE ON FUNCTION public.soft_delete_property (p_property_id UUID) TO authenticated;
 
+GRANT
+SELECT
+    ON public.properties TO authenticated;
+
+GRANT INSERT,
+UPDATE,
+DELETE ON public.properties TO authenticated;
+
 COMMIT;

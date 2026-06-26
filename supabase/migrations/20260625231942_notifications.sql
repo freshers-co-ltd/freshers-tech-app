@@ -646,4 +646,26 @@ ADD TABLE public.push_subscriptions;
 
 COMMENT ON TABLE public.push_subscriptions IS '@omit';
 
+GRANT
+SELECT
+    ON public.notifications TO authenticated;
+
+GRANT
+SELECT
+    ON public.notification_preferences TO authenticated;
+
+GRANT
+SELECT
+    ON public.push_subscriptions TO authenticated;
+
+GRANT
+UPDATE,
+DELETE ON public.notifications TO authenticated;
+
+GRANT
+UPDATE ON public.notification_preferences TO authenticated;
+
+GRANT INSERT,
+DELETE ON public.push_subscriptions TO authenticated;
+
 COMMIT;

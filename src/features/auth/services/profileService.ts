@@ -45,7 +45,10 @@ export const profileService = {
 				.select('id, full_name, avatar_url, role, deleted_at, is_verified')
 				.eq('id', userId)
 				.single();
-			const { data, error } = (await Promise.race([fetchPromise, timeout])) as unknown as PostgrestSingleResponse<unknown>;
+			const { data, error } = (await Promise.race([
+				fetchPromise,
+				timeout,
+			])) as unknown as PostgrestSingleResponse<unknown>;
 
 			if (error) {
 				throw error;

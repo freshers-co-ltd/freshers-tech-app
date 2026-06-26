@@ -142,6 +142,8 @@ EXECUTE FUNCTION public.log_admin_action ();
 
 REVOKE SELECT ON TABLE public.audit_logs FROM authenticated;
 
+COMMENT ON TABLE public.audit_logs IS '@omit';
+
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 
 CREATE
