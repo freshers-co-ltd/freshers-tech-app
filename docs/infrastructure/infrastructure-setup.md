@@ -1,6 +1,6 @@
 # Infrastructure Setup
 
-This document provides step-by-step instructions for configuring the [Cleaner Hire PWA](/README.md) infrastructure on [GitHub](#1-github-repository-setup), [Supabase](#2-supabase-setup), and [Vercel](#3-vercel-setup).
+This document provides step-by-step instructions for configuring the [Freshers PWA](/README.md) infrastructure on [GitHub](#1-github-repository-setup), [Supabase](#2-supabase-setup), and [Vercel](#3-vercel-setup).
 
 ## 1. Github Repository Setup
 
@@ -52,14 +52,10 @@ The following variables and secrets must be added to both environments.
 
 **Variables**:
 - `SUPABASE_PROJECT_ID`: Found in the Supabase project settings under **General > Project ID**.
-- `VITE_SUPABASE_ANON_KEY`: Found in the Supabase project settings under **API Keys > Publishable Key**.
-- `VITE_SUPABASE_URL`: Found in the Supabase project settings under **Data API > API URL**.
 
 **Secrets**:
-- `INTERNAL_API_SECRET`: Run `openssl rand -base64 32` in the CLI.
 - `SUPABASE_DB_PASSWORD`: Created during Supabase project creation.
 - `SUPABASE_SERVICE_ROLE_KEY`: Found in the Supabase project settings under **API Keys > Private Key**.
-- `VAPID_PRIVATE_KEY`: Run `npx web-push generate-vapid-keys` in the CLI.
 
 #### 1.3.1 Staging
 
@@ -96,6 +92,8 @@ The following secrets must be added to the repository under **Secrets and variab
 - `VERCEL_ORG_ID`: Found in the Vercel team settings under **General > Team ID**.
 - `VERCEL_PROJECT_ID`: Found in the Vercel project settings under **General > Project ID**.
 - `VERCEL_TOKEN`: Create in Vercel account settings under **Tokens > Create token** with **Full Account** scope.
+- `RELEASE_APP_ID`: Create a GitHub App for the production release workflow.
+- `RELEASE_APP_PRIVATE_KEY`: The private key for the GitHub App above.
 
 ## 2. Supabase Setup
 
@@ -117,6 +115,9 @@ Go to **Authentication > URL Configuration** and add the following:
 Go to **Edge Functions > Secrets** and add the following:
 
 - `VAPID_PRIVATE_KEY`: Run `npx web-push generate-vapid-keys` in the CLI.
+- `VAPID_PUBLIC_KEY`: Run `npx web-push generate-vapid-keys` in the CLI.
+- `VAPID_SUBJECT`: Contact email.
+- `WEBHOOK_SECRET` : Run `openssl rand -base64 32` in the CLI.
 
 ## 3. Vercel Setup
 

@@ -1,6 +1,6 @@
 # Branching Strategy
 
-This document outlines the branching strategy for the [Cleaner Hire PWA](/README.md).
+This document outlines the branching strategy for the [Freshers PWA](/README.md).
 
 ## 1. Branches
 
@@ -8,7 +8,7 @@ This project implements a variant [GitHub Flow](https://www.w3schools.com/git/gi
 
 **Feature Branches**: Feature branches are used for all new development, bug fixes, and refactoring. These branches are created from the latest `main` commit and are deleted after they are successfully merged.
 
-**Main Branch**: The `main` branch acts as a [staging environment](/docs/infrastructure/environment-variables.md) for quality assurance (QA). It must always be in a deployable state. Direct commits to `main` are prohibited, all changes must arrive via merged pull requests.
+**Main Branch**: Pull requests to `main` trigger automatic staging deployments to the Vercel Preview environment for quality assurance (QA). The `main` branch must always be in a deployable state. Direct commits to `main` are prohibited, all changes must arrive via merged pull requests.
 
 ## 2. Naming Conventions
 

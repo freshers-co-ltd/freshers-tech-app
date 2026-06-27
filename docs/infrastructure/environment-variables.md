@@ -1,6 +1,6 @@
 # Environment Variables
 
-This document defines the environments and environment variables used by the [Cleaner Hire PWA](/README.md).
+This document defines the environments and environment variables used by the [Freshers PWA](/README.md).
 
 ## 1. Environment Hierarchy
 
@@ -39,7 +39,7 @@ These identifiers are non-sensitive and serve to reference the appropriate infra
 
 These encrypted credentials are used during the CI/CD pipeline and specific server-side functions. They must be stored as protected secrets within both staging and production environments.
 
-- `INTERNAL_API_SECRET`: A shared secret used to verify requests between Vercel and Supabase Edge Functions.
+- `WEBHOOK_SECRET`: A shared secret used to verify requests between webhooks and Supabase Edge Functions.
 - `SUPABASE_DB_PASSWORD`: The Supabase database password used for database migrations.
 - `SUPABASE_SERVICE_ROLE_KEY`: An administrative key used to bypass RLS for backend operations.
 - `VAPID_PRIVATE_KEY`: The secret key used to sign and authorise Web Push notifications.

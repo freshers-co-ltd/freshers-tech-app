@@ -27,8 +27,8 @@ export default defineConfig({
 				suppressWarnings: true,
 			},
 			manifest: {
-				name: 'Cleaner Hire PWA',
-				short_name: 'CleanerHire',
+				name: 'Freshers PWA',
+				short_name: 'Freshers',
 				description: 'Professional cleaning service platform.',
 				start_url: '/',
 				display: 'standalone',

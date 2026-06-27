@@ -17,7 +17,7 @@ import type { Profile, UserRole } from '@/features/auth/types';
 import { useProfileRealtime } from '@/features/auth/useProfileRealtime';
 import { useVisibilityReconnect } from '@/hooks/useVisibilityReconnect';
 import { initAuthSync } from '@/lib/authSync';
-import { setSuppressSessionBroadcast } from '@/lib/supabaseClient';
+import { setSessionBroadcastSuppressed } from '@/lib/supabaseClient';
 
 export interface AuthContextType {
 	user: User | null;
@@ -129,14 +129,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 				(search.includes('code=') && window.location.pathname === '/update-password');
 
 			if (isInviteFlow) {
-				setSuppressSessionBroadcast(true);
+				setSessionBroadcastSuppressed(true);
 				setLoading(false);
 				setInitialised(true);
 				return;
 			}
 
 			if (isPkceRecoveryFlow) {
-				setSuppressSessionBroadcast(true);
+				setSessionBroadcastSuppressed(true);
 				if (isMounted) {
 					setLoading(false);
 					setInitialised(true);
@@ -243,7 +243,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 				abortControllerRef.current?.abort();
 				abortControllerRef.current = null;
-				setSuppressSessionBroadcast(false);
+				setSessionBroadcastSuppressed(false);
 				lastUserId.current = null;
 				setSession(null);
 				setUser(null);
@@ -288,7 +288,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			await authService.signOut();
 		} finally {
 			isVoluntarySignOutRef.current = false;
-			setSuppressSessionBroadcast(false);
+			setSessionBroadcastSuppressed(false);
 			lastUserId.current = null;
 			setProfile(null);
 			setUser(null);

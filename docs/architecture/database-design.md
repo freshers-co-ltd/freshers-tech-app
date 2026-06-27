@@ -1,6 +1,6 @@
 # Database Design
 
-This document outlines the design of the database for the [Cleaner Hire PWA](/README.md).
+This document outlines the design of the database for the [Freshers PWA](/README.md).
 
 ## 1. Custom Enumerated Types
 

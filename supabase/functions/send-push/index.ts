@@ -75,7 +75,7 @@ Deno.serve(async (req: Request) => {
 
     const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY')?.trim() ?? '';
     const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY')?.trim() ?? '';
-    const vapidSubject = Deno.env.get('VAPID_SUBJECT')?.trim() ?? 'mailto:admin@example.com';
+    const vapidSubject = Deno.env.get('VAPID_SUBJECT')?.trim() ?? '';
 
     if (!vapidPrivateKey || !vapidPublicKey) {
       throw new Error('VAPID keys not configured');

@@ -17,10 +17,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 let authChannel: BroadcastChannel | null = null;
 
-let suppressSessionBroadcast = false;
+let isSessionBroadcastSuppressed = false;
 
-export const setSuppressSessionBroadcast = (value: boolean): void => {
-	suppressSessionBroadcast = value;
+export const setSessionBroadcastSuppressed = (value: boolean): void => {
+	isSessionBroadcastSuppressed = value;
 };
 
 const getAuthChannel = (): BroadcastChannel => {
@@ -66,7 +66,7 @@ const getAuthStorage = () => {
 			} else {
 				window.sessionStorage.setItem(key, value);
 			}
-			if (!suppressSessionBroadcast) {
+			if (!isSessionBroadcastSuppressed) {
 				getAuthChannel().postMessage({ type: 'SEND_SESSION', session: value });
 			}
 		},

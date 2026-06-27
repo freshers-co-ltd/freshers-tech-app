@@ -36,13 +36,13 @@ self.addEventListener('push', async (event: PushEvent) => {
 		const rawData = event.data?.json();
 		devLog('Raw push data:', rawData);
 		data = rawData ?? {
-			title: 'Cleaner Hire',
+			title: 'Freshers',
 			body: 'You have a new notification',
 		};
 	} catch (e) {
 		devLog('Failed to parse push data:', e);
 		data = {
-			title: 'Cleaner Hire',
+			title: 'Freshers',
 			body: 'You have a new notification',
 		};
 	}
@@ -54,7 +54,7 @@ self.addEventListener('push', async (event: PushEvent) => {
 		icon: data.icon || '/pwa-192x192.png',
 		badge: data.badge || '/pwa-64x64.png',
 		data: data.data,
-		tag: 'cleaner-hire-notification',
+		tag: 'freshers-notification',
 	};
 
 	devLog('Showing notification with options:', options);

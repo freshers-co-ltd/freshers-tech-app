@@ -102,7 +102,7 @@ export const mockSupabase = {
 
 export const supabase = mockSupabase;
 
-export const setSuppressSessionBroadcast = vi.fn();
+export const setSessionBroadcastSuppressed = vi.fn();
 
 export function triggerAuthEvent(event: string, session: unknown) {
 	if (authCallback) {
