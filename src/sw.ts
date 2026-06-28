@@ -1,11 +1,41 @@
 /// <reference lib="webworker" />
 
 import { clientsClaim } from 'workbox-core';
+import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute } from 'workbox-precaching';
+import { registerRoute } from 'workbox-routing';
+import { NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies';
 
 declare let self: ServiceWorkerGlobalScope;
 
 precacheAndRoute(self.__WB_MANIFEST);
+
+registerRoute(
+	({ url }) => url.hostname.includes('supabase.co') && url.pathname.startsWith('/rest/v1/'),
+	new NetworkFirst({
+		cacheName: 'supabase-api',
+		plugins: [
+			new ExpirationPlugin({
+				maxEntries: 50,
+				maxAgeSeconds: 60 * 60 * 24,
+			}),
+		],
+		networkTimeoutSeconds: 5,
+	}),
+);
+
+registerRoute(
+	({ url }) => url.hostname.includes('supabase.co') && url.pathname.startsWith('/storage/v1/'),
+	new StaleWhileRevalidate({
+		cacheName: 'supabase-storage',
+		plugins: [
+			new ExpirationPlugin({
+				maxEntries: 100,
+				maxAgeSeconds: 60 * 60 * 24 * 7,
+			}),
+		],
+	}),
+);
 
 self.skipWaiting();
 clientsClaim();

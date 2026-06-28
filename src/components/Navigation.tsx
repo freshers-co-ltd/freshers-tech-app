@@ -43,9 +43,9 @@ export function Navigation() {
 	return (
 		<>
 			<nav className="fixed top-0 left-0 right-0 z-50 hidden h-20 border-b bg-background/80 backdrop-blur-md md:block">
-				<div className="flex-between h-full max-w-6xl px-6 mx-auto">
-					<Logo />
-					<div className="flex items-center gap-2">
+				<div className="flex items-center h-full max-w-6xl px-6 mx-auto gap-4">
+					<Logo className="max-w-[140px] lg:max-w-none" />
+					<div className="flex items-center gap-2 flex-1 justify-end overflow-x-auto">
 						{navItems.map((item) => (
 							<Link
 								key={item.path}

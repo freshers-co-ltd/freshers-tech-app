@@ -43,7 +43,7 @@ export function LoginPage() {
 	return (
 		<div className="relative grid w-full min-h-dvh lg:grid-cols-2 bg-background overflow-hidden">
 			<div className="relative flex-col-center p-4 md:p-8">
-				<Logo className="text-5xl mb-14" />
+				<Logo className="w-[300px] mb-14" />
 
 				<FormContainer variant="page" className="w-full max-w-sm lg:max-w-xs">
 					<LoginForm />
