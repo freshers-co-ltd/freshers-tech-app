@@ -1,6 +1,15 @@
 import type { MfaStatus } from '@/features/auth/types';
 import { supabase } from '@/lib/supabaseClient';
 
+export const MFA_ISSUER = 'FreshersCo';
+
+export type EnrollMfaResult = {
+	id: string;
+	qrCode: string;
+	secret: string;
+	uri: string;
+};
+
 export const mfaService = {
 	async checkMfaStatus(): Promise<{ data: MfaStatus | null; error: string | null }> {
 		const { data: factors, error: listError } = await supabase.auth.mfa.listFactors();
@@ -23,7 +32,7 @@ export const mfaService = {
 	},
 
 	async enrollMfa(): Promise<{
-		data: { id: string; qrCode: string } | null;
+		data: EnrollMfaResult | null;
 		error: string | null;
 	}> {
 		const { data: existing, error: listError } = await supabase.auth.mfa.listFactors();
@@ -60,13 +69,29 @@ export const mfaService = {
 				console.error('[MFA] enrollMfa retry failed:', retryError.message);
 				return { data: null, error: retryError.message };
 			}
-			return { data: { id: retryData.id, qrCode: retryData.totp.qr_code }, error: null };
+			return {
+				data: {
+					id: retryData.id,
+					qrCode: retryData.totp.qr_code,
+					secret: retryData.totp.secret,
+					uri: retryData.totp.uri,
+				},
+				error: null,
+			};
 		}
 		if (error) {
 			console.error('[MFA] enrollMfa failed:', error.message);
 			return { data: null, error: error.message };
 		}
-		return { data: { id: data.id, qrCode: data.totp.qr_code }, error: null };
+		return {
+			data: {
+				id: data.id,
+				qrCode: data.totp.qr_code,
+				secret: data.totp.secret,
+				uri: data.totp.uri,
+			},
+			error: null,
+		};
 	},
 
 	async challengeMfa(

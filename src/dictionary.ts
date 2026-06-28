@@ -204,8 +204,15 @@ export const DICT = {
 			ENROLLMENT: {
 				TITLE: 'Set Up Two-Factor Authentication',
 				MANDATORY_MESSAGE:
-					'Your admin account requires two-factor authentication. Scan the QR code below with your authenticator app, then enter the 6-digit code to verify.',
-				QR_INSTRUCTION: 'Scan this QR code with Google Authenticator, Authy, or any TOTP app.',
+					'Scan the QR code below with your authenticator app, then enter the 6-digit code to verify.',
+				QR_INSTRUCTION:
+					'Scan this QR code with Ente Auth, Google Authenticator, Authy, or any TOTP app.',
+				MANUAL_ENTRY_TITLE: 'Or enter the details below manually in your TOTP app',
+				ISSUER_LABEL: 'Issuer',
+				ACCOUNT_LABEL: 'Email/Account',
+				SECRET_LABEL: 'Secret Key',
+				COPY: 'Copy',
+				COPIED_TOAST: 'Copied!',
 				CODE_LABEL: 'Verification Code',
 				CODE_PLACEHOLDER: '000000',
 				BUTTON_VERIFY: 'Verify & Enable',

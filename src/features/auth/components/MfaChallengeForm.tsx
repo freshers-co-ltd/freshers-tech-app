@@ -2,7 +2,6 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
-import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { toast } from '@/components/Toast';
@@ -27,7 +26,6 @@ interface MfaChallengeFormProps {
 
 export function MfaChallengeForm({ onComplete }: MfaChallengeFormProps) {
 	const dict = DICT.AUTH.MFA.CHALLENGE;
-	const [error, setError] = useState('');
 
 	const form = useForm<ChallengeFormValues>({
 		resolver: zodResolver(challengeSchema),
@@ -35,18 +33,16 @@ export function MfaChallengeForm({ onComplete }: MfaChallengeFormProps) {
 	});
 
 	const onSubmit = async (values: ChallengeFormValues) => {
-		setError('');
-
 		const { data: factors, error: listError } = await mfaService.listMfaFactors();
 		if (listError || !factors?.totp?.length) {
 			console.error('[MFA] Challenge listFactors failed:', listError);
-			setError(dict.ERROR);
+			toast.error(dict.ERROR);
 			return;
 		}
 
 		const totpFactor = factors.totp[0];
 		if (!totpFactor) {
-			setError(dict.ERROR);
+			toast.error(dict.ERROR);
 			return;
 		}
 		const factorId = totpFactor.id;
@@ -54,7 +50,7 @@ export function MfaChallengeForm({ onComplete }: MfaChallengeFormProps) {
 		const { data: challengeData, error: challengeError } = await mfaService.challengeMfa(factorId);
 		if (challengeError || !challengeData) {
 			console.error('[MFA] Challenge failed:', challengeError);
-			setError(dict.ERROR);
+			toast.error(dict.ERROR);
 			return;
 		}
 
@@ -65,7 +61,7 @@ export function MfaChallengeForm({ onComplete }: MfaChallengeFormProps) {
 		);
 		if (verifyError) {
 			console.error('[MFA] Verify failed:', verifyError);
-			setError(dict.ERROR);
+			toast.error(dict.ERROR);
 			return;
 		}
 
@@ -82,37 +78,35 @@ export function MfaChallengeForm({ onComplete }: MfaChallengeFormProps) {
 		<div className="space-y-6">
 			<p className="text-sm text-muted-foreground">{dict.MESSAGE}</p>
 
-			{error && (
-				<div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
-			)}
-
 			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-				<Controller
-					control={form.control}
-					name="code"
-					render={({ field, fieldState }) => (
-						<Field className="space-y-1.5">
-							<FieldLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-								{dict.CODE_LABEL}
-							</FieldLabel>
-							<Input
-								{...field}
-								type="text"
-								inputMode="numeric"
-								maxLength={6}
-								placeholder={dict.CODE_PLACEHOLDER}
-								aria-invalid={!!fieldState.error}
-								className={fieldState.error ? 'border-destructive' : ''}
-							/>
-							{fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
-						</Field>
-					)}
-				/>
+				<div className="flex items-end gap-2">
+					<Controller
+						control={form.control}
+						name="code"
+						render={({ field, fieldState }) => (
+							<Field className="flex-1 space-y-1.5">
+								<FieldLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+									{dict.CODE_LABEL}
+								</FieldLabel>
+								<Input
+									{...field}
+									type="text"
+									inputMode="numeric"
+									maxLength={6}
+									placeholder={dict.CODE_PLACEHOLDER}
+									aria-invalid={!!fieldState.error}
+									className={fieldState.error ? 'border-destructive' : ''}
+								/>
+								{fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
+							</Field>
+						)}
+					/>
 
-				<Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-					{form.formState.isSubmitting && <Loader2 className="mr-1 size-4 animate-spin" />}
-					{form.formState.isSubmitting ? dict.BUTTON_VERIFYING : dict.BUTTON_VERIFY}
-				</Button>
+					<Button type="submit" className="shrink-0" disabled={form.formState.isSubmitting}>
+						{form.formState.isSubmitting && <Loader2 className="mr-1 size-4 animate-spin" />}
+						{form.formState.isSubmitting ? dict.BUTTON_VERIFYING : dict.BUTTON_VERIFY}
+					</Button>
+				</div>
 			</form>
 		</div>
 	);

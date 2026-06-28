@@ -14,7 +14,7 @@ export function MfaChallengePage() {
 	};
 
 	return (
-		<div className="flex min-h-dvh flex-col items-center justify-center p-4 md:p-8 bg-background">
+		<div className="flex h-dvh overflow-hidden flex-col items-center justify-center p-4 md:p-8 bg-background">
 			<FormContainer variant="page" className="w-full max-w-md">
 				<header className="space-y-1.5 mb-6 text-center">
 					<h1 className="text-2xl font-bold">{DICT.AUTH.MFA.CHALLENGE.TITLE}</h1>
