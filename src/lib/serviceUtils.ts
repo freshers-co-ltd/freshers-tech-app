@@ -8,9 +8,9 @@ export interface ActionResult<T> {
 
 export const mapDatabaseError = (error: PostgrestError | AuthError): string => {
 	const errorMap: Record<string, string> = {
-		PGRST116: 'Record not found or access denied.',
-		'42501': 'You do not have permission to perform this action.',
-		'23505': 'This record already exists.',
+		PGRST116: DICT.ERRORS.DATABASE.RECORD_NOT_FOUND,
+		'42501': DICT.ERRORS.DATABASE.PERMISSION_DENIED,
+		'23505': DICT.ERRORS.DATABASE.RECORD_EXISTS,
 	};
 
 	if (error.message?.includes('Failed to fetch')) {

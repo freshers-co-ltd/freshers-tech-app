@@ -11,7 +11,7 @@ import { CLEANING_STATUS } from '@/features/cleanings/types';
 import { type ActionResult, mapDatabaseError } from '@/lib/serviceUtils';
 import { supabase } from '@/lib/supabaseClient';
 
-const isRawCleaningQueryResult = (item: unknown): item is RawCleaningRequestQueryResult => {
+export const isRawCleaningQueryResult = (item: unknown): item is RawCleaningRequestQueryResult => {
 	const i = item as RawCleaningRequestQueryResult;
 	return (
 		i !== null &&
@@ -22,7 +22,7 @@ const isRawCleaningQueryResult = (item: unknown): item is RawCleaningRequestQuer
 	);
 };
 
-const normaliseCleaningRequest = (item: RawCleaningRequestQueryResult): CleaningRequest => {
+export const normaliseCleaningRequest = (item: RawCleaningRequestQueryResult): CleaningRequest => {
 	const propertyData = Array.isArray(item.property) ? item.property[0] : item.property;
 	const cleanerData = Array.isArray(item.cleaner) ? item.cleaner[0] : item.cleaner;
 	const reportData = Array.isArray(item.cleaning_reports)

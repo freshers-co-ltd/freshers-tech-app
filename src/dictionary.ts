@@ -627,6 +627,11 @@ export const DICT = {
 			ACCOUNT_LOCKED:
 				'Account locked due to too many failed login attempts. Try again later or reset your password.',
 		},
+		DATABASE: {
+			RECORD_NOT_FOUND: 'Record not found or access denied.',
+			PERMISSION_DENIED: 'You do not have permission to perform this action.',
+			RECORD_EXISTS: 'This record already exists.',
+		},
 		HTTP: {
 			DEFAULT_TITLE: 'Oops! An unexpected error has occurred.',
 			DEFAULT_MESSAGE: 'Something went wrong while loading the page. Please try again later.',
