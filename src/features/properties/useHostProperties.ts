@@ -53,9 +53,10 @@ export function useHostProperties() {
 
 			if (result.success) {
 				modal.handleClose();
+				await fetchCleanings();
 			}
 		},
-		[user, editingProperty, upsertProperty, modal],
+		[user, editingProperty, upsertProperty, modal, fetchCleanings],
 	);
 
 	const handleDelete = useCallback(async () => {
