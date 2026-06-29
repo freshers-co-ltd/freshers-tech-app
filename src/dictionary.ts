@@ -309,6 +309,7 @@ export const DICT = {
 		DETAIL: {
 			MESSAGE: 'View complete cleaning information',
 			TITLE: 'Cleaning Details',
+			BUTTON_VIEW_IMAGES: 'View Property Images',
 			PENDING_ASSIGNMENT: 'Pending assignment...',
 			REPORT_TITLE: 'Cleaning Report',
 			CLOCK_IN: {

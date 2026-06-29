@@ -131,7 +131,7 @@ export function AccountPage() {
 									variant="outline"
 									className="h-auto py-4 flex-col items-start gap-2"
 									asChild>
-									<a href="mailto:Freshersco@outlook.com">
+									<a href="mailto:contact@freshersco.com">
 										<div className="flex items-center gap-2 font-semibold">
 											<Mail className="size-4" /> {dict.CONTACT.SUPPORT.TITLE}
 										</div>

@@ -1,9 +1,10 @@
 'use client';
 
-import { MapPin } from 'lucide-react';
+import { Image, MapPin } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { EntityBadge } from '@/components/EntityBadge';
 import { FullscreenMediaCarousel } from '@/components/FullscreenMediaCarousel';
+import { Button } from '@/components/ui/button';
 import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -99,6 +100,9 @@ export function CleaningDetailView({
 		{ url: string; type: Database['public']['Enums']['media_type'] }[]
 	>([]);
 
+	const [propertyGalleryOpen, setPropertyGalleryOpen] = useState(false);
+	const [propertyMedia, setPropertyMedia] = useState<{ url: string; type: 'image' }[]>([]);
+
 	useEffect(() => {
 		if (evidence.length === 0) {
 			setEvidenceMedia([]);
@@ -124,6 +128,40 @@ export function CleaningDetailView({
 			cancelled = true;
 		};
 	}, [evidence]);
+
+	useEffect(() => {
+		const property = cleaning.property;
+		if (!property) {
+			setPropertyMedia([]);
+			return;
+		}
+
+		const paths = [property.main_image_url, ...(property.extra_images_urls ?? [])].filter(
+			Boolean,
+		) as string[];
+
+		if (paths.length === 0) {
+			setPropertyMedia([]);
+			return;
+		}
+
+		let cancelled = false;
+
+		Promise.all(
+			paths.map(async (path) => ({
+				url: (await mediaService.getSignedUrl(path, 'property-media')) ?? '/placeholder-image.webp',
+				type: 'image' as const,
+			})),
+		).then((results) => {
+			if (!cancelled) {
+				setPropertyMedia(results);
+			}
+		});
+
+		return () => {
+			cancelled = true;
+		};
+	}, [cleaning.property?.main_image_url, cleaning.property?.extra_images_urls, cleaning.property]);
 
 	const expiryInfo = useMemo(() => {
 		if (!cleaning.clock_out_time) {
@@ -156,6 +194,16 @@ export function CleaningDetailView({
 									{formatPostcode(cleaning.property?.postcode ?? '')}
 								</span>
 							</div>
+						)}
+						{!showEvidenceForm && propertyMedia.length > 0 && (
+							<Button
+								variant="outline"
+								size="sm"
+								className="mt-2"
+								onClick={() => setPropertyGalleryOpen(true)}>
+								<Image className="size-4 mr-2" />
+								{DICT.CLEANINGS.DETAIL.BUTTON_VIEW_IMAGES}
+							</Button>
 						)}
 					</div>
 					{!showEvidenceForm && (
@@ -236,6 +284,14 @@ export function CleaningDetailView({
 				open={isFullScreen}
 				onOpenChange={setIsFullScreen}
 				alt="Evidence"
+			/>
+
+			<FullscreenMediaCarousel
+				media={propertyMedia}
+				initialMedia={propertyMedia[0]?.url}
+				open={propertyGalleryOpen}
+				onOpenChange={setPropertyGalleryOpen}
+				alt="Property"
 			/>
 		</div>
 	);
