@@ -1,20 +1,18 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 
 export function useObjectUrls(files: File[] | null | undefined): string[] {
-	const urlsRef = useRef<string[]>([]);
+	const [urls, setUrls] = useState<string[]>([]);
 
 	useEffect(() => {
+		const newUrls = files?.map(URL.createObjectURL) ?? [];
+		setUrls(newUrls);
+
 		return () => {
-			urlsRef.current.forEach(URL.revokeObjectURL);
+			newUrls.forEach(URL.revokeObjectURL);
 		};
-	}, []);
-
-	useEffect(() => {
-		urlsRef.current.forEach(URL.revokeObjectURL);
-		urlsRef.current = files?.map(URL.createObjectURL) ?? [];
 	}, [files]);
 
-	return urlsRef.current;
+	return urls;
 }
