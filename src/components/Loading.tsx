@@ -1,14 +1,19 @@
 import { Loader2 } from 'lucide-react';
 import { DICT } from '@/dictionary';
+import { cn } from '@/lib/utils';
 
-export const Loading = () => {
+export const Loading = ({ absolute = true }) => {
 	return (
-		<div className="flex-col-center min-h-screen gap-4 bg-background">
+		<output
+			className={cn(
+				'flex flex-col items-center justify-center gap-4 w-full h-full',
+				absolute && 'absolute inset-0',
+			)}>
 			<Loader2 className="size-14 animate-spin text-primary" />
 			<div className="flex flex-col items-center gap-1">
-				<h2 className="text-2xl font-semibold tracking-tight">{DICT.COMMON.LOADING_TITLE}</h2>
-				<p className="text-lg text-muted-foreground">{DICT.COMMON.LOADING_MESSAGE}</p>
+				<h2 className="text-2xl font-semibold tracking-tight">{DICT.COMMON.LOADING.TITLE}</h2>
+				<p className="text-lg text-muted-foreground">{DICT.COMMON.LOADING.MESSAGE}</p>
 			</div>
-		</div>
+		</output>
 	);
 };

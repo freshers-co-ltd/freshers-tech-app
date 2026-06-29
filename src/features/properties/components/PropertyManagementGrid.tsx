@@ -10,17 +10,7 @@ interface PropertyManagementGridProps {
 }
 
 export function PropertyManagementGrid({ onView, onEdit, onDelete }: PropertyManagementGridProps) {
-	const { properties, isLoading } = useProperties();
-
-	if (isLoading) {
-		return (
-			<div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-				{[1, 2, 3].map((i) => (
-					<div key={i} className="h-64 rounded-xl bg-muted animate-pulse" />
-				))}
-			</div>
-		);
-	}
+	const { properties } = useProperties();
 
 	return (
 		<div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">

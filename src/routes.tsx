@@ -1,131 +1,15 @@
-import { type ComponentType, lazy, type ReactElement, Suspense } from 'react';
-import {
-	createBrowserRouter,
-	Navigate,
-	Outlet,
-	type RouteObject,
-	useLocation,
-} from 'react-router-dom';
-import { Loading } from '@/components/Loading';
-import { useAuth } from '@/features/auth/AuthContext';
+import { createBrowserRouter, Navigate, Outlet, type RouteObject } from 'react-router-dom';
+import { DashboardRedirect, ProtectedRoute, PublicRoute } from '@/features/auth/RouteGuards';
+import { AppLayout } from '@/layouts/AppLayout';
 import { AuthLayout } from '@/layouts/AuthLayout';
-import { DashboardLayout } from '@/layouts/DashboardLayout';
+import { lazyLoad } from '@/lib/LazyLoad';
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPassword';
 import { LoginPage } from '@/pages/auth/Login';
+import { MfaChallengePage } from '@/pages/auth/MfaChallenge';
+import { MfaEnrollPage } from '@/pages/auth/MfaEnroll';
+import { SetPasswordPage } from '@/pages/auth/SetPassword';
 import { SignupPage } from '@/pages/auth/Signup';
 import { ErrorPage } from '@/pages/Error';
-import type { UserRole } from './features/auth/authService';
-
-const lazyLoad = <T extends Record<string, unknown>>(
-	importFn: () => Promise<Record<string, ComponentType<T>>>,
-	name: string,
-): ReactElement => {
-	const LazyComponent = lazy(async () => {
-		const module = await importFn();
-		const Component = module[name];
-		if (!Component) {
-			throw new Error(`Component "${name}" not found in module.`);
-		}
-		return { default: Component };
-	});
-
-	const ComponentToRender = LazyComponent as unknown as ComponentType<Record<string, unknown>>;
-
-	return (
-		<Suspense fallback={<Loading />}>
-			<ComponentToRender />
-		</Suspense>
-	);
-};
-
-export interface NavigationState {
-	reason?: string;
-	from?: string;
-	[key: string]: unknown;
-}
-
-const useForwardState = (extraData: NavigationState = {}): NavigationState => {
-	const location = useLocation();
-	const currentState = (location.state as NavigationState) || {};
-	return { ...currentState, ...extraData };
-};
-
-interface ProtectedRouteProps {
-	children?: React.ReactNode;
-	allowedRoles?: UserRole[];
-}
-
-export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
-	const { user, profile, loading } = useAuth();
-	const location = useLocation();
-	const state = useForwardState({ from: location.pathname });
-
-	if (loading || (user && !profile && navigator.onLine)) {
-		return <Loading />;
-	}
-
-	if (!user) {
-		return <Navigate to="/login" state={state} replace />;
-	}
-
-	if (allowedRoles && (!profile || !allowedRoles.includes(profile.role as UserRole))) {
-		return <Navigate to="/error/403" replace />;
-	}
-
-	return children ? children : <Outlet />;
-};
-
-export const PublicRoute = () => {
-	const { user, loading } = useAuth();
-	const location = useLocation();
-
-	if (loading) {
-		return <Loading />;
-	}
-
-	console.log('[PublicRoute] Auth State:', { loading, user: !!user, path: location.pathname });
-
-	const searchParams = new URLSearchParams(location.search);
-	const isLoggingOut = searchParams.get('reason') === 'inactivity';
-
-	if (user && !isLoggingOut) {
-		const state = location.state as NavigationState;
-		const fallbackPath = state?.from && typeof state.from === 'string' ? state.from : '/dashboard';
-
-		return <Navigate to={fallbackPath} replace />;
-	}
-
-	return <Outlet />;
-};
-
-export const DashboardRedirect = () => {
-	const { profile, loading, user } = useAuth();
-	const state = useForwardState();
-
-	if (loading) {
-		return <Loading />;
-	}
-	if (!user) {
-		return <Navigate to="/login" state={state} replace />;
-	}
-
-	const role = (profile?.role || user.user_metadata?.role) as UserRole;
-	let destination = '/error/403';
-
-	switch (role) {
-		case 'host':
-			destination = '/host/dashboard';
-			break;
-		case 'cleaner':
-			destination = '/cleaner/dashboard';
-			break;
-		case 'admin':
-			destination = '/admin/dashboard';
-			break;
-	}
-
-	return <Navigate to={destination} replace />;
-};
 
 const routesConfig: RouteObject[] = [
 	{
@@ -158,30 +42,50 @@ const routesConfig: RouteObject[] = [
 				],
 			},
 			{
-				path: 'auth/callback',
-				element: lazyLoad(() => import('@/pages/auth/Callback'), 'AuthCallback'),
+				path: 'set-password',
+				element: <SetPasswordPage />,
+			},
+			{
+				path: 'update-password',
+				element: lazyLoad(() => import('@/pages/auth/ResetPassword'), 'ResetPasswordPage'),
 			},
 			{
 				element: (
 					<ProtectedRoute>
-						<AuthLayout />
+						<Outlet />
 					</ProtectedRoute>
 				),
 				children: [
 					{
-						path: 'update-password',
-						element: lazyLoad(() => import('@/pages/auth/ResetPassword'), 'ResetPasswordPage'),
+						path: 'mfa-enroll',
+						element: <MfaEnrollPage />,
+					},
+					{
+						path: 'mfa-challenge',
+						element: <MfaChallengePage />,
 					},
 				],
+			},
+			{
+				path: 'auth/callback',
+				element: lazyLoad(() => import('@/pages/auth/Callback'), 'AuthCallback'),
+			},
+			{
+				path: 'privacy',
+				element: lazyLoad(() => import('@/pages/Privacy'), 'PrivacyPage'),
 			},
 			{
 				path: '/host',
 				element: (
 					<ProtectedRoute allowedRoles={['host']}>
-						<DashboardLayout />
+						<AppLayout />
 					</ProtectedRoute>
 				),
 				children: [
+					{
+						index: true,
+						element: <Navigate to="dashboard" replace />,
+					},
 					{
 						path: 'dashboard',
 						element: lazyLoad(() => import('@/pages/host/Dashboard'), 'HostDashboardPage'),
@@ -198,19 +102,39 @@ const routesConfig: RouteObject[] = [
 						path: 'account',
 						element: lazyLoad(() => import('@/pages/Account'), 'AccountPage'),
 					},
+					{
+						path: 'notifications',
+						element: lazyLoad(() => import('@/pages/Notifications'), 'NotificationsPage'),
+					},
 				],
 			},
 			{
 				path: '/cleaner',
 				element: (
 					<ProtectedRoute allowedRoles={['cleaner']}>
-						<DashboardLayout />
+						<AppLayout />
 					</ProtectedRoute>
 				),
 				children: [
 					{
+						index: true,
+						element: <Navigate to="dashboard" replace />,
+					},
+					{
 						path: 'dashboard',
 						element: lazyLoad(() => import('@/pages/cleaner/Dashboard'), 'CleanerDashboardPage'),
+					},
+					{
+						path: 'cleanings',
+						element: lazyLoad(() => import('@/pages/cleaner/Cleanings'), 'CleanerCleaningsPage'),
+					},
+					{
+						path: 'account',
+						element: lazyLoad(() => import('@/pages/Account'), 'AccountPage'),
+					},
+					{
+						path: 'notifications',
+						element: lazyLoad(() => import('@/pages/Notifications'), 'NotificationsPage'),
 					},
 				],
 			},
@@ -218,13 +142,48 @@ const routesConfig: RouteObject[] = [
 				path: '/admin',
 				element: (
 					<ProtectedRoute allowedRoles={['admin']}>
-						<DashboardLayout />
+						<AppLayout />
 					</ProtectedRoute>
 				),
 				children: [
 					{
+						index: true,
+						element: <Navigate to="dashboard" replace />,
+					},
+					{
 						path: 'dashboard',
 						element: lazyLoad(() => import('@/pages/admin/Dashboard'), 'AdminDashboardPage'),
+					},
+					{
+						path: 'users',
+						element: lazyLoad(() => import('@/pages/admin/Users'), 'AdminUsersPage'),
+					},
+					{
+						path: 'users/hosts/:id',
+						element: lazyLoad(() => import('@/pages/admin/HostDetail'), 'AdminHostDetailPage'),
+					},
+					{
+						path: 'users/cleaners/:id',
+						element: lazyLoad(
+							() => import('@/pages/admin/CleanerDetail'),
+							'AdminCleanerDetailPage',
+						),
+					},
+					{
+						path: 'cleanings',
+						element: lazyLoad(() => import('@/pages/admin/Cleanings'), 'AdminCleaningsPage'),
+					},
+					{
+						path: 'analytics',
+						element: lazyLoad(() => import('@/pages/admin/Analytics'), 'AdminAnalyticsPage'),
+					},
+					{
+						path: 'account',
+						element: lazyLoad(() => import('@/pages/Account'), 'AccountPage'),
+					},
+					{
+						path: 'notifications',
+						element: lazyLoad(() => import('@/pages/Notifications'), 'NotificationsPage'),
 					},
 				],
 			},

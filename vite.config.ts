@@ -9,9 +9,12 @@ export default defineConfig({
 		react(),
 		tailwindcss(),
 		VitePWA({
+			strategies: 'injectManifest',
 			registerType: 'autoUpdate',
 			injectRegister: 'auto',
 			includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png', 'icon-source.svg'],
+			srcDir: 'src',
+			filename: 'sw.ts',
 			workbox: {
 				globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
 				cleanupOutdatedCaches: true,
@@ -24,8 +27,8 @@ export default defineConfig({
 				suppressWarnings: true,
 			},
 			manifest: {
-				name: 'Cleaner Hire PWA',
-				short_name: 'CleanerHire',
+				name: 'Freshers PWA',
+				short_name: 'Freshers',
 				description: 'Professional cleaning service platform.',
 				start_url: '/',
 				display: 'standalone',
@@ -72,14 +75,5 @@ export default defineConfig({
 		target: 'esnext',
 		sourcemap: true,
 		chunkSizeWarningLimit: 1000,
-		rollupOptions: {
-			output: {
-				manualChunks(id) {
-					if (id.includes('node_modules')) {
-						return 'vendor';
-					}
-				},
-			},
-		},
 	},
 });

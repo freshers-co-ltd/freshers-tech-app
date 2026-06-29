@@ -26,7 +26,7 @@ jobs:
         run: npx @biomejs/biome check
 
       - name: Type Check
-        run: npx tsc --noEmit
+        run: npx tsc -p tsconfig.app.json --noEmit
 
       - name: Test
         run: npm test

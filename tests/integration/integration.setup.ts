@@ -1,42 +1,55 @@
 import { configure } from '@testing-library/dom';
 import '@testing-library/jest-dom/vitest';
-import { afterAll, afterEach, beforeAll, vi } from 'vitest';
-import { server } from '../server';
+import { cleanup } from '@testing-library/react';
+import { afterEach, beforeAll, vi } from 'vitest';
+import { resetSupabaseMocks } from '~/mocks/supabaseClient';
 
-vi.mock('@/lib/supabaseClient', () => ({
-	supabase: {
-		auth: {
-			signInWithPassword: vi.fn().mockImplementation(async ({ email, password }) => {
-				const res = await fetch('*/auth/v1/token', {
-					method: 'POST',
-					body: JSON.stringify({ email, password }),
-				});
-				const responseData = await res.json();
-				if (!res.ok) {
-					return {
-						data: { user: null, session: null },
-						error: { message: responseData.error_description || 'Invalid credentials' },
-					};
-				}
-				return { data: responseData, error: null };
-			}),
-			signUp: vi.fn().mockImplementation(async () => {
-				const res = await fetch('*/auth/v1/signup', { method: 'POST' });
-				const responseData = await res.json();
-				return { data: responseData, error: res.ok ? null : responseData };
-			}),
-			getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
-			onAuthStateChange: vi.fn(() => ({
-				data: { subscription: { unsubscribe: vi.fn() } },
-			})),
-		},
-	},
-}));
+beforeAll(() => {
+	Object.defineProperty(window, 'matchMedia', {
+		writable: true,
+		value: vi.fn().mockImplementation((query: string) => ({
+			matches: false,
+			media: query,
+			onchange: null,
+			addListener: vi.fn(),
+			removeListener: vi.fn(),
+			addEventListener: vi.fn(),
+			removeEventListener: vi.fn(),
+			dispatchEvent: vi.fn(),
+		})),
+	});
 
-vi.mock('sonner', () => ({
+	// jsdom does not implement PointerEvent; Radix UI Select depends on it.
+	if (typeof PointerEvent === 'undefined') {
+		// @ts-expect-error - polyfilling PointerEvent for jsdom
+		globalThis.PointerEvent = class extends MouseEvent {
+			readonly pointerType: string;
+			constructor(type: string, init?: PointerEventInit) {
+				super(type, init);
+				this.pointerType = init?.pointerType ?? 'mouse';
+			}
+		};
+	}
+	// jsdom does not implement Element.hasPointerCapture;
+	// Radix UI Select depends on it to open the dropdown.
+	if (!Element.prototype.hasPointerCapture) {
+		Element.prototype.hasPointerCapture = vi.fn().mockReturnValue(false);
+	}
+
+	// jsdom does not implement Element.scrollIntoView;
+	// Radix UI SelectContent calls scrollIntoView on the selected item.
+	if (!Element.prototype.scrollIntoView) {
+		Element.prototype.scrollIntoView = vi.fn();
+	}
+});
+
+vi.mock('@/lib/supabaseClient', () => import('~/mocks/supabaseClient'));
+
+vi.mock('@/components/Toast', () => ({
 	toast: {
 		error: vi.fn(),
 		success: vi.fn(),
+		warning: vi.fn(),
 		loading: vi.fn(),
 		dismiss: vi.fn(),
 	},
@@ -50,11 +63,18 @@ configure({
 	},
 });
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
-
 afterEach(() => {
-	server.resetHandlers();
+	cleanup();
+	// Remove leftover portal content that cleanup() misses (Radix UI portals
+	// render directly into document.body, and nuqs may cache query state).
+	document.body.innerHTML = '';
+	// nuqs reads window.location.search to initialise query state on mount.
+	// Clear it so the next test starts with a clean URL.
+	if (window.location.search) {
+		window.history.replaceState(null, '', window.location.pathname + window.location.hash);
+	}
 	vi.clearAllMocks();
+	resetSupabaseMocks();
+	localStorage.clear();
+	sessionStorage.clear();
 });
-
-afterAll(() => server.close());

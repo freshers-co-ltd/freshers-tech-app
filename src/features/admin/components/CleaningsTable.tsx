@@ -1,0 +1,453 @@
+'use client';
+
+import { ArrowUpDown, Eye, Pencil, UserPlus } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { DataTable } from '@/components/DataTable';
+import { EntityBadge } from '@/components/EntityBadge';
+import { toast } from '@/components/Toast';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { DICT } from '@/dictionary';
+import { AssignCleanerDialog } from '@/features/admin/components/AssignCleanerDialog';
+import { cleaningService as adminCleaningService } from '@/features/admin/services/cleaningService';
+import type { AdminCleaning } from '@/features/admin/types';
+import type { UserRole } from '@/features/auth/types';
+import { CleaningDialogs } from '@/features/cleanings/components/CleaningDialogs';
+import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
+import type { CleaningRequest } from '@/features/cleanings/types';
+import { CLEANING_STATUS } from '@/features/cleanings/types';
+import { useCleaningModals } from '@/hooks/useCleaningModals';
+import { formatDate } from '@/lib/utils';
+
+export interface CleaningsTableProps {
+	data: AdminCleaning[];
+	fetchById: (id: string) => Promise<CleaningRequest | null>;
+	onUpsert: (data: CleaningFormValues, existingId?: string) => Promise<void>;
+	userRole: UserRole;
+	excludeHost?: boolean;
+	excludeCleaner?: boolean;
+	hideHostCost?: boolean;
+	hideCleanerPay?: boolean;
+	emptyMessage?: string;
+	availableCleaners: { id: string; full_name: string | null }[];
+	onRefresh?: () => void;
+	page?: number;
+	totalCount?: number;
+	pageSize?: number;
+	onPageChange?: (page: number) => void;
+	loading?: boolean;
+	sortField?: string;
+	sortDirection?: 'asc' | 'desc';
+	onSort?: (field: string) => void;
+	allData?: AdminCleaning[];
+	hasMore?: boolean;
+	onLoadMore?: () => void;
+	loadingMore?: boolean;
+}
+
+export function CleaningsTable({
+	data,
+	fetchById,
+	onUpsert,
+	userRole,
+	excludeHost,
+	excludeCleaner,
+	hideHostCost,
+	hideCleanerPay,
+	emptyMessage = 'No cleaning requests found',
+	onRefresh,
+	page = 1,
+	totalCount,
+	pageSize = 20,
+	onPageChange,
+	loading = false,
+	sortField = 'date',
+	sortDirection = 'desc',
+	onSort,
+	allData,
+	hasMore,
+	onLoadMore,
+	loadingMore = false,
+	availableCleaners,
+}: CleaningsTableProps) {
+	const { modal, viewingCleaning, editingCleaning, isViewLoading, isEditLoading, handleUpsert } =
+		useCleaningModals({
+			fetchById,
+			onUpsert,
+			userRole,
+		});
+	const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+	const [selectedCleaningId, setSelectedCleaningId] = useState<string>('');
+	const [selectedCleanerId, setSelectedCleanerId] = useState<string>('');
+
+	const handleSort = useCallback(
+		(field: string) => {
+			onSort?.(field);
+		},
+		[onSort],
+	);
+
+	const isDisabled = useCallback(
+		(cleaning: AdminCleaning) =>
+			cleaning.status === CLEANING_STATUS.IN_PROGRESS ||
+			cleaning.status === CLEANING_STATUS.COMPLETED ||
+			cleaning.status === CLEANING_STATUS.CANCELLED,
+		[],
+	);
+
+	const openAssignModal = useCallback((cleaningId: string, currentCleanerId?: string | null) => {
+		setSelectedCleaningId(cleaningId);
+		setSelectedCleanerId(currentCleanerId || '');
+		setIsAssignModalOpen(true);
+	}, []);
+
+	const handleAssignCleaner = useCallback(async (): Promise<boolean> => {
+		if (!selectedCleaningId || !selectedCleanerId) {
+			toast.error(DICT.CLEANINGS.ASSIGN_CLEANER.TOAST_ERROR);
+			return false;
+		}
+		const result = await adminCleaningService.assignCleaner(selectedCleaningId, selectedCleanerId);
+		if (result.error) {
+			toast.error(result.error);
+			return false;
+		}
+		toast.success(DICT.CLEANINGS.ASSIGN_CLEANER.TOAST_SUCCESS);
+		setIsAssignModalOpen(false);
+		onRefresh?.();
+		return true;
+	}, [selectedCleaningId, selectedCleanerId, onRefresh]);
+
+	const handleReassignCleaner = useCallback(
+		(cleaningId: string, currentCleanerId?: string | null) => {
+			openAssignModal(cleaningId, currentCleanerId);
+		},
+		[openAssignModal],
+	);
+
+	const columns = useMemo(() => {
+		const cols: {
+			key: string;
+			label: string;
+			sortable: boolean;
+			render?: (item: AdminCleaning) => ReactNode;
+		}[] = [
+			{
+				key: 'date',
+				label: 'Date',
+				sortable: true,
+				render: (cleaning: AdminCleaning) => (
+					<div>{formatDate(cleaning.scheduled_start, { variant: 'numeric' })}</div>
+				),
+			},
+			{
+				key: 'time',
+				label: 'Time',
+				sortable: true,
+				render: (cleaning: AdminCleaning) => (
+					<div>{formatDate(cleaning.scheduled_start, { variant: 'time' })}</div>
+				),
+			},
+			{
+				key: 'property_address',
+				label: 'Address',
+				sortable: true,
+				render: (item: AdminCleaning) => item.property_address || 'Unknown Property',
+			},
+			{
+				key: 'property_postcode',
+				label: 'Postcode',
+				sortable: true,
+				render: (item: AdminCleaning) => item.property_postcode || '-',
+			},
+			{
+				key: 'property_town_city',
+				label: 'City',
+				sortable: true,
+				render: (item: AdminCleaning) => item.property_town_city || '-',
+			},
+		];
+
+		if (!excludeHost) {
+			cols.push({
+				key: 'host_name',
+				label: 'Host',
+				sortable: true,
+				render: (item: AdminCleaning) => item.host_name || '-',
+			});
+		}
+
+		if (!excludeCleaner) {
+			cols.push({
+				key: 'cleaner_name',
+				label: 'Cleaner',
+				sortable: true,
+				render: (item: AdminCleaning) =>
+					item.cleaner_name || (
+						<span className="text-muted-foreground">{DICT.CLEANINGS.UNASSIGNED}</span>
+					),
+			});
+		}
+
+		cols.push({
+			key: 'status',
+			label: 'Status',
+			sortable: true,
+			render: (item: AdminCleaning) => (
+				<EntityBadge variant={{ type: 'cleaning', value: item.status }} />
+			),
+		});
+
+		if (!hideHostCost) {
+			cols.push({
+				key: 'service_cost',
+				label: 'Host Cost',
+				sortable: true,
+				render: (item: AdminCleaning) =>
+					item.service_cost === null ? (
+						<span className="text-muted-foreground">Not set</span>
+					) : (
+						<span>£{item.service_cost.toFixed(2)}</span>
+					),
+			});
+		}
+
+		if (!hideCleanerPay) {
+			cols.push({
+				key: 'cleaner_pay',
+				label: 'Cleaner Pay',
+				sortable: true,
+				render: (item: AdminCleaning) => <span>£{item.cleaner_pay?.toFixed(2) ?? '0.00'}</span>,
+			});
+		}
+
+		cols.push({
+			key: 'actions',
+			label: 'Actions',
+			sortable: false,
+			render: (item: AdminCleaning) => (
+				<div className="flex items-center justify-end gap-1">
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button variant="secondary" size="icon-sm" onClick={() => modal.openView(item.id)}>
+								<Eye className="size-4" />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>
+							<p>{DICT.COMMON.ACTIONS.VIEW_DETAILS}</p>
+						</TooltipContent>
+					</Tooltip>
+					{!isDisabled(item) && (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button variant="secondary" size="icon-sm" onClick={() => modal.openEdit(item.id)}>
+									<Pencil className="size-4" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p>Edit</p>
+							</TooltipContent>
+						</Tooltip>
+					)}
+					{!item.cleaner_name && (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button variant="secondary" size="icon-sm" onClick={() => openAssignModal(item.id)}>
+									<UserPlus className="size-4" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p>{DICT.COMMON.ACTIONS.ASSIGN_CLEANER}</p>
+							</TooltipContent>
+						</Tooltip>
+					)}
+					{item.cleaner_name && !isDisabled(item) && (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									variant="secondary"
+									size="icon-sm"
+									onClick={() => handleReassignCleaner(item.id, item.cleaner_id)}>
+									<ArrowUpDown className="size-4" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p>{DICT.COMMON.ACTIONS.REASSIGN}</p>
+							</TooltipContent>
+						</Tooltip>
+					)}
+				</div>
+			),
+		});
+
+		return cols;
+	}, [
+		excludeHost,
+		excludeCleaner,
+		openAssignModal,
+		handleReassignCleaner,
+		modal,
+		hideCleanerPay,
+		hideHostCost,
+		isDisabled,
+	]);
+
+	const renderMobileHeader = useCallback(
+		(cleaning: AdminCleaning) => (
+			<div className="flex items-start justify-between gap-2">
+				<div className="min-w-0">
+					<p className="font-medium truncate">{cleaning.property_address || 'Unknown Property'}</p>
+					<p className="text-sm text-muted-foreground">
+						{cleaning.property_postcode}
+						{cleaning.property_town_city ? `,  ${cleaning.property_town_city}` : ''}
+					</p>
+					<p className="text-sm text-muted-foreground mt-1">
+						{formatDate(cleaning.scheduled_start)} at{' '}
+						{formatDate(cleaning.scheduled_start, { variant: 'time' })}
+					</p>
+				</div>
+
+				<div className="flex flex-col gap-3 shrink-0">
+					<div className="flex gap-1">
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									variant="secondary"
+									size="icon-sm"
+									onClick={() => modal.openView(cleaning.id)}>
+									<Eye className="size-4" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p>View Details</p>
+							</TooltipContent>
+						</Tooltip>
+						{!isDisabled(cleaning) && (
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										variant="secondary"
+										size="icon-sm"
+										onClick={() => modal.openEdit(cleaning.id)}>
+										<Pencil className="size-4" />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>Edit</p>
+								</TooltipContent>
+							</Tooltip>
+						)}
+						{!cleaning.cleaner_name && (
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										variant="secondary"
+										size="icon-sm"
+										onClick={() => openAssignModal(cleaning.id)}>
+										<UserPlus className="size-4" />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>Assign</p>
+								</TooltipContent>
+							</Tooltip>
+						)}
+						{cleaning.cleaner_name && !isDisabled(cleaning) && (
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										variant="secondary"
+										size="icon-sm"
+										onClick={() => openAssignModal(cleaning.id, cleaning.cleaner_id)}>
+										<ArrowUpDown className="size-4" />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>
+									<p>Reassign</p>
+								</TooltipContent>
+							</Tooltip>
+						)}
+					</div>
+					<div className="self-center justify-self-end">
+						<EntityBadge variant={{ type: 'cleaning', value: cleaning.status }} />
+					</div>
+				</div>
+			</div>
+		),
+		[modal, openAssignModal, isDisabled],
+	);
+
+	const priorityColumns = [
+		'property_address',
+		'property_postcode',
+		'property_town_city',
+		'actions',
+	];
+
+	const excludeFromExpanded = [
+		'date',
+		'time',
+		'status',
+		'property_address',
+		'property_postcode',
+		'property_town_city',
+		'actions',
+	];
+
+	return (
+		<>
+			<DataTable
+				data={data}
+				columns={columns}
+				keyField="id"
+				emptyMessage={emptyMessage}
+				sortField={sortField}
+				sortDirection={sortDirection}
+				onSort={handleSort}
+				loading={loading}
+				page={page}
+				totalCount={totalCount}
+				pageSize={pageSize}
+				onPageChange={onPageChange}
+				renderMobileHeader={renderMobileHeader}
+				priorityColumns={priorityColumns}
+				excludeFromExpanded={excludeFromExpanded}
+				allData={allData}
+				hasMore={hasMore}
+				onLoadMore={onLoadMore}
+				loadingMore={loadingMore}
+			/>
+			<AssignCleanerDialog
+				open={isAssignModalOpen}
+				onOpenChange={setIsAssignModalOpen}
+				availableCleaners={availableCleaners}
+				selectedCleanerId={selectedCleanerId}
+				onSelectCleaner={setSelectedCleanerId}
+				onAssign={handleAssignCleaner}
+			/>
+			<CleaningDialogs
+				isViewOpen={modal.isViewOpen}
+				isEditOpen={modal.isEditOrCreateOpen}
+				viewingCleaning={viewingCleaning}
+				editingCleaning={editingCleaning}
+				isViewLoading={isViewLoading}
+				isEditLoading={isEditLoading}
+				deletingId={modal.deletingId}
+				onEdit={modal.openEdit}
+				onDeleteConfirm={() => {
+					if (modal.deletingId) {
+						modal.setDeletingId(null);
+					}
+				}}
+				onDeleteCancel={() => modal.setDeletingId(null)}
+				onUpsert={async (data) => {
+					await handleUpsert(data, editingCleaning?.id);
+					modal.handleClose();
+					onRefresh?.();
+				}}
+				onCancel={() => modal.handleClose()}
+				userRole={userRole}
+			/>
+		</>
+	);
+}

@@ -1,0 +1,118 @@
+'use client';
+
+import { Cell, Pie, PieChart, Tooltip } from 'recharts';
+
+import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
+import { cn } from '@/lib/utils';
+
+const DEFAULT_COLORS = [
+	'color-mix(in oklch, var(--color-purple), var(--color-purple-border))',
+	'color-mix(in oklch, var(--color-blue), var(--color-blue-border))',
+	'color-mix(in oklch, var(--color-yellow), var(--color-yellow-border) 80%)',
+	'color-mix(in oklch, var(--color-green), var(--color-green-border) 70%)',
+	'color-mix(in oklch, var(--color-red), var(--color-red-border) 70%)',
+];
+
+export interface PieChartData {
+	name: string;
+	value: number;
+}
+
+export interface PieChartEntry {
+	name: string;
+	value: number;
+	fill?: string;
+}
+
+export interface PieChartProps {
+	title?: string;
+	subtitle?: string;
+	data: PieChartEntry[];
+	showLegend?: boolean;
+	className?: string;
+	formatLabels?: boolean;
+}
+
+function formatLabel(label: string): string {
+	return label.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+export function PieChartComponent({
+	title,
+	subtitle,
+	data,
+	showLegend = true,
+	className,
+	formatLabels = true,
+}: PieChartProps) {
+	const config = data.reduce(
+		(acc, entry, index) => {
+			acc[entry.name] = {
+				label: formatLabels ? formatLabel(entry.name) : entry.name,
+				color:
+					entry.fill ??
+					DEFAULT_COLORS[index % DEFAULT_COLORS.length] ??
+					'color-mix(in oklch, var(--color-purple), var(--color-purple-border))',
+			};
+			return acc;
+		},
+		{} as Record<string, { label: string; color: string }>,
+	);
+
+	return (
+		<div className={cn('flex flex-col', className)}>
+			{(title || subtitle) && (
+				<div className="mb-4">
+					{title && <h3 className="text-lg font-semibold">{title}</h3>}
+					{subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+				</div>
+			)}
+			<div className="flex-1 min-h-0">
+				<ChartContainer className="h-full w-full" config={config}>
+					<PieChart>
+						<Tooltip content={<ChartTooltipContent hideLabel />} />
+						<Pie
+							data={data}
+							cx="50%"
+							cy="50%"
+							innerRadius="60%"
+							outerRadius="100%"
+							paddingAngle={2}
+							dataKey="value">
+							{data.map((entry, index) => (
+								<Cell
+									key={entry.name}
+									fill={
+										entry.fill ??
+										DEFAULT_COLORS[index % DEFAULT_COLORS.length] ??
+										'color-mix(in oklch, var(--color-purple), var(--color-purple-border))'
+									}
+								/>
+							))}
+						</Pie>
+					</PieChart>
+				</ChartContainer>
+			</div>
+			{showLegend && (
+				<div className="flex flex-wrap justify-center gap-4 pt-4">
+					{data.map((entry, index) => (
+						<div key={entry.name} className="flex items-center gap-2">
+							<div
+								className="h-3 w-3 rounded-full"
+								style={{
+									backgroundColor:
+										entry.fill ??
+										DEFAULT_COLORS[index % DEFAULT_COLORS.length] ??
+										'color-mix(in oklch, var(--color-purple), var(--color-purple-border))',
+								}}
+							/>
+							<span className="text-sm text-muted-foreground">
+								{formatLabels ? formatLabel(entry.name) : entry.name}
+							</span>
+						</div>
+					))}
+				</div>
+			)}
+		</div>
+	);
+}

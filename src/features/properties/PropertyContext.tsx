@@ -1,15 +1,26 @@
 'use client';
 
-import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import {
+	createContext,
+	type ReactNode,
+	useCallback,
+	useContext,
+	useEffect,
+	useRef,
+	useState,
+} from 'react';
+import { toast } from '@/components/Toast';
 import { useAuth } from '@/features/auth/AuthContext';
-import { type Property, type PropertyInsert, propertyService } from './propertyService';
+import { propertyService } from '@/features/properties/propertyService';
+import type { Property, PropertyInsert } from '@/features/properties/types';
+import { useVisibilityReconnect } from '@/hooks/useVisibilityReconnect';
 
 interface PropertyContextType {
 	properties: Property[];
 	isLoading: boolean;
+	fetchProperties: (signal?: AbortSignal, skipLoadingState?: boolean) => Promise<void>;
 	upsertProperty: (property: PropertyInsert) => Promise<{ success: boolean; data?: Property }>;
-	deleteProperty: (id: string) => Promise<{ success: boolean }>;
+	deleteProperty: (id: string, hard?: boolean) => Promise<{ success: boolean }>;
 }
 
 const PropertyContext = createContext<PropertyContextType | undefined>(undefined);
@@ -17,37 +28,68 @@ const PropertyContext = createContext<PropertyContextType | undefined>(undefined
 export function PropertyProvider({ children }: { children: ReactNode }) {
 	const [properties, setProperties] = useState<Property[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
-	const { user } = useAuth();
+	const { user, profile } = useAuth();
+	const abortControllerRef = useRef<AbortController | null>(null);
 
-	const fetchProperties = useCallback(async () => {
-		if (!user) {
-			setProperties([]);
-			setIsLoading(false);
-			return;
-		}
+	const fetchProperties = useCallback(
+		async (signal?: AbortSignal, skipLoadingState = false) => {
+			if (!user) {
+				setProperties([]);
+				setIsLoading(false);
+				return;
+			}
 
-		if (properties.length === 0) {
-			setIsLoading(true);
-		}
+			if (!skipLoadingState) {
+				setIsLoading(true);
+			}
 
-		const { data, error } = await propertyService.getProperties();
+			const { data, error } = await propertyService.getProperties();
 
-		if (error) {
-			toast.error(error);
-		} else if (data) {
-			setProperties(data);
-		}
+			if (signal?.aborted) {
+				if (!skipLoadingState) {
+					setIsLoading(false);
+				}
+				return;
+			}
 
-		setIsLoading(false);
-	}, [user, properties.length]);
+			if (error) {
+				toast.error(error);
+			} else if (data) {
+				setProperties(data);
+			}
+
+			if (!skipLoadingState) {
+				setIsLoading(false);
+			}
+		},
+		[user],
+	);
 
 	useEffect(() => {
-		fetchProperties();
-	}, [fetchProperties]);
+		if (user && profile?.role === 'host') {
+			abortControllerRef.current?.abort();
+			abortControllerRef.current = new AbortController();
+			fetchProperties(abortControllerRef.current.signal);
+		} else if (user && profile) {
+			setIsLoading(false);
+		}
+
+		return () => {
+			abortControllerRef.current?.abort();
+		};
+	}, [user, profile, fetchProperties]);
+
+	useVisibilityReconnect({
+		enabled: !!user && profile?.role === 'host',
+		onVisible: async () => {
+			await fetchProperties(undefined, true);
+		},
+	});
 
 	const upsertProperty = async (property: PropertyInsert) => {
 		const { data, error } = await propertyService.upsertProperty(property);
 		if (error) {
+			toast.error(error);
 			return { success: false };
 		}
 
@@ -61,9 +103,13 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 		return { success: false };
 	};
 
-	const deleteProperty = async (id: string) => {
-		const { error } = await propertyService.deleteProperty(id);
+	const deleteProperty = async (id: string, hard: boolean = false) => {
+		const { error } = hard
+			? await propertyService.hardDeleteProperty(id)
+			: await propertyService.softDeleteProperty(id);
+
 		if (error) {
+			toast.error(error);
 			return { success: false };
 		}
 		setProperties((prev) => prev.filter((p) => p.id !== id));
@@ -71,7 +117,14 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 	};
 
 	return (
-		<PropertyContext.Provider value={{ properties, isLoading, upsertProperty, deleteProperty }}>
+		<PropertyContext.Provider
+			value={{
+				properties,
+				isLoading,
+				fetchProperties,
+				upsertProperty,
+				deleteProperty,
+			}}>
 			{children}
 		</PropertyContext.Provider>
 	);

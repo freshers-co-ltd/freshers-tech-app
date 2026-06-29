@@ -1,6 +1,6 @@
 # CI/CD Pipeline
 
-This document describes the CI/CD pipeline for the [Cleaner Hire PWA](/README.md). The process ensures that only verified, stable code reaches the production environment.
+This document describes the CI/CD pipeline for the [Freshers PWA](/README.md). The process ensures that only verified, stable code reaches the production environment.
 
 ## 1. Versioning Strategy
 

@@ -1,10 +1,8 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -14,6 +12,7 @@ import {
 	FileUploaderContent,
 	FileUploaderItem,
 } from '@/components/ui/file-upload';
+import { FileSvgDraw } from '@/components/ui/file-upload-components';
 import { Input } from '@/components/ui/input';
 import {
 	Select,
@@ -24,35 +23,39 @@ import {
 } from '@/components/ui/select';
 import { DICT } from '@/dictionary';
 import { useAuth } from '@/features/auth/AuthContext';
-import type { Property, PropertyInsert } from '@/features/properties/propertyService';
-import { mediaService } from '@/lib/mediaService';
-import { cn } from '@/lib/utils';
+import { usePropertyImageUpload } from '@/features/properties/hooks/usePropertyImageUpload';
+import type { Property, PropertyInsert } from '@/features/properties/types';
+import { propertyTypeValues } from '@/features/properties/types';
+import { useObjectUrls } from '@/hooks/useObjectUrls';
+import { formatPostcode } from '@/lib/utils';
 
 const POSTCODE_REGEX = /^[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}$/i;
-const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
 const propertySchema = z.object({
-	address_line_1: z.string().min(1, DICT.FORMS.VALIDATION.ADDRESS_REQUIRED),
+	address_line_1: z.string().min(1, DICT.COMMON.VALIDATION.ADDRESS_REQUIRED),
 	address_line_2: z.string().optional(),
-	town_city: z.string().min(1, DICT.FORMS.VALIDATION.TOWN_REQUIRED),
-	postcode: z.string().regex(POSTCODE_REGEX, DICT.FORMS.VALIDATION.POSTCODE_INVALID),
-	type: z.enum(['house', 'apartment', 'other']),
-	bedrooms: z.coerce.number().min(0, DICT.FORMS.VALIDATION.NUMBER_INVALID),
-	bathrooms: z.coerce.number().min(0, DICT.FORMS.VALIDATION.NUMBER_INVALID),
+	town_city: z.string().min(1, DICT.COMMON.VALIDATION.TOWN_REQUIRED),
+	postcode: z
+		.string()
+		.regex(POSTCODE_REGEX, DICT.COMMON.VALIDATION.POSTCODE_INVALID)
+		.transform((val) => formatPostcode(val.replace(/\s+/g, ''))),
+	type: z.enum(propertyTypeValues),
+	bedrooms: z.coerce.number().min(0, DICT.COMMON.VALIDATION.NUMBER_INVALID),
+	bathrooms: z.coerce.number().min(0, DICT.COMMON.VALIDATION.NUMBER_INVALID),
 	main_image_url: z.string().optional(),
 	has_main_image: z.boolean().refine((val) => val === true, {
-		message: DICT.FORMS.VALIDATION.IMAGE_REQUIRED,
+		message: DICT.COMMON.VALIDATION.IMAGE_REQUIRED,
 	}),
 });
 
-type PropertyFormValues = z.infer<typeof propertySchema>;
+export type PropertyFormValues = z.infer<typeof propertySchema>;
 
 type PropertyFormInput = {
 	address_line_1: string;
 	address_line_2?: string;
 	town_city: string;
 	postcode: string;
-	type: 'house' | 'apartment' | 'other';
+	type: (typeof propertyTypeValues)[number];
 	bedrooms: unknown;
 	bathrooms: unknown;
 	has_main_image: boolean;
@@ -62,52 +65,27 @@ interface PropertyFormProps {
 	initialData?: Property;
 	onSubmit: (data: PropertyInsert) => Promise<void>;
 	onCancel: () => void;
+	cancelLabel?: string;
 }
 
-const FileSvgDraw = ({ accept }: { accept?: Record<string, string[]> }) => {
-	const allowedExtensions = accept
-		? Object.values(accept)
-				.flat()
-				.map((ext) => ext.replace('.', '').toUpperCase())
-				.join(', ')
-		: 'Files';
-
-	return (
-		<>
-			<svg
-				className="size-8 mb-3 text-primary"
-				aria-hidden="true"
-				xmlns="http://www.w3.org/2000/svg"
-				fill="none"
-				viewBox="0 0 20 16">
-				<path
-					stroke="currentColor"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					strokeWidth="2"
-					d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
-				/>
-			</svg>
-			<p className="mb-1 text-sm text-primary">
-				<span className="font-semibold">{DICT.FORMS.LABELS.UPLOAD_PROMPT}</span>{' '}
-				{DICT.FORMS.LABELS.UPLOAD_DRAG_DROP}
-			</p>
-			<p className="text-xs text-primary">{allowedExtensions}</p>
-		</>
-	);
-};
-
-export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormProps) {
+export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: PropertyFormProps) {
 	const { user } = useAuth();
-	const navigate = useNavigate();
 
-	const [mainImage, setMainImage] = useState<File[] | null>(null);
-	const [extraImages, setExtraImages] = useState<File[] | null>([]);
-	const [isUploading, setIsUploading] = useState(false);
+	const {
+		mainImage,
+		setMainImage,
+		extraImages,
+		setExtraImages,
+		extraImagesPaths,
+		removeExistingImage,
+		remainingSlots,
+		isUploading,
+		bucketConfig,
+		uploadImages,
+	} = usePropertyImageUpload(initialData);
 
-	const [extraImagesPaths, setExtraImagesPaths] = useState<string[]>(
-		initialData?.extra_images_urls || [],
-	);
+	const mainImageUrls = useObjectUrls(mainImage);
+	const extraImageUrls = useObjectUrls(extraImages);
 
 	const form = useForm<PropertyFormInput, undefined, PropertyFormValues>({
 		resolver: zodResolver(propertySchema),
@@ -116,7 +94,7 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 			address_line_2: initialData?.address_line_2 ?? '',
 			town_city: initialData?.town_city ?? '',
 			postcode: initialData?.postcode ?? '',
-			type: (initialData?.type as 'house' | 'apartment' | 'other') ?? 'apartment',
+			type: (initialData?.type as (typeof propertyTypeValues)[number]) ?? propertyTypeValues[0],
 			bedrooms: initialData?.bedrooms ?? 1,
 			bathrooms: initialData?.bathrooms ?? 1,
 			has_main_image: !!initialData?.main_image_url,
@@ -124,101 +102,34 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 	});
 
 	useEffect(() => {
-		if (initialData) {
-			form.reset({
-				address_line_1: initialData.address_line_1,
-				address_line_2: initialData.address_line_2 ?? '',
-				town_city: initialData.town_city,
-				postcode: initialData.postcode,
-				type: initialData.type as 'house' | 'apartment' | 'other',
-				bedrooms: initialData.bedrooms,
-				bathrooms: initialData.bathrooms,
-				has_main_image: !!initialData.main_image_url,
-			});
-			setExtraImagesPaths(initialData.extra_images_urls || []);
+		const hasImage = !!(mainImage?.[0] || initialData?.main_image_url);
+		form.setValue('has_main_image', hasImage);
+
+		if (hasImage) {
+			form.clearErrors('has_main_image');
 		}
-	}, [initialData, form]);
-
-	useEffect(() => {
-		const hasImage = (mainImage && mainImage.length > 0) || !!initialData?.main_image_url;
-		form.setValue('has_main_image', hasImage, { shouldValidate: form.formState.isSubmitted });
-	}, [mainImage, initialData, form]);
-
-	const removeExistingImage = (pathToRemove: string) => {
-		setExtraImagesPaths((prev) => {
-			return prev.filter((path) => {
-				return path !== pathToRemove;
-			});
-		});
-	};
-
-	const remainingSlots = Math.max(0, 10 - extraImagesPaths.length);
+	}, [mainImage, initialData?.main_image_url, form]);
 
 	const handleFormSubmit = async (values: PropertyFormValues) => {
 		if (!user) {
 			return;
 		}
 
-		setIsUploading(true);
-		try {
-			let mainImagePath = initialData?.main_image_url || '';
-			const finalExtraImagesPaths = [...extraImagesPaths];
-			const { has_main_image, ...databaseValues } = values;
+		const { has_main_image, ...databaseValues } = values;
+		const { mainImagePath, finalExtraImagesPaths } = await uploadImages(user.id);
 
-			if (mainImage?.[0]) {
-				const { path: uploadedPath, error } = await mediaService.uploadMedia(
-					user.id,
-					mainImage[0] || null,
-					'property-media',
-				);
-				if (error) {
-					throw new Error(error);
-				}
-				if (uploadedPath) {
-					mainImagePath = uploadedPath;
-				}
-			}
+		const payload: PropertyInsert = {
+			...databaseValues,
+			host_id: user.id,
+			main_image_url: mainImagePath,
+			extra_images_urls: finalExtraImagesPaths,
+		};
 
-			if (extraImages && extraImages.length > 0) {
-				const totalImages = extraImagesPaths.length + extraImages.length;
-				if (totalImages > 10) {
-					form.setError('root', { message: DICT.FORMS.VALIDATION.IMAGE_LIMIT });
-					setIsUploading(false);
-					return;
-				}
-
-				for (const file of extraImages) {
-					const { path: uploadedPath, error } = await mediaService.uploadMedia(
-						user.id,
-						file || null,
-						'property-media',
-					);
-					if (!error && uploadedPath) {
-						finalExtraImagesPaths.push(uploadedPath);
-					}
-				}
-			}
-
-			const payload: PropertyInsert = {
-				...databaseValues,
-				host_id: user.id,
-				main_image_url: mainImagePath,
-				extra_images_urls: finalExtraImagesPaths,
-			};
-
-			if (initialData?.id) {
-				payload.id = initialData.id;
-			}
-
-			await onSubmit(payload);
-		} catch (err) {
-			if (import.meta.env.DEV) {
-				console.error('Submission error:', err);
-			}
-			navigate('/error/500');
-		} finally {
-			setIsUploading(false);
+		if (initialData?.id) {
+			payload.id = initialData.id;
 		}
+
+		await onSubmit(payload);
 	};
 
 	return (
@@ -230,11 +141,12 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 			className="space-y-6">
 			<FieldGroup>
 				<Field>
-					<FieldLabel htmlFor="address_line_1">{DICT.FORMS.LABELS.ADDRESS_LINE_1}</FieldLabel>
+					<FieldLabel htmlFor="address_line_1">{DICT.COMMON.LABELS.ADDRESS_LINE_1}</FieldLabel>
 					<Input
 						{...form.register('address_line_1')}
 						id="address_line_1"
-						placeholder={DICT.FORMS.PLACEHOLDERS.ADDRESS_LINE_1}
+						type="text"
+						placeholder={DICT.COMMON.PLACEHOLDERS.ADDRESS_LINE_1}
 					/>
 					{form.formState.errors.address_line_1 && (
 						<FieldError>{form.formState.errors.address_line_1.message}</FieldError>
@@ -242,32 +154,32 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 				</Field>
 
 				<Field>
-					<FieldLabel htmlFor="address_line_2">{DICT.FORMS.LABELS.ADDRESS_LINE_2}</FieldLabel>
+					<FieldLabel htmlFor="address_line_2">{DICT.COMMON.LABELS.ADDRESS_LINE_2}</FieldLabel>
 					<Input
 						{...form.register('address_line_2')}
 						id="address_line_2"
-						placeholder={DICT.FORMS.PLACEHOLDERS.ADDRESS_LINE_2}
+						placeholder={DICT.COMMON.PLACEHOLDERS.ADDRESS_LINE_2}
 					/>
 				</Field>
 
 				<div className="grid grid-cols-2 gap-4">
 					<Field>
-						<FieldLabel htmlFor="town_city">{DICT.FORMS.LABELS.TOWN_CITY}</FieldLabel>
+						<FieldLabel htmlFor="town_city">{DICT.COMMON.LABELS.TOWN_CITY}</FieldLabel>
 						<Input
 							{...form.register('town_city')}
 							id="town_city"
-							placeholder={DICT.FORMS.PLACEHOLDERS.TOWN_CITY}
+							placeholder={DICT.COMMON.PLACEHOLDERS.TOWN_CITY}
 						/>
 						{form.formState.errors.town_city && (
 							<FieldError>{form.formState.errors.town_city.message}</FieldError>
 						)}
 					</Field>
 					<Field>
-						<FieldLabel htmlFor="postcode">{DICT.FORMS.LABELS.POSTCODE}</FieldLabel>
+						<FieldLabel htmlFor="postcode">{DICT.COMMON.LABELS.POSTCODE}</FieldLabel>
 						<Input
 							{...form.register('postcode')}
 							id="postcode"
-							placeholder={DICT.FORMS.PLACEHOLDERS.POSTCODE}
+							placeholder={DICT.COMMON.PLACEHOLDERS.POSTCODE}
 							className="uppercase"
 						/>
 						{form.formState.errors.postcode && (
@@ -277,7 +189,7 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 				</div>
 
 				<Field>
-					<FieldLabel>{DICT.FORMS.LABELS.PROPERTY_TYPE}</FieldLabel>
+					<FieldLabel>{DICT.COMMON.LABELS.PROPERTY_TYPE}</FieldLabel>
 					<Select
 						onValueChange={(value) => form.setValue('type', value as PropertyFormValues['type'])}
 						defaultValue={form.getValues('type')}>
@@ -285,16 +197,18 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 							<SelectValue />
 						</SelectTrigger>
 						<SelectContent>
-							<SelectItem value="apartment">{DICT.PROPERTIES.TYPES.APARTMENT}</SelectItem>
-							<SelectItem value="house">{DICT.PROPERTIES.TYPES.HOUSE}</SelectItem>
-							<SelectItem value="other">{DICT.PROPERTIES.TYPES.OTHER}</SelectItem>
+							{propertyTypeValues.map((type) => (
+								<SelectItem key={type} value={type}>
+									{DICT.PROPERTIES.TYPES[type.toUpperCase() as 'APARTMENT' | 'HOUSE' | 'STUDIO']}
+								</SelectItem>
+							))}
 						</SelectContent>
 					</Select>
 				</Field>
 
 				<div className="grid grid-cols-2 gap-4">
 					<Field>
-						<FieldLabel htmlFor="bedrooms">{DICT.FORMS.LABELS.BEDROOMS}</FieldLabel>
+						<FieldLabel htmlFor="bedrooms">{DICT.COMMON.LABELS.BEDROOMS}</FieldLabel>
 						<Input
 							{...form.register('bedrooms')}
 							id="bedrooms"
@@ -307,7 +221,7 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 						)}
 					</Field>
 					<Field>
-						<FieldLabel htmlFor="bathrooms">{DICT.FORMS.LABELS.BATHROOMS}</FieldLabel>
+						<FieldLabel htmlFor="bathrooms">{DICT.COMMON.LABELS.BATHROOMS}</FieldLabel>
 						<Input
 							{...form.register('bathrooms')}
 							id="bathrooms"
@@ -319,47 +233,28 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 				</div>
 
 				<Field>
-					<FieldLabel>{DICT.FORMS.LABELS.MAIN_IMAGE}</FieldLabel>
+					<FieldLabel>{DICT.COMMON.IMAGES.MAIN}</FieldLabel>
 					<FileUploader
 						value={mainImage}
 						onValueChange={setMainImage}
+						existingImages={initialData?.main_image_url ? [initialData.main_image_url] : []}
+						onRemoveExisting={() => setMainImage(null)}
 						dropzoneOptions={{
 							maxFiles: 1,
-							maxSize: MAX_FILE_SIZE,
-							accept: { 'image/*': ['.jpg', '.jpeg', '.png'] },
+							maxSize: bucketConfig.maxSize,
+							accept: bucketConfig.accept,
 						}}
+						orientation="horizontal"
 						className="file-dropzone">
 						<FileInput className="flex-col-center w-full pt-3 pb-4">
-							<FileSvgDraw accept={{ 'image/*': ['.jpg', '.jpeg', '.png'] }} />
+							<FileSvgDraw accept={bucketConfig.accept} />
 						</FileInput>
-						<FileUploaderContent className="flex flex-row items-center gap-2 mt-2">
+						<FileUploaderContent className="flex flex-wrap gap-2 mt-2 w-full">
 							{mainImage?.map((file, i) => (
-								<FileUploaderItem
-									key={`${file.name}-${file.lastModified}-${i}`}
-									index={i}
-									className="p-0 overflow-hidden border rounded-md size-20">
-									<img
-										src={URL.createObjectURL(file)}
-										alt="Preview"
-										className="object-cover size-20"
-									/>
+								<FileUploaderItem key={`${file.name}-${file.lastModified}-${i}`} index={i}>
+									<img src={mainImageUrls[i]} alt="Preview" className="object-cover size-20" />
 								</FileUploaderItem>
 							))}
-							{!mainImage?.length && initialData?.main_image_url && (
-								<div className="relative p-0 overflow-hidden border rounded-md size-20">
-									<img
-										src={mediaService.getMediaUrl(
-											initialData.main_image_url || null,
-											'property-media',
-										)}
-										alt="Current"
-										className="object-cover size-20"
-									/>
-									<div className="absolute top-0 right-0 p-1 bg-primary text-[8px] text-white">
-										{DICT.FORMS.LABELS.CURRENT_IMAGE}
-									</div>
-								</div>
-							)}
 						</FileUploaderContent>
 					</FileUploader>
 					{form.formState.errors.has_main_image && (
@@ -369,54 +264,33 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 
 				<Field>
 					<FieldLabel>
-						{DICT.FORMS.LABELS.ADDITIONAL_IMAGES} (
-						{extraImagesPaths.length + (extraImages?.length || 0)}/10)
+						{DICT.COMMON.IMAGES.ADDITIONAL} ({extraImagesPaths.length + (extraImages?.length || 0)}
+						/10)
 					</FieldLabel>
 					<FileUploader
 						value={extraImages}
 						onValueChange={(files) => setExtraImages(files?.slice(0, remainingSlots) || [])}
+						existingImages={extraImagesPaths}
+						onRemoveExisting={removeExistingImage}
 						dropzoneOptions={{
-							maxFiles: remainingSlots,
-							maxSize: MAX_FILE_SIZE,
-							accept: { 'image/*': ['.jpg', '.jpeg', '.png'] },
+							maxFiles: 10,
+							maxSize: bucketConfig.maxSize,
+							accept: bucketConfig.accept,
 						}}
-						className={cn('file-dropzone', remainingSlots <= 0 && 'cursor-not-allowed')}>
-						<FileInput className="flex-col-center w-full pt-3 pb-4 **:opacity-100!">
-							<FileSvgDraw accept={{ 'image/*': ['.jpg', '.jpeg', '.png'] }} />
+						orientation="horizontal"
+						className="file-dropzone">
+						<FileInput className="flex-col-center w-full pt-3 pb-4">
+							<FileSvgDraw accept={bucketConfig.accept} />
 							{remainingSlots <= 0 && (
 								<p className="mt-2 text-xs font-medium text-center text-destructive">
-									{DICT.FORMS.LABELS.LIMIT_REACHED}
+									{DICT.COMMON.IMAGES.LIMIT_REACHED}
 								</p>
 							)}
 						</FileInput>
-						<FileUploaderContent className="flex flex-row flex-wrap items-center gap-2 mt-2">
-							{extraImagesPaths.map((path) => (
-								<div
-									key={path}
-									className="relative p-0 overflow-hidden border rounded-md group size-20">
-									<img
-										src={mediaService.getMediaUrl(path || null, 'property-media')}
-										alt="Extra"
-										className="object-cover size-20 opacity-80"
-									/>
-									<button
-										type="button"
-										onClick={() => removeExistingImage(path)}
-										className="absolute p-1 text-white transition-opacity rounded-sm sm:opacity-0 top-1 right-1 bg-destructive group-hover:opacity-100">
-										<Trash2 className="size-3" />
-									</button>
-								</div>
-							))}
+						<FileUploaderContent className="flex flex-wrap gap-2 mt-2 w-full">
 							{extraImages?.map((file, i) => (
-								<FileUploaderItem
-									key={`${file.name}-${file.lastModified}-${i}`}
-									index={i}
-									className="p-0 overflow-hidden border rounded-md size-20">
-									<img
-										src={URL.createObjectURL(file)}
-										alt={file.name}
-										className="object-cover size-20"
-									/>
+								<FileUploaderItem key={`${file.name}-${file.lastModified}-${i}`} index={i}>
+									<img src={extraImageUrls[i]} alt="Preview" className="object-cover size-20" />
 								</FileUploaderItem>
 							))}
 						</FileUploaderContent>
@@ -426,14 +300,14 @@ export function PropertyForm({ initialData, onSubmit, onCancel }: PropertyFormPr
 
 			<div className="flex justify-end gap-3 pt-4 overflow-visible border-t border-border">
 				<Button type="button" variant="outline" onClick={onCancel}>
-					{DICT.PROPERTIES.ACTIONS.CANCEL}
+					{cancelLabel ?? DICT.COMMON.ACTIONS.CANCEL}
 				</Button>
 				<Button type="submit" disabled={isUploading || form.formState.isSubmitting}>
 					{isUploading
-						? DICT.PROPERTIES.ACTIONS.UPLOADING
+						? DICT.PROPERTIES.UPLOADING
 						: initialData
-							? DICT.PROPERTIES.ACTIONS.UPDATE
-							: DICT.PROPERTIES.ACTIONS.ADD}
+							? DICT.COMMON.ACTIONS.UPDATE_PROPERTY
+							: DICT.COMMON.ACTIONS.ADD_PROPERTY}
 				</Button>
 			</div>
 		</form>

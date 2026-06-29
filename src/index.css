@@ -13,17 +13,56 @@
 	--color-foreground: oklch(0.129 0.042 264.695);
 
 	--color-primary: oklch(0.49 0.22 264);
-	--color-primary-foreground: oklch(0.984 0.003 247.858);
 	--color-primary-light: oklch(57.499% 0.19011 263.112);
-	--color-primary-dark: oklch(0.35 0.18 264);
+	--color-primary-background: oklch(0.984 0.003 247.858);
+
+	--color-secondary: oklch(0.88 0.15 92);
+
+	--color-success: oklch(0.63 0.17 149);
+	--color-success-light: oklch(0.8 0.18 152);
+	--color-success-background: oklch(0.96 0.04 157);
+
+	--color-warning: oklch(0.769 0.188 76);
+	--color-warning-light: oklch(0.86 0.17 92);
+	--color-warning-background: oklch(0.99 0.03 102);
+
+	--color-destructive: oklch(62.813% 0.22607 24.516);
+	--color-destructive-light: oklch(68.615% 0.20109 20.445);
+	--color-destructive-background: oklch(0.97 0.01 17);
+
+	--color-neutral: oklch(0.55 0.02 264);
+	--color-neutral-light: oklch(0.71 0.02 261);
+	--color-neutral-background: oklch(0.961 0.006 250);
+
+	--color-accent: oklch(0.96 0.015 264);
+	--color-accent-foreground: var(--color-primary);
 
 	--color-muted: oklch(0.961 0.006 250);
 	--color-muted-foreground: oklch(0.554 0.046 257.417);
 
-	--color-success: oklch(0.627 0.265 150);
-	--color-warning: oklch(0.769 0.188 70.08);
-	--color-destructive: oklch(62.813% 0.22607 24.516);
-	--color-destructive-light: oklch(68.615% 0.20109 20.445);
+	--color-blue: oklch(0.42 0.18 266);
+	--color-blue-background: oklch(0.93 0.03 256);
+	--color-blue-border: oklch(0.88 0.06 254);
+
+	--color-purple: oklch(0.44 0.2 304);
+	--color-purple-background: oklch(0.95 0.03 307);
+	--color-purple-border: oklch(0.9 0.06 307);
+
+	--color-yellow: oklch(0.48 0.1 62);
+	--color-yellow-background: oklch(0.97 0.07 103);
+	--color-yellow-border: oklch(0.95 0.12 102);
+
+	--color-green: oklch(0.45 0.11 151);
+	--color-green-background: oklch(0.96 0.04 157);
+	--color-green-border: oklch(0.93 0.08 156);
+
+	--color-red: oklch(0.44 0.16 27);
+	--color-red-background: oklch(0.94 0.03 18);
+	--color-red-border: oklch(0.88 0.06 18);
+
+	--color-gray: oklch(0.28 0.03 257);
+	--color-gray-background: oklch(0.97 0 265);
+	--color-gray-border: oklch(0.93 0.01 265);
 
 	--color-card: oklch(1 0 0);
 	--color-card-foreground: oklch(0.129 0.042 264.695);
@@ -66,9 +105,6 @@
 	@apply relative p-3 border-2 border-dashed rounded-xl bg-muted/30 border-primary/20 transition-colors hover:bg-muted/50 hover:border-primary/40;
 }
 
-@utility shape-divider {
-	@apply absolute bottom-0 left-0 w-full overflow-hidden leading-0 rotate-180 pointer-events-none;
-	& svg {
-		@apply relative block w-[calc(100%+1.3px)] h-20 md:h-37.5 fill-primary;
-	}
+@utility link {
+	@apply underline underline-offset-4 hover:text-primary;
 }

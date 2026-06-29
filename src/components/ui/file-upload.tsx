@@ -17,7 +17,9 @@ import {
 	type FileRejection,
 	useDropzone,
 } from 'react-dropzone';
-import { toast } from 'sonner';
+import { ImageWithFallback } from '@/components/ImageWithFallback';
+import { toast } from '@/components/Toast';
+import { useMediaUrl } from '@/hooks/useMediaUrl';
 import { cn } from '@/lib/utils';
 import { Button } from './button';
 
@@ -32,6 +34,11 @@ type FileUploaderContextType = {
 	setActiveIndex: Dispatch<SetStateAction<number>>;
 	orientation: 'horizontal' | 'vertical';
 	direction: DirectionOptions;
+	existingImages?: string[];
+	onRemoveExisting?: (path: string) => void;
+	bucket?: string;
+	maxFiles?: number;
+	value: File[] | null;
 };
 
 const FileUploaderContext = createContext<FileUploaderContextType | null>(null);
@@ -50,6 +57,9 @@ type FileUploaderProps = {
 	onValueChange: (value: File[] | null) => void;
 	dropzoneOptions: DropzoneOptions;
 	orientation?: 'horizontal' | 'vertical';
+	existingImages?: string[];
+	onRemoveExisting?: (path: string) => void;
+	bucket?: string;
 };
 
 export const FileUploader = forwardRef<
@@ -63,7 +73,10 @@ export const FileUploader = forwardRef<
 			value,
 			onValueChange,
 			reSelect,
-			orientation = 'vertical',
+			orientation = 'horizontal',
+			existingImages,
+			onRemoveExisting,
+			bucket,
 			children,
 			dir,
 			...props
@@ -227,6 +240,11 @@ export const FileUploader = forwardRef<
 					setActiveIndex,
 					orientation,
 					direction,
+					existingImages,
+					onRemoveExisting,
+					bucket,
+					maxFiles,
+					value,
 				}}>
 				<div
 					ref={ref}
@@ -247,7 +265,14 @@ FileUploader.displayName = 'FileUploader';
 
 export const FileUploaderContent = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
 	({ children, className, ...props }, ref) => {
-		const { orientation } = useFileUpload();
+		const { orientation, existingImages, onRemoveExisting, bucket, maxFiles, value } =
+			useFileUpload();
+
+		const hasNewFiles = value && value.length > 0;
+		const isSingleImage = maxFiles === 1;
+
+		const firstExistingImage = existingImages?.[0];
+		const existingImageUrl = useMediaUrl(firstExistingImage ?? null, bucket || 'property-media');
 
 		return (
 			<div className={cn('w-full px-1')} aria-description="content file holder">
@@ -259,6 +284,37 @@ export const FileUploaderContent = forwardRef<HTMLDivElement, React.HTMLAttribut
 						orientation === 'horizontal' ? 'grid grid-cols-2' : 'flex flex-col',
 						className,
 					)}>
+					{firstExistingImage && !hasNewFiles && (
+						<div
+							key={firstExistingImage}
+							className="relative p-0 overflow-hidden border rounded-md size-20">
+							<ImageWithFallback
+								src={existingImageUrl}
+								alt="Current"
+								className="object-cover size-20"
+							/>
+							{isSingleImage ? (
+								<div className="absolute top-1 right-1 px-1.5 py-0.5 text-[8px] font-medium text-white rounded-md bg-primary">
+									CURRENT
+								</div>
+							) : (
+								onRemoveExisting && (
+									<Button
+										type="button"
+										variant="destructive"
+										size="xs"
+										className="absolute size-5 top-[0.145em] right-1"
+										onClick={(e) => {
+											e.preventDefault();
+											e.stopPropagation();
+											onRemoveExisting(firstExistingImage);
+										}}>
+										<Trash2 />
+									</Button>
+								)
+							)}
+						</div>
+					)}
 					{children}
 				</div>
 			</div>
@@ -278,7 +334,7 @@ export const FileUploaderItem = forwardRef<
 		<div
 			ref={ref}
 			className={cn(
-				'h-7 p-1 border rounded-md justify-between overflow-hidden  w-full cursor-pointer relative hover:bg-primary-foreground',
+				'border rounded-md justify-between overflow-hidden p-0 size-20 cursor-pointer relative hover:bg-primary-background',
 				className,
 				isSelected ? 'bg-muted' : '',
 			)}
@@ -287,13 +343,18 @@ export const FileUploaderItem = forwardRef<
 				{children}
 			</div>
 			<Button
+				type="button"
 				variant="destructive"
 				size="xs"
 				className={cn(
 					'absolute size-5',
 					direction === 'rtl' ? 'top-1 left-1' : 'top-[0.145em] right-1',
 				)}
-				onClick={() => removeFileFromSet(index)}>
+				onClick={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					removeFileFromSet(index);
+				}}>
 				<span className="sr-only">remove item {index}</span>
 				<Trash2 />
 			</Button>
@@ -333,7 +394,7 @@ export const FileInput = forwardRef<HTMLDivElement, FileInputProps>(
 					{...rootProps}>
 					{children}
 					{dropzoneState.isDragActive && (
-						<div className="absolute inset-0 flex items-center justify-center rounded-lg bg-primary-foreground/60 backdrop-blur-xs">
+						<div className="absolute inset-0 flex items-center justify-center rounded-lg bg-primary-background/60 backdrop-blur-xs">
 							<p className="font-medium text-primary">Drop an image here.</p>
 						</div>
 					)}

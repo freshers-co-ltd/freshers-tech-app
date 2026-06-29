@@ -1,23 +1,54 @@
 'use client';
 
-import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react';
-import { toast } from 'sonner';
-import { useAuth } from '@/features/auth/AuthContext';
 import {
-	type CleaningRequest,
-	type CreateCleaningRequestPayload,
-	cleaningService,
-	type UpdateCleaningRequestPayload,
-} from './cleaningService';
+	createContext,
+	type ReactNode,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react';
+import { toast } from '@/components/Toast';
+import { useAuth } from '@/features/auth/AuthContext';
+import { cleaningsService } from '@/features/cleanings/services/cleaningsService';
+import type {
+	CleaningRequest,
+	CleaningUpdate,
+	CreateCleaningRequestPayload,
+	EvidenceInsert,
+	ReportInsert,
+	TaskInsert,
+	TaskUpdate,
+	UpdateCleaningRequestPayload,
+} from '@/features/cleanings/types';
+import { useVisibilityReconnect } from '@/hooks/useVisibilityReconnect';
+import { useCleaningsOperations } from './hooks/useCleaningsOperations';
+import { useCleaningsRealtime } from './hooks/useCleaningsRealtime';
 
 interface CleaningContextType {
 	cleanings: CleaningRequest[];
 	isLoading: boolean;
-	error: string | null;
-	refresh: () => Promise<void>;
-	createCleaning: (payload: CreateCleaningRequestPayload) => Promise<boolean>;
-	updateCleaning: (id: string, update: UpdateCleaningRequestPayload) => Promise<boolean>;
-	deleteCleaning: (id: string) => Promise<boolean>;
+	fetchCleanings: (signal?: AbortSignal, skipLoadingState?: boolean) => Promise<void>;
+	upsertCleaning: (
+		payload: CreateCleaningRequestPayload | (UpdateCleaningRequestPayload & { id: string }),
+	) => Promise<{ success: boolean; data?: CleaningRequest }>;
+	updateCleaning: (
+		id: string,
+		payload: CleaningUpdate,
+	) => Promise<{ success: boolean; data?: CleaningRequest }>;
+	deleteCleaning: (id: string, hard?: boolean) => Promise<{ success: boolean }>;
+	insertTask: (payload: TaskInsert) => Promise<{ success: boolean }>;
+	updateTask: (payload: TaskUpdate) => Promise<{ success: boolean }>;
+	updateTasksBatch: (cleaningId: string, updates: TaskUpdate[]) => Promise<{ success: boolean }>;
+	deleteTask: (id: string, hard?: boolean) => Promise<{ success: boolean }>;
+	addEvidence: (payload: EvidenceInsert) => Promise<{ success: boolean }>;
+	deleteEvidence: (id: string, hard?: boolean) => Promise<{ success: boolean }>;
+	upsertReport: (payload: ReportInsert) => Promise<{ success: boolean }>;
+	createCleaning: (
+		payload: CreateCleaningRequestPayload,
+	) => Promise<{ success: boolean; data?: CleaningRequest }>;
 }
 
 const CleaningContext = createContext<CleaningContextType | undefined>(undefined);
@@ -25,95 +56,95 @@ const CleaningContext = createContext<CleaningContextType | undefined>(undefined
 export function CleaningProvider({ children }: { children: ReactNode }) {
 	const [cleanings, setCleanings] = useState<CleaningRequest[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
-	const [error, setError] = useState<string | null>(null);
-	const { user } = useAuth();
+	const { user, profile } = useAuth();
+	const abortControllerRef = useRef<AbortController | null>(null);
+	const lastUserIdRef = useRef<string | null>(null);
 
-	const fetchCleanings = useCallback(async () => {
-		if (!user) {
-			setCleanings([]);
-			setIsLoading(false);
-			return;
-		}
+	const operations = useCleaningsOperations(setCleanings);
 
-		if (cleanings.length === 0) {
-			setIsLoading(true);
-		}
+	const fetchCleanings = useCallback(
+		async (signal?: AbortSignal, skipLoadingState = false) => {
+			if (!user) {
+				setCleanings([]);
+				setIsLoading(false);
+				return;
+			}
 
-		setError(null);
-		const { data, error: fetchError } = await cleaningService.getCleaningRequests();
+			if (!skipLoadingState) {
+				setIsLoading(true);
+			}
 
-		if (fetchError) {
-			setError(fetchError);
-			toast.error(fetchError);
-		} else {
-			setCleanings(data || []);
-		}
+			const { data, error } = await cleaningsService.getCleaningRequests(profile?.role);
 
-		setIsLoading(false);
-	}, [user, cleanings.length]);
+			if (signal?.aborted) {
+				if (!skipLoadingState) {
+					setIsLoading(false);
+				}
+				return;
+			}
+
+			if (error) {
+				toast.error(error);
+			} else if (data) {
+				setCleanings(data);
+			}
+
+			if (!skipLoadingState) {
+				setIsLoading(false);
+			}
+		},
+		[user, profile?.role],
+	);
 
 	useEffect(() => {
-		fetchCleanings();
-	}, [fetchCleanings]);
+		if (user && profile) {
+			const isUserChange = user.id !== lastUserIdRef.current;
+			lastUserIdRef.current = user.id;
 
-	const createCleaning = async (payload: CreateCleaningRequestPayload): Promise<boolean> => {
-		const { error: createError } = await cleaningService.createCleaningRequest(payload);
-
-		if (createError) {
-			toast.error(createError);
-			return false;
+			abortControllerRef.current?.abort();
+			abortControllerRef.current = new AbortController();
+			fetchCleanings(abortControllerRef.current.signal, !isUserChange);
 		}
 
-		await fetchCleanings();
-		return true;
-	};
+		return () => {
+			abortControllerRef.current?.abort();
+		};
+	}, [user, profile, fetchCleanings]);
 
-	const updateCleaning = async (
-		id: string,
-		update: UpdateCleaningRequestPayload,
-	): Promise<boolean> => {
-		const { error: updateError } = await cleaningService.updateCleaningRequest(id, update);
+	const { reconnect: reconnectChannel } = useCleaningsRealtime({
+		user,
+		profile,
+		onCleaningChange: fetchCleanings,
+	});
 
-		if (updateError) {
-			toast.error(updateError);
-			return false;
-		}
+	useVisibilityReconnect({
+		enabled: !!user && !!profile,
+		onVisible: async () => {
+			reconnectChannel();
+		},
+	});
 
-		await fetchCleanings();
-		return true;
-	};
-
-	const deleteCleaning = async (id: string): Promise<boolean> => {
-		const { error: deleteError } = await cleaningService.deleteCleaningRequest(id);
-
-		if (deleteError) {
-			toast.error(deleteError);
-			return false;
-		}
-
-		setCleanings((prev) => {
-			return prev.filter((c) => {
-				return c.id !== id;
-			});
-		});
-
-		return true;
-	};
-
-	return (
-		<CleaningContext.Provider
-			value={{
-				cleanings,
-				isLoading,
-				error,
-				refresh: fetchCleanings,
-				createCleaning,
-				updateCleaning,
-				deleteCleaning,
-			}}>
-			{children}
-		</CleaningContext.Provider>
+	const contextValue = useMemo(
+		() => ({
+			cleanings,
+			isLoading,
+			fetchCleanings,
+			upsertCleaning: operations.upsertCleaning,
+			updateCleaning: operations.updateCleaning,
+			deleteCleaning: operations.deleteCleaning,
+			insertTask: operations.insertTask,
+			updateTask: operations.updateTask,
+			updateTasksBatch: operations.updateTasksBatch,
+			deleteTask: operations.deleteTask,
+			addEvidence: operations.addEvidence,
+			deleteEvidence: operations.deleteEvidence,
+			upsertReport: operations.upsertReport,
+			createCleaning: operations.upsertCleaning,
+		}),
+		[cleanings, isLoading, fetchCleanings, operations],
 	);
+
+	return <CleaningContext.Provider value={contextValue}>{children}</CleaningContext.Provider>;
 }
 
 export const useCleanings = () => {

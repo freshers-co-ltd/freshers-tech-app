@@ -9,6 +9,9 @@ jobs:
   deploy-and-audit:
     runs-on: ubuntu-latest
     environment: Staging
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Wait for CI Validation
         uses: lewagon/wait-on-check-action@v1.3.4
@@ -39,7 +42,6 @@ jobs:
           npx supabase link --project-ref "${{ vars.SUPABASE_PROJECT_ID }}" --password "${{ secrets.SUPABASE_DB_PASSWORD }}"
           npx supabase db push
 
-
       - name: Vercel Staging Deploy
         id: deploy
         shell: bash
@@ -47,9 +49,25 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          DEPLOY_URL=$(npx vercel --token ${{ secrets.VERCEL_TOKEN }} --yes\
-            -e VITE_PUBLIC_SUPABASE_URL=${{ vars.SUPABASE_URL }} \
-            -e VITE_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }})
+          DEPLOY_URL=$(npx vercel --token ${{ secrets.VERCEL_TOKEN }} --yes)
           
-          echo "### Staging Deployment to Vercel Successful!" >> $GITHUB_STEP_SUMMARY
-          echo "Preview URL: [$DEPLOY_URL]($DEPLOY_URL)" >> $GITHUB_STEP_SUMMARY
+          echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+          
+          echo "### Staging Deployment Successful!" >> $GITHUB_STEP_SUMMARY
+          echo "Preview URL: $DEPLOY_URL" >> $GITHUB_STEP_SUMMARY
+
+      - name: Get Timestamp
+        id: timestamp
+        run: echo "formatted_date=$(date +'%d/%m/%y at %H:%M')" >> $GITHUB_OUTPUT
+
+      - name: Post Preview URL to PR
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: mshick/add-pr-comment@v3
+        with:
+          message-id: vercel-deploy-status 
+          message: |
+            ### Staging Deployment Ready!
+            **Preview URL**: ${{ steps.deploy.outputs.url }}
+            _Last updated at: ${{ steps.timestamp.outputs.formatted_date }}_
+            

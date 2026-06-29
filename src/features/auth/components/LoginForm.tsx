@@ -3,8 +3,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import * as z from 'zod';
+import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -18,12 +18,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { DICT } from '@/dictionary';
-import { authService } from '@/features/auth/authService';
+import { authService } from '@/features/auth/services/authService';
 import { cn } from '@/lib/utils';
 
 const loginSchema = z.object({
-	email: z.email(DICT.FORMS.VALIDATION.EMAIL_INVALID).trim(),
-	password: z.string().min(1, DICT.FORMS.VALIDATION.PASSWORD_REQUIRED),
+	email: z.email(DICT.COMMON.VALIDATION.EMAIL_INVALID).trim(),
+	password: z.string().min(1, DICT.COMMON.VALIDATION.PASSWORD_REQUIRED),
 	rememberMe: z.boolean(),
 });
 
@@ -43,24 +43,17 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
 	});
 
 	const onSubmit = async (values: LoginFormValues) => {
-		try {
-			localStorage.setItem('trust_device', String(values.rememberMe));
+		localStorage.setItem('trust_device', String(values.rememberMe));
 
-			const { error } = await authService.signIn(values);
+		const { error } = await authService.signIn(values);
 
-			if (error) {
-				toast.error(error);
-				return;
-			}
-
-			toast.success(DICT.AUTH.LOGIN.SUCCESS_TOAST, { duration: 3000 });
-			navigate('/dashboard');
-		} catch (err) {
-			console.error('Login error:', err);
-			toast.error(DICT.ERRORS.COMMON.GENERIC);
-		} finally {
-			form.reset(undefined, { keepValues: true });
+		if (error) {
+			toast.error(error);
+			return;
 		}
+
+		toast.success(DICT.AUTH.LOGIN.TOAST_SUCCESS, { duration: 3000 });
+		navigate('/dashboard');
 	};
 
 	return (
@@ -78,13 +71,13 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
 					name="email"
 					render={({ field, fieldState }) => (
 						<Field>
-							<FieldLabel htmlFor="email">{DICT.FORMS.LABELS.EMAIL}</FieldLabel>
+							<FieldLabel htmlFor="email">{DICT.COMMON.LABELS.EMAIL}</FieldLabel>
 							<Input
 								{...field}
 								id="email"
 								type="email"
 								autoComplete="username"
-								placeholder={DICT.FORMS.PLACEHOLDERS.EMAIL}
+								placeholder={DICT.COMMON.PLACEHOLDERS.EMAIL}
 								aria-invalid={!!fieldState.error}
 								className={fieldState.error ? 'border-destructive' : ''}
 							/>
@@ -98,20 +91,18 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
 					name="password"
 					render={({ field, fieldState }) => (
 						<Field>
-							<FieldLabel htmlFor="password">{DICT.FORMS.LABELS.PASSWORD}</FieldLabel>
+							<FieldLabel htmlFor="password">{DICT.COMMON.LABELS.PASSWORD}</FieldLabel>
 							<PasswordInput
 								{...field}
 								id="password"
 								autoComplete="current-password"
-								placeholder={DICT.FORMS.PLACEHOLDERS.PASSWORD}
+								placeholder={DICT.COMMON.PLACEHOLDERS.PASSWORD}
 								error={!!fieldState.error}
 							/>
 							{fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
 							<div className="flex items-center">
-								<Link
-									to="/forgot-password"
-									className="ml-auto text-sm underline-offset-4 hover:underline">
-									{DICT.AUTH.LOGIN.FORGOT_LINK}
+								<Link to="/forgot-password" className="ml-auto text-sm link">
+									{DICT.AUTH.LOGIN.LINK_FORGOT}
 								</Link>
 							</div>
 						</Field>
@@ -121,8 +112,8 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
 				<Field>
 					<Button type="submit" disabled={form.formState.isSubmitting}>
 						{form.formState.isSubmitting
-							? DICT.AUTH.LOGIN.SUBMITTING_BUTTON
-							: DICT.AUTH.LOGIN.SUBMIT_BUTTON}
+							? DICT.AUTH.LOGIN.BUTTON_SUBMITTING
+							: DICT.AUTH.LOGIN.BUTTON_SUBMIT}
 					</Button>
 				</Field>
 
@@ -141,7 +132,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
 									}}
 								/>
 								<FieldLabel htmlFor="rememberMe" className="text-sm font-normal">
-									Trust this device
+									{DICT.AUTH.LOGIN.CHECKBOX_TRUST}
 								</FieldLabel>
 							</Field>
 						)}
@@ -152,9 +143,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
 
 				<Field>
 					<FieldDescription className="text-center">
-						{DICT.AUTH.LOGIN.NO_ACCOUNT_LABEL}{' '}
-						<Link to="/signup" className="underline underline-offset-4">
-							{DICT.AUTH.LOGIN.SIGNUP_LINK}
+						{DICT.AUTH.LOGIN.LABEL_NO_ACCOUNT}{' '}
+						<Link to="/signup" className="link">
+							{DICT.AUTH.LOGIN.LINK_SIGNUP}
 						</Link>
 					</FieldDescription>
 				</Field>

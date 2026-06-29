@@ -11,7 +11,7 @@ export const initAuthSync = (): Promise<void> => {
 		const isTrusted = window.localStorage.getItem('trust_device') === 'true';
 		const localSession = window.sessionStorage.getItem(STORAGE_KEY);
 
-		if (isTrusted || localSession) {
+		if (!isTrusted && localSession) {
 			resolve();
 			return;
 		}

@@ -1,31 +1,44 @@
-import { BarChart3, CheckCircle2, Clock, Plus } from 'lucide-react';
-import { PageHeader } from '@/components/PageHeader';
-import { StatCard } from '@/components/StatCard';
-import { Button } from '@/components/ui/button';
+'use client';
+
+import { Banknote, BrushCleaning, Clock, Sparkles } from 'lucide-react';
+import { DICT } from '@/dictionary';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { DashboardLayout } from '@/layouts/DashboardLayout';
 
 export function CleanerDashboardPage() {
-	return (
-		<main className="max-width-container">
-			<PageHeader
-				title="Overview"
-				description="Track your performance and upcoming jobs."
-				actions={
-					<Button className="rounded-xl font-bold">
-						<Plus className="mr-2 size-4" /> New Job
-					</Button>
-				}
-			/>
+	const { stats, isLoading } = useDashboardStats();
+	const dict = DICT.DASHBOARD.CLEANER;
 
-			<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-				<StatCard
-					label="Earnings"
-					value="$1,240"
-					icon={BarChart3}
-					trend={{ value: 12, isPositive: true }}
-				/>
-				<StatCard label="Active Jobs" value="4" icon={Clock} />
-				<StatCard label="Completed" value="48" icon={CheckCircle2} />
-			</div>
-		</main>
-	);
+	if (isLoading) {
+		return <DashboardLayout stats={[]} />;
+	}
+
+	const statsConfig = [
+		{
+			label: dict.STATS.ASSIGNED,
+			value: stats?.assigned ?? 0,
+			icon: Clock,
+			iconColor: 'text-[color-mix(in_oklch,var(--color-primary),var(--color-destructive))]',
+		},
+		{
+			label: dict.STATS.ACTIVE,
+			value: stats?.active ?? 0,
+			icon: BrushCleaning,
+			iconColor: 'text-primary-light',
+		},
+		{
+			label: dict.STATS.COMPLETED,
+			value: stats?.completed ?? 0,
+			icon: Sparkles,
+			iconColor: 'text-warning-light',
+		},
+		{
+			label: dict.STATS.TOTAL_EARNINGS,
+			value: stats?.totalEarnings !== undefined ? `£${stats.totalEarnings.toFixed(2)}` : '£0.00',
+			icon: Banknote,
+			iconColor: 'text-success',
+		},
+	];
+
+	return <DashboardLayout stats={statsConfig} />;
 }

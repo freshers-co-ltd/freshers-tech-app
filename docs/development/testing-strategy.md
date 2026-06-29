@@ -1,6 +1,6 @@
 # Testing Strategy
 
-This document outlines the testing strategy for the [Cleaner Hire PWA](/README.md). 
+This document outlines the testing strategy for the [Freshers PWA](/README.md). 
 
 ## 1. Functional Testing
 

@@ -2,7 +2,7 @@
 # https://supabase.com/docs/guides/local-development/cli/config
 # A string used to distinguish different Supabase projects on the same host. Defaults to the
 # working directory name when running `supabase init`.
-project_id = "cleaner-hire-pwa"
+project_id = "freshers-pwa"
 
 [api]
 enabled = true
@@ -111,19 +111,19 @@ enabled = true
 file_size_limit = "100MiB"
 
 [storage.buckets.avatars]
-public = true
+public = false
 file_size_limit = "50MiB"
 allowed_mime_types = ["image/png", "image/jpeg"]
 objects_path = "./seed-assets/avatars"
 
 [storage.buckets.property-media]
-public = true
+public = false
 file_size_limit = "50MiB"
 allowed_mime_types = ["image/png", "image/jpeg"]
 objects_path = "./seed-assets/property-media"
 
 [storage.buckets.cleaning-media]
-public = true
+public = false
 file_size_limit = "50MiB"
 allowed_mime_types = ["image/*", "video/*"]
 objects_path = "./seed-assets/cleaning-media"
@@ -182,10 +182,10 @@ enable_anonymous_sign_ins = false
 # Allow/disallow testing manual linking of accounts
 enable_manual_linking = false
 # Passwords shorter than this value will be rejected as weak. Minimum 6, recommended 8 or more.
-minimum_password_length = 6
+minimum_password_length = 8
 # Passwords that do not meet the following requirements will be rejected as weak. Supported values
 # are: `letters_digits`, `lower_upper_letters_digits`, `lower_upper_letters_digits_symbols`
-password_requirements = ""
+password_requirements = "lower_upper_letters_digits_symbols"
 
 [auth.rate_limit]
 # Number of emails that can be sent per hour. Requires auth.email.smtp to be enabled.
@@ -293,8 +293,8 @@ max_enrolled_factors = 10
 
 # Control MFA via App Authenticator (TOTP)
 [auth.mfa.totp]
-enroll_enabled = false
-verify_enabled = false
+enroll_enabled = true
+verify_enabled = true
 
 # Configure MFA via Phone Messaging
 [auth.mfa.phone]
@@ -396,3 +396,6 @@ s3_region = "env(S3_REGION)"
 s3_access_key = "env(S3_ACCESS_KEY)"
 # Configures AWS_SECRET_ACCESS_KEY for S3 bucket
 s3_secret_key = "env(S3_SECRET_KEY)"
+
+[functions.send-push]
+verify_jwt = false

@@ -1,11 +1,13 @@
 'use client';
 
-import { Bath, Bed, Home, Pencil, Trash2 } from 'lucide-react';
+import { Bath, Bed, Home, InfoIcon, Pencil, Trash2 } from 'lucide-react';
+import { memo, useMemo } from 'react';
+import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { DICT } from '@/dictionary';
-import type { Property } from '@/features/properties/propertyService';
-import { mediaService } from '@/lib/mediaService';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { Property } from '@/features/properties/types';
+import { useMediaUrl } from '@/hooks/useMediaUrl';
+import { formatPostcode } from '@/lib/utils';
 
 interface PropertyCardProps {
 	property: Property;
@@ -14,28 +16,33 @@ interface PropertyCardProps {
 	onView: (id: string) => void;
 }
 
-export function PropertyCard({ property, onDelete, onEdit, onView }: PropertyCardProps) {
+export const PropertyCard = memo(({ property, onDelete, onEdit, onView }: PropertyCardProps) => {
+	const imageUrl = useMediaUrl(property.main_image_url, 'property-media');
+
+	const formattedPostcode = useMemo(() => {
+		return formatPostcode(property.postcode);
+	}, [property.postcode]);
+
 	return (
 		<Card
-			className="overflow-hidden gap-4 p-0 pb-6 transition-all cursor-pointer hover:scale-103 group"
+			className="overflow-hidden gap-4 p-0! pb-6 transition-all cursor-pointer hover:scale-103 group"
 			onClick={() => onView(property.id)}>
-			<div className="relative w-full h-60 overflow-hidden bg-muted">
-				{property.main_image_url ? (
-					<img
-						src={mediaService.getMediaUrl(property.main_image_url || null, 'property-media')}
+			<div className="relative w-full h-48 overflow-hidden bg-muted">
+				{imageUrl ? (
+					<ImageWithFallback
+						src={imageUrl}
 						alt={property.address_line_1}
 						className="object-cover size-full"
 					/>
 				) : (
-					<div className="flex-center h-full">
-						<Home className="size-12 text-muted-foreground/20" />
+					<div className="flex items-center justify-center h-full text-muted-foreground/40">
+						<Home className="size-8" />
 					</div>
 				)}
-				<div className="absolute flex gap-1 top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+				<div className="absolute flex gap-1 top-2 right-2 invisible group-hover:visible">
 					<Button
 						variant="secondary"
-						size="icon"
-						className="size-8"
+						size="icon-sm"
 						onClick={(e) => {
 							e.stopPropagation();
 							onEdit(property.id);
@@ -44,8 +51,7 @@ export function PropertyCard({ property, onDelete, onEdit, onView }: PropertyCar
 					</Button>
 					<Button
 						variant="destructive"
-						size="icon"
-						className="size-8"
+						size="icon-sm"
 						onClick={(e) => {
 							e.stopPropagation();
 							onDelete(property.id);
@@ -55,36 +61,40 @@ export function PropertyCard({ property, onDelete, onEdit, onView }: PropertyCar
 				</div>
 			</div>
 
-			<CardHeader className="pb-2">
+			<CardHeader className="gap-1">
 				<CardTitle className="text-lg font-bold truncate">
 					{property.address_line_1}
-					{property.address_line_2 && (
-						<p className="text-muted-foreground truncate">{property.address_line_2}</p>
-					)}
+					{property.address_line_2 && `, ${property.address_line_2}`}
 				</CardTitle>
 				<p className="text-sm text-muted-foreground">
-					{property.town_city}, {property.postcode.toUpperCase()}
+					{property.town_city}, {formattedPostcode}
 				</p>
 			</CardHeader>
-			<CardContent className="pt-4">
-				<div className="flex items-center gap-6 text-sm text-muted-foreground">
-					<div className="flex items-center gap-2">
-						<Bed className="size-4" />
-						<span>
-							{property.bedrooms} {DICT.PROPERTIES.LABELS.BEDS}
-						</span>
-					</div>
-					<div className="flex items-center gap-2">
-						<Bath className="size-4" />
-						<span>
-							{property.bathrooms} {DICT.PROPERTIES.LABELS.BATHS}
-						</span>
+
+			<CardContent className="pb-4">
+				<div className="flex items-center justify-between border-t pt-4">
+					<div className="space-y-1">
+						<div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase">
+							<InfoIcon className="size-3 mt-px" />
+							Details
+						</div>
+						<div className="flex items-center gap-4 text-sm">
+							<div className="flex items-center gap-2">
+								<Bed className="size-4" />
+								<span>{property.bedrooms}</span>
+							</div>
+							<div className="flex items-center gap-2">
+								<Bath className="size-4" />
+								<span>{property.bathrooms}</span>
+							</div>
+							<div className="flex items-center gap-2">
+								<Home className="size-4" />
+								<span className="capitalize">{property.type}</span>
+							</div>
+						</div>
 					</div>
 				</div>
 			</CardContent>
-			<CardFooter className="pt-0 text-xs capitalize text-muted-foreground">
-				{DICT.PROPERTIES.LABELS.TYPE}: {property.type}
-			</CardFooter>
 		</Card>
 	);
-}
+});

@@ -1,6 +1,6 @@
 # Dependency Management
 
-This document outlines the dependency management strategy for the [Cleaner Hire PWA](/README.md), focusing on maintaining stable and secure dependencies critical for PWA performance and security.
+This document outlines the dependency management strategy for the [Freshers PWA](/README.md), focusing on maintaining stable and secure dependencies critical for PWA performance and security.
 
 ## 1. Initial Development Phase
 

@@ -1,6 +1,6 @@
 # Commit Guidelines
 
-This document explains the commit message guidelines for the [Cleaner Hire PWA](/README.md). This project enforces the [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) specification for all contributions. Adhering to this standard ensures a readable project history and enables automated versioning and changelog generation.
+This document explains the commit message guidelines for the [Freshers PWA](/README.md). This project enforces the [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/) specification for all contributions. Adhering to this standard ensures a readable project history and enables automated versioning and changelog generation.
 
 ## 1. Message Structure
 

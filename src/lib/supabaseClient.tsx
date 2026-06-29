@@ -15,21 +15,42 @@ if (!supabaseUrl || !supabaseAnonKey) {
 	}
 }
 
-const channel = new BroadcastChannel('auth_sync_channel');
+let authChannel: BroadcastChannel | null = null;
 
-channel.onmessage = (event: MessageEvent) => {
-	if (event.data.type === 'REQUEST_SESSION') {
-		const session = window.sessionStorage.getItem(STORAGE_KEY);
-		if (session) {
-			channel.postMessage({ type: 'SEND_SESSION', session });
-		}
+let isSessionBroadcastSuppressed = false;
+
+export const setSessionBroadcastSuppressed = (value: boolean): void => {
+	isSessionBroadcastSuppressed = value;
+};
+
+const getAuthChannel = (): BroadcastChannel => {
+	if (!authChannel) {
+		authChannel = new BroadcastChannel('auth_sync_channel');
+
+		authChannel.onmessage = (event: MessageEvent) => {
+			if (event.data.type === 'REQUEST_SESSION') {
+				const session = window.sessionStorage.getItem(STORAGE_KEY);
+				if (session) {
+					authChannel?.postMessage({ type: 'SEND_SESSION', session });
+				}
+			}
+			if (event.data.type === 'LOGOUT') {
+				if (window.localStorage.getItem('trust_device') === 'true') {
+					return;
+				}
+				window.sessionStorage.removeItem(STORAGE_KEY);
+				if (window.location.pathname !== '/login') {
+					window.location.href = '/login';
+				}
+			}
+		};
+
+		window.addEventListener('beforeunload', () => {
+			authChannel?.close();
+			authChannel = null;
+		});
 	}
-	if (event.data.type === 'LOGOUT') {
-		window.sessionStorage.removeItem(STORAGE_KEY);
-		if (window.location.pathname !== '/login') {
-			window.location.href = '/login';
-		}
-	}
+	return authChannel;
 };
 
 const getAuthStorage = () => {
@@ -40,17 +61,22 @@ const getAuthStorage = () => {
 			return window.localStorage.getItem(key) || window.sessionStorage.getItem(key);
 		},
 		setItem: (key: string, value: string) => {
-			if (isTrusted()) {
+			if (isTrusted() || key.includes('-code-verifier')) {
 				window.localStorage.setItem(key, value);
 			} else {
 				window.sessionStorage.setItem(key, value);
-				channel.postMessage({ type: 'SEND_SESSION', session: value });
+			}
+			if (!isSessionBroadcastSuppressed) {
+				getAuthChannel().postMessage({ type: 'SEND_SESSION', session: value });
 			}
 		},
 		removeItem: (key: string) => {
+			const isTrusted = window.localStorage.getItem('trust_device') === 'true';
 			window.localStorage.removeItem(key);
 			window.sessionStorage.removeItem(key);
-			channel.postMessage({ type: 'LOGOUT' });
+			if (!isTrusted) {
+				getAuthChannel().postMessage({ type: 'LOGOUT' });
+			}
 		},
 	};
 };
@@ -60,7 +86,8 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 		persistSession: true,
 		storage: getAuthStorage(),
 		autoRefreshToken: true,
-		detectSessionInUrl: true,
+		detectSessionInUrl: false,
+		flowType: 'pkce',
 		storageKey: STORAGE_KEY,
 	},
 });

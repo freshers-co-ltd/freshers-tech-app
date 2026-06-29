@@ -1,6 +1,6 @@
 # Rollback Procedures
 
-This document defines the protocols for reverting the application to a stable state in the event of a critical failure within the [Cleaner Hire PWA](/README.md).
+This document defines the protocols for reverting the application to a stable state in the event of a critical failure within the [Freshers PWA](/README.md).
 
 ## 1. Front-end Rollbacks
 
@@ -10,8 +10,8 @@ Front-end stability is maintained through [Vercel](https://vercel.com)'s instant
 
 1. Confirm the issue is caused by the most recent deployment and not a backend or third-party service outage.
 2. Navigate to the project **Deployments** tab in the Vercel dashboard and locate the last known stable deployment.
-4. Select **Instant Rollback** from the deployment's options menu. This allows you to reassign the production traffic to that specific deployment.
-5. Verify that the application is functional. The underlying issue must then be addressed.
+3. Select **Instant Rollback** from the deployment's options menu. This allows you to reassign the production traffic to that specific deployment.
+4. Verify that the application is functional. The underlying issue must then be addressed.
 
 ## 2. Database Rollbacks
 

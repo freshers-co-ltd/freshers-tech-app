@@ -1,20 +1,11 @@
 'use client';
 
-import {
-	Bath,
-	Bed,
-	ChevronLeft,
-	ChevronRight,
-	MapPin,
-	Maximize2,
-	Pencil,
-	Trash2,
-	X,
-} from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Bath, Bed, MapPin, Maximize2, Pencil, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { FullscreenMediaCarousel } from '@/components/FullscreenMediaCarousel';
+import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { Button } from '@/components/ui/button';
 import {
-	Dialog,
 	DialogContent,
 	DialogDescription,
 	DialogHeader,
@@ -23,9 +14,11 @@ import {
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { DICT } from '@/dictionary';
 import { useAuth } from '@/features/auth/AuthContext';
-import type { Property } from '@/features/properties/propertyService';
+import type { Property } from '@/features/properties/types';
 import { useCarousel } from '@/hooks/useCarousel';
+import { useMediaUrl } from '@/hooks/useMediaUrl';
 import { mediaService } from '@/lib/mediaService';
+import { formatPostcode } from '@/lib/utils';
 
 interface PropertyDetailViewProps {
 	property: Property;
@@ -36,23 +29,39 @@ interface PropertyDetailViewProps {
 export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetailViewProps) {
 	const { user } = useAuth();
 	const [isFullScreen, setIsFullScreen] = useState(false);
+	const [extraImageUrls, setExtraImageUrls] = useState<string[]>([]);
 
-	const images = useMemo(() => {
-		const rawPaths = [property.main_image_url, ...(property.extra_images_urls || [])].filter(
-			Boolean,
-		) as string[];
+	const mainImageUrl = useMediaUrl(property.main_image_url, 'property-media');
 
-		return rawPaths.map((path) => mediaService.getMediaUrl(path || null, 'property-media'));
-	}, [property]);
+	useEffect(() => {
+		const paths = property.extra_images_urls;
+		if (!paths || paths.length === 0) {
+			setExtraImageUrls([]);
+			return;
+		}
 
-	const { activeImage, setActiveImage, currentIndex, nextImage, prevImage, allImages } =
-		useCarousel({
-			images,
-			initialImage: property.main_image_url
-				? mediaService.getMediaUrl(property.main_image_url || null, 'property-media')
-				: '',
-			isKeyboardEnabled: isFullScreen,
-		});
+		let cancelled = false;
+
+		Promise.all(paths.map(async (path) => mediaService.getSignedUrl(path, 'property-media'))).then(
+			(results) => {
+				if (!cancelled) {
+					setExtraImageUrls(results.map((url) => url ?? '/placeholder-image.webp'));
+				}
+			},
+		);
+
+		return () => {
+			cancelled = true;
+		};
+	}, [property.extra_images_urls]);
+
+	const images = [mainImageUrl || '/placeholder-image.webp', ...extraImageUrls];
+
+	const { activeImage, setActiveImage, allImages } = useCarousel({
+		images,
+		initialImage: mainImageUrl || '/placeholder-image.webp',
+		isKeyboardEnabled: isFullScreen,
+	});
 
 	const isHost = user?.user_metadata?.role === 'host';
 
@@ -72,14 +81,18 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 							<div className="flex items-center gap-1 text-muted-foreground text-sm">
 								<MapPin className="size-4 shrink-0" />
 								<span className="truncate">
-									{property.town_city}, {property.postcode.toUpperCase()}
+									{property.town_city}, {formatPostcode(property.postcode)}
 								</span>
 							</div>
 						</DialogHeader>
 
 						<div className="flex flex-col lg:flex-row gap-4 overflow-hidden">
 							<div className="relative aspect-video lg:flex-1 bg-muted rounded-lg overflow-hidden shrink-0 lg:shrink">
-								<img src={activeImage} className="size-full object-contain" alt="Property" />
+								<ImageWithFallback
+									src={activeImage}
+									className="size-full object-contain"
+									alt="Property"
+								/>
 								<Button
 									size="icon"
 									variant="secondary"
@@ -100,7 +113,11 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 												className={`p-0 size-16 lg:w-full shrink-0 overflow-hidden transition-all ${
 													activeImage === url ? 'ring-2 ring-primary border-primary' : 'opacity-70'
 												}`}>
-												<img src={url} className="size-full object-cover" alt="Thumbnail" />
+												<ImageWithFallback
+													src={url}
+													className="size-full object-cover"
+													alt="Thumbnail"
+												/>
 											</Button>
 										))}
 									</div>
@@ -125,13 +142,13 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 							{isHost && (
 								<div className="flex flex-col gap-2">
 									<Button onClick={() => onEdit(property.id)} className="w-full">
-										<Pencil className="mr-2 size-4" /> {DICT.PROPERTIES.EDIT}
+										<Pencil className="mr-1 size-4" /> {DICT.COMMON.ACTIONS.EDIT}
 									</Button>
 									<Button
 										variant="destructive"
 										onClick={() => onDelete(property.id)}
 										className="w-full">
-										<Trash2 className="mr-2 size-4" /> {DICT.PROPERTIES.DELETE}
+										<Trash2 className="mr-1 size-4" /> {DICT.COMMON.ACTIONS.DELETE}
 									</Button>
 								</div>
 							)}
@@ -140,69 +157,13 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 				</ScrollArea>
 			</div>
 
-			<Dialog open={isFullScreen} onOpenChange={setIsFullScreen}>
-				<DialogContent className="max-w-7xl! w-[95vw] h-[90vh] p-0 bg-card border-none flex flex-col items-center justify-start overflow-hidden rounded-lg shadow-xl [&>button]:hidden">
-					<DialogHeader>
-						<DialogTitle className="sr-only">{DICT.PROPERTIES.LABELS.FULLSCREEN_VIEW}</DialogTitle>
-						<DialogDescription className="sr-only">
-							Viewing image {currentIndex + 1}.
-						</DialogDescription>
-					</DialogHeader>
-
-					<div className="absolute top-0 right-0 z-50 p-6">
-						<Button
-							variant="ghost"
-							size="icon"
-							className="rounded-full shadow-sm size-10 bg-background/80 backdrop-blur-md"
-							onClick={() => setIsFullScreen(false)}>
-							<X className="size-5" />
-						</Button>
-					</div>
-
-					{allImages.length > 1 && (
-						<div className="absolute left-0 right-0 z-50 px-6 flex-center bottom-5">
-							<div className="flex items-center gap-4 p-1 border rounded-xl shadow-lg bg-background/80 backdrop-blur-md">
-								<Button
-									variant="ghost"
-									size="icon"
-									className="size-10"
-									onClick={(e) => {
-										e.stopPropagation();
-										prevImage();
-									}}>
-									<ChevronLeft className="size-6" />
-								</Button>
-
-								<div className="px-2 text-sm font-semibold text-muted-foreground">
-									{currentIndex + 1} / {allImages.length}
-								</div>
-
-								<Button
-									variant="ghost"
-									size="icon"
-									className="size-10"
-									onClick={(e) => {
-										e.stopPropagation();
-										nextImage();
-									}}>
-									<ChevronRight className="size-6" />
-								</Button>
-							</div>
-						</div>
-					)}
-
-					<div className="relative flex-col-center size-full">
-						<img
-							src={activeImage}
-							className="relative z-10 object-contain w-full max-h-[85dvh] select-none"
-							alt={DICT.PROPERTIES.LABELS.FULLSCREEN_VIEW}
-							onError={(e) => {
-								(e.target as HTMLImageElement).src = '/placeholder-property.jpg';
-							}}
-						/>
-					</div>
-				</DialogContent>
-			</Dialog>
+			<FullscreenMediaCarousel
+				media={allImages.map((url) => ({ url, type: 'image' as const }))}
+				initialMedia={activeImage}
+				open={isFullScreen}
+				onOpenChange={setIsFullScreen}
+				alt="Property"
+			/>
 		</DialogContent>
 	);
 }

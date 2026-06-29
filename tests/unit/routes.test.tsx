@@ -2,14 +2,10 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { type AuthContextType, useAuth } from '@/features/auth/AuthContext';
-import { DashboardRedirect, PublicRoute } from '@/routes';
+import { DashboardRedirect, PublicRoute } from '@/features/auth/RouteGuards';
 
 vi.mock('@/features/auth/AuthContext', () => ({
 	useAuth: vi.fn(),
-}));
-
-vi.mock('@/components/Loading', () => ({
-	Loading: () => <div data-testid="loading"></div>,
 }));
 
 describe('Authentication Routing', () => {
@@ -20,6 +16,7 @@ describe('Authentication Routing', () => {
 	it('blocks authenticated users from public routes', () => {
 		vi.mocked(useAuth).mockReturnValue({
 			user: { id: '123' },
+			profile: { role: 'host' },
 			loading: false,
 		} as Partial<AuthContextType> as AuthContextType);
 
@@ -50,7 +47,7 @@ describe('Authentication Routing', () => {
 			</MemoryRouter>,
 		);
 
-		expect(screen.getByTestId('loading')).toBeInTheDocument();
+		expect(screen.getByRole('status')).toBeInTheDocument();
 	});
 
 	it.each([

@@ -1,12 +1,12 @@
 # Coding Standards
 
-This document establishes the coding standards for the [Cleaner Hire PWA](/README.md). These guidelines ensure code quality, consistency, and maintainability.
+This document establishes the coding standards for the [Freshers PWA](/README.md). These guidelines ensure code quality, consistency, and maintainability.
 
 ## 1. Best Practises
 
 ### 1.1 Naming
 
-Name identifiers  based on their responsibility. Names should capture what the code does, not how it is used.\
+Name identifiers based on their responsibility. Names should capture what the code does, not how it is used.\
 Function names should capture the action performed. Avoid generic names like `handleClick()`, prefer descriptive action names like `activateRipple()`.\
 Prefix boolean variables with a verb such as `is`, `has`, or `can` to clarify intent.
 
@@ -27,7 +27,7 @@ Use `//` style comments for explanations and background information.
 The project requires strict TypeScript configuration. Enable the `strict` flag in `tsconfig.json` to ensure type safety and prevent runtime errors.\
 Use `interface` for public API definitions and data models. Use `type` for unions, intersections, and utility definitions.\
 Avoid the `any` keyword; if a type is unknown at compile time, use `unknown` and implement type narrowing.\
-Do not use non-null assertions (`!`) or type assertions (`as`). Instead, use a validation library or custom type guards to validate data at the application boundary.
+Do not use non-null assertions (`!`). Use type assertions (`as`) sparingly, prefer type guards for data at application boundaries, but `as` is acceptable for boundary conversions such as Supabase RPC results or external API responses.
     
 ### 2.1 Variable Declarations
 
@@ -53,7 +53,6 @@ The application follows a functional component pattern.
 Implement robust error handling for all asynchronous operations.
 
 **Try-Catch**: Use try-catch blocks only for legitimately unexpected errors, do not use try-catch to avoid checking for expected error conditions.
-Each try-catch block must include a comment explaining the specific error being caught and why it cannot be prevented.
 
 **Error Boundaries**: Wrap top-level feature components in React Error Boundaries. This prevents a single component failure from crashing the entire PWA and allows the application to fail gracefully with a fallback UI.
 

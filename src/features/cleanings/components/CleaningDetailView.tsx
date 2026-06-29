@@ -1,422 +1,298 @@
 'use client';
 
-import {
-	AlertTriangle,
-	Bath,
-	Bed,
-	CheckCircle2,
-	ChevronLeft,
-	ChevronRight,
-	Clock,
-	FileImage,
-	Info,
-	ListChecks,
-	MapPin,
-	Maximize2,
-	PackageSearch,
-	Pencil,
-	Trash2,
-	User,
-	X,
-} from 'lucide-react';
-import { useMemo, useState } from 'react';
-
+import { Image, MapPin } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { EntityBadge } from '@/components/EntityBadge';
+import { FullscreenMediaCarousel } from '@/components/FullscreenMediaCarousel';
 import { Button } from '@/components/ui/button';
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from '@/components/ui/dialog';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { DICT } from '@/dictionary';
-import { useAuth } from '@/features/auth/AuthContext';
-import { type CleaningRequest, STATUS } from '@/features/cleanings/cleaningService';
-import { CleaningStatusBadge } from '@/features/cleanings/components/CleaningStatusBadge';
-import { useCarousel } from '@/hooks/useCarousel';
+import type { UserRole } from '@/features/auth/types';
+import { useCleanerPayConfig } from '@/features/cleanings/CleanerPayContext';
+import { useCleanings } from '@/features/cleanings/CleaningContext';
+import { CleaningActionButtons } from '@/features/cleanings/components/CleaningActionButtons';
+import { CleaningEvidenceForm } from '@/features/cleanings/components/CleaningEvidenceForm';
+import { CleaningReportView } from '@/features/cleanings/components/CleaningReportView';
+import { CleaningRequestDetails } from '@/features/cleanings/components/CleaningrequestDetails';
+import { CleaningTaskList } from '@/features/cleanings/components/CleaningTaskList';
+import { useCleanerCleanings } from '@/features/cleanings/hooks/useCleanerCleanings';
+import { useClockInOut } from '@/features/cleanings/hooks/useClockInOut';
+import { useEvidenceSubmission } from '@/features/cleanings/hooks/useEvidenceSubmission';
+import { useTaskSync } from '@/features/cleanings/hooks/useTaskSync';
+import type { CleaningRequest } from '@/features/cleanings/types';
+import { CLEANING_STATUS } from '@/features/cleanings/types';
+import type { Database } from '@/lib/database.types';
 import { mediaService } from '@/lib/mediaService';
+import { formatPostcode } from '@/lib/utils';
 
 interface CleaningDetailViewProps {
 	cleaning: CleaningRequest;
-	onEdit: (id: string) => void;
-	onDelete: (id: string) => void;
+	userRole: UserRole;
+	onEdit?: (id: string) => void;
+	onDelete?: (id: string) => void;
 }
 
-export function CleaningDetailView({ cleaning, onEdit, onDelete }: CleaningDetailViewProps) {
-	const { user } = useAuth();
-	const [isReportOpen, setIsReportOpen] = useState(false);
-	const [isFullScreen, setIsFullScreen] = useState(false);
+export function CleaningDetailView({
+	cleaning,
+	userRole,
+	onEdit,
+	onDelete,
+}: CleaningDetailViewProps) {
+	const isCleaner = userRole === 'cleaner';
+	const isHost = userRole === 'host';
+	const isAdmin = userRole === 'admin';
 
-	const isHost = user?.user_metadata?.role === 'host';
-	const tasks = Array.isArray(cleaning.tasks) ? cleaning.tasks : [];
-	const hasEvidence = !!(cleaning.status === 'completed' && cleaning.evidence?.length);
+	const { updateCleaning, addEvidence, upsertReport, updateTasksBatch } = useCleanings();
+	const { handleClockIn } = useCleanerCleanings();
 
-	const hasBrokenItems = !!cleaning.report?.broken_items_report;
-	const isSuppliesLow = !!cleaning.report?.low_supplies_report;
+	const {
+		canClockIn,
+		isProcessing: isClockInProcessing,
+		onClockIn,
+	} = useClockInOut({
+		cleaning,
+		onClockIn: handleClockIn,
+	});
 
-	const canEdit = STATUS.CAN_EDIT.includes(cleaning.status);
-	const canCancel = STATUS.CAN_CANCEL.includes(cleaning.status);
+	const { localTasks, handleTaskToggle, handleSyncTasks } = useTaskSync({
+		cleaning,
+		updateTasksBatch,
+	});
 
-	const evidenceUrls = useMemo(
-		() =>
-			(cleaning.evidence || []).map((m) => mediaService.getMediaUrl(m.media_url, 'cleaning-media')),
-		[cleaning.evidence],
+	const { config: cleanerPayConfig } = useCleanerPayConfig();
+	const hourlyRate = !isHost ? (cleanerPayConfig?.hourly_rate ?? null) : null;
+
+	const estimatedHours =
+		cleaning.cleaner_pay != null && hourlyRate != null && hourlyRate > 0
+			? cleaning.cleaner_pay / hourlyRate
+			: null;
+
+	const {
+		showEvidenceForm,
+		setShowEvidenceForm,
+		isFullScreen,
+		setIsFullScreen,
+		selectedMediaIndex,
+		setSelectedMediaIndex,
+		isFinishDisabled,
+		onFormSubmit,
+	} = useEvidenceSubmission({
+		cleaning,
+		addEvidence,
+		upsertReport,
+		updateCleaning,
+		handleSyncTasks,
+	});
+
+	const tasks = localTasks;
+	const evidence = Array.isArray(cleaning.evidence) ? cleaning.evidence : [];
+	const isInProgress = cleaning.status === CLEANING_STATUS.IN_PROGRESS;
+	const isCompleted = cleaning.status === CLEANING_STATUS.COMPLETED;
+
+	const allTasksCompleted = useMemo(
+		() => tasks.length > 0 && tasks.every((t) => t.is_completed),
+		[tasks],
 	);
 
-	const { activeImage, setActiveImage, currentIndex, nextImage, prevImage, allImages } =
-		useCarousel({
-			images: evidenceUrls,
-			initialImage: evidenceUrls[0] || '',
-			isKeyboardEnabled: isFullScreen,
+	const [evidenceMedia, setEvidenceMedia] = useState<
+		{ url: string; type: Database['public']['Enums']['media_type'] }[]
+	>([]);
+
+	const [propertyGalleryOpen, setPropertyGalleryOpen] = useState(false);
+	const [propertyMedia, setPropertyMedia] = useState<{ url: string; type: 'image' }[]>([]);
+
+	useEffect(() => {
+		if (evidence.length === 0) {
+			setEvidenceMedia([]);
+			return;
+		}
+
+		let cancelled = false;
+
+		Promise.all(
+			evidence.map(async (item) => ({
+				url:
+					(await mediaService.getSignedUrl(item.media_url, 'cleaning-media')) ??
+					'/placeholder-image.webp',
+				type: item.type,
+			})),
+		).then((results) => {
+			if (!cancelled) {
+				setEvidenceMedia(results);
+			}
 		});
 
-	const scheduledDate = new Date(cleaning.scheduled_start);
-	const longDate = scheduledDate.toLocaleDateString(undefined, {
-		weekday: 'short',
-		year: 'numeric',
-		month: 'short',
-		day: 'numeric',
-	});
-	const shortDate = scheduledDate.toLocaleDateString('en-GB', {
-		day: '2-digit',
-		month: '2-digit',
-		year: '2-digit',
-	});
-	const formattedTime = scheduledDate.toLocaleTimeString(undefined, {
-		hour: '2-digit',
-		minute: '2-digit',
-		hour12: true,
-	});
+		return () => {
+			cancelled = true;
+		};
+	}, [evidence]);
+
+	useEffect(() => {
+		const property = cleaning.property;
+		if (!property) {
+			setPropertyMedia([]);
+			return;
+		}
+
+		const paths = [property.main_image_url, ...(property.extra_images_urls ?? [])].filter(
+			Boolean,
+		) as string[];
+
+		if (paths.length === 0) {
+			setPropertyMedia([]);
+			return;
+		}
+
+		let cancelled = false;
+
+		Promise.all(
+			paths.map(async (path) => ({
+				url: (await mediaService.getSignedUrl(path, 'property-media')) ?? '/placeholder-image.webp',
+				type: 'image' as const,
+			})),
+		).then((results) => {
+			if (!cancelled) {
+				setPropertyMedia(results);
+			}
+		});
+
+		return () => {
+			cancelled = true;
+		};
+	}, [cleaning.property?.main_image_url, cleaning.property?.extra_images_urls, cleaning.property]);
+
+	const expiryInfo = useMemo(() => {
+		if (!cleaning.clock_out_time) {
+			return null;
+		}
+		const completedAt = new Date(cleaning.clock_out_time);
+		const expiresAt = new Date(completedAt.getTime() + 14 * 24 * 60 * 60 * 1000);
+		const now = new Date();
+		const daysRemaining = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+		return { daysRemaining, isExpired: daysRemaining <= 0 };
+	}, [cleaning.clock_out_time]);
+
+	const isClockInDisabled = !canClockIn || isClockInProcessing;
 
 	return (
-		<DialogContent className="sm:max-w-2xl h-fit max-h-[95svh] flex flex-col p-0 overflow-hidden">
-			<DialogHeader className="p-6 pb-2 shrink-0">
+		<div className="flex flex-col overflow-hidden flex-1">
+			<DialogHeader className="p-6 pb-0 shrink-0">
 				<div className="flex justify-between items-start gap-4">
 					<div className="space-y-1 min-w-0">
 						<DialogTitle className="wrap-break-word text-xl font-bold leading-tight">
-							{cleaning.properties?.address_line_1}
+							{showEvidenceForm
+								? DICT.CLEANINGS.DETAIL.REPORT_TITLE
+								: cleaning.property?.address_line_1}
 						</DialogTitle>
-						<div className="flex items-center gap-1 text-muted-foreground text-sm">
-							<MapPin className="size-3 shrink-0" />
-							<span className="truncate">
-								{cleaning.properties?.town_city}, {cleaning.properties?.postcode}
-							</span>
-						</div>
+						{!showEvidenceForm && (
+							<div className="flex items-center gap-1 text-muted-foreground text-sm">
+								<MapPin className="size-3 shrink-0" />
+								<span className="truncate">
+									{cleaning.property?.town_city},{' '}
+									{formatPostcode(cleaning.property?.postcode ?? '')}
+								</span>
+							</div>
+						)}
+						{!showEvidenceForm && propertyMedia.length > 0 && (
+							<Button
+								variant="outline"
+								size="sm"
+								className="mt-2"
+								onClick={() => setPropertyGalleryOpen(true)}>
+								<Image className="size-4 mr-2" />
+								{DICT.CLEANINGS.DETAIL.BUTTON_VIEW_IMAGES}
+							</Button>
+						)}
 					</div>
-					<CleaningStatusBadge status={cleaning.status} />
+					{!showEvidenceForm && (
+						<EntityBadge
+							className="mr-8"
+							variant={{ type: 'cleaning', value: cleaning.status }}
+							customLabel={
+								isCleaner && cleaning.status === CLEANING_STATUS.CONFIRMED ? 'ASSIGNED' : undefined
+							}
+						/>
+					)}
 				</div>
 			</DialogHeader>
 
-			<ScrollArea className="flex-1 min-h-0 w-full overflow-y-auto">
-				<div className="px-6 space-y-6 pb-6">
-					<Separator />
+			<div className="relative flex-1 min-h-0">
+				<ScrollArea className="h-full w-full">
+					<div className="w-full p-4 sm:p-6 space-y-6 max-w-full overflow-hidden">
+						{showEvidenceForm && cleaning.cleaner_id ? (
+							<CleaningEvidenceForm
+								cleaningId={cleaning.id}
+								cleanerId={cleaning.cleaner_id}
+								onSubmit={onFormSubmit}
+								onCancel={() => setShowEvidenceForm(false)}
+							/>
+						) : (
+							<>
+								<Separator />
 
-					<div className="grid grid-cols-2 gap-4">
-						<div className="flex items-center gap-3 p-2 rounded-lg border bg-muted/30">
-							<Clock className="size-5 text-primary shrink-0" />
-							<div className="min-w-0">
-								<p className="text-xs text-muted-foreground uppercase font-bold tracking-tight">
-									Scheduled
-								</p>
-								<p className="text-sm font-medium truncate">
-									<span className="sm:hidden">{shortDate}</span>
-									<span className="hidden sm:inline">{longDate}</span>
-								</p>
-								<p className="text-xs font-bold text-primary">{formattedTime}</p>
-							</div>
-						</div>
-						<div className="flex items-center gap-3 p-2 rounded-lg border bg-muted/30">
-							<CheckCircle2 className="size-5 text-primary shrink-0" />
-							<div>
-								<p className="text-xs text-muted-foreground uppercase font-bold tracking-tight">
-									Total Cost
-								</p>
-								<p className="text-sm font-bold text-primary">£{cleaning.service_cost}</p>
-							</div>
-						</div>
+								<CleaningRequestDetails
+									cleaning={cleaning}
+									userRole={userRole}
+									estimatedHours={estimatedHours}
+								/>
+
+								<CleaningTaskList
+									tasks={tasks}
+									interactive={isCleaner && isInProgress}
+									showCustomIndicator={isHost || isAdmin}
+									onTaskToggle={handleTaskToggle}
+								/>
+
+								{isCompleted &&
+									(cleaning.report || (evidence.length > 0 && !expiryInfo?.isExpired)) && (
+										<CleaningReportView
+											cleaning={cleaning}
+											evidenceMedia={evidenceMedia}
+											expiryInfo={expiryInfo}
+											onMediaClick={(index) => {
+												setSelectedMediaIndex(index);
+												setIsFullScreen(true);
+											}}
+										/>
+									)}
+							</>
+						)}
 					</div>
+				</ScrollArea>
+			</div>
 
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-						<div className="space-y-3">
-							<h4 className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2 tracking-wider">
-								<Info className="size-4 text-primary" />
-								Property Specs
-							</h4>
-							<div className="flex gap-4 p-2 rounded-md border bg-muted/10">
-								<div className="flex items-center gap-2">
-									<Bed className="size-4 text-muted-foreground" />
-									<span>{cleaning.properties?.bedrooms}</span>
-								</div>
-								<div className="flex items-center gap-2">
-									<Bath className="size-4 text-muted-foreground" />
-									<span>{cleaning.properties?.bathrooms}</span>
-								</div>
-								<span className=" font-medium capitalize text-primary/80 ml-auto">
-									{cleaning.properties?.type}
-								</span>
-							</div>
-						</div>
-
-						<div className="space-y-3">
-							<h4 className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2 tracking-wider">
-								<User className="size-4 text-primary" />
-								Assigned Cleaner
-							</h4>
-							<div className="p-2 rounded-md border bg-muted/10">
-								{cleaning.cleaner ? (
-									<div className="flex items-center gap-2">
-										<span className="text-sm font-semibold">{cleaning.cleaner.full_name}</span>
-									</div>
-								) : (
-									<span className="text-sm text-muted-foreground">Pending assignment...</span>
-								)}
-							</div>
-						</div>
-					</div>
-
-					{cleaning.instructions && (
-						<div className="space-y-3">
-							<h4 className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2 tracking-wider">
-								<Info className="size-4 text-primary" />
-								Special Instructions
-							</h4>
-							<div className="py-2 px-3 rounded-md border bg-muted/10">
-								<p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-									{cleaning.instructions}
-								</p>
-							</div>
-						</div>
-					)}
-
-					<div className="space-y-3">
-						<h4 className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2 tracking-wider">
-							<ListChecks className="size-4 text-primary" />
-							Service Checklist
-						</h4>
-
-						<div className="rounded-md border bg-muted/10 divide-y">
-							{tasks.map((task, index) => (
-								<div
-									key={`${task.description}-${index}`}
-									className={`flex items-center gap-3 px-3 py-2.5 ${
-										task.is_custom ? 'bg-primary/5' : ''
-									}`}>
-									<span className="flex items-center justify-center size-5 shrink-0 text-[10px] font-bold text-muted-foreground/60">
-										{String(index + 1).padStart(2, '0')}
-									</span>
-
-									<div className="flex flex-1 items-center justify-between min-w-0">
-										<span className="text-sm font-medium wrap-break-word">
-											{task.description}
-											{task.is_custom && (
-												<span className="ml-2 text-[9px] font-black text-primary uppercase border border-primary/20 px-1 rounded-sm bg-primary/5 whitespace-nowrap">
-													Custom
-												</span>
-											)}
-										</span>
-
-										{task.is_completed && (
-											<CheckCircle2 className="size-3.5 text-green-500 shrink-0 ml-2" />
-										)}
-									</div>
-								</div>
-							))}
-
-							{tasks.length === 0 && (
-								<p className="text-sm text-muted-foreground text-center py-8">No tasks defined.</p>
-							)}
-						</div>
-					</div>
-				</div>
-			</ScrollArea>
-
-			{(hasEvidence || (isHost && (canEdit || canCancel))) && (
-				<div className="p-3 border-t bg-background shrink-0">
-					{hasEvidence && (
-						<Button className="w-full" onClick={() => setIsReportOpen(true)}>
-							<FileImage className="mr-2 size-4" /> View Review Form and Evidence
-						</Button>
-					)}
-
-					{isHost && (
-						<div className="flex flex-col sm:flex-row gap-3">
-							{canEdit && (
-								<Button
-									variant="outline"
-									className="flex-1"
-									disabled={!canEdit}
-									onClick={() => onEdit(cleaning.id)}>
-									<Pencil className="mr-2 size-4" /> {DICT.CLEANINGS.EDIT}
-								</Button>
-							)}
-							{canCancel && (
-								<Button
-									variant="destructive"
-									className="flex-1 "
-									onClick={() => onDelete(cleaning.id)}>
-									<Trash2 className="mr-2 size-4" />{' '}
-									{cleaning.status === 'confirmed' ? 'Cancel Cleaning' : DICT.CLEANINGS.DELETE}
-								</Button>
-							)}
-						</div>
-					)}
-				</div>
+			{!showEvidenceForm && (
+				<CleaningActionButtons
+					userRole={userRole}
+					status={cleaning.status}
+					allTasksCompleted={allTasksCompleted}
+					onClockIn={isCleaner ? onClockIn : undefined}
+					onFinish={isCleaner ? () => setShowEvidenceForm(true) : undefined}
+					onEdit={onEdit}
+					onDelete={onDelete}
+					cleaningId={cleaning.id}
+					isClockInDisabled={isClockInDisabled}
+					isFinishDisabled={isFinishDisabled}
+				/>
 			)}
 
-			<Dialog open={isReportOpen} onOpenChange={setIsReportOpen}>
-				<DialogContent className="max-w-4xl! w-[95vw] h-[85svh] flex flex-col p-0 overflow-hidden">
-					<DialogHeader className="p-6 pb-2 shrink-0">
-						<div className="flex flex-col gap-1">
-							<DialogTitle className="text-lg font-bold">Post-Clean Report</DialogTitle>
-							<DialogDescription className="sr-only">
-								Review form and visual evidence.
-							</DialogDescription>
-						</div>
-					</DialogHeader>
+			<FullscreenMediaCarousel
+				media={evidenceMedia}
+				initialMedia={evidenceMedia[selectedMediaIndex]?.url}
+				open={isFullScreen}
+				onOpenChange={setIsFullScreen}
+				alt="Evidence"
+			/>
 
-					<ScrollArea className="flex-1 min-h-0 w-full">
-						<div className="p-6 pt-0 space-y-6">
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-								<div
-									className={`p-3 rounded-lg border transition-colors ${hasBrokenItems ? 'bg-destructive/5 border-destructive/20' : 'bg-muted/30'}`}>
-									<div className="flex flex-col gap-1 min-w-0">
-										<div className="flex items-center gap-2">
-											<AlertTriangle
-												className={`size-4 shrink-0 ${hasBrokenItems ? 'text-destructive' : 'text-muted-foreground'}`}
-											/>
-											<p className="text-xs font-bold uppercase tracking-wider text-muted-foreground truncate">
-												Broken Items
-											</p>
-										</div>
-										<p className="text-sm font-medium leading-relaxed wrap-break-word">
-											{cleaning.report?.broken_items_report ||
-												'No items reported broken during this cleaning.'}
-										</p>
-									</div>
-								</div>
-
-								<div
-									className={`p-3 rounded-lg border transition-colors ${isSuppliesLow ? 'bg-amber-500/5 border-amber-500/20' : 'bg-muted/30'}`}>
-									<div className="flex flex-col gap-1 min-w-0">
-										<div className="flex items-center gap-2">
-											<PackageSearch
-												className={`size-4 shrink-0 ${isSuppliesLow ? 'text-amber-600' : 'text-muted-foreground'}`}
-											/>
-											<p className="text-xs font-bold uppercase tracking-wider text-muted-foreground truncate">
-												Cleaning Supplies
-											</p>
-										</div>
-										<p className="text-sm font-medium leading-relaxed wrap-break-word">
-											{cleaning.report?.low_supplies_report ||
-												'All cleaning supplies are sufficiently stocked.'}
-										</p>
-									</div>
-								</div>
-							</div>
-
-							<div className="flex flex-col lg:flex-row gap-4 overflow-hidden">
-								<div className="relative aspect-video lg:aspect-auto lg:flex-1 lg:h-85 bg-muted rounded-lg overflow-hidden shrink-0 lg:shrink">
-									<img src={activeImage} className="size-full object-contain" alt="Evidence" />
-									<Button
-										size="icon"
-										variant="secondary"
-										className="absolute bottom-2 right-2"
-										onClick={() => setIsFullScreen(true)}>
-										<Maximize2 className="size-4" />
-									</Button>
-								</div>
-
-								<div className="w-full lg:w-24 max-w-full overflow-hidden shrink-0">
-									<ScrollArea className="w-full lg:h-85">
-										<div className="flex lg:flex-col gap-2 p-1">
-											{allImages.map((url) => (
-												<Button
-													key={url}
-													variant="outline"
-													onClick={() => setActiveImage(url)}
-													className={`p-0 size-16 lg:w-full lg:h-20 shrink-0 overflow-hidden transition-all ${
-														activeImage === url
-															? 'ring-2 ring-primary border-primary'
-															: 'opacity-70'
-													}`}>
-													<img src={url} className="size-full object-cover" alt="Thumbnail" />
-												</Button>
-											))}
-										</div>
-										<ScrollBar orientation="horizontal" className="lg:hidden" />
-										<ScrollBar orientation="vertical" className="hidden lg:block" />
-									</ScrollArea>
-								</div>
-							</div>
-						</div>
-						<ScrollBar orientation="vertical" />
-					</ScrollArea>
-				</DialogContent>
-			</Dialog>
-
-			<Dialog open={isFullScreen} onOpenChange={setIsFullScreen}>
-				<DialogContent className="max-w-7xl! w-[95vw] h-[90vh] p-0 bg-card border-none flex flex-col items-center justify-start overflow-hidden rounded-lg shadow-xl [&>button]:hidden">
-					<DialogHeader>
-						<DialogTitle className="sr-only">{DICT.PROPERTIES.LABELS.FULLSCREEN_VIEW}</DialogTitle>
-						<DialogDescription className="sr-only">
-							Viewing image {currentIndex + 1} of {allImages.length}.
-						</DialogDescription>
-					</DialogHeader>
-
-					<div className="absolute top-0 right-0 z-50 p-6">
-						<Button
-							variant="ghost"
-							size="icon"
-							className="rounded-full shadow-sm size-10 bg-background/80 backdrop-blur-md"
-							onClick={() => setIsFullScreen(false)}>
-							<X className="size-5" />
-						</Button>
-					</div>
-
-					{allImages.length > 1 && (
-						<div className="absolute left-0 right-0 z-50 px-6 flex-center bottom-5">
-							<div className="flex items-center gap-4 p-1 border rounded-xl shadow-lg bg-background/80 backdrop-blur-md">
-								<Button
-									variant="ghost"
-									size="icon"
-									className="size-10"
-									onClick={(e) => {
-										e.stopPropagation();
-										prevImage();
-									}}>
-									<ChevronLeft className="size-6" />
-								</Button>
-								<div className="px-2 text-sm font-semibold text-muted-foreground">
-									{currentIndex + 1} / {allImages.length}
-								</div>
-								<Button
-									variant="ghost"
-									size="icon"
-									className="size-10"
-									onClick={(e) => {
-										e.stopPropagation();
-										nextImage();
-									}}>
-									<ChevronRight className="size-6" />
-								</Button>
-							</div>
-						</div>
-					)}
-
-					<div className="relative flex-col-center size-full">
-						<img
-							src={activeImage}
-							className="relative z-10 object-contain w-full max-h-[85dvh] select-none"
-							alt={DICT.PROPERTIES.LABELS.FULLSCREEN_VIEW}
-							onError={(e) => {
-								(e.target as HTMLImageElement).src = '/placeholder-property.jpg';
-							}}
-						/>
-					</div>
-				</DialogContent>
-			</Dialog>
-		</DialogContent>
+			<FullscreenMediaCarousel
+				media={propertyMedia}
+				initialMedia={propertyMedia[0]?.url}
+				open={propertyGalleryOpen}
+				onOpenChange={setPropertyGalleryOpen}
+				alt="Property"
+			/>
+		</div>
 	);
 }
