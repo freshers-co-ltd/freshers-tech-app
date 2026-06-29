@@ -71,25 +71,36 @@ export function useCleaningsRealtime({
 		cleaningChannelRef.current = newChannel;
 	}, [user, profile, onCleaningChange]);
 
+	const setupChannelRef = useRef(setupChannel);
+	setupChannelRef.current = setupChannel;
+
+	const cleanupChannelRef = useRef(cleanupChannel);
+	cleanupChannelRef.current = cleanupChannel;
+
 	const reconnect = useCallback(() => {
-		cleanupChannel();
-		setupChannel();
-	}, [cleanupChannel, setupChannel]);
+		cleanupChannelRef.current();
+		setupChannelRef.current();
+	}, []);
 
 	const isChannelJoined = cleaningChannelRef.current?.state === 'joined';
 
 	useEffect(() => {
-		if (!enabled || !user || !profile) {
-			cleanupChannel();
+		if (!enabled || !user || !profile?.role) {
+			cleanupChannelRef.current();
 			return;
 		}
 
-		setupChannel();
+		setupChannelRef.current();
 
 		return () => {
-			cleanupChannel();
+			cleanupChannelRef.current();
 		};
-	}, [enabled, user, profile, setupChannel, cleanupChannel]);
+	}, [enabled, user, profile?.role]);
 
-	return { cleanupChannel, setupChannel, reconnect, isChannelJoined };
+	return {
+		cleanupChannel: cleanupChannelRef.current,
+		setupChannel: setupChannelRef.current,
+		reconnect,
+		isChannelJoined,
+	};
 }

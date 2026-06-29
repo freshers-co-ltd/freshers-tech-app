@@ -301,7 +301,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	}, []);
 
 	useEffect(() => {
-		if (!initialised || !profile) {
+		if (!initialised || !profile?.role) {
 			return;
 		}
 		if (profile.role !== 'admin') {
@@ -324,7 +324,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		return () => {
 			cancelled = true;
 		};
-	}, [initialised, profile]);
+	}, [initialised, profile?.role]);
 
 	const resolveMfaAction = useCallback(() => {
 		mfaResolvingRef.current = true;
