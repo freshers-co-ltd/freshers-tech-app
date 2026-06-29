@@ -79,15 +79,13 @@ export function MfaChallengeForm({ onComplete }: MfaChallengeFormProps) {
 			<p className="text-sm text-muted-foreground">{dict.MESSAGE}</p>
 
 			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-				<div className="flex items-end gap-2">
-					<Controller
-						control={form.control}
-						name="code"
-						render={({ field, fieldState }) => (
-							<Field className="flex-1 space-y-1.5">
-								<FieldLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-									{dict.CODE_LABEL}
-								</FieldLabel>
+				<Controller
+					control={form.control}
+					name="code"
+					render={({ field, fieldState }) => (
+						<Field>
+							<FieldLabel className="...">{dict.CODE_LABEL}</FieldLabel>
+							<div className="flex gap-2">
 								<Input
 									{...field}
 									type="text"
@@ -97,16 +95,15 @@ export function MfaChallengeForm({ onComplete }: MfaChallengeFormProps) {
 									aria-invalid={!!fieldState.error}
 									className={fieldState.error ? 'border-destructive' : ''}
 								/>
-								{fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
-							</Field>
-						)}
-					/>
-
-					<Button type="submit" className="shrink-0" disabled={form.formState.isSubmitting}>
-						{form.formState.isSubmitting && <Loader2 className="mr-1 size-4 animate-spin" />}
-						{form.formState.isSubmitting ? dict.BUTTON_VERIFYING : dict.BUTTON_VERIFY}
-					</Button>
-				</div>
+								<Button type="submit" className="shrink-0" disabled={form.formState.isSubmitting}>
+									{form.formState.isSubmitting && <Loader2 className="mr-1 size-4 animate-spin" />}
+									{form.formState.isSubmitting ? dict.BUTTON_VERIFYING : dict.BUTTON_VERIFY}
+								</Button>
+							</div>
+							{fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
+						</Field>
+					)}
+				/>
 			</form>
 		</div>
 	);

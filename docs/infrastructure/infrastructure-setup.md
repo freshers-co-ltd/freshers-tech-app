@@ -87,7 +87,6 @@ Enable the following settings:
 For more information about variables and secrets see the [environment variables definitions](/docs/infrastructure/environment-variables.md).\
 The following secrets must be added to the repository under **Secrets and variables > Actions**.
 
-- `GH_TOKEN`: Create in GitHub account settings under **Developer Settings > Tokens (classic)** with **repo** and **workflow** scopes.
 - `SUPABASE_ACCESS_TOKEN`: Create in Supabase account settings under **Access Tokens > Generate new token** with **Full Account** scope and no expiration.
 - `VERCEL_ORG_ID`: Found in the Vercel team settings under **General > Team ID**.
 - `VERCEL_PROJECT_ID`: Found in the Vercel project settings under **General > Project ID**.
