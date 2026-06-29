@@ -22,6 +22,17 @@ const addDurationStyle = (options?: ToastOptions): ToastStyle | undefined => {
 	};
 };
 
+function toSafeMessage(message: React.ReactNode): React.ReactNode {
+	if (typeof message === 'object' && message !== null) {
+		const obj = message as unknown as Record<string, unknown>;
+		if (typeof obj.message === 'string') {
+			return obj.message;
+		}
+		return String(message);
+	}
+	return message;
+}
+
 function createToastWithDuration() {
 	type ToastMessage = React.ReactNode;
 	type ToastId = string | number;
@@ -56,7 +67,7 @@ function createToastWithDuration() {
 	};
 
 	wrappedToast.error = (message, options) => {
-		return sonnerToast.error(message, wrapOptions(options));
+		return sonnerToast.error(toSafeMessage(message), wrapOptions(options));
 	};
 
 	wrappedToast.info = (message, options) => {
