@@ -18,12 +18,15 @@ function checkRateLimit(key: string, maxRequests: number, windowMs: number): boo
 }
 
 function getAllowedOrigin(req: Request): string {
-	const allowed = Deno.env.get('CORS_ORIGIN') || DEFAULT_ORIGIN;
-	const requestOrigin = req.headers.get('Origin');
-	if (requestOrigin && allowed.split(',').some((o) => o.trim() === requestOrigin)) {
-		return requestOrigin;
+	const allowed = Deno.env.get('CORS_ORIGIN');
+	if (allowed) {
+		const requestOrigin = req.headers.get('Origin');
+		if (requestOrigin && allowed.split(',').some((o) => o.trim() === requestOrigin)) {
+			return requestOrigin;
+		}
+		return allowed.split(',')[0]?.trim() || DEFAULT_ORIGIN;
 	}
-	return allowed.split(',')[0]?.trim() || DEFAULT_ORIGIN;
+	return req.headers.get('Origin') || DEFAULT_ORIGIN;
 }
 
 function corsHeaders(origin: string): Record<string, string> {
@@ -62,17 +65,32 @@ serve(async (req: Request) => {
 			supabaseAnonKey,
 			{ global: { headers: { Authorization: authHeader } } }
 		)
+		const adminClient = createClient(supabaseUrl, serviceRoleKey)
 
 		const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
 
-		if (authError || user?.app_metadata?.role !== 'admin') {
+		if (authError || !user) {
 			return new Response(JSON.stringify({ error: 'Unauthorized' }), {
 				status: 401,
 				headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' }
 			})
 		}
 
-		const adminClient = createClient(supabaseUrl, serviceRoleKey)
+		const isAdmin = user?.app_metadata?.role === 'admin' || await (async () => {
+			const { data: profile } = await adminClient
+				.from('profiles')
+				.select('role')
+				.eq('id', user.id)
+				.single()
+			return profile?.role === 'admin'
+		})()
+
+		if (!isAdmin) {
+			return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+				status: 401,
+				headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' }
+			})
+		}
 
 		const { email, role, full_name, origin: bodyOrigin } = await req.json()
 
@@ -85,6 +103,7 @@ serve(async (req: Request) => {
 		})
 
 		if (inviteError) {
+			console.error('[Invite] inviteUserByEmail error:', inviteError);
 			return new Response(JSON.stringify({ error: inviteError }), {
 				status: 400,
 				headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' }
