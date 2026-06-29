@@ -114,8 +114,21 @@ export function setMockUserRole(role: 'host' | 'cleaner' | 'admin') {
 		identities: [],
 	};
 
+	const currentSession = {
+		access_token: 'mock-access-token',
+		token_type: 'bearer',
+		expires_in: 3600,
+		refresh_token: 'mock-refresh-token',
+		user: currentUser,
+	};
+
 	mockSupabase.auth.getUser.mockResolvedValue({
 		data: { user: currentUser },
+		error: null,
+	});
+
+	mockSupabase.auth.getSession.mockResolvedValue({
+		data: { session: currentSession },
 		error: null,
 	});
 }

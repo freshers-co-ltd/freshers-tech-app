@@ -32,6 +32,13 @@ function fireAuthEvent(event: string, session: unknown) {
 
 export const mockSupabase = {
 	auth: {
+		mfa: {
+			listFactors: vi.fn().mockResolvedValue({ data: { totp: [], phone: null }, error: null }),
+			getAuthenticatorAssuranceLevel: vi.fn().mockResolvedValue({
+				data: { currentLevel: 'aal1', nextLevel: null, currentAuthenticationMethods: [] },
+				error: null,
+			}),
+		},
 		getSession: vi.fn().mockResolvedValue({ data: { session: defaultSession }, error: null }),
 		getUser: vi.fn().mockResolvedValue({ data: { user: defaultUser }, error: null }),
 		signInWithPassword: vi
