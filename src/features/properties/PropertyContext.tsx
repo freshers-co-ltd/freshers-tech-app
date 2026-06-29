@@ -70,19 +70,26 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 			abortControllerRef.current?.abort();
 			abortControllerRef.current = new AbortController();
 			fetchProperties(abortControllerRef.current.signal);
-		} else if (user && profile) {
+		} else if (user && profile?.role) {
 			setIsLoading(false);
 		}
 
 		return () => {
 			abortControllerRef.current?.abort();
 		};
-	}, [user, profile, fetchProperties]);
+	}, [user, profile?.role, fetchProperties]);
+
+	const lastFetchedRef = useRef(0);
+	const STALE_THRESHOLD_MS = 60_000;
 
 	useVisibilityReconnect({
 		enabled: !!user && profile?.role === 'host',
 		onVisible: async () => {
-			await fetchProperties(undefined, true);
+			const now = Date.now();
+			if (now - lastFetchedRef.current > STALE_THRESHOLD_MS) {
+				lastFetchedRef.current = now;
+				await fetchProperties(undefined, true);
+			}
 		},
 	});
 

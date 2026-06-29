@@ -97,7 +97,7 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 	);
 
 	useEffect(() => {
-		if (user && profile) {
+		if (user && profile?.role) {
 			const isUserChange = user.id !== lastUserIdRef.current;
 			lastUserIdRef.current = user.id;
 
@@ -109,18 +109,25 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 		return () => {
 			abortControllerRef.current?.abort();
 		};
-	}, [user, profile, fetchCleanings]);
+	}, [user, profile?.role, fetchCleanings]);
 
-	const { reconnect: reconnectChannel } = useCleaningsRealtime({
+	useCleaningsRealtime({
 		user,
 		profile,
 		onCleaningChange: fetchCleanings,
 	});
 
+	const lastCleaningFetchRef = useRef(0);
+	const CLEANING_STALE_THRESHOLD_MS = 60_000;
+
 	useVisibilityReconnect({
 		enabled: !!user && !!profile,
 		onVisible: async () => {
-			reconnectChannel();
+			const now = Date.now();
+			if (now - lastCleaningFetchRef.current > CLEANING_STALE_THRESHOLD_MS) {
+				lastCleaningFetchRef.current = now;
+				await fetchCleanings(undefined, true);
+			}
 		},
 	});
 
