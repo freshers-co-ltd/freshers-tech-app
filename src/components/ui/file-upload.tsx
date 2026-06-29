@@ -19,7 +19,7 @@ import {
 } from 'react-dropzone';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { toast } from '@/components/Toast';
-import { useMediaUrl } from '@/hooks/useMediaUrl';
+import { useMediaUrls } from '@/hooks/useMediaUrls';
 import { cn } from '@/lib/utils';
 import { Button } from './button';
 
@@ -265,14 +265,10 @@ FileUploader.displayName = 'FileUploader';
 
 export const FileUploaderContent = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
 	({ children, className, ...props }, ref) => {
-		const { orientation, existingImages, onRemoveExisting, bucket, maxFiles, value } =
-			useFileUpload();
+		const { orientation, existingImages, onRemoveExisting, bucket, maxFiles } = useFileUpload();
 
-		const hasNewFiles = value && value.length > 0;
-		const isSingleImage = maxFiles === 1;
-
-		const firstExistingImage = existingImages?.[0];
-		const existingImageUrl = useMediaUrl(firstExistingImage ?? null, bucket || 'property-media');
+		const isSingleImage = maxFiles === 1 && (!existingImages || existingImages.length <= 1);
+		const existingImageUrls = useMediaUrls(existingImages, bucket || 'property-media');
 
 		return (
 			<div className={cn('w-full px-1')} aria-description="content file holder">
@@ -284,37 +280,34 @@ export const FileUploaderContent = forwardRef<HTMLDivElement, React.HTMLAttribut
 						orientation === 'horizontal' ? 'grid grid-cols-2' : 'flex flex-col',
 						className,
 					)}>
-					{firstExistingImage && !hasNewFiles && (
-						<div
-							key={firstExistingImage}
-							className="relative p-0 overflow-hidden border rounded-md size-20">
+					{existingImages?.map((imagePath, index) => (
+						<div key={imagePath} className="relative p-0 overflow-hidden border rounded-md size-20">
 							<ImageWithFallback
-								src={existingImageUrl}
+								src={existingImageUrls[index] || '/placeholder-image.webp'}
 								alt="Current"
 								className="object-cover size-20"
 							/>
-							{isSingleImage ? (
+							{isSingleImage && (
 								<div className="absolute top-1 right-1 px-1.5 py-0.5 text-[8px] font-medium text-white rounded-md bg-primary">
 									CURRENT
 								</div>
-							) : (
-								onRemoveExisting && (
-									<Button
-										type="button"
-										variant="destructive"
-										size="xs"
-										className="absolute size-5 top-[0.145em] right-1"
-										onClick={(e) => {
-											e.preventDefault();
-											e.stopPropagation();
-											onRemoveExisting(firstExistingImage);
-										}}>
-										<Trash2 />
-									</Button>
-								)
+							)}
+							{onRemoveExisting && (
+								<Button
+									type="button"
+									variant="destructive"
+									size="xs"
+									className="absolute size-5 top-[0.145em] right-1"
+									onClick={(e) => {
+										e.preventDefault();
+										e.stopPropagation();
+										onRemoveExisting(imagePath);
+									}}>
+									<Trash2 />
+								</Button>
 							)}
 						</div>
-					)}
+					))}
 					{children}
 				</div>
 			</div>

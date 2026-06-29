@@ -269,11 +269,11 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 					</FieldLabel>
 					<FileUploader
 						value={extraImages}
-						onValueChange={(files) => setExtraImages(files?.slice(0, remainingSlots) || [])}
+						onValueChange={(files) => setExtraImages(files || [])}
 						existingImages={extraImagesPaths}
 						onRemoveExisting={removeExistingImage}
 						dropzoneOptions={{
-							maxFiles: 10,
+							maxFiles: remainingSlots,
 							maxSize: bucketConfig.maxSize,
 							accept: bucketConfig.accept,
 						}}
