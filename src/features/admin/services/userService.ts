@@ -244,33 +244,38 @@ export const userService = {
 	},
 
 	async inviteUser(email: string, role: UserRole, fullName: string): Promise<ActionResult<void>> {
-		const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-		const edgeFunctionUrl = `${supabaseUrl}/functions/v1/invite-user`;
-		const {
-			data: { session },
-		} = await supabase.auth.getSession();
+		try {
+			const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+			const edgeFunctionUrl = `${supabaseUrl}/functions/v1/invite-user`;
+			const {
+				data: { session },
+			} = await supabase.auth.getSession();
 
-		const response = await fetch(edgeFunctionUrl, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${session?.access_token}`,
-			},
-			body: JSON.stringify({
-				email,
-				role,
-				full_name: fullName,
-				origin: window.location.origin,
-			}),
-		});
+			const response = await fetch(edgeFunctionUrl, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${session?.access_token}`,
+				},
+				body: JSON.stringify({
+					email,
+					role,
+					full_name: fullName,
+					origin: window.location.origin,
+				}),
+			});
 
-		const result = await response.json();
+			const result = await response.json();
 
-		if (!response.ok || result.error) {
-			return { data: null, error: result.error || 'Failed to invite user' };
+			if (!response.ok || result.error) {
+				return { data: null, error: result.error || 'Failed to invite user' };
+			}
+
+			return { data: undefined, error: null };
+		} catch (error: unknown) {
+			const message = error instanceof Error ? error.message : 'Failed to invite user';
+			return { data: null, error: message };
 		}
-
-		return { data: undefined, error: null };
 	},
 
 	async purgeUserPii(userId: string): Promise<ActionResult<void>> {

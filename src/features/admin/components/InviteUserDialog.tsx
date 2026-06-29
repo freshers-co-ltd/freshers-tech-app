@@ -38,13 +38,16 @@ export function InviteUserDialog({ open, onOpenChange, onInvite }: InviteUserDia
 			return;
 		}
 		setLoading(true);
-		const success = await onInvite(email, role, fullName);
-		setLoading(false);
-		if (success) {
-			setEmail('');
-			setFullName('');
-			setRole('host');
-			onOpenChange(false);
+		try {
+			const success = await onInvite(email, role, fullName);
+			if (success) {
+				setEmail('');
+				setFullName('');
+				setRole('host');
+				onOpenChange(false);
+			}
+		} finally {
+			setLoading(false);
 		}
 	};
 
