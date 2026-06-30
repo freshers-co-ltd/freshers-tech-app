@@ -30,8 +30,6 @@ function getAllowedOrigin(req: Request): string {
     }
   }
 
-  // If CORS_ORIGIN is not set or origin isn't in the list,
-  // echo back the request origin so CORS still works
   console.warn(`[invite-user] CORS: origin "${requestOrigin}" not in allowed list, echoing back`);
   return requestOrigin;
 }
@@ -43,6 +41,12 @@ function corsHeaders(origin: string): Record<string, string> {
 		'Access-Control-Allow-Methods': 'POST, OPTIONS',
 		'Vary': 'Origin',
 	};
+}
+
+function errorJson(error: unknown): string {
+  if (typeof error === 'string') return JSON.stringify({ error });
+  if (error instanceof Error) return JSON.stringify({ error: error.message });
+  return JSON.stringify({ error: String(error) });
 }
 
 serve(async (req: Request) => {
@@ -65,6 +69,20 @@ serve(async (req: Request) => {
 		const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 		const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
+		console.log('[Invite] Environment check:', {
+			hasUrl: !!supabaseUrl,
+			hasAnonKey: !!supabaseAnonKey,
+			hasServiceRole: !!serviceRoleKey,
+		});
+
+		if (!supabaseUrl || !serviceRoleKey) {
+			console.error('[Invite] Missing required env vars');
+			return new Response(errorJson('Server configuration error'), {
+				status: 500,
+				headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' },
+			});
+		}
+
 		const authHeader = req.headers.get('Authorization') ?? '';
 
 		const supabaseClient = createClient(
@@ -72,28 +90,42 @@ serve(async (req: Request) => {
 			supabaseAnonKey,
 			{ global: { headers: { Authorization: authHeader } } }
 		)
-		const adminClient = createClient(supabaseUrl, serviceRoleKey)
 
 		const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
 
 		if (authError || !user) {
-			return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+			return new Response(errorJson('Unauthorized'), {
 				status: 401,
 				headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' }
 			})
 		}
 
-		const isAdmin = user?.app_metadata?.role === 'admin' || await (async () => {
-			const { data: profile } = await adminClient
-				.from('profiles')
-				.select('role')
-				.eq('id', user.id)
-				.single()
-			return profile?.role === 'admin'
-		})()
+		// Check admin role via direct REST API call (avoids gotrue-js Admin client)
+		let profileRole: string | null = null;
+		try {
+			const profileResponse = await fetch(
+				`${supabaseUrl}/rest/v1/profiles?id=eq.${user.id}&select=role`,
+				{
+					headers: {
+						'apikey': serviceRoleKey,
+						'Authorization': `Bearer ${serviceRoleKey}`,
+					},
+				},
+			);
+			if (profileResponse.ok) {
+				const profiles = await profileResponse.json();
+				profileRole = profiles?.[0]?.role ?? null;
+			} else {
+				console.warn('[Invite] Profile fetch failed:', profileResponse.status);
+			}
+		} catch (profileErr) {
+			console.warn('[Invite] Profile fetch exception:', profileErr instanceof Error ? profileErr.message : profileErr);
+		}
+
+		const isAdmin = user?.app_metadata?.role === 'admin' || profileRole === 'admin';
 
 		if (!isAdmin) {
-			return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+			return new Response(errorJson('Unauthorized'), {
 				status: 401,
 				headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' }
 			})
@@ -104,40 +136,79 @@ serve(async (req: Request) => {
 		const redirectOrigin = bodyOrigin || req.headers.get('origin') || new URL(req.url).origin;
 		const redirectTo = `${redirectOrigin}/set-password`;
 
-		const { data, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
-			data: { role, full_name, password_set: false },
-			redirectTo,
-		})
+		console.log('[Invite] Calling Admin API to invite user:', email);
 
-		if (inviteError) {
-			console.error('[Invite] inviteUserByEmail error:', inviteError);
-			return new Response(JSON.stringify({ error: inviteError }), {
+		const inviteResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'apikey': serviceRoleKey,
+				'Authorization': `Bearer ${serviceRoleKey}`,
+			},
+			body: JSON.stringify({
+				email,
+				email_confirm: true,
+				invite: true,
+				data: { role, full_name, password_set: false },
+				redirect_to: redirectTo,
+			}),
+		});
+
+		const inviteData = await inviteResponse.json();
+
+		if (!inviteResponse.ok) {
+			const errorMsg = typeof inviteData?.error === 'string'
+				? inviteData.error
+				: typeof inviteData?.msg === 'string'
+					? inviteData.msg
+					: `Auth Admin API returned status ${inviteResponse.status}`;
+			console.error('[Invite] Admin API error:', inviteResponse.status, errorMsg, inviteData);
+			return new Response(errorJson(errorMsg), {
 				status: 400,
 				headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' }
 			})
 		}
 
-		if (data?.user) {
-			await adminClient.auth.admin.updateUserById(data.user.id, {
-				app_metadata: { role, provider: 'email', providers: ['email'] },
-				user_metadata: {
-					sub: data.user.id,
-					role,
-					full_name,
-					email_verified: false,
-					password_set: false,
+		console.log('[Invite] User invited successfully:', inviteData?.id);
+
+		if (inviteData?.id) {
+			// Update user metadata via direct Admin API call
+			const updateResponse = await fetch(
+				`${supabaseUrl}/auth/v1/admin/users/${inviteData.id}`,
+				{
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json',
+						'apikey': serviceRoleKey,
+						'Authorization': `Bearer ${serviceRoleKey}`,
+					},
+					body: JSON.stringify({
+						app_metadata: { role, provider: 'email', providers: ['email'] },
+						user_metadata: {
+							sub: inviteData.id,
+							role,
+							full_name,
+							email_verified: false,
+							password_set: false,
+						},
+					}),
 				},
-			})
+			);
+
+			if (!updateResponse.ok) {
+				const updateError = await updateResponse.json();
+				console.error('[Invite] User invited but metadata update failed:', updateError);
+			}
 		}
 
-		return new Response(JSON.stringify({ data }), {
+		return new Response(JSON.stringify({ data: inviteData }), {
 			status: 200,
 			headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' }
 		})
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : 'Unknown error';
 		console.error('[Invite] Fatal error:', message);
-		return new Response(JSON.stringify({ error: 'Internal server error' }), {
+		return new Response(errorJson('Internal server error'), {
 			status: 500,
 			headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' }
 		})
