@@ -399,3 +399,6 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 
 [functions.send-push]
 verify_jwt = false
+
+[functions.invite-user]
+verify_jwt = false

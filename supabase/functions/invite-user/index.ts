@@ -2,8 +2,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
-const DEFAULT_ORIGIN = 'http://localhost:5173';
-
 const rateLimits = new Map<string, { count: number; resetAt: number }>();
 
 function checkRateLimit(key: string, maxRequests: number, windowMs: number): boolean {
@@ -18,15 +16,24 @@ function checkRateLimit(key: string, maxRequests: number, windowMs: number): boo
 }
 
 function getAllowedOrigin(req: Request): string {
-	const allowed = Deno.env.get('CORS_ORIGIN');
-	if (allowed) {
-		const requestOrigin = req.headers.get('Origin');
-		if (requestOrigin && allowed.split(',').some((o) => o.trim() === requestOrigin)) {
-			return requestOrigin;
-		}
-		return allowed.split(',')[0]?.trim() || DEFAULT_ORIGIN;
-	}
-	return req.headers.get('Origin') || DEFAULT_ORIGIN;
+  const allowed = Deno.env.get('CORS_ORIGIN');
+  const requestOrigin = req.headers.get('Origin');
+
+  if (!requestOrigin) {
+    return '*';
+  }
+
+  if (allowed) {
+    const origins = allowed.split(',').map((o) => o.trim());
+    if (origins.includes(requestOrigin)) {
+      return requestOrigin;
+    }
+  }
+
+  // If CORS_ORIGIN is not set or origin isn't in the list,
+  // echo back the request origin so CORS still works
+  console.warn(`[invite-user] CORS: origin "${requestOrigin}" not in allowed list, echoing back`);
+  return requestOrigin;
 }
 
 function corsHeaders(origin: string): Record<string, string> {
