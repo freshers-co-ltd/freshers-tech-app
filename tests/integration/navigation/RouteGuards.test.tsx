@@ -80,19 +80,18 @@ describe('RouteGuards', () => {
 		});
 
 		it('renders outlet when role matches and no children provided', async () => {
-			setMockUserRole('admin');
+			setMockUserRole('host');
 
 			const routes = [
 				{
-					path: '/admin',
-					element: <ProtectedRoute allowedRoles={['admin']} />,
-					children: [{ index: true, element: <div data-testid="admin-page">Admin</div> }],
+					path: '/host',
+					element: <ProtectedRoute allowedRoles={['host']} />,
+					children: [{ index: true, element: <div data-testid="host-page">Host</div> }],
 				},
 			];
 
-			renderWithProviders(<div />, { routes, initialEntries: ['/admin'] });
-
-			expect(await screen.findByTestId('admin-page')).toBeInTheDocument();
+			renderWithProviders(<div />, { routes, initialEntries: ['/host'] });
+			expect(await screen.findByTestId('host-page')).toBeInTheDocument();
 		});
 	});
 
@@ -103,11 +102,7 @@ describe('RouteGuards', () => {
 			const routes = [
 				{
 					path: '/login',
-					element: (
-						<PublicRoute>
-							<div data-testid="login-form">Login</div>
-						</PublicRoute>
-					),
+					element: <PublicRoute />,
 				},
 				{ path: '/dashboard', element: <div data-testid="dashboard-redirect" /> },
 			];
