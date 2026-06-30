@@ -10,6 +10,7 @@ import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { DICT } from '@/dictionary';
 import { mfaService } from '@/features/auth/services/mfaService';
+import { cn } from '@/lib/utils';
 
 const challengeSchema = z.object({
 	code: z
@@ -70,7 +71,7 @@ export function MfaChallengeForm({ onComplete }: MfaChallengeFormProps) {
 			console.error('[MFA] AAL2 not confirmed after challenge verify:', aalError);
 		}
 
-		toast.success(dict.SUCCESS_TOAST);
+		toast.success(dict.TOAST_SUCCESS);
 		onComplete();
 	};
 
@@ -84,16 +85,16 @@ export function MfaChallengeForm({ onComplete }: MfaChallengeFormProps) {
 					name="code"
 					render={({ field, fieldState }) => (
 						<Field>
-							<FieldLabel className="...">{dict.CODE_LABEL}</FieldLabel>
+							<FieldLabel>{dict.LABEL_CODE}</FieldLabel>
 							<div className="flex gap-2">
 								<Input
 									{...field}
 									type="text"
 									inputMode="numeric"
 									maxLength={6}
-									placeholder={dict.CODE_PLACEHOLDER}
+									placeholder={dict.PLACEHOLDER_CODE}
 									aria-invalid={!!fieldState.error}
-									className={fieldState.error ? 'border-destructive' : ''}
+									className={cn('flex-1', fieldState.error ? 'border-destructive' : '')}
 								/>
 								<Button type="submit" className="shrink-0" disabled={form.formState.isSubmitting}>
 									{form.formState.isSubmitting && <Loader2 className="mr-1 size-4 animate-spin" />}

@@ -6,6 +6,7 @@ import { toast } from '@/components/Toast';
 import { FormContainer } from '@/components/ui/form-container';
 import { DICT } from '@/dictionary';
 import { LoginForm } from '@/features/auth/components/LoginForm';
+import { PwaInstallButton } from '@/features/auth/components/PwaInstallButton';
 
 export function LoginPage() {
 	const [searchParams] = useSearchParams();
@@ -48,6 +49,8 @@ export function LoginPage() {
 				<FormContainer variant="page" className="w-full max-w-sm lg:max-w-xs">
 					<LoginForm />
 				</FormContainer>
+
+				<PwaInstallButton />
 			</div>
 
 			<div className="relative hidden h-full bg-muted lg:block">

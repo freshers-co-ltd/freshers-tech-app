@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { DICT } from '@/dictionary';
 import { useAuth } from '@/features/auth/AuthContext';
 import { MFA_ISSUER, mfaService } from '@/features/auth/services/mfaService';
+import { cn } from '@/lib/utils';
 
 const verifySchema = z.object({
 	code: z
@@ -142,7 +143,7 @@ export function MfaEnrollmentForm({ onComplete }: MfaEnrollmentFormProps) {
 					name="code"
 					render={({ field, fieldState }) => (
 						<Field>
-							<FieldLabel className="...">{dict.CODE_LABEL}</FieldLabel>
+							<FieldLabel>{dict.CODE_LABEL}</FieldLabel>
 							<div className="flex gap-2">
 								<Input
 									{...field}
@@ -151,7 +152,7 @@ export function MfaEnrollmentForm({ onComplete }: MfaEnrollmentFormProps) {
 									maxLength={6}
 									placeholder={dict.CODE_PLACEHOLDER}
 									aria-invalid={!!fieldState.error}
-									className={fieldState.error ? 'border-destructive' : ''}
+									className={cn('flex-1', fieldState.error ? 'border-destructive' : '')}
 								/>
 								<Button type="submit" className="shrink-0" disabled={form.formState.isSubmitting}>
 									{form.formState.isSubmitting && <Loader2 className="mr-1 size-4 animate-spin" />}
@@ -164,7 +165,7 @@ export function MfaEnrollmentForm({ onComplete }: MfaEnrollmentFormProps) {
 				/>
 			</form>
 			<div className="flex justify-center">
-				<img src={qrCode} alt="QR Code" className="size-48" />
+				<img src={qrCode} alt="QR Code" className="size-48 max-w-full h-auto" />
 			</div>
 
 			<p className="text-sm text-muted-foreground text-center">{dict.QR_INSTRUCTION}</p>
@@ -175,7 +176,7 @@ export function MfaEnrollmentForm({ onComplete }: MfaEnrollmentFormProps) {
 				</div>
 			</div>
 
-			<div className="rounded-lg border p-4 space-y-3">
+			<div className="rounded-lg border p-2 sm:p-4 space-y-3">
 				{manualFields.map((field) => {
 					const isCopied = copiedField === field.key;
 					return (
