@@ -225,12 +225,12 @@ export const DICT = {
 			CHALLENGE: {
 				TITLE: 'Two-Factor Authentication Required',
 				MESSAGE: 'Enter the 6-digit code from your authenticator app.',
-				CODE_LABEL: 'Authentication Code',
-				CODE_PLACEHOLDER: '000000',
+				LABEL_CODE: 'Authentication Code',
+				PLACEHOLDER_CODE: '000000',
 				BUTTON_VERIFY: 'Verify',
 				BUTTON_VERIFYING: 'Verifying...',
 				ERROR: 'Invalid code. Please try again.',
-				SUCCESS_TOAST: 'Verified successfully.',
+				TOAST_SUCCESS: 'Verified successfully.',
 			},
 			ACCOUNT_STATUS: {
 				TITLE: 'Two-Factor Authentication',
@@ -609,6 +609,36 @@ export const DICT = {
 			MESSAGE_SUCCESS: 'Notifications enabled',
 			MESSAGE_BLOCKED:
 				'Push notifications are blocked. Please enable them in your browser settings.',
+		},
+	},
+	PWA: {
+		BUTTON_INSTALL: 'Install instructions',
+		TITLE: 'Install Freshers PWA',
+		DESCRIPTION: 'Follow the steps below to install the app on your device for quick access.',
+		IOS: {
+			TITLE: 'Install on iPhone or iPad',
+			STEP_1: 'Tap the Share button in the Safari toolbar.',
+			STEP_2: 'Scroll down and tap "Add to Home Screen".',
+			STEP_3: 'Tap "Add" in the top-right corner.',
+		},
+		ANDROID: {
+			TITLE: 'Install on Android',
+			STEP_1: 'Tap the ⋮ menu button in the Chrome toolbar.',
+			STEP_2: 'Tap "Install app" or "Add to Home screen".',
+			STEP_3: 'Tap "Install" on the popup.',
+			BUTTON_INSTALL_NATIVE: 'Install Now',
+		},
+		DESKTOP: {
+			TITLE: 'Install on Desktop',
+			STEP_1:
+				'Click the install icon in the address bar, or open the menu and click "Install Freshers PWA".',
+			STEP_2: 'Click "Install" in the browser dialog.',
+			BUTTON_INSTALL_NATIVE: 'Install Now',
+		},
+		FALLBACK: {
+			TITLE: 'Install the App',
+			MESSAGE:
+				'Open this page in Chrome, Edge, or Safari and look for the install option in the browser menu.',
 		},
 	},
 	ERRORS: {
