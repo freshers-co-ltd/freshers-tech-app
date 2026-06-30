@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
@@ -69,12 +68,6 @@ serve(async (req: Request) => {
 		const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 		const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-		console.log('[Invite] Environment check:', {
-			hasUrl: !!supabaseUrl,
-			hasAnonKey: !!supabaseAnonKey,
-			hasServiceRole: !!serviceRoleKey,
-		});
-
 		if (!supabaseUrl || !serviceRoleKey) {
 			console.error('[Invite] Missing required env vars');
 			return new Response(errorJson('Server configuration error'), {
@@ -100,33 +93,27 @@ serve(async (req: Request) => {
 			})
 		}
 
-		// Check admin role via direct REST API call (avoids gotrue-js Admin client)
-		let profileRole: string | null = null;
-		try {
-			const profileResponse = await fetch(
-				`${supabaseUrl}/rest/v1/profiles?id=eq.${user.id}&select=role`,
-				{
-					headers: {
-						'apikey': serviceRoleKey,
-						'Authorization': `Bearer ${serviceRoleKey}`,
-					},
-				},
-			);
-			if (profileResponse.ok) {
-				const profiles = await profileResponse.json();
-				profileRole = profiles?.[0]?.role ?? null;
-			} else {
-				console.warn('[Invite] Profile fetch failed:', profileResponse.status);
-			}
-		} catch (profileErr) {
-			console.warn('[Invite] Profile fetch exception:', profileErr instanceof Error ? profileErr.message : profileErr);
-		}
+		// Check admin role via profiles table (more reliable than JWT claims)
+		const { data: profiles, error: profileError } = await supabaseClient
+			.from('profiles')
+			.select('role')
+			.eq('id', user.id)
+			.single()
 
-		const isAdmin = user?.app_metadata?.role === 'admin' || profileRole === 'admin';
-
-		if (!isAdmin) {
+		if (profileError || !profiles) {
+			console.error('[Invite] Failed to fetch caller profile:', profileError);
 			return new Response(errorJson('Unauthorized'), {
 				status: 401,
+				headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' }
+			})
+		}
+
+		const isAdmin = profiles.role === 'admin' || user?.app_metadata?.role === 'admin'
+
+		if (!isAdmin) {
+			console.warn(`[Invite] Non-admin user ${user.id} attempted to invite`);
+			return new Response(errorJson('Forbidden'), {
+				status: 403,
 				headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' }
 			})
 		}
@@ -136,72 +123,38 @@ serve(async (req: Request) => {
 		const redirectOrigin = bodyOrigin || req.headers.get('origin') || new URL(req.url).origin;
 		const redirectTo = `${redirectOrigin}/set-password`;
 
-		console.log('[Invite] Calling Admin API to invite user:', email);
+		console.log('[Invite] Inviting user:', { email, role, full_name });
 
-		const inviteResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'apikey': serviceRoleKey,
-				'Authorization': `Bearer ${serviceRoleKey}`,
-			},
-			body: JSON.stringify({
-				email,
-				email_confirm: true,
-				invite: true,
-				data: { role, full_name, password_set: false },
-				redirect_to: redirectTo,
-			}),
-		});
+		// Use the admin client (service_role) to invite the user
+		const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey)
 
-		const inviteData = await inviteResponse.json();
+		const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+			email,
+			{
+				redirectTo,
+				data: { role, full_name },
+			}
+		)
 
-		if (!inviteResponse.ok) {
-			const errorMsg = typeof inviteData?.error === 'string'
-				? inviteData.error
-				: typeof inviteData?.msg === 'string'
-					? inviteData.msg
-					: `Auth Admin API returned status ${inviteResponse.status}`;
-			console.error('[Invite] Admin API error:', inviteResponse.status, errorMsg, inviteData);
-			return new Response(errorJson(errorMsg), {
+		if (inviteError) {
+			console.error('[Invite] Admin API error:', inviteError);
+			return new Response(errorJson(inviteError.message), {
 				status: 400,
 				headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' }
 			})
 		}
 
-		console.log('[Invite] User invited successfully:', inviteData?.id);
-
-		if (inviteData?.id) {
-			// Update user metadata via direct Admin API call
-			const updateResponse = await fetch(
-				`${supabaseUrl}/auth/v1/admin/users/${inviteData.id}`,
-				{
-					method: 'PUT',
-					headers: {
-						'Content-Type': 'application/json',
-						'apikey': serviceRoleKey,
-						'Authorization': `Bearer ${serviceRoleKey}`,
-					},
-					body: JSON.stringify({
-						app_metadata: { role, provider: 'email', providers: ['email'] },
-						user_metadata: {
-							sub: inviteData.id,
-							role,
-							full_name,
-							email_verified: false,
-							password_set: false,
-						},
-					}),
-				},
-			);
-
-			if (!updateResponse.ok) {
-				const updateError = await updateResponse.json();
-				console.error('[Invite] User invited but metadata update failed:', updateError);
-			}
+		if (!inviteData?.user) {
+			console.error('[Invite] No user returned from invite');
+			return new Response(errorJson('Invite failed: no user created'), {
+				status: 500,
+				headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' }
+			})
 		}
 
-		return new Response(JSON.stringify({ data: inviteData }), {
+		console.log('[Invite] User invited successfully:', inviteData.user.id);
+
+		return new Response(JSON.stringify({ data: { id: inviteData.user.id, email: inviteData.user.email } }), {
 			status: 200,
 			headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' }
 		})
