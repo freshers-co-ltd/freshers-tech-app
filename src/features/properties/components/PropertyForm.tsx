@@ -66,9 +66,16 @@ interface PropertyFormProps {
 	onSubmit: (data: PropertyInsert) => Promise<void>;
 	onCancel: () => void;
 	cancelLabel?: string;
+	hostId?: string;
 }
 
-export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: PropertyFormProps) {
+export function PropertyForm({
+	initialData,
+	onSubmit,
+	onCancel,
+	cancelLabel,
+	hostId,
+}: PropertyFormProps) {
 	const { user } = useAuth();
 
 	const {
@@ -120,7 +127,7 @@ export function PropertyForm({ initialData, onSubmit, onCancel, cancelLabel }: P
 
 		const payload: PropertyInsert = {
 			...databaseValues,
-			host_id: user.id,
+			host_id: hostId ?? user.id,
 			main_image_url: mainImagePath,
 			extra_images_urls: finalExtraImagesPaths,
 		};

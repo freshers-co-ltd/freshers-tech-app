@@ -305,7 +305,8 @@ export function AdminHostDetailPage() {
 							<CleaningForm
 								onSubmit={handleCreateCleaning}
 								onCancel={() => setIsCreateModalOpen(false)}
-								disableCreateProperty={true}
+								hostId={host?.id}
+								onPropertyCreated={refresh}
 								availableProperties={properties}
 							/>
 						</FormContainer>

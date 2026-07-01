@@ -25,6 +25,7 @@ import type { CleaningRequest } from '@/features/cleanings/types';
 import { STATUS_GROUPS } from '@/features/cleanings/types';
 import { PropertyForm } from '@/features/properties/components/PropertyForm';
 import { useProperties } from '@/features/properties/PropertyContext';
+import { propertyService } from '@/features/properties/propertyService';
 import type { Property, PropertyInsert } from '@/features/properties/types';
 
 const cleaningFormSchema = z.object({
@@ -54,6 +55,8 @@ interface CleaningFormProps {
 	onSubmit: (values: CleaningFormValues) => Promise<void>;
 	onCancel?: () => void;
 	disableCreateProperty?: boolean;
+	hostId?: string;
+	onPropertyCreated?: (property: Property) => void;
 	availableProperties?: {
 		id: string;
 		address_line_1: string;
@@ -69,6 +72,8 @@ export function CleaningForm({
 	onSubmit,
 	disableCreateProperty = false,
 	availableProperties,
+	hostId,
+	onPropertyCreated,
 }: CleaningFormProps) {
 	const isRestricted = initialData
 		? STATUS_GROUPS.CAN_EDIT_RESTRICTED.includes(initialData.status)
@@ -80,9 +85,10 @@ export function CleaningForm({
 	const [standardTasks, setStandardTasks] = useState<{ id: string; description: string }[]>([]);
 	const [standardTasksLoading, setStandardTasksLoading] = useState(false);
 	const [standardTasksError, setStandardTasksError] = useState<string | null>(null);
+	const [adminProperties, setAdminProperties] = useState<Property[]>([]);
 	const { properties: contextProperties, upsertProperty } = useProperties();
 
-	const displayedProperties = availableProperties || contextProperties;
+	const displayedProperties = availableProperties || [...adminProperties, ...contextProperties];
 
 	const dict = DICT.CLEANINGS.FORM;
 
@@ -175,15 +181,34 @@ export function CleaningForm({
 	}, [selectedProperty]);
 
 	const handlePropertySubmit = async (propertyData: PropertyInsert): Promise<void> => {
-		const result = await upsertProperty(propertyData);
-		if (result.data) {
-			const property = result.data as Property;
-			setValue('property_id', property.id, {
-				shouldValidate: true,
-				shouldDirty: true,
-				shouldTouch: true,
-			});
-			setStep(2);
+		if (hostId) {
+			const { data, error } = await propertyService.upsertProperty(propertyData);
+			if (error) {
+				toast.error(error);
+				return;
+			}
+			if (data) {
+				const property = data as Property;
+				setAdminProperties((prev) => [property, ...prev]);
+				onPropertyCreated?.(property);
+				setValue('property_id', property.id, {
+					shouldValidate: true,
+					shouldDirty: true,
+					shouldTouch: true,
+				});
+				setStep(2);
+			}
+		} else {
+			const result = await upsertProperty(propertyData);
+			if (result.data) {
+				const property = result.data as Property;
+				setValue('property_id', property.id, {
+					shouldValidate: true,
+					shouldDirty: true,
+					shouldTouch: true,
+				});
+				setStep(2);
+			}
 		}
 	};
 
@@ -207,6 +232,7 @@ export function CleaningForm({
 					onSubmit={handlePropertySubmit}
 					onCancel={handlePropertyFormCancel}
 					cancelLabel={DICT.COMMON.ACTIONS.BACK}
+					hostId={hostId}
 				/>
 			) : (
 				<form onSubmit={handleSubmit(handleFinalSubmit)} className="space-y-6">
@@ -224,7 +250,9 @@ export function CleaningForm({
 											onClick={() => setEntryMode('create')}>
 											{dict.LABELS.NEW_PROPERTY}
 										</Button>
-										<p className="text-center font-medium">OR</p>
+										{displayedProperties.length > 0 && (
+											<p className="text-center font-medium">OR</p>
+										)}
 									</>
 								)}
 								{displayedProperties.length > 0 && (
