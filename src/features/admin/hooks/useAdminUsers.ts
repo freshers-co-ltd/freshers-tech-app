@@ -160,7 +160,11 @@ export function useAdminUsers(): UseAdminUsersResult {
 				toast.error(result.error);
 				return false;
 			}
-			toast.success('Invitation sent successfully');
+			if (result.data?.reinvited) {
+				toast.success('New invitation sent to existing user');
+			} else {
+				toast.success('Invitation sent successfully');
+			}
 			await refetchCurrentPage();
 			return true;
 		},

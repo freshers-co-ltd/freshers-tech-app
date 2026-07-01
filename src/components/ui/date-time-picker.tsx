@@ -204,7 +204,11 @@ export function DateTimePicker({ value, onChange, error }: DateTimePickerProps) 
 					mode="single"
 					selected={value}
 					onSelect={handleDateSelect}
-					disabled={(date) => date < new Date()}
+					disabled={(date) => {
+						const today = new Date();
+						today.setHours(0, 0, 0, 0);
+						return date < today;
+					}}
 					fixedWeeks
 					className="p-0"
 				/>
