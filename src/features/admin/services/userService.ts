@@ -243,7 +243,11 @@ export const userService = {
 		return { data: undefined, error: null };
 	},
 
-	async inviteUser(email: string, role: UserRole, fullName: string): Promise<ActionResult<void>> {
+	async inviteUser(
+		email: string,
+		role: UserRole,
+		fullName: string,
+	): Promise<ActionResult<{ reinvited: boolean }>> {
 		try {
 			const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 			const edgeFunctionUrl = `${supabaseUrl}/functions/v1/invite-user`;
@@ -271,7 +275,7 @@ export const userService = {
 				return { data: null, error: result.error || 'Failed to invite user' };
 			}
 
-			return { data: undefined, error: null };
+			return { data: { reinvited: result.reinvited ?? false }, error: null };
 		} catch (error: unknown) {
 			const message = error instanceof Error ? error.message : 'Failed to invite user';
 			return { data: null, error: message };

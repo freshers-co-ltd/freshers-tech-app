@@ -125,15 +125,49 @@ serve(async (req: Request) => {
 
 		console.log('[Invite] Inviting user:', { email, role, full_name });
 
-		// Use the admin client (service_role) to invite the user
-		const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey)
+		// Use the admin client (service_role) to check and invite the user
+		const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+
+		// Check if user with this email already exists
+		const { data: existingProfile } = await supabaseAdmin
+			.from('profiles')
+			.select('id, deleted_at')
+			.eq('email', email)
+			.maybeSingle();
+
+		let isReinvite = false;
+
+		if (existingProfile) {
+			const { data: authUser, error: authUserError } = await supabaseAdmin.auth.admin.getUserById(
+				existingProfile.id,
+			);
+
+			if (authUserError) {
+				console.warn('[Invite] Failed to check auth status:', authUserError);
+				isReinvite = true;
+			} else if (authUser?.user?.email_confirmed_at && !existingProfile.deleted_at) {
+				return new Response(
+					JSON.stringify({
+						error: 'This email is already registered and active. Use the password reset option instead.',
+						code: 'USER_ALREADY_ACTIVE',
+					}),
+					{
+						status: 409,
+						headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' },
+					},
+				);
+			} else {
+				isReinvite = true;
+				console.log('[Invite] Re-inviting existing pending user:', email);
+			}
+		}
 
 		const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
 			email,
 			{
 				redirectTo,
 				data: { role, full_name },
-			}
+			},
 		)
 
 		if (inviteError) {
@@ -154,10 +188,16 @@ serve(async (req: Request) => {
 
 		console.log('[Invite] User invited successfully:', inviteData.user.id);
 
-		return new Response(JSON.stringify({ data: { id: inviteData.user.id, email: inviteData.user.email } }), {
-			status: 200,
-			headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' }
-		})
+		return new Response(
+			JSON.stringify({
+				data: { id: inviteData.user.id, email: inviteData.user.email },
+				reinvited: isReinvite,
+			}),
+			{
+				status: 200,
+				headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' },
+			},
+		)
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : 'Unknown error';
 		console.error('[Invite] Fatal error:', message);
