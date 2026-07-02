@@ -39,7 +39,11 @@ export function DashboardLayout({ stats, cta, className, ...props }: DashboardLa
 	const dict = DICT.DASHBOARD;
 	const { profile } = useAuth();
 	const { preferences, updatePreferences } = useNotifications();
-	const { isSupported, permissionState } = usePushNotifications();
+	const { isSupported, permissionState } = usePushNotifications({
+		onValidateFailed: async () => {
+			await updatePreferences({ push_enabled: false });
+		},
+	});
 	const firstName = profile?.full_name?.split(' ')[0] || profile?.role;
 
 	const [showOnboarding, setShowOnboarding] = useState(false);

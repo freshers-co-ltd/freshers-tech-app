@@ -10,6 +10,7 @@ import {
 	useState,
 } from 'react';
 import { toast } from '@/components/Toast';
+import { DICT } from '@/dictionary';
 import { useAuth } from '@/features/auth/AuthContext';
 import { propertyService } from '@/features/properties/propertyService';
 import type { Property, PropertyInsert } from '@/features/properties/types';
@@ -101,10 +102,14 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 		}
 
 		if (data) {
+			const isUpdate = properties.some((p) => p.id === data.id);
 			setProperties((prev) => {
 				const exists = prev.find((p) => p.id === data.id);
 				return exists ? prev.map((p) => (p.id === data.id ? data : p)) : [data, ...prev];
 			});
+			toast.success(
+				isUpdate ? DICT.PROPERTIES.EDIT.TOAST_SUCCESS : DICT.PROPERTIES.CREATE.TOAST_SUCCESS,
+			);
 			return { success: true, data };
 		}
 		return { success: false };
@@ -120,6 +125,7 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 			return { success: false };
 		}
 		setProperties((prev) => prev.filter((p) => p.id !== id));
+		toast.success(DICT.PROPERTIES.DELETE.TOAST_SUCCESS);
 		return { success: true };
 	};
 

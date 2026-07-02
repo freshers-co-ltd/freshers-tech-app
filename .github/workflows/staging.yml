@@ -41,6 +41,8 @@ jobs:
           npx supabase login --token "${{ secrets.SUPABASE_ACCESS_TOKEN }}"
           npx supabase link --project-ref "${{ vars.SUPABASE_PROJECT_ID }}" --password "${{ secrets.SUPABASE_DB_PASSWORD }}"
           npx supabase db push
+          npx supabase functions deploy invite-user
+          npx supabase functions deploy send-push --no-verify-jwt
 
       - name: Vercel Staging Deploy
         id: deploy

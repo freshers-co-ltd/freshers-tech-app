@@ -138,11 +138,15 @@ Deno.serve(async (req: Request) => {
         } catch (err: unknown) {
           const error = err as { statusCode?: number; message?: string; body?: string };
 
-          if (error.statusCode === 410 || error.statusCode === 404) {
-            await supabaseAdmin.from('push_subscriptions').delete().eq('id', sub.id);
-            return { success: false, reason: 'expired', statusCode: error.statusCode };
-          }
-          return { success: false, reason: error.message || 'unknown', statusCode: error.statusCode };
+          if (
+            error.statusCode === 410 ||
+            error.statusCode === 404 ||
+            (error.body && typeof error.body === 'string' && error.body.includes('VapidPkHashMismatch'))
+            ) {
+              await supabaseAdmin.from('push_subscriptions').delete().eq('id', sub.id);
+              return { success: false, reason: 'stale', statusCode: error.statusCode, body: error.body };
+            }
+            return { success: false, reason: error.message || 'unknown', statusCode: error.statusCode, body: error.body };
         }
       })
     );
@@ -153,7 +157,7 @@ Deno.serve(async (req: Request) => {
     if (failed > 0) {
       results.forEach((r, i) => {
         if (!r.success) {
-          console.error(`[Push] Notification ${i} failed:`, r.reason, 'statusCode:', r.statusCode);
+          console.error(`[Push] Notification ${i} failed:`, r.reason, 'statusCode:', r.statusCode, 'body:', (r as { body?: string }).body);
         }
       });
     }
