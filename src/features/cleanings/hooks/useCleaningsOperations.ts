@@ -2,6 +2,7 @@
 
 import { type Dispatch, type SetStateAction, useCallback } from 'react';
 import { toast } from '@/components/Toast';
+import { DICT } from '@/dictionary';
 import {
 	cleaningsService,
 	evidenceService,
@@ -43,6 +44,9 @@ export function useCleaningsOperations(setCleanings: Dispatch<SetStateAction<Cle
 					const exists = prev.find((c) => c.id === data.id);
 					return exists ? prev.map((c) => (c.id === data.id ? data : c)) : [data, ...prev];
 				});
+				toast.success(
+					isUpdate ? DICT.CLEANINGS.EDIT.TOAST_SUCCESS : DICT.CLEANINGS.CREATE.TOAST_SUCCESS,
+				);
 				return { success: true, data };
 			}
 
@@ -82,6 +86,7 @@ export function useCleaningsOperations(setCleanings: Dispatch<SetStateAction<Cle
 			}
 
 			setCleanings((prev) => prev.filter((c) => c.id !== id));
+			toast.success(DICT.CLEANINGS.DELETE.TOAST_SUCCESS);
 			return { success: true };
 		},
 		[setCleanings],

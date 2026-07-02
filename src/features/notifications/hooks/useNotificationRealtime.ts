@@ -37,10 +37,6 @@ export function useNotificationRealtime({
 			return;
 		}
 
-		if (import.meta.env.DEV) {
-			return;
-		}
-
 		const newChannel = supabase
 			.channel('notifications-realtime')
 			.on(

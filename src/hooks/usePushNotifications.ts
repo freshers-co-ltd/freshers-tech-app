@@ -21,7 +21,15 @@ interface UsePushNotificationsResult {
 	hasSubscription: (userId: string) => Promise<boolean>;
 }
 
-export function usePushNotifications(): UsePushNotificationsResult {
+interface UsePushNotificationsOptions {
+	onValidateFailed?: () => Promise<void>;
+}
+
+export function usePushNotifications(
+	options?: UsePushNotificationsOptions,
+): UsePushNotificationsResult {
+	const optionsRef = useRef(options);
+	optionsRef.current = options;
 	const [isSupported, setIsSupported] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 
@@ -249,30 +257,33 @@ export function usePushNotifications(): UsePushNotificationsResult {
 				if (import.meta.env.DEV) {
 					console.log('[Push] Auto re-subscribing due to invalid subscription');
 				}
-				await subscribe(userId);
+				const { success } = await subscribe(userId);
+				if (!success) {
+					await optionsRef.current?.onValidateFailed?.();
+				}
 			}
 		},
 		[subscribe, validateSubscription],
 	);
 
 	useEffect(() => {
-		const handleVisibilityChange = () => {
-			if (document.visibilityState === 'visible') {
-				const userId = authService.getCurrentUser().then(
-					({ data }) => data.user?.id,
-					() => undefined,
-				);
-				userId.then((id) => {
-					if (id && permissionState === 'granted') {
-						autoReSubscribe(id);
-					}
-				});
+		const checkAndReSubscribe = async () => {
+			if (document.visibilityState !== 'visible') {
+				return;
+			}
+
+			const { data } = await authService.getCurrentUser();
+			const id = data?.user?.id;
+			if (id && permissionState === 'granted') {
+				await autoReSubscribe(id);
 			}
 		};
 
-		document.addEventListener('visibilitychange', handleVisibilityChange);
+		checkAndReSubscribe();
+
+		document.addEventListener('visibilitychange', checkAndReSubscribe);
 		return () => {
-			document.removeEventListener('visibilitychange', handleVisibilityChange);
+			document.removeEventListener('visibilitychange', checkAndReSubscribe);
 		};
 	}, [permissionState, autoReSubscribe]);
 

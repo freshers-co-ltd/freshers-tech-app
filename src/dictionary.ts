@@ -282,14 +282,17 @@ export const DICT = {
 		CREATE: {
 			MESSAGE: 'Enter details about your property to save them',
 			TITLE: 'Save new property',
+			TOAST_SUCCESS: 'Property saved successfully',
 		},
 		EDIT: {
 			MESSAGE: 'Edit details about your property to save them',
 			TITLE: 'Edit property',
+			TOAST_SUCCESS: 'Property updated successfully',
 		},
 		DELETE: {
 			MESSAGE: 'This will permanently remove the property and all associated cleaning history.',
 			TITLE: 'Delete property?',
+			TOAST_SUCCESS: 'Property deleted successfully',
 		},
 		THUMBNAIL: 'Thumbnail',
 		FOCUS_IMAGE: 'Property focus',
@@ -387,6 +390,7 @@ export const DICT = {
 		DELETE: {
 			MESSAGE: "This will permanently cancel the cleaning and you won't be charged.",
 			TITLE: 'Cancel cleaning request?',
+			TOAST_SUCCESS: 'Cleaning request cancelled successfully',
 		},
 		ASSIGN_CLEANER: {
 			TITLE: 'Assign Cleaner',
