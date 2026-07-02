@@ -151,7 +151,11 @@ Deno.serve(async (req: Request) => {
     const failed = results.filter((r) => !r.success).length;
 
     if (failed > 0) {
-      console.error(`[Push] Failed to send ${failed}/${results.length} notifications`);
+      results.forEach((r, i) => {
+        if (!r.success) {
+          console.error(`[Push] Notification ${i} failed:`, r.reason, 'statusCode:', r.statusCode);
+        }
+      });
     }
 
     return new Response(JSON.stringify({ sent: successful, total: subscriptions.length }), {
