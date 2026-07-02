@@ -35,7 +35,10 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
 	const form = useForm<LoginFormValues>({
 		resolver: zodResolver(loginSchema),
 		defaultValues: {
-			email: '',
+			email:
+				typeof window !== 'undefined' && localStorage.getItem('trust_device') === 'true'
+					? (localStorage.getItem('saved_email') ?? '')
+					: '',
 			password: '',
 			rememberMe:
 				typeof window !== 'undefined' ? localStorage.getItem('trust_device') === 'true' : false,
@@ -50,6 +53,12 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
 		if (error) {
 			toast.error(error);
 			return;
+		}
+
+		if (values.rememberMe) {
+			localStorage.setItem('saved_email', values.email);
+		} else {
+			localStorage.removeItem('saved_email');
 		}
 
 		toast.success(DICT.AUTH.LOGIN.TOAST_SUCCESS, { duration: 3000 });
@@ -129,6 +138,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'form'>)
 									onCheckedChange={(checked) => {
 										field.onChange(checked);
 										localStorage.setItem('trust_device', String(checked));
+										if (!checked) {
+											localStorage.removeItem('saved_email');
+										}
 									}}
 								/>
 								<FieldLabel htmlFor="rememberMe" className="text-sm font-normal">

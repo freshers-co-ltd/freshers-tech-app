@@ -231,14 +231,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 						const storedToken = window.localStorage.getItem('sb-auth-token');
 						if (storedToken) {
 							const parsed = JSON.parse(storedToken);
-							await authService.setSession(parsed);
+							const { data } = await authService.setSession(parsed);
+							if (data?.session) {
+								return;
+							}
 						}
 					} catch {
 						if (import.meta.env.DEV) {
 							console.error('[Auth] Failed to recover session after sign-out');
 						}
 					}
-					return;
 				}
 
 				abortControllerRef.current?.abort();
@@ -359,12 +361,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 			if (!currentUser) {
 				if (isTrusted) {
-					await refreshProfile();
-					reconnectProfileChannel();
-					return;
+					try {
+						const storedToken = window.localStorage.getItem('sb-auth-token');
+						if (storedToken) {
+							const parsed = JSON.parse(storedToken);
+							const { data } = await authService.setSession(parsed);
+							if (data?.session) {
+								await refreshProfile();
+								reconnectProfileChannel();
+								return;
+							}
+						}
+					} catch {
+						if (import.meta.env.DEV) {
+							console.error('[Auth] Failed to recover session on visibility change');
+						}
+					}
 				}
 
-				await authService.signOut();
 				lastUserId.current = null;
 				setSession(null);
 				setUser(null);
