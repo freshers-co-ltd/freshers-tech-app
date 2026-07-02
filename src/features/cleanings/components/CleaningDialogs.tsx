@@ -88,6 +88,7 @@ export function CleaningDialogs({
 								onSubmit={onUpsert}
 								onCancel={onCancel}
 								disableCreateProperty={true}
+								showCleanerPay={userRole === 'admin'}
 							/>
 						</FormContainer>
 					) : null}

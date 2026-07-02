@@ -347,6 +347,7 @@ export const DICT = {
 		FORM: {
 			STEPS: { PROPERTY: 'Select Property', DETAILS: 'Service Details', CHECKLIST: 'Checklist' },
 			LABELS: {
+				CLEANER_PAY: 'Cleaner Pay',
 				COST: 'Cost',
 				CUSTOM_TASKS: 'Additional Tasks',
 				INFORMATION: 'Additional Information',

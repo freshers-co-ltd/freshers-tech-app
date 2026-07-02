@@ -75,6 +75,7 @@ export function AdminCleaningsPage() {
 				scheduled_start: data.scheduled_start.toISOString(),
 				stocks_included: data.stocks_included,
 				custom_tasks: data.custom_tasks?.map((t) => t.description) || [],
+				cleaner_pay: data.cleaner_pay,
 			});
 
 			if (result.error) {

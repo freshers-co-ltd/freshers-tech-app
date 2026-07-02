@@ -35,6 +35,7 @@ const cleaningFormSchema = z.object({
 	scheduled_start: z.date({ message: 'Please select a start date' }),
 	information: z.string().optional(),
 	stocks_included: z.boolean(),
+	cleaner_pay: z.optional(z.nullable(z.number())),
 	custom_tasks: z.array(
 		z.object({ description: z.string().min(1, { message: 'Task description required' }) }),
 	),
@@ -47,6 +48,7 @@ type CleaningFormInput = {
 	scheduled_start: Date;
 	information?: string;
 	stocks_included: boolean;
+	cleaner_pay?: number | null;
 	custom_tasks: { description: string }[];
 };
 
@@ -65,6 +67,7 @@ interface CleaningFormProps {
 		type: string;
 		price_per_cleaning?: number | null;
 	}[];
+	showCleanerPay?: boolean;
 }
 
 export function CleaningForm({
@@ -74,6 +77,7 @@ export function CleaningForm({
 	availableProperties,
 	hostId,
 	onPropertyCreated,
+	showCleanerPay = false,
 }: CleaningFormProps) {
 	const isRestricted = initialData
 		? STATUS_GROUPS.CAN_EDIT_RESTRICTED.includes(initialData.status)
@@ -103,6 +107,7 @@ export function CleaningForm({
 				: ('' as unknown as Date),
 			information: initialData?.information ?? '',
 			stocks_included: initialData?.stocks_included ?? false,
+			cleaner_pay: initialData?.cleaner_pay ?? null,
 			custom_tasks:
 				initialData?.tasks
 					?.filter((t) => t.is_custom)
@@ -427,22 +432,50 @@ export function CleaningForm({
 									)}
 								</Field>
 
-								<div className="p-4 rounded-xl border bg-muted/20">
-									<p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-										{dict.LABELS.COST}
-									</p>
-									{initialData ? (
-										<p className="text-2xl font-black text-primary">
-											{DICT.COMMON.CURRENCY}
-											{Number(initialData.service_cost).toFixed(2)}
+								<div className="grid grid-cols-2 gap-4">
+									<div className="p-4 rounded-xl border bg-muted/20">
+										<p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+											{dict.LABELS.COST}
 										</p>
-									) : calculatedPrice === null ? (
-										<p className="text-lg font-medium text-muted-foreground">Not set</p>
-									) : (
-										<p className="text-2xl font-black text-primary">
-											{DICT.COMMON.CURRENCY}
-											{calculatedPrice?.toFixed(2) ?? '0.00'}
-										</p>
+										{initialData ? (
+											<p className="text-2xl font-black text-primary">
+												{DICT.COMMON.CURRENCY}
+												{Number(initialData.service_cost).toFixed(2)}
+											</p>
+										) : calculatedPrice === null ? (
+											<p className="text-lg font-medium text-muted-foreground">Not set</p>
+										) : (
+											<p className="text-2xl font-black text-primary">
+												{DICT.COMMON.CURRENCY}
+												{calculatedPrice?.toFixed(2) ?? '0.00'}
+											</p>
+										)}
+									</div>
+									{showCleanerPay && (
+										<div className="p-4 rounded-xl border bg-muted/20">
+											<p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+												{dict.LABELS.CLEANER_PAY}
+											</p>
+											<Controller
+												control={control}
+												name="cleaner_pay"
+												render={({ field }) => (
+													<div className="text-2xl font-black text-primary flex items-center">
+														<span>{DICT.COMMON.CURRENCY}</span>
+														<input
+															type="number"
+															step="0.01"
+															value={field.value ?? ''}
+															onChange={(e) => {
+																const val = e.target.value;
+																field.onChange(val === '' ? null : Number(val));
+															}}
+															className="bg-transparent border-none p-0 outline-none w-full [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+														/>
+													</div>
+												)}
+											/>
+										</div>
 									)}
 								</div>
 							</FieldGroup>
