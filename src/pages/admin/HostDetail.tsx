@@ -328,18 +328,20 @@ export function AdminHostDetailPage() {
 				</DialogContent>
 			</Dialog>
 
-			<PropertyPriceDialog
-				open={editingProperty !== null}
-				onOpenChange={(open) => {
-					if (!open) {
-						setEditingProperty(null);
-					}
-				}}
-				propertyId={editingProperty?.id ?? ''}
-				propertyAddress={`${editingProperty?.address_line_1 ?? ''}, ${editingProperty?.postcode ?? ''}`}
-				currentPrice={editingProperty?.price_per_cleaning ?? null}
-				onSuccess={refresh}
-			/>
+			{editingProperty && (
+				<PropertyPriceDialog
+					open={true}
+					onOpenChange={(open) => {
+						if (!open) {
+							setEditingProperty(null);
+						}
+					}}
+					propertyId={editingProperty.id}
+					propertyAddress={`${editingProperty.address_line_1 ?? ''}, ${editingProperty.postcode ?? ''}`}
+					currentPrice={editingProperty.price_per_cleaning ?? null}
+					onSuccess={refresh}
+				/>
+			)}
 		</UserDetailLayout>
 	);
 }

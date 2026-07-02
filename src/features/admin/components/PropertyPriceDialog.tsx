@@ -36,23 +36,16 @@ export function PropertyPriceDialog({
 		propertyId,
 		onSuccess: () => {
 			onSuccess?.();
-			handleOpen(false);
+			onOpenChange(false);
 		},
 	});
-
-	const handleOpen = (isOpen: boolean) => {
-		if (!isOpen) {
-			setPrice(currentPrice?.toString() || '');
-		}
-		onOpenChange(isOpen);
-	};
 
 	const handleSave = async () => {
 		await savePrice(price);
 	};
 
 	return (
-		<Dialog open={open} onOpenChange={handleOpen}>
+		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="max-w-sm">
 				<DialogHeader>
 					<DialogTitle>Set Property Price</DialogTitle>
@@ -78,7 +71,7 @@ export function PropertyPriceDialog({
 				</div>
 
 				<div className="flex justify-end gap-2 pt-4 border-t">
-					<Button variant="outline" onClick={() => handleOpen(false)}>
+					<Button variant="outline" onClick={() => onOpenChange(false)}>
 						Cancel
 					</Button>
 					<Button onClick={handleSave} disabled={saving}>

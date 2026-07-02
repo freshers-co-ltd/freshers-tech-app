@@ -110,6 +110,7 @@ export const cleaningService = {
 			p_information: payload.information,
 			p_scheduled_start: payload.scheduled_start,
 			p_stocks_included: payload.stocks_included,
+			p_cleaner_pay: payload.cleaner_pay ?? null,
 		});
 
 		if (error) {

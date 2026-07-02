@@ -1,6 +1,7 @@
--- Fix notify_cleaning_reminders - add missing c.property_id to SELECT
-CREATE OR REPLACE FUNCTION public.notify_cleaning_reminders ()
-RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+CREATE
+OR REPLACE FUNCTION public.notify_cleaning_reminders () RETURNS void LANGUAGE plpgsql SECURITY DEFINER
+SET
+    search_path = public AS $$
 DECLARE
     rec RECORD;
 BEGIN
@@ -46,9 +47,10 @@ BEGIN
 END;
 $$;
 
--- Fix notify_cleaning_starting_soon - add missing c.property_id to SELECT
-CREATE OR REPLACE FUNCTION public.notify_cleaning_starting_soon ()
-RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+CREATE
+OR REPLACE FUNCTION public.notify_cleaning_starting_soon () RETURNS void LANGUAGE plpgsql SECURITY DEFINER
+SET
+    search_path = public AS $$
 DECLARE
     rec RECORD;
 BEGIN
@@ -93,9 +95,10 @@ BEGIN
 END;
 $$;
 
--- Fix notify_missed_clockin - add missing c.property_id to SELECT
-CREATE OR REPLACE FUNCTION public.notify_missed_clockin ()
-RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+CREATE
+OR REPLACE FUNCTION public.notify_missed_clockin () RETURNS void LANGUAGE plpgsql SECURITY DEFINER
+SET
+    search_path = public AS $$
 DECLARE
     rec RECORD;
     v_admin_id UUID;
