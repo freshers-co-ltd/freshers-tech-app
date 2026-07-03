@@ -1,7 +1,7 @@
 import type { AuthError, Session } from '@supabase/supabase-js';
 import { DICT } from '@/dictionary';
 import type { AuthActionResult, UserRole } from '@/features/auth/types';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, supabaseImplicit } from '@/lib/supabaseClient';
 
 export const mapAuthError = (error: AuthError): string => {
 	switch (error.code) {
@@ -151,7 +151,7 @@ export const authService = {
 	},
 
 	async resetPassword(email: string): Promise<{ error: string | null }> {
-		const { error } = await supabase.auth.resetPasswordForEmail(email, {
+		const { error } = await supabaseImplicit.auth.resetPasswordForEmail(email, {
 			redirectTo: `${window.location.origin}/update-password`,
 		});
 

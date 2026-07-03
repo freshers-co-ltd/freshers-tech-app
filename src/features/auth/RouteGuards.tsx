@@ -45,7 +45,7 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
 		return <Navigate to="/mfa-enroll" replace />;
 	}
 
-	if (mfaAction === 'challenge' && location.pathname !== '/mfa-challenge') {
+	if (mfaAction === 'challenge' && location.pathname !== '/mfa-challenge' && !import.meta.env.DEV) {
 		return <Navigate to="/mfa-challenge" replace />;
 	}
 

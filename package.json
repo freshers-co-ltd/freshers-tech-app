@@ -13,7 +13,6 @@
 		"serialize-javascript": "7.0.3"
 	},
 	"scripts": {
-		"predev": "node scripts/extract-privacy-notice.mjs",
 		"dev": "vite",
 		"prebuild": "node scripts/extract-privacy-notice.mjs",
 		"build": "tsc -p tsconfig.app.json && vite build",
