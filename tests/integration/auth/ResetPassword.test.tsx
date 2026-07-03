@@ -93,30 +93,32 @@ describe('ResetPassword Feature', () => {
 		});
 	});
 
-	it('exchanges PKCE code from ?code=xxx on /update-password without type=recovery', async () => {
-		mockSupabase.auth.exchangeCodeForSession.mockImplementationOnce(async () => {
+	it('reads tokens from hash and sets session on /update-password', async () => {
+		mockSupabase.auth.setSession.mockImplementationOnce(async () => {
 			triggerAuthEvent('SIGNED_IN', recoverySession);
 			return { data: { user: recoverySession.user, session: recoverySession }, error: null };
 		});
 
-		window.history.replaceState(null, '', '/update-password?code=valid-code');
+		const hash = '#access_token=recovery-token&refresh_token=recovery-refresh&type=recovery';
+		window.history.replaceState(null, '', `/update-password${hash}`);
 
-		renderResetPassword('/update-password?code=valid-code');
+		renderResetPassword(`/update-password${hash}`);
 
 		await waitFor(() => {
 			expect(screen.getByLabelText(/new password/i)).toBeInTheDocument();
 		});
 	});
 
-	it('shows error view when exchangeCodeForSession fails', async () => {
-		mockSupabase.auth.exchangeCodeForSession.mockResolvedValueOnce({
+	it('shows error view when setSession fails', async () => {
+		mockSupabase.auth.setSession.mockResolvedValueOnce({
 			data: { user: null, session: null },
-			error: { code: 'bad_code', message: 'Invalid recovery code' },
+			error: { code: 'bad_token', message: 'Invalid recovery token' },
 		});
 
-		window.history.replaceState(null, '', '/update-password?code=bad-code');
+		const hash = '#access_token=bad-token&refresh_token=bad-refresh&type=recovery';
+		window.history.replaceState(null, '', `/update-password${hash}`);
 
-		renderResetPassword('/update-password?code=bad-code');
+		renderResetPassword(`/update-password${hash}`);
 
 		await waitFor(() => {
 			expect(screen.getByText(DICT.AUTH.SET_PASSWORD.TITLE_ERROR)).toBeInTheDocument();
@@ -124,7 +126,7 @@ describe('ResetPassword Feature', () => {
 		expect(toast.error).toHaveBeenCalledWith(DICT.ERRORS.AUTH.LINK_EXPIRED);
 	});
 
-	it('shows error view when no code in URL and no session', async () => {
+	it('shows error view when no hash params in URL and no session', async () => {
 		mockSupabase.auth.getSession.mockResolvedValue({
 			data: { session: null },
 			error: null,

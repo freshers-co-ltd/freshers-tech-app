@@ -37,7 +37,10 @@ export function ResetPasswordForm({ className, ...props }: React.ComponentProps<
 	const { loading, user } = useAuth();
 	const [isSuccess, setIsSuccess] = useState(false);
 	const [isProcessing, setIsProcessing] = useState(false);
-	const [isExchanging, setIsExchanging] = useState(false);
+	const [isExchanging, setIsExchanging] = useState(() => {
+		const hash = window.location.hash || '';
+		return hash.includes('type=recovery');
+	});
 	const [exchangeError, setExchangeError] = useState(false);
 	const exchangeAttemptedRef = useRef(false);
 
@@ -48,44 +51,38 @@ export function ResetPasswordForm({ className, ...props }: React.ComponentProps<
 
 	useEffect(() => {
 		const hash = window.location.hash || '';
-		const search = window.location.search || '';
-		const isRecovery =
-			search.includes('type=recovery') ||
-			hash.includes('type=recovery') ||
-			(search.includes('code=') && window.location.pathname === '/update-password');
+		const isRecovery = hash.includes('type=recovery');
 
-		if (!isRecovery || exchangeAttemptedRef.current) {
+		if (!isRecovery) {
+			return;
+		}
+
+		if (exchangeAttemptedRef.current) {
 			return;
 		}
 
 		exchangeAttemptedRef.current = true;
 
-		const searchParams = new URLSearchParams(search);
 		const hashParams = new URLSearchParams(hash.substring(1));
-		const code = searchParams.get('code') || hashParams.get('code');
+		const accessToken = hashParams.get('access_token');
+		const refreshToken = hashParams.get('refresh_token');
 
-		if (!code) {
+		if (!accessToken || !refreshToken) {
 			setExchangeError(true);
 			return;
 		}
 
-		setIsExchanging(true);
-
-		authService.exchangeCodeForSession(code).then(({ error }) => {
-			window.history.replaceState(null, '', '/update-password');
-			if (error) {
+		authService
+			.setSession({ access_token: accessToken, refresh_token: refreshToken })
+			.then(({ error }) => {
+				window.history.replaceState(null, '', '/update-password');
 				setIsExchanging(false);
-				setExchangeError(true);
-				toast.error(DICT.ERRORS.AUTH.LINK_EXPIRED);
-			}
-		});
+				if (error) {
+					setExchangeError(true);
+					toast.error(DICT.ERRORS.AUTH.LINK_EXPIRED);
+				}
+			});
 	}, []);
-
-	useEffect(() => {
-		if (user && isExchanging) {
-			setIsExchanging(false);
-		}
-	}, [user, isExchanging]);
 
 	const onSubmit = async (data: ResetPasswordFormValues) => {
 		setIsProcessing(true);
@@ -103,7 +100,7 @@ export function ResetPasswordForm({ className, ...props }: React.ComponentProps<
 	};
 
 	if (loading || isExchanging) {
-		return <Loading />;
+		return <Loading absolute={false} />;
 	}
 
 	if (!user || exchangeError) {

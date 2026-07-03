@@ -193,7 +193,7 @@ export const DICT = {
 			BUTTON_SUBMITTING: 'Creating...',
 			MESSAGE: 'Create a password to access your account.',
 			MESSAGE_ERROR:
-				'This invitation link is invalid or has expired. Please contact your administrator for a new invitation.',
+				'This link is invalid or has expired. Please request a new password reset link.',
 			MESSAGE_SUCCESS: 'Your account has been created. Redirecting to your dashboard...',
 			TITLE: 'Create Password',
 			TITLE_ERROR: 'Invalid or Expired Link',
@@ -203,24 +203,24 @@ export const DICT = {
 		MFA: {
 			ENROLLMENT: {
 				TITLE: 'Set Up Two-Factor Authentication',
-				MANDATORY_MESSAGE:
+				MESSAGE_MANDATORY:
 					'Scan the QR code below with your authenticator app, then enter the 6-digit code to verify.',
 				QR_INSTRUCTION:
 					'Scan this QR code with Ente Auth, Google Authenticator, Authy, or any TOTP app.',
-				MANUAL_ENTRY_TITLE: 'Or enter the details below manually in your TOTP app',
+				MANUAL_ENTRY_TITLE: 'Or enter the details below manually in your authenticator app',
 				ISSUER_LABEL: 'Issuer',
 				ACCOUNT_LABEL: 'Email/Account',
 				SECRET_LABEL: 'Secret Key',
 				COPY: 'Copy',
 				COPIED_TOAST: 'Copied!',
-				CODE_LABEL: 'Verification Code',
-				CODE_PLACEHOLDER: '000000',
+				LABEL_CODE: 'Verification Code',
+				PLACEHOLDER_CODE: '000000',
 				BUTTON_VERIFY: 'Verify & Enable',
 				BUTTON_VERIFYING: 'Verifying...',
 				LOADING: 'Preparing setup...',
 				ERROR_ENROLL: 'Failed to setup MFA. Please try again.',
 				ERROR_VERIFY: 'Invalid code. Please try again.',
-				SUCCESS_TOAST: 'Two-factor authentication enabled.',
+				TOAST_SUCCESS: 'Two-factor authentication enabled.',
 			},
 			CHALLENGE: {
 				TITLE: 'Two-Factor Authentication Required',

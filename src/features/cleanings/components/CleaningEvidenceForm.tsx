@@ -135,7 +135,7 @@ export function CleaningEvidenceForm({ onSubmit, onCancel }: CleaningEvidenceFor
 						value={files}
 						onValueChange={onFilesChange}
 						dropzoneOptions={{
-							maxFiles: 10,
+							maxFiles: 20,
 							maxSize: bucketConfig.maxSize,
 							accept: bucketConfig.accept,
 						}}

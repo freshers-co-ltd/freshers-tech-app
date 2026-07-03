@@ -91,3 +91,12 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 		storageKey: STORAGE_KEY,
 	},
 });
+
+export const supabaseImplicit = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+	auth: {
+		flowType: 'implicit',
+		detectSessionInUrl: false,
+		persistSession: false,
+		autoRefreshToken: false,
+	},
+});

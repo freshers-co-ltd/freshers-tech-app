@@ -12,7 +12,7 @@ import type {
 } from '@/features/admin/types';
 import type { UserRole } from '@/features/auth/types';
 import { type ActionResult, mapDatabaseError } from '@/lib/serviceUtils';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, supabaseImplicit } from '@/lib/supabaseClient';
 
 function validateSingle<T>(
 	schema: z.ZodTypeAny,
@@ -232,7 +232,7 @@ export const userService = {
 			return { data: null, error: 'User email not found' };
 		}
 
-		const { error } = await supabase.auth.resetPasswordForEmail(profile.email, {
+		const { error } = await supabaseImplicit.auth.resetPasswordForEmail(profile.email, {
 			redirectTo: `${window.location.origin}/update-password`,
 		});
 

@@ -114,7 +114,7 @@ export function MfaEnrollmentForm({ onComplete }: MfaEnrollmentFormProps) {
 			console.error('[MFA] AAL2 not confirmed after verify:', aalError);
 		}
 
-		toast.success(dict.SUCCESS_TOAST);
+		toast.success(dict.TOAST_SUCCESS);
 		onComplete();
 	};
 
@@ -125,7 +125,7 @@ export function MfaEnrollmentForm({ onComplete }: MfaEnrollmentFormProps) {
 	if (!qrCode) {
 		return (
 			<div className="space-y-6">
-				<p className="text-sm text-muted-foreground">{dict.MANDATORY_MESSAGE}</p>
+				<p className="text-sm text-muted-foreground">{dict.MESSAGE_MANDATORY}</p>
 
 				<Button type="button" className="w-full" onClick={initEnrollment}>
 					Try Again
@@ -136,21 +136,21 @@ export function MfaEnrollmentForm({ onComplete }: MfaEnrollmentFormProps) {
 
 	return (
 		<div className="space-y-6">
-			<p className="text-sm text-muted-foreground">{dict.MANDATORY_MESSAGE}</p>
+			<p className="text-sm text-muted-foreground">{dict.MESSAGE_MANDATORY}</p>
 			<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
 				<Controller
 					control={form.control}
 					name="code"
 					render={({ field, fieldState }) => (
 						<Field>
-							<FieldLabel>{dict.CODE_LABEL}</FieldLabel>
+							<FieldLabel>{dict.LABEL_CODE}</FieldLabel>
 							<div className="flex gap-2">
 								<Input
 									{...field}
 									type="text"
 									inputMode="numeric"
 									maxLength={6}
-									placeholder={dict.CODE_PLACEHOLDER}
+									placeholder={dict.PLACEHOLDER_CODE}
 									aria-invalid={!!fieldState.error}
 									className={cn('flex-1', fieldState.error ? 'border-destructive' : '')}
 								/>
