@@ -130,11 +130,15 @@ export const userService = {
 		hostId: string,
 		propertiesSortField?: string,
 		propertiesSortDirection?: 'asc' | 'desc',
+		cleaningsSortField?: string,
+		cleaningsSortDirection?: 'asc' | 'desc',
 	): Promise<ActionResult<AdminHostDetail>> {
 		const { data, error } = await supabase.rpc('admin_get_host_detail', {
 			p_host_id: hostId,
 			p_properties_sort_field: propertiesSortField || 'created_at',
 			p_properties_sort_direction: propertiesSortDirection || 'desc',
+			p_cleanings_sort_field: cleaningsSortField || 'created_at',
+			p_cleanings_sort_direction: cleaningsSortDirection || 'desc',
 		});
 
 		if (error) {
@@ -169,9 +173,15 @@ export const userService = {
 		return { data: undefined, error: null };
 	},
 
-	async getCleanerDetail(cleanerId: string): Promise<ActionResult<AdminCleanerDetail>> {
+	async getCleanerDetail(
+		cleanerId: string,
+		cleaningsSortField?: string,
+		cleaningsSortDirection?: 'asc' | 'desc',
+	): Promise<ActionResult<AdminCleanerDetail>> {
 		const { data, error } = await supabase.rpc('admin_get_cleaner_detail', {
 			p_cleaner_id: cleanerId,
+			p_cleanings_sort_field: cleaningsSortField || 'scheduled_start',
+			p_cleanings_sort_direction: cleaningsSortDirection || 'desc',
 		});
 
 		if (error) {

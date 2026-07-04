@@ -39,7 +39,7 @@ export interface PropertiesTableProps {
 
 export function PropertiesTable({
 	data,
-	emptyMessage = 'No properties found',
+	emptyMessage = DICT.ADMIN.CLEANINGS.DETAIL.HOST_DETAIL.EMPTY_PROPERTIES,
 	onView,
 	onEditPrice,
 	page = 1,
@@ -71,52 +71,54 @@ export function PropertiesTable({
 		}[] = [
 			{
 				key: 'address_line_1',
-				label: 'Address',
+				label: DICT.COMMON.LABELS.ADDRESS,
 				sortable: true,
 				render: (item) => item.address_line_1,
 			},
 			{
 				key: 'postcode',
-				label: 'Postcode',
+				label: DICT.COMMON.LABELS.POSTCODE,
 				sortable: true,
 				render: (item) => item.postcode,
 			},
 			{
 				key: 'town_city',
-				label: 'City',
+				label: DICT.COMMON.LABELS.TOWN_CITY,
 				sortable: true,
 				render: (item) => item.town_city,
 			},
 			{
 				key: 'type',
-				label: 'Type',
+				label: DICT.COMMON.LABELS.TYPE,
 				sortable: true,
 				render: (item) => item.type.charAt(0).toUpperCase() + item.type.slice(1),
 			},
 			{
 				key: 'bedrooms',
-				label: 'No. of bedrooms',
+				label: DICT.COMMON.LABELS.BEDROOMS,
 				sortable: true,
 				render: (item) => item.bedrooms,
 			},
 			{
 				key: 'bathrooms',
-				label: 'No. of bathrooms',
+				label: DICT.COMMON.LABELS.BATHROOMS,
 				sortable: true,
 				render: (item) => item.bathrooms,
 			},
 			{
 				key: 'price_per_cleaning',
-				label: 'Price',
+				label: DICT.COMMON.LABELS.PRICE,
 				sortable: false,
 				render: (item) =>
-					item.price_per_cleaning
-						? `${DICT.COMMON.CURRENCY}${Number(item.price_per_cleaning).toFixed(2)}`
-						: '-',
+					item.price_per_cleaning ? (
+						`${DICT.COMMON.CURRENCY}${Number(item.price_per_cleaning).toFixed(2)}`
+					) : (
+						<span className="text-muted-foreground">{DICT.COMMON.LABELS.NOT_SET}</span>
+					),
 			},
 			{
 				key: 'actions',
-				label: 'Actions',
+				label: DICT.COMMON.LABELS.ACTIONS,
 				sortable: false,
 				render: (item) => (
 					<div className="flex items-center justify-end gap-1">
@@ -127,7 +129,7 @@ export function PropertiesTable({
 								</Button>
 							</TooltipTrigger>
 							<TooltipContent>
-								<p>View Details</p>
+								<p>{DICT.COMMON.ACTIONS.VIEW_DETAILS}</p>
 							</TooltipContent>
 						</Tooltip>
 						<Tooltip>
@@ -137,7 +139,7 @@ export function PropertiesTable({
 								</Button>
 							</TooltipTrigger>
 							<TooltipContent>
-								<p>Set Price</p>
+								<p>{DICT.COMMON.ACTIONS.SET_PRICE}</p>
 							</TooltipContent>
 						</Tooltip>
 					</div>
@@ -158,9 +160,11 @@ export function PropertiesTable({
 						{property.town_city ? `, ${property.town_city}` : ''}
 					</p>
 					<p className="text-xs text-muted-foreground mt-1">
-						{property.price_per_cleaning
-							? `${DICT.COMMON.CURRENCY}${Number(property.price_per_cleaning).toFixed(2)}`
-							: 'No price set'}
+						{property.price_per_cleaning ? (
+							`${DICT.COMMON.CURRENCY}${Number(property.price_per_cleaning).toFixed(2)}`
+						) : (
+							<span className="text-muted-foreground">{DICT.COMMON.LABELS.NOT_SET}</span>
+						)}
 					</p>
 				</div>
 
@@ -172,7 +176,7 @@ export function PropertiesTable({
 							</Button>
 						</TooltipTrigger>
 						<TooltipContent>
-							<p>Set Price</p>
+							<p>{DICT.COMMON.ACTIONS.SET_PRICE}</p>
 						</TooltipContent>
 					</Tooltip>
 					<Tooltip>
@@ -182,7 +186,7 @@ export function PropertiesTable({
 							</Button>
 						</TooltipTrigger>
 						<TooltipContent>
-							<p>View Details</p>
+							<p>{DICT.COMMON.ACTIONS.VIEW_DETAILS}</p>
 						</TooltipContent>
 					</Tooltip>
 				</div>

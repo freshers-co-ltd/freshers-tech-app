@@ -9,6 +9,8 @@ import { supabase } from '@/lib/supabaseClient';
 interface UseHostDetailOptions {
 	propertiesSortField?: string;
 	propertiesSortDirection?: 'asc' | 'desc';
+	cleaningsSortField?: string;
+	cleaningsSortDirection?: 'asc' | 'desc';
 }
 
 interface UseHostDetailResult {
@@ -21,7 +23,12 @@ export function useHostDetail(
 	hostId: string | undefined,
 	options: UseHostDetailOptions = {},
 ): UseHostDetailResult {
-	const { propertiesSortField = 'created_at', propertiesSortDirection = 'desc' } = options;
+	const {
+		propertiesSortField = 'created_at',
+		propertiesSortDirection = 'desc',
+		cleaningsSortField = 'created_at',
+		cleaningsSortDirection = 'desc',
+	} = options;
 
 	const [host, setHost] = useState<AdminHostDetail | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -40,6 +47,8 @@ export function useHostDetail(
 			hostId,
 			propertiesSortField,
 			propertiesSortDirection,
+			cleaningsSortField,
+			cleaningsSortDirection,
 		);
 
 		if (result.error) {
@@ -50,7 +59,13 @@ export function useHostDetail(
 		}
 
 		setLoading(false);
-	}, [hostId, propertiesSortField, propertiesSortDirection]);
+	}, [
+		hostId,
+		propertiesSortField,
+		propertiesSortDirection,
+		cleaningsSortField,
+		cleaningsSortDirection,
+	]);
 
 	const refresh = useCallback(async () => {
 		await fetchHostDetail();

@@ -76,6 +76,7 @@ export function AdminCleaningsPage() {
 				stocks_included: data.stocks_included,
 				custom_tasks: data.custom_tasks?.map((t) => t.description) || [],
 				cleaner_pay: data.cleaner_pay,
+				service_cost: data.service_cost,
 			});
 
 			if (result.error) {

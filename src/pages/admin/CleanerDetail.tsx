@@ -18,7 +18,13 @@ import { formatHours } from '@/lib/utils';
 export function AdminCleanerDetailPage() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
-	const { cleaner, loading, refresh } = useCleanerDetail(id);
+	const [cleaningsSortField, setCleaningsSortField] = useState<string>('scheduled_start');
+	const [cleaningsSortDirection, setCleaningsSortDirection] = useState<'asc' | 'desc'>('desc');
+
+	const { cleaner, loading, refresh } = useCleanerDetail(id, {
+		cleaningsSortField,
+		cleaningsSortDirection,
+	});
 	const { fetchCleanings } = useCleanings();
 	const { handleResetPassword, handleBan, handleUnban } = useAdminUsers();
 	const [availableCleaners, setAvailableCleaners] = useState<
@@ -48,6 +54,8 @@ export function AdminCleanerDetailPage() {
 				scheduled_start: values.scheduled_start.toISOString(),
 				stocks_included: values.stocks_included,
 				custom_tasks: values.custom_tasks?.map((t) => t.description) || [],
+				cleaner_pay: values.cleaner_pay,
+				service_cost: values.service_cost,
 			});
 			if (result.error) {
 				throw new Error(result.error);
@@ -182,6 +190,16 @@ export function AdminCleanerDetailPage() {
 							pageSize={10}
 							totalCount={cleanings.length}
 							availableCleaners={availableCleaners}
+							sortField={cleaningsSortField}
+							sortDirection={cleaningsSortDirection}
+							onSort={(field) => {
+								if (cleaningsSortField === field) {
+									setCleaningsSortDirection(cleaningsSortDirection === 'asc' ? 'desc' : 'asc');
+								} else {
+									setCleaningsSortField(field);
+									setCleaningsSortDirection('desc');
+								}
+							}}
 						/>
 					),
 				},

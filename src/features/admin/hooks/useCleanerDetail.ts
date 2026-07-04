@@ -12,7 +12,17 @@ interface UseCleanerDetailResult {
 	refresh: () => Promise<void>;
 }
 
-export function useCleanerDetail(cleanerId: string | undefined): UseCleanerDetailResult {
+interface UseCleanerDetailOptions {
+	cleaningsSortField?: string;
+	cleaningsSortDirection?: 'asc' | 'desc';
+}
+
+export function useCleanerDetail(
+	cleanerId: string | undefined,
+	options: UseCleanerDetailOptions = {},
+): UseCleanerDetailResult {
+	const { cleaningsSortField = 'scheduled_start', cleaningsSortDirection = 'desc' } = options;
+
 	const [cleaner, setCleaner] = useState<AdminCleanerDetail | null>(null);
 	const [loading, setLoading] = useState(true);
 
@@ -26,7 +36,11 @@ export function useCleanerDetail(cleanerId: string | undefined): UseCleanerDetai
 		}
 
 		setLoading(true);
-		const result = await userService.getCleanerDetail(cleanerId);
+		const result = await userService.getCleanerDetail(
+			cleanerId,
+			cleaningsSortField,
+			cleaningsSortDirection,
+		);
 
 		if (result.error) {
 			toast.error(result.error);
@@ -36,7 +50,7 @@ export function useCleanerDetail(cleanerId: string | undefined): UseCleanerDetai
 		}
 
 		setLoading(false);
-	}, [cleanerId]);
+	}, [cleanerId, cleaningsSortField, cleaningsSortDirection]);
 
 	const refresh = useCallback(async () => {
 		await fetchCleanerDetail();
