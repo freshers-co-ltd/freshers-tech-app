@@ -42,6 +42,7 @@ export interface UpdateCleaningPayload {
 	scheduled_start: string;
 	stocks_included: boolean;
 	cleaner_pay?: number | null;
+	service_cost?: number | null;
 }
 
 export type AdminUser = {

@@ -39,10 +39,14 @@ export function AdminHostDetailPage() {
 	const [editingProperty, setEditingProperty] = useState<Property | null>(null);
 	const [propertiesSortField, setPropertiesSortField] = useState<string>('address_line_1');
 	const [propertiesSortDirection, setPropertiesSortDirection] = useState<'asc' | 'desc'>('desc');
+	const [cleaningsSortField, setCleaningsSortField] = useState<string>('created_at');
+	const [cleaningsSortDirection, setCleaningsSortDirection] = useState<'asc' | 'desc'>('desc');
 
 	const { host, loading, refresh } = useHostDetail(id, {
 		propertiesSortField,
 		propertiesSortDirection,
+		cleaningsSortField,
+		cleaningsSortDirection,
 	});
 
 	const { fetchCleanings } = useCleanings();
@@ -158,6 +162,8 @@ export function AdminHostDetailPage() {
 				scheduled_start: values.scheduled_start.toISOString(),
 				stocks_included: values.stocks_included,
 				custom_tasks: values.custom_tasks?.map((t) => t.description) || [],
+				cleaner_pay: values.cleaner_pay,
+				service_cost: values.service_cost,
 			});
 			if (result.error) {
 				throw new Error(result.error);
@@ -291,6 +297,16 @@ export function AdminHostDetailPage() {
 							pageSize={10}
 							totalCount={cleanings.length}
 							availableCleaners={availableCleaners}
+							sortField={cleaningsSortField}
+							sortDirection={cleaningsSortDirection}
+							onSort={(field) => {
+								if (cleaningsSortField === field) {
+									setCleaningsSortDirection(cleaningsSortDirection === 'asc' ? 'desc' : 'asc');
+								} else {
+									setCleaningsSortField(field);
+									setCleaningsSortDirection('desc');
+								}
+							}}
 						/>
 					),
 				},

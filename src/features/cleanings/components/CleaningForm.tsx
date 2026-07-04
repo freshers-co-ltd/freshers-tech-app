@@ -36,6 +36,7 @@ const cleaningFormSchema = z.object({
 	information: z.string().optional(),
 	stocks_included: z.boolean(),
 	cleaner_pay: z.optional(z.nullable(z.number())),
+	service_cost: z.optional(z.nullable(z.number())),
 	custom_tasks: z.array(
 		z.object({ description: z.string().min(1, { message: 'Task description required' }) }),
 	),
@@ -49,6 +50,7 @@ type CleaningFormInput = {
 	information?: string;
 	stocks_included: boolean;
 	cleaner_pay?: number | null;
+	service_cost?: number | null;
 	custom_tasks: { description: string }[];
 };
 
@@ -108,6 +110,7 @@ export function CleaningForm({
 			information: initialData?.information ?? '',
 			stocks_included: initialData?.stocks_included ?? false,
 			cleaner_pay: initialData?.cleaner_pay ?? null,
+			service_cost: initialData?.service_cost ?? null,
 			custom_tasks:
 				initialData?.tasks
 					?.filter((t) => t.is_custom)
@@ -133,6 +136,8 @@ export function CleaningForm({
 				scheduled_start: new Date(initialData.scheduled_start),
 				information: initialData.information ?? '',
 				stocks_included: initialData.stocks_included ?? false,
+				cleaner_pay: initialData.cleaner_pay ?? null,
+				service_cost: initialData.service_cost ?? null,
 				custom_tasks:
 					initialData.tasks
 						?.filter((t) => t.is_custom)
@@ -435,9 +440,29 @@ export function CleaningForm({
 								<div className="grid grid-cols-2 gap-4">
 									<div className="p-4 rounded-xl border bg-muted/20">
 										<p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-											{dict.LABELS.COST}
+											{showCleanerPay ? dict.LABELS.HOST_COST : dict.LABELS.COST}
 										</p>
-										{initialData ? (
+										{showCleanerPay && initialData ? (
+											<Controller
+												control={control}
+												name="service_cost"
+												render={({ field }) => (
+													<div className="text-2xl font-black text-primary flex items-center">
+														<span>{DICT.COMMON.CURRENCY}</span>
+														<input
+															type="number"
+															step="0.01"
+															value={field.value ?? ''}
+															onChange={(e) => {
+																const val = e.target.value;
+																field.onChange(val === '' ? null : Number(val));
+															}}
+															className="bg-transparent border-none p-0 outline-none w-full [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+														/>
+													</div>
+												)}
+											/>
+										) : initialData ? (
 											<p className="text-2xl font-black text-primary">
 												{DICT.COMMON.CURRENCY}
 												{Number(initialData.service_cost).toFixed(2)}

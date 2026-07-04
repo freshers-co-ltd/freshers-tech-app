@@ -111,6 +111,7 @@ export const cleaningService = {
 			p_scheduled_start: payload.scheduled_start,
 			p_stocks_included: payload.stocks_included,
 			p_cleaner_pay: payload.cleaner_pay ?? null,
+			p_service_cost: payload.service_cost ?? null,
 		});
 
 		if (error) {
