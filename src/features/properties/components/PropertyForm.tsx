@@ -43,9 +43,7 @@ const propertySchema = z.object({
 	bedrooms: z.coerce.number().min(0, DICT.COMMON.VALIDATION.NUMBER_INVALID),
 	bathrooms: z.coerce.number().min(0, DICT.COMMON.VALIDATION.NUMBER_INVALID),
 	main_image_url: z.string().optional(),
-	has_main_image: z.boolean().refine((val) => val === true, {
-		message: DICT.COMMON.VALIDATION.IMAGE_REQUIRED,
-	}),
+	has_main_image: z.boolean().optional(),
 });
 
 export type PropertyFormValues = z.infer<typeof propertySchema>;
@@ -58,7 +56,7 @@ type PropertyFormInput = {
 	type: (typeof propertyTypeValues)[number];
 	bedrooms: unknown;
 	bathrooms: unknown;
-	has_main_image: boolean;
+	has_main_image?: boolean;
 };
 
 interface PropertyFormProps {

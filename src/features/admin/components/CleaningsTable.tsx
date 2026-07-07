@@ -229,7 +229,11 @@ export function CleaningsTable({
 				<div className="flex items-center justify-end gap-1">
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<Button variant="secondary" size="icon-sm" onClick={() => modal.openView(item.id)}>
+							<Button
+								variant="secondary"
+								size="icon-sm"
+								aria-label="View details"
+								onClick={() => modal.openView(item.id)}>
 								<Eye className="size-4" />
 							</Button>
 						</TooltipTrigger>
@@ -240,7 +244,11 @@ export function CleaningsTable({
 					{!isDisabled(item) && (
 						<Tooltip>
 							<TooltipTrigger asChild>
-								<Button variant="secondary" size="icon-sm" onClick={() => modal.openEdit(item.id)}>
+								<Button
+									variant="secondary"
+									size="icon-sm"
+									aria-label="Edit"
+									onClick={() => modal.openEdit(item.id)}>
 									<Pencil className="size-4" />
 								</Button>
 							</TooltipTrigger>
@@ -252,7 +260,11 @@ export function CleaningsTable({
 					{!item.cleaner_name && (
 						<Tooltip>
 							<TooltipTrigger asChild>
-								<Button variant="secondary" size="icon-sm" onClick={() => openAssignModal(item.id)}>
+								<Button
+									variant="secondary"
+									size="icon-sm"
+									aria-label={DICT.COMMON.ACTIONS.ASSIGN}
+									onClick={() => openAssignModal(item.id)}>
 									<UserPlus className="size-4" />
 								</Button>
 							</TooltipTrigger>
@@ -267,6 +279,7 @@ export function CleaningsTable({
 								<Button
 									variant="secondary"
 									size="icon-sm"
+									aria-label={DICT.COMMON.ACTIONS.REASSIGN}
 									onClick={() => handleReassignCleaner(item.id, item.cleaner_id)}>
 									<ArrowUpDown className="size-4" />
 								</Button>
@@ -314,6 +327,7 @@ export function CleaningsTable({
 								<Button
 									variant="secondary"
 									size="icon-sm"
+									aria-label="View details"
 									onClick={() => modal.openView(cleaning.id)}>
 									<Eye className="size-4" />
 								</Button>
@@ -328,6 +342,7 @@ export function CleaningsTable({
 									<Button
 										variant="secondary"
 										size="icon-sm"
+										aria-label="Edit"
 										onClick={() => modal.openEdit(cleaning.id)}>
 										<Pencil className="size-4" />
 									</Button>
@@ -343,6 +358,7 @@ export function CleaningsTable({
 									<Button
 										variant="secondary"
 										size="icon-sm"
+										aria-label={DICT.COMMON.ACTIONS.ASSIGN}
 										onClick={() => openAssignModal(cleaning.id)}>
 										<UserPlus className="size-4" />
 									</Button>
@@ -358,6 +374,7 @@ export function CleaningsTable({
 									<Button
 										variant="secondary"
 										size="icon-sm"
+										aria-label={DICT.COMMON.ACTIONS.REASSIGN}
 										onClick={() => openAssignModal(cleaning.id, cleaning.cleaner_id)}>
 										<ArrowUpDown className="size-4" />
 									</Button>
