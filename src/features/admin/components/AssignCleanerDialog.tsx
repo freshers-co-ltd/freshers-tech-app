@@ -55,7 +55,7 @@ export function AssignCleanerDialog({
 				</DialogHeader>
 				<div className="space-y-4">
 					<Select value={selectedCleanerId} onValueChange={onSelectCleaner}>
-						<SelectTrigger className="w-full">
+						<SelectTrigger className="w-full" aria-label={DICT.CLEANINGS.ASSIGN_CLEANER.SELECT}>
 							<SelectValue
 								placeholder={DICT.CLEANINGS.ASSIGN_CLEANER.SELECT}
 								className={displayValue ? 'text-foreground' : ''}>

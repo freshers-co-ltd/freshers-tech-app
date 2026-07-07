@@ -128,6 +128,7 @@ export function UsersTable({
 									<Button
 										variant="secondary"
 										size="icon-sm"
+										aria-label="View details"
 										onClick={() =>
 											navigate(
 												`/admin/users/${user.role === 'host' ? 'hosts' : 'cleaners'}/${user.id}`,
@@ -206,6 +207,7 @@ export function UsersTable({
 						<Button
 							variant="secondary"
 							size="icon-sm"
+							aria-label="View details"
 							onClick={() =>
 								navigate(`/admin/users/${user.role === 'host' ? 'hosts' : 'cleaners'}/${user.id}`)
 							}>

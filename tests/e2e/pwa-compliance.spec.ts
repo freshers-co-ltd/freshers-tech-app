@@ -30,15 +30,21 @@ test('PWA meets modern installability criteria', async ({ page }) => {
 	expect(hasIcon('512x512')).toBe(true);
 });
 
-test('Service Worker handles offline requests', async ({ page, context, browserName }) => {
+test('Service Worker handles offline requests', async ({ browser, browserName }) => {
 	test.skip(browserName === 'webkit', 'Offline emulation is unstable in WebKit');
+
+	// Global config blocks SWs; allow them only for this test
+	const context = await browser.newContext({ serviceWorkers: 'allow' });
+	const page = await context.newPage();
 
 	await page.goto('/');
 
 	await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
 
 	await context.setOffline(true);
-	await page.reload({ waitUntil: 'networkidle' }); // Ensure it reloads from cache
+	await page.reload({ waitUntil: 'networkidle' });
 	await expect(page.locator('h1')).toBeVisible();
 	await context.setOffline(false);
+
+	await context.close();
 });
