@@ -3,6 +3,7 @@
 import { BrushCleaning, ClipboardList, Clock, Sparkles } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from '@/components/Toast';
 import { DICT } from '@/dictionary';
 import { CleaningsTable } from '@/features/admin/components/CleaningsTable';
 import { useAdminUsers } from '@/features/admin/hooks/useAdminUsers';
@@ -64,6 +65,15 @@ export function AdminCleanerDetailPage() {
 		},
 		[refresh, fetchCleanings],
 	);
+
+	const handleDelete = useCallback(async (id: string) => {
+		const result = await adminCleaningService.softDeleteCleaning(id);
+		if (result.error) {
+			toast.error(result.error);
+			throw new Error(result.error);
+		}
+		toast.success(DICT.CLEANINGS.DELETE.ADMIN_TOAST_SUCCESS);
+	}, []);
 
 	const refreshAll = useCallback(async () => {
 		await Promise.all([refresh(), fetchCleanings()]);
@@ -182,6 +192,7 @@ export function AdminCleanerDetailPage() {
 							data={tableData}
 							fetchById={fetchCleaningById}
 							onUpsert={handleUpsert}
+							onDelete={handleDelete}
 							userRole="admin"
 							excludeCleaner={true}
 							hideHostCost={true}

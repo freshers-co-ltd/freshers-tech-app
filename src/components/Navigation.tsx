@@ -42,7 +42,9 @@ export function Navigation() {
 	const navItems = NAV_CONFIG[role];
 	return (
 		<>
-			<nav className="fixed top-0 left-0 right-0 z-50 hidden h-20 border-b bg-background/80 backdrop-blur-md md:block">
+			<nav
+				aria-label="Desktop navigation"
+				className="fixed top-0 left-0 right-0 z-50 hidden h-20 border-b bg-background/80 backdrop-blur-md md:block">
 				<div className="flex items-center h-full max-w-6xl px-6 mx-auto gap-4">
 					<Logo className="max-w-[140px] lg:max-w-none" />
 					<div className="flex items-center gap-2 flex-1 justify-end overflow-x-auto">
@@ -64,7 +66,9 @@ export function Navigation() {
 				</div>
 			</nav>
 
-			<nav className="fixed bottom-0 left-0 right-0 z-50 h-20 border-t bg-background/80 backdrop-blur-lg md:hidden pb-safe">
+			<nav
+				aria-label="Mobile navigation"
+				className="fixed bottom-0 left-0 right-0 z-50 h-20 border-t bg-background/80 backdrop-blur-lg md:hidden pb-safe">
 				<div
 					className="grid h-full px-2 mx-auto place-items-center"
 					style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}>

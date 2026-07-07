@@ -398,6 +398,10 @@ export const DICT = {
 			MESSAGE: "This will permanently cancel the cleaning and you won't be charged.",
 			TITLE: 'Cancel cleaning request?',
 			TOAST_SUCCESS: 'Cleaning request cancelled successfully',
+			ADMIN_MESSAGE:
+				'This will soft-delete this cleaning request. It will be hidden from all users and cannot be undone.',
+			ADMIN_TITLE: 'Delete this cleaning request?',
+			ADMIN_TOAST_SUCCESS: 'Cleaning request deleted successfully',
 		},
 		ASSIGN_CLEANER: {
 			TITLE: 'Assign Cleaner',

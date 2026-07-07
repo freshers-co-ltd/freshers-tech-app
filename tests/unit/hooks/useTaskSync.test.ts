@@ -151,10 +151,14 @@ describe('useTaskSync', () => {
 			result.current.handleTaskToggle('task_1');
 		});
 
-		vi.advanceTimersByTime(2999);
+		act(() => {
+			vi.advanceTimersByTime(2999);
+		});
 		expect(mockUpdateTasksBatch).not.toHaveBeenCalled();
 
-		vi.advanceTimersByTime(1);
+		act(() => {
+			vi.advanceTimersByTime(1);
+		});
 		await vi.waitFor(() => {
 			expect(mockUpdateTasksBatch).toHaveBeenCalled();
 		});

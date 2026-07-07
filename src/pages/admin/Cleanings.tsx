@@ -2,6 +2,7 @@
 
 import { Banknote, ListTodo, Search } from 'lucide-react';
 import { useCallback, useState } from 'react';
+import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -87,6 +88,15 @@ export function AdminCleaningsPage() {
 		},
 		[fetchCleanings],
 	);
+
+	const handleDelete = useCallback(async (id: string) => {
+		const result = await adminCleaningService.softDeleteCleaning(id);
+		if (result.error) {
+			toast.error(result.error);
+			throw new Error(result.error);
+		}
+		toast.success(DICT.CLEANINGS.DELETE.ADMIN_TOAST_SUCCESS);
+	}, []);
 
 	const refreshAll = useCallback(async () => {
 		await refresh();
@@ -191,6 +201,7 @@ export function AdminCleaningsPage() {
 				data={cleanings}
 				fetchById={fetchById}
 				onUpsert={handleUpsert}
+				onDelete={handleDelete}
 				userRole="admin"
 				loading={loading}
 				page={page}

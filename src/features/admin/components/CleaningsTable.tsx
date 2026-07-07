@@ -44,6 +44,7 @@ export interface CleaningsTableProps {
 	hasMore?: boolean;
 	onLoadMore?: () => void;
 	loadingMore?: boolean;
+	onDelete?: (id: string) => Promise<void>;
 }
 
 export function CleaningsTable({
@@ -70,13 +71,22 @@ export function CleaningsTable({
 	onLoadMore,
 	loadingMore = false,
 	availableCleaners,
+	onDelete,
 }: CleaningsTableProps) {
-	const { modal, viewingCleaning, editingCleaning, isViewLoading, isEditLoading, handleUpsert } =
-		useCleaningModals({
-			fetchById,
-			onUpsert,
-			userRole,
-		});
+	const {
+		modal,
+		viewingCleaning,
+		editingCleaning,
+		isViewLoading,
+		isEditLoading,
+		handleUpsert,
+		handleDelete,
+	} = useCleaningModals({
+		fetchById,
+		onUpsert,
+		onDelete,
+		userRole,
+	});
 	const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
 	const [selectedCleaningId, setSelectedCleaningId] = useState<string>('');
 	const [selectedCleanerId, setSelectedCleanerId] = useState<string>('');
@@ -451,9 +461,11 @@ export function CleaningsTable({
 				isEditLoading={isEditLoading}
 				deletingId={modal.deletingId}
 				onEdit={modal.openEdit}
-				onDeleteConfirm={() => {
+				onDelete={(id) => modal.setDeletingId(id)}
+				onDeleteConfirm={async () => {
 					if (modal.deletingId) {
-						modal.setDeletingId(null);
+						await handleDelete();
+						onRefresh?.();
 					}
 				}}
 				onDeleteCancel={() => modal.setDeletingId(null)}
