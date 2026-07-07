@@ -121,6 +121,18 @@ export const cleaningService = {
 		return { data: data as string, error: null };
 	},
 
+	async softDeleteCleaning(cleaningId: string): Promise<ActionResult<void>> {
+		const { error } = await supabase.rpc('soft_delete_cleaning', {
+			p_cleaning_id: cleaningId,
+		});
+
+		if (error) {
+			return { data: null, error: mapDatabaseError(error) };
+		}
+
+		return { data: undefined, error: null };
+	},
+
 	async updateStandardTasks(
 		tasks: { id: string | null; description: string; is_active: boolean }[],
 		tasksToDelete: string[],

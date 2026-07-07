@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Navigation } from '@/components/Navigation';
 import { renderWithProviders } from '~/utils';
@@ -10,6 +10,8 @@ describe('Navigation', () => {
 		sessionStorage.clear();
 	});
 
+	const getDesktopNav = () => screen.getByRole('navigation', { name: /desktop navigation/i });
+
 	it('shows host navigation links', async () => {
 		setMockUserRole('host');
 
@@ -18,11 +20,12 @@ describe('Navigation', () => {
 			initialEntries: ['/host/dashboard'],
 		});
 
-		await screen.findByRole('link', { name: /properties/i });
-		expect(screen.getByRole('link', { name: /dashboard/i })).toBeInTheDocument();
-		expect(screen.getByRole('link', { name: /cleanings/i })).toBeInTheDocument();
-		expect(screen.getByRole('link', { name: /properties/i })).toBeInTheDocument();
-		expect(screen.getByRole('link', { name: /account/i })).toBeInTheDocument();
+		const desktopNav = getDesktopNav();
+		await within(desktopNav).findByRole('link', { name: /properties/i });
+		expect(within(desktopNav).getByRole('link', { name: /dashboard/i })).toBeInTheDocument();
+		expect(within(desktopNav).getByRole('link', { name: /cleanings/i })).toBeInTheDocument();
+		expect(within(desktopNav).getByRole('link', { name: /properties/i })).toBeInTheDocument();
+		expect(within(desktopNav).getByRole('link', { name: /account/i })).toBeInTheDocument();
 	});
 
 	it('shows cleaner navigation links (no properties)', async () => {
@@ -33,13 +36,15 @@ describe('Navigation', () => {
 			initialEntries: ['/cleaner/dashboard'],
 		});
 
+		const desktopNav = getDesktopNav();
 		await waitFor(() => {
-			expect(screen.queryByRole('link', { name: /properties/i })).not.toBeInTheDocument();
+			expect(
+				within(desktopNav).queryByRole('link', { name: /properties/i }),
+			).not.toBeInTheDocument();
 		});
-
-		expect(screen.getByRole('link', { name: /dashboard/i })).toBeInTheDocument();
-		expect(screen.getByRole('link', { name: /cleanings/i })).toBeInTheDocument();
-		expect(screen.getByRole('link', { name: /account/i })).toBeInTheDocument();
+		expect(within(desktopNav).getByRole('link', { name: /dashboard/i })).toBeInTheDocument();
+		expect(within(desktopNav).getByRole('link', { name: /cleanings/i })).toBeInTheDocument();
+		expect(within(desktopNav).getByRole('link', { name: /account/i })).toBeInTheDocument();
 	});
 
 	it('shows admin navigation links', async () => {
@@ -50,11 +55,12 @@ describe('Navigation', () => {
 			initialEntries: ['/admin/dashboard'],
 		});
 
-		await screen.findByRole('link', { name: /users/i });
-		expect(screen.getByRole('link', { name: /dashboard/i })).toBeInTheDocument();
-		expect(screen.getByRole('link', { name: /users/i })).toBeInTheDocument();
-		expect(screen.getByRole('link', { name: /cleanings/i })).toBeInTheDocument();
-		expect(screen.getByRole('link', { name: /analytics/i })).toBeInTheDocument();
-		expect(screen.getByRole('link', { name: /account/i })).toBeInTheDocument();
+		const desktopNav = getDesktopNav();
+		await within(desktopNav).findByRole('link', { name: /users/i });
+		expect(within(desktopNav).getByRole('link', { name: /dashboard/i })).toBeInTheDocument();
+		expect(within(desktopNav).getByRole('link', { name: /users/i })).toBeInTheDocument();
+		expect(within(desktopNav).getByRole('link', { name: /cleanings/i })).toBeInTheDocument();
+		expect(within(desktopNav).getByRole('link', { name: /analytics/i })).toBeInTheDocument();
+		expect(within(desktopNav).getByRole('link', { name: /account/i })).toBeInTheDocument();
 	});
 });

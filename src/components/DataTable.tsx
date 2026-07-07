@@ -279,7 +279,7 @@ export function DataTable<T>({
 										return (
 											<th
 												key={header.id}
-												className={`text-left p-3 font-medium text-sm ${colDef?.className || ''}`}>
+												className={`text-left p-3 font-medium text-sm break-words ${colDef?.className || ''}`}>
 												{header.isPlaceholder ? null : colDef?.sortable && onSort ? (
 													<div className="flex items-center gap-1">
 														{flexRender(header.column.columnDef.header, header.getContext())}
@@ -307,7 +307,7 @@ export function DataTable<T>({
 									{row.getVisibleCells().map((cell) => {
 										const colDef = columns.find((c) => c.key === cell.column.id);
 										return (
-											<td key={cell.id} className={`p-3 ${colDef?.className || ''}`}>
+											<td key={cell.id} className={`p-3 break-words ${colDef?.className || ''}`}>
 												{flexRender(cell.column.columnDef.cell, cell.getContext())}
 											</td>
 										);

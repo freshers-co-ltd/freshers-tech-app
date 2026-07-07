@@ -1,20 +1,16 @@
 'use client';
 
 import type { LucideIcon } from 'lucide-react';
-import { useCallback } from 'react';
+import type { ReactNode } from 'react';
 import { Loading } from '@/components/Loading';
 import { toast } from '@/components/Toast';
 import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Stat, StatIndicator, StatLabel, StatValue } from '@/components/ui/stat';
 import { DICT } from '@/dictionary';
 import { AdminActionDialogs } from '@/features/admin/components/AdminActionDialogs';
 import { UserCard } from '@/features/admin/components/UserCard';
 import { useAdminActionDialogs } from '@/features/admin/hooks/useAdminActionDialogs';
 import type { AdminUser } from '@/features/admin/types';
-import { CleaningDetailView } from '@/features/cleanings/components/CleaningDetailView';
-import { cleaningsService } from '@/features/cleanings/services/cleaningsService';
-import { useCleaningModals } from '@/hooks/useCleaningModals';
 
 interface StatConfig {
 	id?: string;
@@ -27,8 +23,8 @@ interface StatConfig {
 interface SectionConfig {
 	id?: string;
 	title: string;
-	actionButton?: React.ReactNode;
-	content: React.ReactNode;
+	actionButton?: ReactNode;
+	content: ReactNode;
 }
 
 interface UserDetailLayoutProps {
@@ -37,7 +33,7 @@ interface UserDetailLayoutProps {
 	isLoading?: boolean;
 	stats?: StatConfig[];
 	sections?: SectionConfig[];
-	children?: React.ReactNode;
+	children?: ReactNode;
 	onResetPassword?: () => Promise<{ error: string | null }>;
 	onBan?: () => Promise<{ error: string | null }>;
 	onUnban?: () => Promise<{ error: string | null }>;
@@ -60,16 +56,6 @@ export function UserDetailLayout({
 	const detail = DICT.ADMIN.USERS.DETAIL;
 
 	const dialogs = useAdminActionDialogs();
-
-	const fetchById = useCallback(async (id: string) => {
-		const result = await cleaningsService.getCleaningRequestById(id);
-		return result.data || null;
-	}, []);
-
-	const { modal, viewingCleaning, isViewLoading } = useCleaningModals({
-		fetchById,
-		userRole: 'admin',
-	});
 
 	const isCleaner = userRole === 'cleaner';
 
@@ -207,21 +193,6 @@ export function UserDetailLayout({
 			))}
 
 			{children}
-
-			<Dialog open={modal.isViewOpen} onOpenChange={(open) => !open && modal.handleClose()}>
-				<DialogContent className="max-w-xl! w-screen sm:w-full h-[95svh] flex flex-col p-0 gap-0 overflow-hidden">
-					{isViewLoading ? (
-						<Loading absolute={false} />
-					) : viewingCleaning ? (
-						<CleaningDetailView
-							cleaning={viewingCleaning}
-							userRole="admin"
-							onEdit={(id) => modal.openEdit(id)}
-							onDelete={(id) => modal.setDeletingId(id)}
-						/>
-					) : null}
-				</DialogContent>
-			</Dialog>
 
 			<AdminActionDialogs
 				{...dialogs}

@@ -173,6 +173,15 @@ export function AdminHostDetailPage() {
 		[refresh, fetchCleanings],
 	);
 
+	const handleDelete = useCallback(async (id: string) => {
+		const result = await adminCleaningService.softDeleteCleaning(id);
+		if (result.error) {
+			toast.error(result.error);
+			throw new Error(result.error);
+		}
+		toast.success(DICT.CLEANINGS.DELETE.ADMIN_TOAST_SUCCESS);
+	}, []);
+
 	const refreshAll = useCallback(async () => {
 		await Promise.all([refresh(), fetchCleanings()]);
 	}, [refresh, fetchCleanings]);
@@ -289,6 +298,7 @@ export function AdminHostDetailPage() {
 							data={tableData}
 							fetchById={fetchCleaningById}
 							onUpsert={handleUpsert}
+							onDelete={handleDelete}
 							userRole="admin"
 							excludeHost={true}
 							hideCleanerPay={true}

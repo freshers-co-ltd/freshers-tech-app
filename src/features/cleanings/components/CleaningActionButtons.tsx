@@ -39,7 +39,7 @@ export function CleaningActionButtons({
 	const isConfirmed = status === CLEANING_STATUS.CONFIRMED;
 	const isInProgress = status === CLEANING_STATUS.IN_PROGRESS;
 	const canEdit = (isHost || isAdmin) && STATUS_GROUPS.CAN_EDIT.includes(status);
-	const canCancel = isHost && STATUS_GROUPS.CAN_CANCEL.includes(status);
+	const canDelete = isAdmin || (isHost && STATUS_GROUPS.CAN_CANCEL.includes(status));
 
 	if (isCleaner && (isConfirmed || isInProgress)) {
 		return (
@@ -61,7 +61,7 @@ export function CleaningActionButtons({
 		);
 	}
 
-	if ((isHost || isAdmin) && (canEdit || canCancel)) {
+	if ((isHost || isAdmin) && (canEdit || canDelete)) {
 		return (
 			<div className="p-3 border-t shrink-0">
 				<div className="flex flex-col sm:flex-row gap-3">
@@ -74,15 +74,13 @@ export function CleaningActionButtons({
 							{DICT.COMMON.ACTIONS.EDIT}
 						</Button>
 					)}
-					{canCancel && (
+					{canDelete && (
 						<Button
 							variant="destructive"
 							className="flex-1"
 							onClick={() => cleaningId && onDelete?.(cleaningId)}>
 							<Trash2 className="mr-1 size-4" />
-							{status === CLEANING_STATUS.CONFIRMED
-								? DICT.COMMON.ACTIONS.CANCEL_CLEANING
-								: DICT.COMMON.ACTIONS.DELETE}
+							{DICT.COMMON.ACTIONS.DELETE}
 						</Button>
 					)}
 				</div>

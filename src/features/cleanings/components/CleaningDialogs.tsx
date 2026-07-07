@@ -98,15 +98,23 @@ export function CleaningDialogs({
 			<AlertDialog open={!!deletingId} onOpenChange={(open) => !open && onDeleteCancel()}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>{DICT.CLEANINGS.DELETE.TITLE}</AlertDialogTitle>
-						<AlertDialogDescription>{DICT.CLEANINGS.DELETE.MESSAGE}</AlertDialogDescription>
+						<AlertDialogTitle>
+							{userRole === 'admin'
+								? DICT.CLEANINGS.DELETE.ADMIN_TITLE
+								: DICT.CLEANINGS.DELETE.TITLE}
+						</AlertDialogTitle>
+						<AlertDialogDescription>
+							{userRole === 'admin'
+								? DICT.CLEANINGS.DELETE.ADMIN_MESSAGE
+								: DICT.CLEANINGS.DELETE.MESSAGE}
+						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
 						<AlertDialogCancel>{DICT.COMMON.ACTIONS.BACK}</AlertDialogCancel>
 						<AlertDialogAction
 							className="bg-destructive text-white hover:bg-destructive/90"
 							onClick={onDeleteConfirm}>
-							{DICT.COMMON.ACTIONS.DELETE}
+							{userRole === 'admin' ? DICT.COMMON.ACTIONS.DELETE : DICT.COMMON.ACTIONS.CANCEL}
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>
