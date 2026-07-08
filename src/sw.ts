@@ -2,8 +2,8 @@
 
 import { clientsClaim } from 'workbox-core';
 import { ExpirationPlugin } from 'workbox-expiration';
-import { precacheAndRoute } from 'workbox-precaching';
-import { registerRoute } from 'workbox-routing';
+import { createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching';
+import { NavigationRoute, registerRoute, setDefaultHandler } from 'workbox-routing';
 import { NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies';
 
 declare let self: ServiceWorkerGlobalScope;
@@ -36,6 +36,38 @@ registerRoute(
 		],
 	}),
 );
+
+registerRoute(
+	new NavigationRoute(createHandlerBoundToURL('index.html'), {
+		denylist: [/\/api\//, /\/(rest|storage)\/v1\//],
+	}),
+);
+
+setDefaultHandler(async ({ request }) => {
+	const url = new URL(request.url);
+
+	if (
+		url.origin === self.location.origin &&
+		(request.destination === 'script' || request.destination === 'style')
+	) {
+		try {
+			const response = await fetch(request);
+			const contentType = response.headers.get('content-type') || '';
+			if (contentType.includes('text/html')) {
+				const clients = await self.clients.matchAll({ type: 'window' });
+				for (const client of clients) {
+					client.postMessage({ type: 'FORCE_UPDATE' });
+				}
+				return new Response('', { status: 408, statusText: 'Request Timeout' });
+			}
+			return response;
+		} catch {
+			return new Response('', { status: 408, statusText: 'Request Timeout' });
+		}
+	}
+
+	return fetch(request);
+});
 
 self.skipWaiting();
 clientsClaim();

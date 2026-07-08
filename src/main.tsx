@@ -22,6 +22,12 @@ const updateSW = registerSW({
 	},
 });
 
+navigator.serviceWorker?.addEventListener('message', (event) => {
+	if (event.data?.type === 'FORCE_UPDATE') {
+		window.location.reload();
+	}
+});
+
 const rootElement = document.getElementById('root');
 if (!rootElement) {
 	throw new Error('Failed to find the root element');

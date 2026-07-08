@@ -4,7 +4,10 @@
 	"headers": [
 		{
 			"source": "/sw.js",
-			"headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+			"headers": [
+				{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
+				{ "key": "Content-Type", "value": "application/javascript" }
+			]
 		},
 		{
 			"source": "/manifest.webmanifest",
@@ -35,5 +38,8 @@
 			]
 		}
 	],
-	"rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+	"rewrites": [
+		{ "source": "/sw.js", "destination": "/sw.js" },
+		{ "source": "/(.*)", "destination": "/index.html" }
+	]
 }
