@@ -200,7 +200,15 @@ export function FullscreenMediaCarousel({
 								setVideoErrors((prev) => new Set(prev).add(currentIndex));
 							}}>
 							<MediaPlayerVideo className="bg-black" poster={videoPoster}>
-								<source src={safeMedia[currentIndex]?.url} type="video/mp4" />
+								<source
+									src={safeMedia[currentIndex]?.url}
+									type={
+										safeMedia[currentIndex]?.url?.match(/\.(\w+)(?:\?|$)/)?.[1]?.toLowerCase() ===
+										'webm'
+											? 'video/webm'
+											: 'video/mp4'
+									}
+								/>
 							</MediaPlayerVideo>
 							<MediaPlayerLoading />
 							<MediaPlayerError />

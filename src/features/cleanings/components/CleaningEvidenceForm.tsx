@@ -144,15 +144,19 @@ export function CleaningEvidenceForm({ onSubmit, onCancel }: CleaningEvidenceFor
 							<FileSvgDraw accept={bucketConfig.accept} />
 						</FileInput>
 						<FileUploaderContent className="flex flex-row flex-wrap items-center gap-2 mt-2">
-							{files?.map((file, i) => (
-								<FileUploaderItem key={`${file.name}-${file.lastModified}-${i}`} index={i}>
-									{file.type.startsWith('image/') ? (
-										<img src={previewUrls[i]} alt="preview" className="object-cover size-20" />
-									) : (
-										<VideoThumbnail src={previewUrls[i] ?? ''} className="size-20" />
-									)}
-								</FileUploaderItem>
-							))}
+							{files?.map((file, i) => {
+								const isVideo =
+									file.type.startsWith('video/') || /\.(mp4|mov|avi|webm|mkv)$/i.test(file.name);
+								return (
+									<FileUploaderItem key={`${file.name}-${file.lastModified}-${i}`} index={i}>
+										{isVideo ? (
+											<VideoThumbnail src={previewUrls[i] ?? ''} className="size-20" />
+										) : (
+											<img src={previewUrls[i]} alt="preview" className="object-cover size-20" />
+										)}
+									</FileUploaderItem>
+								);
+							})}
 						</FileUploaderContent>
 					</FileUploader>
 					{form.formState.errors.has_evidence && (
