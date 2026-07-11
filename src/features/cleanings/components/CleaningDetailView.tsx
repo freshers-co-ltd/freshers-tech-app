@@ -168,7 +168,7 @@ export function CleaningDetailView({
 			return null;
 		}
 		const completedAt = new Date(cleaning.clock_out_time);
-		const expiresAt = new Date(completedAt.getTime() + 14 * 24 * 60 * 60 * 1000);
+		const expiresAt = new Date(completedAt.getTime() + 20 * 24 * 60 * 60 * 1000);
 		const now = new Date();
 		const daysRemaining = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 		return { daysRemaining, isExpired: daysRemaining <= 0 };

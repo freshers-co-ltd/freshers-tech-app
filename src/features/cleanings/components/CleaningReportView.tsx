@@ -80,7 +80,7 @@ export function CleaningReportView({
 						</div>
 						<ScrollBar orientation="horizontal" />
 					</ScrollArea>
-					{expiryInfo && expiryInfo.daysRemaining > 0 && expiryInfo.daysRemaining <= 14 && (
+					{expiryInfo && expiryInfo.daysRemaining > 0 && expiryInfo.daysRemaining <= 20 && (
 						<div className="flex items-start gap-2 p-2 rounded-md border border-warning-light bg-warning-background text-yellow text-sm">
 							<Clock className="size-4 shrink-0 mt-0.5" />
 							<span>
