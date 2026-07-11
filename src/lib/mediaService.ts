@@ -34,6 +34,19 @@ const MIME_EXTENSION_MAP: Record<string, string[]> = {
 	'video/quicktime': ['.mov'],
 };
 
+const EXTENSION_MIME_MAP: Record<string, string> = {
+	jpg: 'image/jpeg',
+	jpeg: 'image/jpeg',
+	png: 'image/png',
+	gif: 'image/gif',
+	webp: 'image/webp',
+	mp4: 'video/mp4',
+	mov: 'video/quicktime',
+	webm: 'video/webm',
+	avi: 'video/x-msvideo',
+	mkv: 'video/x-matroska',
+};
+
 export function mimeTypesToAccept(mimeTypes: string[]): Record<string, string[]> {
 	if (mimeTypes.length === 0) {
 		return { '*/*': [] };
@@ -88,13 +101,18 @@ export const mediaService = {
 		bucket: StorageBucket,
 	): Promise<{ path: string | null; error: string | null }> {
 		const lastDotIndex = file.name.lastIndexOf('.');
-		const fileExt = lastDotIndex !== -1 ? file.name.slice(lastDotIndex + 1) : '';
+		const fileExt = lastDotIndex !== -1 ? file.name.slice(lastDotIndex + 1).toLowerCase() : '';
 		const fileName = `${crypto.randomUUID()}${fileExt ? `.${fileExt}` : ''}`;
 		const filePath = `${folderId}/${fileName}`;
 
-		const { error: uploadError } = await supabase.storage.from(bucket).upload(filePath, file);
+		const contentType = file.type || (EXTENSION_MIME_MAP[fileExt] ?? undefined);
+
+		const { error: uploadError } = await supabase.storage.from(bucket).upload(filePath, file, {
+			contentType,
+		});
 
 		if (uploadError) {
+			console.error(`[mediaService] Upload failed for ${filePath}:`, uploadError.message);
 			return { path: null, error: uploadError.message };
 		}
 

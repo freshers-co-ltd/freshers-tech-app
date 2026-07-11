@@ -56,11 +56,13 @@ export function useEvidenceSubmission({
 			}
 
 			for (const { file, path } of successfulUploads) {
+				const isVideo =
+					file.type.startsWith('video') || /\.(mp4|mov|avi|webm|mkv)$/i.test(file.name);
 				await addEvidence({
 					cleaning_id: cleaning.id,
 					uploader_id: cleaning.cleaner_id,
 					media_url: path,
-					type: file.type.startsWith('video') ? 'video' : 'image',
+					type: isVideo ? 'video' : 'image',
 				});
 			}
 
