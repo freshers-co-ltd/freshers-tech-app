@@ -34,6 +34,7 @@ export interface CleaningFilters {
 	cleanerId?: string | null;
 	hostId?: string;
 	search?: string;
+	upcoming?: boolean;
 }
 
 export interface UpdateCleaningPayload {

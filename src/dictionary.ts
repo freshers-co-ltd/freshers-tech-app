@@ -533,6 +533,7 @@ export const DICT = {
 				CLEAR: 'Clear',
 				ALL_CLEANERS: 'All Cleaners',
 				UNASSIGNED: 'Unassigned',
+				ONLY_UPCOMING: 'Only upcoming cleanings',
 			},
 			BUTTONS: {
 				STANDARD_TASKS: 'Standard Tasks',
