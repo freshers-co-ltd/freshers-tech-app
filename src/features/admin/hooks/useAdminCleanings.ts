@@ -21,6 +21,7 @@ interface UseAdminCleaningsResult {
 	statusFilter: string;
 	searchQuery: string;
 	cleanerFilter: string;
+	upcomingFilter: boolean;
 	page: number;
 	sortField: string;
 	sortDirection: 'asc' | 'desc';
@@ -31,6 +32,7 @@ interface UseAdminCleaningsResult {
 	setStatusFilter: (status: string) => void;
 	setSearchQuery: (query: string) => void;
 	setCleanerFilter: (filter: string) => void;
+	setUpcomingFilter: (value: boolean) => void;
 	setPage: (page: number) => void;
 	setSortField: (field: string) => void;
 	setSortDirection: (direction: 'asc' | 'desc') => void;
@@ -64,12 +66,23 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 	const [statusFilter, setStatusFilter] = useState<CleaningStatus | 'all'>('all');
 	const [searchQuery, setSearchQuery] = useState('');
 	const [cleanerFilter, setCleanerFilter] = useState<string>('all');
+	const [upcomingFilter, setUpcomingFilter] = useState(false);
 	const [page, setPage] = useState(1);
 	const [sortField, setSortField] = useState<string>('date');
 	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 	const limit = 20;
 	const pageRef = useRef(page);
 	pageRef.current = page;
+
+	const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+	const requestIdRef = useRef(0);
+
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedSearchQuery(searchQuery);
+		}, 300);
+		return () => clearTimeout(timer);
+	}, [searchQuery]);
 
 	const [availableCleaners, setAvailableCleaners] = useState<AvailableCleaner[]>([]);
 
@@ -79,6 +92,8 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 
 	const fetchData = useCallback(
 		async (targetPage: number, mode: 'replace' | 'append' = 'replace') => {
+			const requestId = ++requestIdRef.current;
+
 			if (mode === 'replace') {
 				setLoading(true);
 			} else {
@@ -92,12 +107,17 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 			if (cleanerFilter !== 'all') {
 				filters.cleanerId = cleanerFilter;
 			}
-			filters.search = searchQuery || undefined;
+			filters.search = debouncedSearchQuery || undefined;
+			filters.upcoming = upcomingFilter || undefined;
 
 			const [cleaningsResult, countResult] = await Promise.all([
 				cleaningService.getAllCleanings(filters, targetPage, limit, sortField, sortDirection),
 				cleaningService.getCleaningsCount(filters),
 			]);
+
+			if (requestId !== requestIdRef.current) {
+				return;
+			}
 
 			if (cleaningsResult.error) {
 				toast.error(cleaningsResult.error);
@@ -121,7 +141,7 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 				setLoadingMore(false);
 			}
 		},
-		[statusFilter, cleanerFilter, searchQuery, sortField, sortDirection],
+		[statusFilter, cleanerFilter, debouncedSearchQuery, sortField, sortDirection, upcomingFilter],
 	);
 
 	const refetchCurrentPage = useCallback(() => {
@@ -257,6 +277,7 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 		statusFilter,
 		searchQuery,
 		cleanerFilter,
+		upcomingFilter,
 		page,
 		sortField,
 		sortDirection,
@@ -271,6 +292,7 @@ export function useAdminCleanings(): UseAdminCleaningsResult {
 		},
 		setSearchQuery,
 		setCleanerFilter,
+		setUpcomingFilter,
 		setPage,
 		setSortField,
 		setSortDirection,

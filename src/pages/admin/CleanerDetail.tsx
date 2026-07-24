@@ -1,9 +1,11 @@
 'use client';
 
 import { BrushCleaning, ClipboardList, Clock, Sparkles } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from '@/components/Toast';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { DICT } from '@/dictionary';
 import { CleaningsTable } from '@/features/admin/components/CleaningsTable';
 import { useAdminUsers } from '@/features/admin/hooks/useAdminUsers';
@@ -21,6 +23,7 @@ export function AdminCleanerDetailPage() {
 	const navigate = useNavigate();
 	const [cleaningsSortField, setCleaningsSortField] = useState<string>('scheduled_start');
 	const [cleaningsSortDirection, setCleaningsSortDirection] = useState<'asc' | 'desc'>('desc');
+	const [cleaningsUpcomingFilter, setCleaningsUpcomingFilter] = useState(false);
 
 	const { cleaner, loading, refresh } = useCleanerDetail(id, {
 		cleaningsSortField,
@@ -112,15 +115,23 @@ export function AdminCleanerDetailPage() {
 		return { error: null };
 	}, [cleaner, navigate]);
 
+	const cleanings = cleaner?.assigned_cleanings ?? [];
+	const stats = cleaner?.cleaner_stats;
+	const dict = DICT.ADMIN.CLEANINGS.DETAIL.CLEANER_DETAIL;
+
+	const filteredCleanings = useMemo(() => {
+		if (!cleaningsUpcomingFilter) {
+			return cleanings;
+		}
+		const now = new Date();
+		return cleanings.filter((c) => new Date(c.scheduled_start) >= now);
+	}, [cleanings, cleaningsUpcomingFilter]);
+
 	if (!cleaner) {
 		return null;
 	}
 
-	const cleanings = cleaner.assigned_cleanings || [];
-	const stats = cleaner.cleaner_stats;
-	const dict = DICT.ADMIN.CLEANINGS.DETAIL.CLEANER_DETAIL;
-
-	const tableData = cleanings.map((c) => ({
+	const tableData = filteredCleanings.map((c) => ({
 		id: c.id,
 		status: c.status,
 		scheduled_start: c.scheduled_start,
@@ -188,30 +199,42 @@ export function AdminCleanerDetailPage() {
 				{
 					title: dict.TITLE,
 					content: (
-						<CleaningsTable
-							data={tableData}
-							fetchById={fetchCleaningById}
-							onUpsert={handleUpsert}
-							onDelete={handleDelete}
-							userRole="admin"
-							excludeCleaner={true}
-							hideHostCost={true}
-							emptyMessage={dict.EMPTY}
-							onRefresh={refreshAll}
-							pageSize={10}
-							totalCount={cleanings.length}
-							availableCleaners={availableCleaners}
-							sortField={cleaningsSortField}
-							sortDirection={cleaningsSortDirection}
-							onSort={(field) => {
-								if (cleaningsSortField === field) {
-									setCleaningsSortDirection(cleaningsSortDirection === 'asc' ? 'desc' : 'asc');
-								} else {
-									setCleaningsSortField(field);
-									setCleaningsSortDirection('desc');
-								}
-							}}
-						/>
+						<div className="space-y-3">
+							<div className="flex items-center gap-2">
+								<Checkbox
+									id="cleaner-cleanings-upcoming"
+									checked={cleaningsUpcomingFilter}
+									onCheckedChange={(checked) => setCleaningsUpcomingFilter(checked === true)}
+								/>
+								<Label htmlFor="cleaner-cleanings-upcoming" className="text-sm cursor-pointer">
+									{DICT.ADMIN.CLEANINGS.FILTERS.ONLY_UPCOMING}
+								</Label>
+							</div>
+							<CleaningsTable
+								data={tableData}
+								fetchById={fetchCleaningById}
+								onUpsert={handleUpsert}
+								onDelete={handleDelete}
+								userRole="admin"
+								excludeCleaner={true}
+								hideHostCost={true}
+								emptyMessage={dict.EMPTY}
+								onRefresh={refreshAll}
+								pageSize={10}
+								totalCount={filteredCleanings.length}
+								availableCleaners={availableCleaners}
+								sortField={cleaningsSortField}
+								sortDirection={cleaningsSortDirection}
+								onSort={(field) => {
+									if (cleaningsSortField === field) {
+										setCleaningsSortDirection(cleaningsSortDirection === 'asc' ? 'desc' : 'asc');
+									} else {
+										setCleaningsSortField(field);
+										setCleaningsSortDirection('desc');
+									}
+								}}
+							/>
+						</div>
 					),
 				},
 			]}
