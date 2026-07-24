@@ -1,7 +1,7 @@
 'use client';
 
 import { Bath, Bed, MapPin, Maximize2, Pencil, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FullscreenMediaCarousel } from '@/components/FullscreenMediaCarousel';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { Button } from '@/components/ui/button';
@@ -55,7 +55,10 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 		};
 	}, [property.extra_images_urls]);
 
-	const images = [mainImageUrl || '/placeholder-image.webp', ...extraImageUrls];
+	const images = useMemo(
+		() => [mainImageUrl || '/placeholder-image.webp', ...extraImageUrls],
+		[mainImageUrl, extraImageUrls],
+	);
 
 	const { activeImage, setActiveImage, allImages } = useCarousel({
 		images,
@@ -63,7 +66,7 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 		isKeyboardEnabled: isFullScreen,
 	});
 
-	const isHost = user?.user_metadata?.role === 'host';
+	const canManage = user?.user_metadata?.role === 'host' || user?.user_metadata?.role === 'admin';
 
 	return (
 		<DialogContent className="max-w-5xl! w-screen sm:w-full h-[95svh] flex flex-col p-0 overflow-hidden">
@@ -139,7 +142,7 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 								</div>
 							</div>
 
-							{isHost && (
+							{canManage && (
 								<div className="flex flex-col gap-2">
 									<Button onClick={() => onEdit(property.id)} className="w-full">
 										<Pencil className="mr-1 size-4" /> {DICT.COMMON.ACTIONS.EDIT}

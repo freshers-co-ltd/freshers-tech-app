@@ -1,11 +1,13 @@
 'use client';
 
 import { BadgeCheck, BrushCleaning, CalendarClock, ClipboardList, Plus } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { ConfirmActionDialog } from '@/components/ConfirmActionDialog';
 import { Loading } from '@/components/Loading';
 import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
 	Dialog,
 	DialogContent,
@@ -14,6 +16,7 @@ import {
 	DialogTitle,
 } from '@/components/ui/dialog';
 import { FormContainer } from '@/components/ui/form-container';
+import { Label } from '@/components/ui/label';
 import { DICT } from '@/dictionary';
 import { CleaningsTable } from '@/features/admin/components/CleaningsTable';
 import { PropertiesTable } from '@/features/admin/components/PropertiesTable';
@@ -27,8 +30,9 @@ import type { CleaningFormValues } from '@/features/cleanings/components/Cleanin
 import { CleaningForm } from '@/features/cleanings/components/CleaningForm';
 import { cleaningsService } from '@/features/cleanings/services/cleaningsService';
 import { PropertyDetailView } from '@/features/properties/components/PropertyDetailView';
+import { PropertyForm } from '@/features/properties/components/PropertyForm';
 import { propertyService } from '@/features/properties/propertyService';
-import type { Property } from '@/features/properties/types';
+import type { Property, PropertyInsert } from '@/features/properties/types';
 import { useResourceModals } from '@/hooks/useResourceModals';
 import { UserDetailLayout } from '@/layouts/UserDetailLayout';
 
@@ -36,11 +40,14 @@ export function AdminHostDetailPage() {
 	const { id } = useParams<{ id: string }>();
 	const navigate = useNavigate();
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-	const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+	const [pricingProperty, setPricingProperty] = useState<Property | null>(null);
 	const [propertiesSortField, setPropertiesSortField] = useState<string>('address_line_1');
 	const [propertiesSortDirection, setPropertiesSortDirection] = useState<'asc' | 'desc'>('desc');
-	const [cleaningsSortField, setCleaningsSortField] = useState<string>('created_at');
+	const [cleaningsSortField, setCleaningsSortField] = useState<string>('date');
 	const [cleaningsSortDirection, setCleaningsSortDirection] = useState<'asc' | 'desc'>('desc');
+	const [cleaningsUpcomingFilter, setCleaningsUpcomingFilter] = useState(false);
+	const [deletePropertyId, setDeletePropertyId] = useState<string | null>(null);
+	const [editingProperty, setEditingProperty] = useState<Property | null>(null);
 
 	const { host, loading, refresh } = useHostDetail(id, {
 		propertiesSortField,
@@ -182,19 +189,78 @@ export function AdminHostDetailPage() {
 		toast.success(DICT.CLEANINGS.DELETE.ADMIN_TOAST_SUCCESS);
 	}, []);
 
+	const handleEditProperty = useCallback(
+		(propertyId: string) => {
+			if (!host) {
+				return;
+			}
+			const property = (host.properties ?? []).find((p) => p.id === propertyId);
+			if (property) {
+				propertyModal.handleClose();
+				setEditingProperty(property);
+			}
+		},
+		[host, propertyModal],
+	);
+
+	const handleEditPropertySubmit = useCallback(
+		async (data: PropertyInsert) => {
+			const result = await propertyService.upsertProperty(data);
+			if (result.error) {
+				toast.error(result.error);
+				return;
+			}
+			toast.success(DICT.PROPERTIES.EDIT.TOAST_SUCCESS);
+			setEditingProperty(null);
+			await refresh();
+		},
+		[refresh],
+	);
+
+	const handleDeleteProperty = useCallback(
+		async (propertyId: string) => {
+			setEditingProperty(null);
+			propertyModal.handleClose();
+			setDeletePropertyId(propertyId);
+		},
+		[propertyModal],
+	);
+
+	const confirmDeleteProperty = useCallback(async () => {
+		if (!deletePropertyId) {
+			return;
+		}
+		const result = await propertyService.softDeleteProperty(deletePropertyId);
+		if (result.error) {
+			toast.error(result.error);
+			return;
+		}
+		toast.success(DICT.PROPERTIES.DELETE.TOAST_SUCCESS);
+		setDeletePropertyId(null);
+		await refresh();
+	}, [deletePropertyId, refresh]);
+
 	const refreshAll = useCallback(async () => {
 		await Promise.all([refresh(), fetchCleanings()]);
 	}, [refresh, fetchCleanings]);
+
+	const properties = host?.properties ?? [];
+	const cleanings = host?.cleanings ?? [];
+	const stats = host?.cleaning_stats;
+
+	const filteredCleanings = useMemo(() => {
+		if (!cleaningsUpcomingFilter) {
+			return cleanings;
+		}
+		const now = new Date();
+		return cleanings.filter((c) => new Date(c.scheduled_start) >= now);
+	}, [cleanings, cleaningsUpcomingFilter]);
 
 	if (!host) {
 		return null;
 	}
 
-	const properties = host.properties || [];
-	const cleanings = host.cleanings || [];
-	const stats = host.cleaning_stats;
-
-	const tableData = cleanings.map((c) => {
+	const tableData = filteredCleanings.map((c) => {
 		const property = properties.find((p) => p.id === c.property_id);
 		return {
 			id: c.id,
@@ -269,7 +335,7 @@ export function AdminHostDetailPage() {
 							data={properties}
 							emptyMessage={dict.EMPTY_PROPERTIES}
 							onView={(id) => propertyModal.openView(id)}
-							onEditPrice={(property) => setEditingProperty(property)}
+							onEditPrice={(property) => setPricingProperty(property)}
 							pageSize={10}
 							totalCount={properties.length}
 							sortField={propertiesSortField}
@@ -294,30 +360,42 @@ export function AdminHostDetailPage() {
 						</Button>
 					),
 					content: (
-						<CleaningsTable
-							data={tableData}
-							fetchById={fetchCleaningById}
-							onUpsert={handleUpsert}
-							onDelete={handleDelete}
-							userRole="admin"
-							excludeHost={true}
-							hideCleanerPay={true}
-							emptyMessage={dict.EMPTY_CLEANINGS}
-							onRefresh={refreshAll}
-							pageSize={10}
-							totalCount={cleanings.length}
-							availableCleaners={availableCleaners}
-							sortField={cleaningsSortField}
-							sortDirection={cleaningsSortDirection}
-							onSort={(field) => {
-								if (cleaningsSortField === field) {
-									setCleaningsSortDirection(cleaningsSortDirection === 'asc' ? 'desc' : 'asc');
-								} else {
-									setCleaningsSortField(field);
-									setCleaningsSortDirection('desc');
-								}
-							}}
-						/>
+						<div className="space-y-3">
+							<div className="flex items-center gap-2">
+								<Checkbox
+									id="host-cleanings-upcoming"
+									checked={cleaningsUpcomingFilter}
+									onCheckedChange={(checked) => setCleaningsUpcomingFilter(checked === true)}
+								/>
+								<Label htmlFor="host-cleanings-upcoming" className="text-sm cursor-pointer">
+									{DICT.ADMIN.CLEANINGS.FILTERS.ONLY_UPCOMING}
+								</Label>
+							</div>
+							<CleaningsTable
+								data={tableData}
+								fetchById={fetchCleaningById}
+								onUpsert={handleUpsert}
+								onDelete={handleDelete}
+								userRole="admin"
+								excludeHost={true}
+								hideCleanerPay={true}
+								emptyMessage={dict.EMPTY_CLEANINGS}
+								onRefresh={refreshAll}
+								pageSize={10}
+								totalCount={filteredCleanings.length}
+								availableCleaners={availableCleaners}
+								sortField={cleaningsSortField}
+								sortDirection={cleaningsSortDirection}
+								onSort={(field) => {
+									if (cleaningsSortField === field) {
+										setCleaningsSortDirection(cleaningsSortDirection === 'asc' ? 'desc' : 'asc');
+									} else {
+										setCleaningsSortField(field);
+										setCleaningsSortDirection('desc');
+									}
+								}}
+							/>
+						</div>
 					),
 				},
 			]}>
@@ -347,24 +425,66 @@ export function AdminHostDetailPage() {
 						<DialogDescription>{dict.PROPERTY_MESSAGE}</DialogDescription>
 					</DialogHeader>
 					{viewingPropertyLoading ? (
-						<Loading />
+						<Loading absolute={false} />
 					) : viewingProperty ? (
-						<PropertyDetailView property={viewingProperty} onEdit={() => {}} onDelete={() => {}} />
+						<PropertyDetailView
+							property={viewingProperty}
+							onEdit={handleEditProperty}
+							onDelete={handleDeleteProperty}
+						/>
 					) : null}
 				</DialogContent>
 			</Dialog>
 
-			{editingProperty && (
+			<Dialog
+				open={!!editingProperty && !pricingProperty}
+				onOpenChange={(open) => {
+					if (!open) {
+						setEditingProperty(null);
+					}
+				}}>
+				{editingProperty && (
+					<DialogContent className="p-0 overflow-hidden max-w-2xl border-none">
+						<FormContainer
+							variant="dialog"
+							title={DICT.PROPERTIES.EDIT.TITLE}
+							description={DICT.PROPERTIES.EDIT.MESSAGE}>
+							<PropertyForm
+								initialData={editingProperty}
+								onSubmit={handleEditPropertySubmit}
+								onCancel={() => setEditingProperty(null)}
+								hostId={host?.id}
+							/>
+						</FormContainer>
+					</DialogContent>
+				)}
+			</Dialog>
+
+			<ConfirmActionDialog
+				open={!!deletePropertyId}
+				onOpenChange={(open) => {
+					if (!open) {
+						setDeletePropertyId(null);
+					}
+				}}
+				title={DICT.PROPERTIES.DELETE.TITLE}
+				description={DICT.PROPERTIES.DELETE.MESSAGE}
+				confirmText={DICT.COMMON.ACTIONS.DELETE}
+				variant="destructive"
+				onConfirm={confirmDeleteProperty}
+			/>
+
+			{pricingProperty && (
 				<PropertyPriceDialog
 					open={true}
 					onOpenChange={(open) => {
 						if (!open) {
-							setEditingProperty(null);
+							setPricingProperty(null);
 						}
 					}}
-					propertyId={editingProperty.id}
-					propertyAddress={`${editingProperty.address_line_1 ?? ''}, ${editingProperty.postcode ?? ''}`}
-					currentPrice={editingProperty.price_per_cleaning ?? null}
+					propertyId={pricingProperty.id}
+					propertyAddress={`${pricingProperty.address_line_1 ?? ''}, ${pricingProperty.postcode ?? ''}`}
+					currentPrice={pricingProperty.price_per_cleaning ?? null}
 					onSuccess={refresh}
 				/>
 			)}
