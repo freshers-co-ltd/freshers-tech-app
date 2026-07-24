@@ -588,6 +588,7 @@ export type Database = {
 					p_sort_direction?: string;
 					p_sort_field?: string;
 					p_status?: string;
+					p_upcoming?: boolean;
 				};
 				Returns: {
 					cleaner_id: string;
@@ -644,7 +645,11 @@ export type Database = {
 				}[];
 			};
 			admin_get_cleaner_detail: {
-				Args: { p_cleaner_id: string };
+				Args: {
+					p_cleaner_id: string;
+					p_cleanings_sort_direction?: string;
+					p_cleanings_sort_field?: string;
+				};
 				Returns: {
 					assigned_cleanings: Json;
 					avatar_url: string;
@@ -676,6 +681,7 @@ export type Database = {
 					p_host_id?: string;
 					p_search?: string;
 					p_status?: string;
+					p_upcoming?: boolean;
 				};
 				Returns: number;
 			};
@@ -688,6 +694,8 @@ export type Database = {
 			};
 			admin_get_host_detail: {
 				Args: {
+					p_cleanings_sort_direction?: string;
+					p_cleanings_sort_field?: string;
 					p_host_id: string;
 					p_properties_sort_direction?: string;
 					p_properties_sort_field?: string;
@@ -834,10 +842,12 @@ export type Database = {
 			};
 			admin_update_cleaning: {
 				Args: {
+					p_cleaner_pay?: number;
 					p_cleaning_id: string;
 					p_custom_tasks: string[];
 					p_information: string;
 					p_scheduled_start: string;
+					p_service_cost?: number;
 					p_stocks_included?: boolean;
 				};
 				Returns: string;

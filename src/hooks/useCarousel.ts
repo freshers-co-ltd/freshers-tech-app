@@ -1,4 +1,4 @@
-import { type KeyboardEvent, useCallback, useState } from 'react';
+import { type KeyboardEvent, useCallback, useEffect, useState } from 'react';
 
 interface UseCarouselProps {
 	images: string[];
@@ -14,6 +14,14 @@ export function useCarousel({ images, initialImage, isKeyboardEnabled }: UseCaro
 		}
 		return 0;
 	});
+
+	useEffect(() => {
+		if (images.length === 0) {
+			setCurrentIndex(0);
+			return;
+		}
+		setCurrentIndex((prev) => Math.min(prev, images.length - 1));
+	}, [images.length]);
 
 	const nextImage = useCallback(() => {
 		if (images.length === 0) {

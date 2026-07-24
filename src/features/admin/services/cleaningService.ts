@@ -12,13 +12,17 @@ export const cleaningService = {
 		sortField?: string,
 		sortDirection: 'asc' | 'desc' = 'desc',
 	): Promise<ActionResult<AdminCleaning[]>> {
-		const { status, cleanerId, hostId, search } = filters;
+		const { status, cleanerId, hostId, search, upcoming } = filters;
+
+		const isUnassigned = cleanerId === 'unassigned';
 
 		const { data, error } = await supabase.rpc('admin_get_all_cleanings', {
 			p_status: (status ?? null) as string,
-			p_cleaner_id: (cleanerId === 'unassigned' ? null : (cleanerId ?? null)) as string,
+			p_cleaner_id: (isUnassigned ? null : (cleanerId ?? null)) as string,
 			p_host_id: (hostId ?? null) as string,
 			p_search: (search ?? null) as string,
+			p_upcoming: upcoming ?? undefined,
+			p_unassigned: isUnassigned ? true : null,
 			p_page: page,
 			p_limit: limit,
 			p_sort_field: (sortField ?? null) as string,
@@ -33,13 +37,17 @@ export const cleaningService = {
 	},
 
 	async getCleaningsCount(filters: CleaningFilters = {}): Promise<ActionResult<number>> {
-		const { status, cleanerId, hostId, search } = filters;
+		const { status, cleanerId, hostId, search, upcoming } = filters;
+
+		const isUnassigned = cleanerId === 'unassigned';
 
 		const { data, error } = await supabase.rpc('admin_get_cleanings_count', {
 			p_status: (status ?? null) as string,
-			p_cleaner_id: (cleanerId === 'unassigned' ? null : (cleanerId ?? null)) as string,
+			p_cleaner_id: (isUnassigned ? null : (cleanerId ?? null)) as string,
 			p_host_id: (hostId ?? null) as string,
 			p_search: (search ?? null) as string,
+			p_upcoming: upcoming ?? undefined,
+			p_unassigned: isUnassigned ? true : null,
 		});
 
 		if (error) {
@@ -110,8 +118,8 @@ export const cleaningService = {
 			p_information: payload.information,
 			p_scheduled_start: payload.scheduled_start,
 			p_stocks_included: payload.stocks_included,
-			p_cleaner_pay: payload.cleaner_pay ?? null,
-			p_service_cost: payload.service_cost ?? null,
+			p_cleaner_pay: payload.cleaner_pay ?? undefined,
+			p_service_cost: payload.service_cost ?? undefined,
 		});
 
 		if (error) {

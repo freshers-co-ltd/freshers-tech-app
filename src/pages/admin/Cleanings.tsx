@@ -5,7 +5,9 @@ import { useCallback, useState } from 'react';
 import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
 	Select,
 	SelectContent,
@@ -32,6 +34,7 @@ export function AdminCleaningsPage() {
 		statusFilter,
 		searchQuery,
 		cleanerFilter,
+		upcomingFilter,
 		page,
 		sortField,
 		sortDirection,
@@ -39,6 +42,7 @@ export function AdminCleaningsPage() {
 		setStatusFilter,
 		setSearchQuery,
 		setCleanerFilter,
+		setUpcomingFilter,
 		setPage,
 		setSortField,
 		setSortDirection,
@@ -139,7 +143,10 @@ export function AdminCleaningsPage() {
 							className="h-8 pl-9"
 							placeholder={filtersDict.SEARCH_PLACEHOLDER}
 							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
+							onChange={(e) => {
+								setSearchQuery(e.target.value);
+								setPage(1);
+							}}
 							onKeyDown={(e) => {
 								if (e.key === 'Enter') {
 									setPage(1);
@@ -183,6 +190,19 @@ export function AdminCleaningsPage() {
 							))}
 						</SelectContent>
 					</Select>
+					<div className="flex items-center gap-2">
+						<Checkbox
+							id="admin-cleanings-upcoming"
+							checked={upcomingFilter}
+							onCheckedChange={(checked) => {
+								setUpcomingFilter(checked === true);
+								setPage(1);
+							}}
+						/>
+						<Label htmlFor="admin-cleanings-upcoming" className="text-sm cursor-pointer">
+							{filtersDict.ONLY_UPCOMING}
+						</Label>
+					</div>
 					<Button
 						className="h-8"
 						variant="outline"
@@ -190,6 +210,7 @@ export function AdminCleaningsPage() {
 							setSearchQuery('');
 							setStatusFilter('all');
 							setCleanerFilter('all');
+							setUpcomingFilter(false);
 							setPage(1);
 						}}>
 						{filtersDict.CLEAR}

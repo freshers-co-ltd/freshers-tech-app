@@ -41,7 +41,7 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
 		return <Navigate to="/error/403" replace />;
 	}
 
-	if (mfaAction === 'enroll' && location.pathname !== '/mfa-enroll') {
+	if (mfaAction === 'enroll' && location.pathname !== '/mfa-enroll' && !import.meta.env.DEV) {
 		return <Navigate to="/mfa-enroll" replace />;
 	}
 
