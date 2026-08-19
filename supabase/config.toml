@@ -402,3 +402,9 @@ verify_jwt = false
 
 [functions.invite-user]
 verify_jwt = false
+
+[functions.ical-sync]
+verify_jwt = false
+
+[functions.ical-feeds]
+verify_jwt = false

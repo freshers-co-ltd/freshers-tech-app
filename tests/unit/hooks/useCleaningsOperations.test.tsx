@@ -39,6 +39,7 @@ function createCleaning(): CleaningRequest {
 		scheduled_start: '2026-06-23T10:00:00Z',
 		information: null,
 		stocks_included: false,
+		source: 'manual',
 		service_cost: null,
 		cleaner_pay: null,
 		clock_in_time: null,

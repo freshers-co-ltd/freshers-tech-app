@@ -717,6 +717,23 @@ export const DICT = {
 				'Push notifications are blocked. Please enable them in your browser settings.',
 		},
 	},
+	ICAL: {
+		TITLE: 'Calendar Sync',
+		MESSAGE: 'Automatically create cleanings from your booking calendar.',
+		NOT_FOUND: 'Calendar feed not found.',
+		ERRORS: {
+			FETCH_FAILED: 'Could not fetch the calendar. Please check the link.',
+			INVALID_URL: 'Enter a valid calendar link.',
+			INVALID_CALENDAR: 'The calendar link returned invalid data.',
+			PERSONAL_CALENDAR:
+				'Personal calendars are not supported. Use a booking platform calendar link.',
+			PLATFORM_MISMATCH: "This calendar doesn't match the selected platform.",
+			DETECTED_PLATFORM: 'This looks like a {platform} calendar. Connect it as {platform}?',
+			FEED_EXISTS: 'A feed for this calendar is already connected.',
+			INVALID_SOURCE: 'The selected calendar platform is invalid.',
+			PROPERTY_NOT_FOUND: 'Property not found.',
+		},
+	},
 	PWA: {
 		BUTTON_INSTALL: 'Install instructions',
 		TITLE: 'Install Freshers PWA',
