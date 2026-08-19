@@ -46,4 +46,5 @@ export const NOTIFICATION_TYPES: Record<NotificationType, NotificationType> = {
 	cleaning_reminder: 'cleaning_reminder',
 	cleaning_starting_soon: 'cleaning_starting_soon',
 	cleaning_missed_clockin: 'cleaning_missed_clockin',
+	ical_sync_alert: 'ical_sync_alert',
 };

@@ -16,6 +16,8 @@ export function buildProperty(overrides?: Partial<Property>): Property {
 		cleaner_pay_override: null,
 		main_cleaner_id: null,
 		price_per_cleaning: null,
+		default_cleaning_time: '09:00:00',
+		timezone: 'Europe/London',
 		created_at: new Date().toISOString(),
 		updated_at: new Date().toISOString(),
 		deleted_at: null,

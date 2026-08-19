@@ -1,64 +1,10 @@
 'use client';
 
-import type { Json } from '@/lib/database.types';
 import { type ActionResult, mapDatabaseError } from '@/lib/serviceUtils';
 import { supabase } from '@/lib/supabaseClient';
-import type { Notification, NotificationPreferences, NotificationType } from './types';
+import type { Notification, NotificationPreferences } from './types';
 
 export const notificationsService = {
-	async createNotification(
-		userId: string,
-		type: NotificationType,
-		title: string,
-		message: string,
-		data?: Record<string, unknown>,
-		link?: string,
-	): Promise<{ id: string | null; error: string | null }> {
-		try {
-			const { data: notificationId, error } = await supabase.rpc('create_notification_for_user', {
-				p_user_id: userId,
-				p_type: type,
-				p_title: title,
-				p_message: message,
-				p_data: (data ?? {}) as Json,
-				p_link: link ?? undefined,
-			});
-
-			if (error) {
-				console.error('[Notifications] Error creating notification:', error);
-				return { id: null, error: mapDatabaseError(error) };
-			}
-
-			return { id: notificationId as string | null, error: null };
-		} catch (err) {
-			console.error('[Notifications] Unexpected error creating notification:', err);
-			return { id: null, error: 'Unexpected error creating notification' };
-		}
-	},
-
-	async createNotificationsForMultipleUsers(
-		userIds: string[],
-		type: NotificationType,
-		title: string,
-		message: string,
-		data?: Record<string, unknown>,
-		link?: string,
-	): Promise<{ success: boolean; error: string | null }> {
-		if (userIds.length === 0) {
-			return { success: true, error: null };
-		}
-
-		try {
-			for (const userId of userIds) {
-				await this.createNotification(userId, type, title, message, data, link);
-			}
-			return { success: true, error: null };
-		} catch (err) {
-			console.error('[Notifications] Error creating multiple notifications:', err);
-			return { success: false, error: 'Failed to create notifications' };
-		}
-	},
-
 	async getNotifications(
 		userId: string,
 		options?: {
