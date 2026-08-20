@@ -3,6 +3,7 @@ import {
 	BellRing,
 	BrushCleaning,
 	CalendarCheck,
+	CalendarSync,
 	CalendarX,
 	Clock,
 	Sparkles,
@@ -37,6 +38,8 @@ const getNotificationIcon = (type: NotificationType) => {
 			return <UserPen className="size-5 text-warning-light" />;
 		case 'cleaning_updated':
 			return <SquarePen className="size-5 text-warning-light" />;
+		case 'ical_sync_alert':
+			return <CalendarSync className="size-5 text-primary-light" />;
 		default:
 			return <Clock className="size-5 text-muted-foreground" />;
 	}

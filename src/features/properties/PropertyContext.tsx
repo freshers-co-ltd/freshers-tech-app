@@ -21,7 +21,10 @@ interface PropertyContextType {
 	properties: Property[];
 	isLoading: boolean;
 	fetchProperties: (signal?: AbortSignal, skipLoadingState?: boolean) => Promise<void>;
-	upsertProperty: (property: PropertyInsert) => Promise<{ success: boolean; data?: Property }>;
+	upsertProperty: (
+		property: PropertyInsert,
+		options?: { silent?: boolean },
+	) => Promise<{ success: boolean; data?: Property }>;
 	deleteProperty: (id: string, hard?: boolean) => Promise<{ success: boolean }>;
 }
 
@@ -94,10 +97,12 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 		},
 	});
 
-	const upsertProperty = async (property: PropertyInsert) => {
+	const upsertProperty = async (property: PropertyInsert, options?: { silent?: boolean }) => {
 		const { data, error } = await propertyService.upsertProperty(property);
 		if (error) {
-			toast.error(error);
+			if (!options?.silent) {
+				toast.error(error);
+			}
 			return { success: false };
 		}
 
@@ -107,9 +112,11 @@ export function PropertyProvider({ children }: { children: ReactNode }) {
 				const exists = prev.find((p) => p.id === data.id);
 				return exists ? prev.map((p) => (p.id === data.id ? data : p)) : [data, ...prev];
 			});
-			toast.success(
-				isUpdate ? DICT.PROPERTIES.EDIT.TOAST_SUCCESS : DICT.PROPERTIES.CREATE.TOAST_SUCCESS,
-			);
+			if (!options?.silent) {
+				toast.success(
+					isUpdate ? DICT.PROPERTIES.EDIT.TOAST_SUCCESS : DICT.PROPERTIES.CREATE.TOAST_SUCCESS,
+				);
+			}
 			return { success: true, data };
 		}
 		return { success: false };

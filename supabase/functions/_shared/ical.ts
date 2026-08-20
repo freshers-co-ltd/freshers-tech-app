@@ -1,5 +1,8 @@
 // @ts-nocheck
 import ICAL from 'npm:ical.js@2.2.1';
+import { extractCheckoutDate } from './time.ts';
+
+export { extractCheckoutTime, formatIsoDate, parseClockTime } from './time.ts';
 
 export interface IcalRawDate {
 	year: number;
@@ -97,42 +100,8 @@ export function zonedToUtc(
 	return instant;
 }
 
-export function formatIsoDate(date: IcalRawDate): string {
-	return `${date.year}-${pad2(date.month)}-${pad2(date.day)}`;
-}
-
 export function wallDateToUtc(date: IcalRawDate): number {
 	return Date.UTC(date.year, date.month - 1, date.day);
-}
-
-function pad2(value: number): string {
-	return value < 10 ? `0${value}` : String(value);
-}
-
-export function parseClockTime(value: string): { hour: number; minute: number } {
-	const parts = value.split(':').map((part) => Number(part));
-	return { hour: parts[0] ?? 0, minute: parts[1] ?? 0 };
-}
-
-export function extractCheckoutTime(description: string | null): { hour: number; minute: number } | null {
-	if (!description) return null;
-	const match = description.match(/(?:check[\s_-]*out|checkout)\s*:?\s*(\d{1,2})[:.](\d{2})/i);
-	if (!match) return null;
-	const hour = Number(match[1]);
-	const minute = Number(match[2]);
-	if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
-	return { hour, minute };
-}
-
-export function extractCheckoutDate(description: string | null): { year: number; month: number; day: number } | null {
-	if (!description) return null;
-	const match = description.match(/(?:check[\s_-]*out|checkout)\s*:?\s*(\d{4})-(\d{1,2})-(\d{1,2})/i);
-	if (!match) return null;
-	const year = Number(match[1]);
-	const month = Number(match[2]);
-	const day = Number(match[3]);
-	if (year < 2000 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) return null;
-	return { year, month, day };
 }
 
 export function deriveEndDate(event: IcalRawEvent): IcalRawEvent {

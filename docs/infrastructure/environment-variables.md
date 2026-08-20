@@ -40,6 +40,7 @@ These identifiers are non-sensitive and serve to reference the appropriate infra
 These encrypted credentials are used during the CI/CD pipeline and specific server-side functions. They must be stored as protected secrets within both staging and production environments.
 
 - `WEBHOOK_SECRET`: A shared secret used to verify requests between webhooks and Supabase Edge Functions.
+- `ICAL_WEBHOOK_SECRET`: A shared secret used to authenticate calendar sync webhook calls to the `ical-sync` edge function. Its value must match the `ical_webhook_secret` Vault secret.
 - `SUPABASE_DB_PASSWORD`: The Supabase database password used for database migrations.
 - `SUPABASE_SERVICE_ROLE_KEY`: An administrative key used to bypass RLS for backend operations.
 - `VAPID_PRIVATE_KEY`: The secret key used to sign and authorise Web Push notifications.

@@ -327,7 +327,7 @@ async function failFeed(deps: SyncDeps, feed: FeedRecord, error: string, now: Da
 			title: 'Calendar Sync Failed',
 			message: `We couldn't sync the calendar for ${feed.property.address}. Please check the calendar link.`,
 			data: { feed_id: feed.id, property_id: feed.propertyId },
-			link: '/host/ical',
+			link: '/host/properties',
 		});
 	}
 }

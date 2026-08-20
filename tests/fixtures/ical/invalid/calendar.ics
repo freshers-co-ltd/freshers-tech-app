@@ -1,0 +1,7 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Example//Calendar//EN
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20260912
+UID:unterminated-9001@example.com
+SUMMARY:This event never ends

@@ -1,0 +1,2 @@
+SELECT vault.create_secret('http://host.docker.internal:54321/functions/v1/ical-sync', 'ical_sync_url');
+SELECT vault.create_secret('231ea761ef9508ca106580530bf5de358ee47f4c7f91445223c86854afa8e466', 'ical_webhook_secret');

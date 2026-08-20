@@ -667,3 +667,72 @@ FROM
     PUBLIC,
     anon,
     authenticated;
+
+CREATE
+OR REPLACE FUNCTION public.create_cleaning_request (
+    p_property_id UUID,
+    p_custom_tasks TEXT[],
+    p_information TEXT,
+    p_scheduled_start TIMESTAMPTZ,
+    p_stocks_included BOOLEAN DEFAULT FALSE,
+    p_source TEXT DEFAULT 'manual'
+) RETURNS UUID SECURITY DEFINER
+SET
+    search_path = public AS $$
+DECLARE
+    v_cleaning_id UUID;
+    v_host_id UUID;
+    v_property_type TEXT;
+    v_bedrooms INT;
+    v_price_per_cleaning NUMERIC;
+    v_main_cleaner_id UUID;
+BEGIN
+    IF COALESCE((SELECT auth.jwt() ->> 'role'), '') <> 'service_role' THEN
+        IF NOT EXISTS (SELECT 1 FROM public.properties WHERE id = p_property_id AND host_id = (SELECT auth.uid()) AND deleted_at IS NULL) THEN
+            RAISE EXCEPTION 'Unauthorised' USING ERRCODE = 'P0001';
+        END IF;
+    END IF;
+
+    SELECT p.host_id, p.type, p.bedrooms, p.price_per_cleaning, p.main_cleaner_id
+    INTO v_host_id, v_property_type, v_bedrooms, v_price_per_cleaning, v_main_cleaner_id
+    FROM public.properties p WHERE p.id = p_property_id;
+
+    INSERT INTO public.cleanings (property_id, host_id, scheduled_start, status, information, stocks_included, service_cost, cleaner_id, source)
+    VALUES (
+        p_property_id,
+        v_host_id,
+        p_scheduled_start,
+        CASE WHEN v_main_cleaner_id IS NOT NULL THEN 'confirmed'::cleaning_status ELSE 'requested'::cleaning_status END,
+        p_information,
+        p_stocks_included,
+        v_price_per_cleaning,
+        v_main_cleaner_id,
+        p_source
+    )
+    RETURNING id INTO v_cleaning_id;
+
+    INSERT INTO public.cleaning_tasks (cleaning_id, description, is_custom, is_completed)
+    SELECT v_cleaning_id, description, false, false FROM standard_tasks WHERE is_active = true;
+
+    IF p_custom_tasks IS NOT NULL THEN
+        INSERT INTO public.cleaning_tasks (cleaning_id, description, is_custom, is_completed)
+        SELECT v_cleaning_id, task_desc, true, false FROM unnest(p_custom_tasks) AS task_desc;
+    END IF;
+
+    RETURN v_cleaning_id;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP FUNCTION IF EXISTS public.create_cleaning_request (UUID, TEXT[], TEXT, TIMESTAMPTZ, BOOLEAN);
+
+REVOKE
+EXECUTE ON FUNCTION public.create_cleaning_request (UUID, TEXT[], TEXT, TIMESTAMPTZ, BOOLEAN, TEXT)
+FROM
+    PUBLIC,
+    anon;
+
+GRANT
+EXECUTE ON FUNCTION public.create_cleaning_request (UUID, TEXT[], TEXT, TIMESTAMPTZ, BOOLEAN, TEXT) TO authenticated;
+
+GRANT
+EXECUTE ON FUNCTION public.create_cleaning_request (UUID, TEXT[], TEXT, TIMESTAMPTZ, BOOLEAN, TEXT) TO service_role;

@@ -1,9 +1,10 @@
 'use client';
 
 import { Bath, Bed, MapPin, Maximize2, Pencil, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { FullscreenMediaCarousel } from '@/components/FullscreenMediaCarousel';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
+import { toast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import {
 	DialogContent,
@@ -12,8 +13,11 @@ import {
 	DialogTitle,
 } from '@/components/ui/dialog';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { TimeInput } from '@/components/ui/time-input';
 import { DICT } from '@/dictionary';
 import { useAuth } from '@/features/auth/AuthContext';
+import { IcalFeedManager } from '@/features/ical/components/IcalFeedManager';
+import { useProperties } from '@/features/properties/PropertyContext';
 import type { Property } from '@/features/properties/types';
 import { useCarousel } from '@/hooks/useCarousel';
 import { useMediaUrl } from '@/hooks/useMediaUrl';
@@ -28,7 +32,11 @@ interface PropertyDetailViewProps {
 
 export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetailViewProps) {
 	const { user } = useAuth();
+	const { upsertProperty } = useProperties();
 	const [isFullScreen, setIsFullScreen] = useState(false);
+	const [defaultCleaningTime, setDefaultCleaningTime] = useState(
+		property.default_cleaning_time?.slice(0, 5) ?? '11:00',
+	);
 
 	const mainImageUrl = useMediaUrl(property.main_image_url, 'property-media');
 	const extraImageUrls = useMediaUrls(property.extra_images_urls, 'property-media');
@@ -45,6 +53,40 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 	});
 
 	const canManage = user?.user_metadata?.role === 'host' || user?.user_metadata?.role === 'admin';
+
+	const handleDefaultTimeChange = useCallback((value: string) => {
+		setDefaultCleaningTime(value);
+	}, []);
+
+	const handleDefaultTimeClose = useCallback(async () => {
+		const currentValue = property.default_cleaning_time?.slice(0, 5) ?? '11:00';
+		if (defaultCleaningTime === currentValue) {
+			return;
+		}
+		const result = await upsertProperty(
+			{
+				id: property.id,
+				created_at: property.created_at,
+				host_id: property.host_id,
+				address_line_1: property.address_line_1,
+				address_line_2: property.address_line_2,
+				town_city: property.town_city,
+				postcode: property.postcode,
+				type: property.type,
+				bedrooms: property.bedrooms,
+				bathrooms: property.bathrooms,
+				main_image_url: property.main_image_url,
+				extra_images_urls: property.extra_images_urls,
+				default_cleaning_time: defaultCleaningTime,
+			},
+			{ silent: true },
+		);
+		if (result.success) {
+			toast.success(DICT.PROPERTIES.DEFAULT_TIME_SAVED);
+		} else {
+			toast.error(DICT.ERRORS.COMMON.GENERIC);
+		}
+	}, [property, defaultCleaningTime, upsertProperty]);
 
 	return (
 		<DialogContent className="max-w-5xl! w-screen sm:w-full h-[95svh] flex flex-col p-0 overflow-hidden">
@@ -135,6 +177,25 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 								</div>
 							)}
 						</div>
+
+						{canManage && (
+							<div className="border rounded-lg p-4 space-y-4">
+								<div>
+									<h3 className="font-bold">{DICT.ICAL.TITLE}</h3>
+									<p className="text-sm text-muted-foreground">{DICT.ICAL.MESSAGE}</p>
+								</div>
+								<div className="space-y-2">
+									<p className="text-sm font-medium">{DICT.COMMON.LABELS.DEFAULT_CLEANING_TIME}</p>
+									<TimeInput
+										value={defaultCleaningTime}
+										onChange={handleDefaultTimeChange}
+										onClose={handleDefaultTimeClose}
+									/>
+									<p className="text-xs text-muted-foreground">{DICT.PROPERTIES.TIME_HELP}</p>
+								</div>
+								<IcalFeedManager propertyId={property.id} />
+							</div>
+						)}
 					</div>
 				</ScrollArea>
 			</div>

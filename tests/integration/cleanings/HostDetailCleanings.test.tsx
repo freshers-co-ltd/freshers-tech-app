@@ -43,7 +43,7 @@ function buildHostDetail(overrides?: Record<string, unknown>) {
 			{
 				id: 'cln_1',
 				status: 'confirmed',
-				scheduled_start: '2026-08-10T10:00:00Z',
+				scheduled_start: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
 				service_cost: 100,
 				cleaner_pay: 50,
 				cleaner_id: 'cleaner_1',
@@ -54,7 +54,7 @@ function buildHostDetail(overrides?: Record<string, unknown>) {
 			{
 				id: 'cln_2',
 				status: 'completed',
-				scheduled_start: '2026-06-01T10:00:00Z',
+				scheduled_start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
 				service_cost: 120,
 				cleaner_pay: 60,
 				cleaner_id: null,
