@@ -23,6 +23,7 @@
 		"test:unit": "vitest unit",
 		"test:int": "vitest integration",
 		"test:e2e": "playwright test",
+		"serve:ical-fixtures": "node scripts/serve-ical-fixtures.mjs",
 		"type-check": "tsc -p tsconfig.app.json --noEmit && tsc -p tests/tsconfig.json --noEmit",
 		"create-assets": "pwa-assets-generator -p minimal-2023 --html.preset 2023 public/icon-source.svg",
 		"update-types": "npx supabase gen types typescript --local --schema public,storage > src/lib/database.types.ts"

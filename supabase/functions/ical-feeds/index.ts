@@ -189,6 +189,11 @@ async function handleCreateFeed(
 		console.error('[ical-feeds] Failed to insert feed:', insertError.message);
 		return jsonResponse({ error: 'Failed to create calendar feed' }, 500, origin);
 	}
+
+	const { error: syncError } = await admin.rpc('run_ical_sync', { p_feed_id: feed.id });
+	if (syncError) {
+		console.error('[ical-feeds] Failed to queue initial sync:', syncError.message);
+	}
 	return jsonResponse({ data: feed }, 201, origin);
 }
 
@@ -322,6 +327,40 @@ async function handleDeleteFeed(
 	const feed = await getFeedRow(admin, feedId);
 	if (!feed) return jsonResponse({ error: 'Calendar feed not found' }, 404, origin);
 	if (!assertOwnership(feed, auth, isAdmin)) return jsonResponse({ error: 'Forbidden' }, 403, origin);
+
+	if (body.cancelCleanings === true) {
+		const { data: events } = await admin
+			.from('ical_events')
+			.select('cleaning_id')
+			.eq('feed_id', feedId)
+			.not('cleaning_id', 'is', null);
+		const cleaningIds = Array.from(
+			new Set(
+				(events ?? [])
+					.map((event) => event.cleaning_id)
+					.filter((id): id is string => id !== null),
+			),
+		);
+		if (cleaningIds.length > 0) {
+			const { data: cleanings } = await admin
+				.from('cleanings')
+				.select('id')
+				.in('id', cleaningIds)
+				.in('status', ['requested', 'confirmed'])
+				.is('deleted_at', null);
+			const cancelIds = (cleanings ?? []).map((cleaning) => cleaning.id);
+			if (cancelIds.length > 0) {
+				const { error: cancelError } = await admin
+					.from('cleanings')
+					.update({ status: 'cancelled' })
+					.in('id', cancelIds);
+				if (cancelError) {
+					console.error('[ical-feeds] Failed to cancel cleanings:', cancelError.message);
+					return jsonResponse({ error: 'Failed to cancel cleanings' }, 500, origin);
+				}
+			}
+		}
+	}
 
 	const { error } = await admin.from('ical_feeds').delete().eq('id', feedId);
 	if (error) {

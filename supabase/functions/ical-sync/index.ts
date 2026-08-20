@@ -251,21 +251,17 @@ function createSyncDeps(admin: SupabaseClient): SyncDeps {
 				);
 			},
 			async createCleaning(input) {
-				const { data, error } = await admin
-					.from('cleanings')
-					.insert({
-						host_id: input.hostId,
-						property_id: input.propertyId,
-						scheduled_start: input.scheduledStart,
-						information: input.information,
-						status: 'requested',
-						source: 'ical',
-						stocks_included: false,
-					})
-					.select('id')
-					.single();
+				const { data, error } = await admin.rpc('create_cleaning_request', {
+					p_property_id: input.propertyId,
+					p_custom_tasks: [],
+					p_information: input.information,
+					p_scheduled_start: input.scheduledStart,
+					p_stocks_included: false,
+					p_source: 'ical',
+				});
 				if (error) throw new Error(`Failed to create cleaning: ${error.message}`);
-				return data.id;
+				if (typeof data !== 'string') throw new Error('Failed to create cleaning: invalid response');
+				return data;
 			},
 			async updateCleaningDate(cleaningId, scheduledStart) {
 				const { error } = await admin

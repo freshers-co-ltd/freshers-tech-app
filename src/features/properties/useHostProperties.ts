@@ -47,6 +47,7 @@ export function useHostProperties() {
 				bathrooms: data.bathrooms ?? 0,
 				main_image_url: data.main_image_url ?? '',
 				extra_images_urls: 'extra_images_urls' in data ? data.extra_images_urls : [],
+				default_cleaning_time: editingProperty?.default_cleaning_time ?? '11:00',
 				updated_at: new Date().toISOString(),
 			};
 

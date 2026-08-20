@@ -48,6 +48,7 @@ export const DICT = {
 			CONFIRM_PASSWORD: 'Confirm Password',
 			CURRENT_PASSWORD: 'Current Password',
 			DATE: 'Date',
+			DEFAULT_CLEANING_TIME: 'Default cleaning time',
 			EMAIL: 'Email',
 			NAME: 'Full Name',
 			NOT_SET: 'Not set',
@@ -114,6 +115,7 @@ export const DICT = {
 			POSTCODE_INVALID: 'Enter a valid UK postcode',
 			TOWN_REQUIRED: 'Town or City is required',
 			TOWN_MAX: 'Town or City must be no more than 50 characters',
+			TIME_INVALID: 'Enter a valid time',
 		},
 		LOADING: { MESSAGE: 'Please wait...', TITLE: 'Loading' },
 		CURRENCY: '£',
@@ -307,6 +309,8 @@ export const DICT = {
 		FOCUS_IMAGE: 'Property focus',
 		FULLSCREEN_VIEW: 'Fullscreen view of property images',
 		UPLOADING: 'Uploading...',
+		TIME_HELP: 'Used when a booking calendar does not include a checkout time.',
+		DEFAULT_TIME_SAVED: 'Default cleaning time updated',
 	},
 	CLEANINGS: {
 		TITLE: 'Cleaning requests',
@@ -720,7 +724,38 @@ export const DICT = {
 	ICAL: {
 		TITLE: 'Calendar Sync',
 		MESSAGE: 'Automatically create cleanings from your booking calendar.',
-		NOT_FOUND: 'Calendar feed not found.',
+		EMPTY: 'No calendar links connected yet.',
+		ADD: 'Add calendar link',
+		SYNC_NOW: 'Sync now',
+		SYNCING: 'Syncing...',
+		NEVER_SYNCED: 'Not synced yet',
+		SYNC_ERROR: 'Sync error',
+		LAST_SYNCED: 'Last synced {time}',
+		URL: 'Calendar link',
+		SOURCE: 'Platform',
+		SOURCES: {
+			AIRBNB: 'Airbnb',
+			BOOKING: 'Booking.com',
+			VRBO: 'Vrbo',
+			GENERIC: 'Other',
+		},
+		GENERIC_CONFIRM: 'This link is from a booking platform calendar.',
+		DETECTED_SOURCE_HINT: 'Looks like a {platform} calendar link.',
+		DELETE_CANCEL_CLEANINGS: 'Cancel the cleanings created by this calendar',
+		DELETE_WITH_CLEANINGS_MESSAGE:
+			'The cleanings created by this calendar will be cancelled. Cleanings that already started will stay.',
+		CREATE: {
+			TITLE: 'Connect a calendar',
+			MESSAGE: 'Paste the link from your booking platform calendar.',
+			TOAST_SUCCESS: 'Calendar connected',
+		},
+		DELETE: {
+			TITLE: 'Remove calendar link',
+			MESSAGE:
+				'Calendar sync will stop and bookings from this calendar will no longer create cleanings.',
+			TOAST_SUCCESS: 'Calendar link removed',
+		},
+		TOAST_SYNC_STARTED: 'Sync started',
 		ERRORS: {
 			FETCH_FAILED: 'Could not fetch the calendar. Please check the link.',
 			INVALID_URL: 'Enter a valid calendar link.',
@@ -732,6 +767,8 @@ export const DICT = {
 			FEED_EXISTS: 'A feed for this calendar is already connected.',
 			INVALID_SOURCE: 'The selected calendar platform is invalid.',
 			PROPERTY_NOT_FOUND: 'Property not found.',
+			NOT_CONFIRMED:
+				'Confirm that this link is from a booking platform calendar before connecting it.',
 		},
 	},
 	PWA: {

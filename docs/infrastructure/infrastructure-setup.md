@@ -117,6 +117,14 @@ Go to **Edge Functions > Secrets** and add the following:
 - `VAPID_PUBLIC_KEY`: Run `npx web-push generate-vapid-keys` in the CLI.
 - `VAPID_SUBJECT`: Contact email.
 - `WEBHOOK_SECRET` : Run `openssl rand -base64 32` in the CLI.
+- `ICAL_WEBHOOK_SECRET`: Run `openssl rand -base64 32` in the CLI.
+
+### 2.4 Vault Secrets
+
+Go to **Integrations > Vault > Secrets** and add the following:
+
+- `ical_sync_url`: Supabase project function URL in this format `https://<project-ref>.supabase.co/functions/v1/ical-sync`.
+- `ical_webhook_secret`: Use the same value as `ICAL_WEBHOOK_SECRET`.
 
 ## 3. Vercel Setup
 
