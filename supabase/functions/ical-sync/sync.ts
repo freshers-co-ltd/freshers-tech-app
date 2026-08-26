@@ -74,6 +74,8 @@ export interface SyncDb {
 		hostId: string;
 		scheduledStart: string;
 		information: string | null;
+		source: string;
+		confidence: string;
 	}): Promise<string>;
 	updateCleaningDate(cleaningId: string, scheduledStart: string): Promise<void>;
 	cancelCleaning(cleaningId: string): Promise<void>;
@@ -149,7 +151,7 @@ export async function processFeed(
 		return { ok: false, error: fetched.error };
 	}
 	if (fetched.status === 'not_modified') {
-		await deps.db.updateFeedStatus(feed.id, { status: 'success', lastSyncedAt: now.toISOString() });
+		await deps.db.updateFeedStatus(feed.id, { status: 'success', error: null, lastSyncedAt: now.toISOString() });
 		return { ok: true };
 	}
 
@@ -202,11 +204,13 @@ export async function processFeed(
 		let cleaningId = existing?.cleaningId ?? null;
 		if (cleaningId) {
 			const cleaning = await deps.db.getCleaning(cleaningId);
-			if (cleaning && cleaning.deletedAt === null && cleaning.status !== 'cancelled') {
-				const scheduled = computeScheduledStart(deps, normalizedEvent, property);
+			if (cleaning && cleaning.deletedAt === null && (cleaning.status === 'requested' || cleaning.status === 'confirmed')) {
+				const scheduled = computeScheduledStart(normalizedEvent, property);
 				if (scheduled !== cleaning.scheduledStart) {
 					await deps.db.updateCleaningDate(cleaningId, scheduled);
 				}
+			} else if (cleaning && cleaning.deletedAt !== null) {
+				continue;
 			} else {
 				cleaningId = null;
 			}
@@ -215,18 +219,20 @@ export async function processFeed(
 			const covering = await deps.db.findCleaningForRange(feed.propertyId, startDate, endDate);
 			if (covering) {
 				const cleaning = await deps.db.getCleaning(covering);
-				if (cleaning && cleaning.deletedAt === null && cleaning.status !== 'cancelled') {
+		if (cleaning && cleaning.deletedAt === null && (cleaning.status === 'requested' || cleaning.status === 'confirmed')) {
 					cleaningId = covering;
 				}
 			}
 		}
 		if (!cleaningId) {
-			const scheduled = computeScheduledStart(deps, normalizedEvent, property);
+			const scheduled = computeScheduledStart(normalizedEvent, property);
 			cleaningId = await deps.db.createCleaning({
 				propertyId: feed.propertyId,
 				hostId: property.hostId,
 				scheduledStart: scheduled,
-				information: normalizedEvent.summary,
+				information: null,
+				source: feed.source,
+				confidence: classification.confidence,
 			});
 		}
 		await deps.db.upsertEvent({
@@ -278,13 +284,14 @@ export async function processFeed(
 				title: 'Calendar Update',
 				message: `A booking was removed at ${property.address}.`,
 				data: { cleaning_id: event.cleaningId, property_id: feed.propertyId, feed_id: feed.id },
-				link: '/host/cleanings',
+				link: `/host/properties?property_view=${feed.propertyId}`,
 			});
 		}
 	}
 
 	await deps.db.updateFeedStatus(feed.id, {
 		status: 'success',
+		error: null,
 		etag: fetched.etag,
 		lastModified: fetched.lastModified,
 		consecutiveFailures: 0,
@@ -293,14 +300,14 @@ export async function processFeed(
 	return { ok: true };
 }
 
-function computeScheduledStart(deps: SyncDeps, event: IcalRawEvent, property: FeedProperty): string {
+export function computeScheduledStart(event: IcalRawEvent, property: FeedProperty): string {
 	const end = event.dtend;
 	if (!end) throw new Error('Event has no end date');
 	const checkout = extractCheckoutTime(event.description);
 	let hour: number;
 	let minute: number;
 	if (checkout) {
-		hour = checkout.hour + 1;
+		hour = checkout.hour;
 		minute = checkout.minute;
 	} else {
 		const clock = parseClockTime(property.defaultCleaningTime);
@@ -312,22 +319,41 @@ function computeScheduledStart(deps: SyncDeps, event: IcalRawEvent, property: Fe
 	return new Date(instant).toISOString();
 }
 
+export function sanitizeSyncError(raw: string): string {
+	switch (true) {
+		case /Network is unreachable|ECONNREFUSED|ENOTFOUND|fetch failed|connection refused|dns error|tcp connect error/i.test(raw):
+			return 'Could not reach the calendar source. Please check the link and try again.';
+		case /^HTTP \d{3}/.test(raw):
+			return 'The calendar source returned an error. Please try again later.';
+		case /invalid calendar|parse|malformed/i.test(raw):
+			return 'The calendar link returned invalid data.';
+		case /url not configured/i.test(raw):
+			return 'Calendar link is not configured.';
+		default:
+			return 'Something went wrong syncing this calendar. Please try again.';
+	}
+}
+
+function isPowerOf2(n: number): boolean {
+	return n > 0 && (n & (n - 1)) === 0;
+}
+
 async function failFeed(deps: SyncDeps, feed: FeedRecord, error: string, now: Date): Promise<void> {
 	const consecutiveFailures = feed.consecutiveFailures + 1;
 	await deps.db.updateFeedStatus(feed.id, {
 		status: 'error',
-		error: error.slice(0, 500),
+		error: sanitizeSyncError(error).slice(0, 500),
 		consecutiveFailures,
 		lastSyncedAt: now.toISOString(),
 	});
-	if (consecutiveFailures === 3 && feed.property) {
+	if (feed.property && isPowerOf2(consecutiveFailures)) {
 		await deps.db.insertNotification({
 			userId: feed.property.hostId,
 			type: 'ical_sync_alert',
 			title: 'Calendar Sync Failed',
 			message: `We couldn't sync the calendar for ${feed.property.address}. Please check the calendar link.`,
 			data: { feed_id: feed.id, property_id: feed.propertyId },
-			link: '/host/properties',
+			link: `/host/properties?property_view=${feed.propertyId}`,
 		});
 	}
 }

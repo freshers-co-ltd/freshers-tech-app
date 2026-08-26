@@ -5,12 +5,17 @@ import { toast } from '@/components/Toast';
 import { DICT } from '@/dictionary';
 import { useAuth } from '@/features/auth/AuthContext';
 import { icalService } from '@/features/ical/icalService';
-import type { CreateFeedPayload, DeleteFeedPayload, IcalFeed } from '@/features/ical/types';
+import type {
+	CreateFeedPayload,
+	DeleteFeedPayload,
+	IcalFeed,
+	UpdateFeedPayload,
+} from '@/features/ical/types';
 
 const SYNC_POLL_INTERVAL_MS = 2000;
 const MAX_SYNC_POLLS = 5;
 
-export function useIcalFeeds(propertyId: string) {
+export function useIcalFeeds(propertyId: string, onSyncComplete?: () => void) {
 	const { user } = useAuth();
 	const [feeds, setFeeds] = useState<IcalFeed[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
@@ -19,27 +24,25 @@ export function useIcalFeeds(propertyId: string) {
 	const fetchAbortRef = useRef<AbortController | null>(null);
 	const pollAbortRef = useRef<AbortController | null>(null);
 
-	const fetchFeeds = useCallback(
+	const fetchFeedsData = useCallback(
 		async (signal?: AbortSignal): Promise<IcalFeed[]> => {
 			if (!user) {
 				setFeeds([]);
-				setIsLoading(false);
 				return [];
 			}
-			setIsLoading(true);
 			const { data, error } = await icalService.getFeeds(signal);
 			if (signal?.aborted) {
 				return [];
 			}
 			if (error) {
 				toast.error(error);
-			} else if (data) {
+				return [];
+			}
+			if (data) {
 				const filtered = data.filter((feed) => feed.property_id === propertyId);
 				setFeeds(filtered);
-				setIsLoading(false);
 				return filtered;
 			}
-			setIsLoading(false);
 			return [];
 		},
 		[user, propertyId],
@@ -49,11 +52,12 @@ export function useIcalFeeds(propertyId: string) {
 		fetchAbortRef.current?.abort();
 		const controller = new AbortController();
 		fetchAbortRef.current = controller;
-		fetchFeeds(controller.signal);
+		setIsLoading(true);
+		void fetchFeedsData(controller.signal).finally(() => setIsLoading(false));
 		return () => {
 			controller.abort();
 		};
-	}, [fetchFeeds]);
+	}, [fetchFeedsData]);
 
 	useEffect(() => {
 		return () => {
@@ -68,14 +72,14 @@ export function useIcalFeeds(propertyId: string) {
 				if (signal?.aborted) {
 					return;
 				}
-				const currentFeeds = await fetchFeeds(signal);
+				const currentFeeds = await fetchFeedsData(signal);
 				const target = currentFeeds.find((feed) => feed.id === feedId);
-				if (!target || target.last_synced_at) {
+				if (!target || target.last_synced_at || target.last_sync_error) {
 					return;
 				}
 			}
 		},
-		[fetchFeeds],
+		[fetchFeedsData],
 	);
 
 	const beginSyncTracking = useCallback(
@@ -86,9 +90,10 @@ export function useIcalFeeds(propertyId: string) {
 			setIsSyncingId(feedId);
 			void waitForSync(feedId, controller.signal).finally(() => {
 				setIsSyncingId((current) => (current === feedId ? null : current));
+				onSyncComplete?.();
 			});
 		},
-		[waitForSync],
+		[waitForSync, onSyncComplete],
 	);
 
 	const createFeed = useCallback(
@@ -142,6 +147,23 @@ export function useIcalFeeds(propertyId: string) {
 		[beginSyncTracking],
 	);
 
+	const updateFeed = useCallback(
+		async (payload: UpdateFeedPayload): Promise<{ success: boolean; data?: IcalFeed }> => {
+			const { data, error } = await icalService.updateFeed(payload);
+			if (error) {
+				toast.error(error);
+				return { success: false };
+			}
+			if (data) {
+				setFeeds((prev) => prev.map((feed) => (feed.id === data.id ? data : feed)));
+				toast.success(DICT.ICAL.UPDATE.TOAST_SUCCESS);
+				return { success: true, data };
+			}
+			return { success: false };
+		},
+		[],
+	);
+
 	return {
 		feeds,
 		isLoading,
@@ -150,5 +172,7 @@ export function useIcalFeeds(propertyId: string) {
 		createFeed,
 		deleteFeed,
 		syncFeed,
+		updateFeed,
+		refreshFeeds: fetchFeedsData,
 	};
 }

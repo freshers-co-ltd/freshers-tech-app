@@ -633,10 +633,14 @@ export async function setupSupabaseMocks(
 				await fulfillJson(route, [
 					{
 						hourly_rate: 15,
-						bedroom_time: 30,
-						bathroom_time: 20,
-						common_time: 15,
-						target_times: { bedroom: 30, bathroom: 20, common: 15 },
+						target_times: {
+							studio: 2.5,
+							'1_bed': 3,
+							'2_bed': 4,
+							'3_bed': 5,
+							'4_bed': 6,
+						},
+						bathroom_time: 0.5,
 					},
 				]);
 				return;

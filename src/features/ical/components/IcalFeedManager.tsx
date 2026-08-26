@@ -1,7 +1,7 @@
 'use client';
 
 import { formatDistanceToNow } from 'date-fns';
-import { Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Loading } from '@/components/Loading';
 import {
@@ -24,9 +24,16 @@ import {
 	DialogTitle,
 } from '@/components/ui/dialog';
 import { DICT } from '@/dictionary';
+import { useCleanings } from '@/features/cleanings/CleaningContext';
 import { IcalFeedForm } from '@/features/ical/components/IcalFeedForm';
 import { useIcalFeeds } from '@/features/ical/hooks/useIcalFeeds';
-import type { CreateFeedPayload, IcalFeed } from '@/features/ical/types';
+import { useIcalFeedsRealtime } from '@/features/ical/hooks/useIcalFeedsRealtime';
+import type {
+	CreateFeedPayload,
+	IcalFeed,
+	IcalSource,
+	UpdateFeedPayload,
+} from '@/features/ical/types';
 import { cn } from '@/lib/utils';
 
 interface IcalFeedManagerProps {
@@ -44,18 +51,49 @@ const formatLastSynced = (iso: string | null): string => {
 };
 
 export function IcalFeedManager({ propertyId }: IcalFeedManagerProps) {
-	const { feeds, isLoading, isSyncingId, isDeletingId, createFeed, deleteFeed, syncFeed } =
-		useIcalFeeds(propertyId);
+	const { fetchCleanings } = useCleanings();
+	const {
+		feeds,
+		isLoading,
+		isSyncingId,
+		isDeletingId,
+		createFeed,
+		deleteFeed,
+		syncFeed,
+		updateFeed,
+		refreshFeeds,
+	} = useIcalFeeds(propertyId, fetchCleanings);
+
+	useIcalFeedsRealtime({ propertyId, onFeedChange: refreshFeeds });
 
 	const [isFormOpen, setIsFormOpen] = useState(false);
+	const [editingFeed, setEditingFeed] = useState<IcalFeed | null>(null);
+	const [isEditFormOpen, setIsEditFormOpen] = useState(false);
 	const [deletingFeed, setDeletingFeed] = useState<IcalFeed | null>(null);
 	const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 	const [cancelCleanings, setCancelCleanings] = useState(false);
 
-	const handleFormSubmit = async (payload: CreateFeedPayload) => {
-		const result = await createFeed(payload);
+	const handleFormSubmit = async (payload: CreateFeedPayload | UpdateFeedPayload) => {
+		const result = await createFeed(payload as CreateFeedPayload);
 		if (result.success) {
 			setIsFormOpen(false);
+		}
+		return result;
+	};
+
+	const openEditForm = (feed: IcalFeed) => {
+		setEditingFeed(feed);
+		setIsEditFormOpen(true);
+	};
+
+	const handleEditSubmit = async (payload: CreateFeedPayload | UpdateFeedPayload) => {
+		if (!editingFeed) {
+			return { success: false };
+		}
+		const result = await updateFeed({ ...payload, feedId: editingFeed.id } as UpdateFeedPayload);
+		if (result.success) {
+			setIsEditFormOpen(false);
+			setEditingFeed(null);
 		}
 		return result;
 	};
@@ -107,7 +145,7 @@ export function IcalFeedManager({ propertyId }: IcalFeedManagerProps) {
 							<div className="flex items-center gap-1 shrink-0">
 								<Button
 									size="icon-sm"
-									variant="ghost"
+									variant="secondary"
 									aria-label={DICT.ICAL.SYNC_NOW}
 									onClick={() => syncFeed(feed.id)}
 									disabled={isSyncing}>
@@ -115,7 +153,14 @@ export function IcalFeedManager({ propertyId }: IcalFeedManagerProps) {
 								</Button>
 								<Button
 									size="icon-sm"
-									variant="ghost"
+									variant="secondary"
+									aria-label={DICT.COMMON.ACTIONS.EDIT}
+									onClick={() => openEditForm(feed)}>
+									<Pencil className="size-4" />
+								</Button>
+								<Button
+									size="icon-sm"
+									variant="destructive"
 									aria-label={DICT.COMMON.ACTIONS.DELETE}
 									onClick={() => openDeleteConfirm(feed)}>
 									<Trash2 className="size-4" />
@@ -141,6 +186,26 @@ export function IcalFeedManager({ propertyId }: IcalFeedManagerProps) {
 						onSubmit={handleFormSubmit}
 						onCancel={() => setIsFormOpen(false)}
 					/>
+				</DialogContent>
+			</Dialog>
+
+			<Dialog open={isEditFormOpen} onOpenChange={setIsEditFormOpen}>
+				<DialogContent className="max-w-md">
+					<DialogHeader>
+						<DialogTitle>{DICT.ICAL.UPDATE.TITLE}</DialogTitle>
+						<DialogDescription>{DICT.ICAL.UPDATE.MESSAGE}</DialogDescription>
+					</DialogHeader>
+					{editingFeed && (
+						<IcalFeedForm
+							propertyId={propertyId}
+							initialValues={{ url: '', source: editingFeed.source as IcalSource }}
+							onSubmit={handleEditSubmit}
+							onCancel={() => {
+								setIsEditFormOpen(false);
+								setEditingFeed(null);
+							}}
+						/>
+					)}
 				</DialogContent>
 			</Dialog>
 

@@ -36,6 +36,7 @@ interface CleaningDialogsProps {
 	onCancel: () => void;
 	onEdit?: (id: string) => void;
 	onDelete?: (id: string) => void;
+	onVerify?: (id: string) => void;
 	userRole: UserRole;
 }
 
@@ -53,6 +54,7 @@ export function CleaningDialogs({
 	onCancel,
 	onEdit,
 	onDelete,
+	onVerify,
 	userRole,
 }: CleaningDialogsProps) {
 	return (
@@ -67,6 +69,7 @@ export function CleaningDialogs({
 							userRole={userRole}
 							onEdit={onEdit}
 							onDelete={onDelete}
+							onVerify={onVerify}
 						/>
 					) : null}
 				</DialogContent>

@@ -240,15 +240,20 @@ function createSyncDeps(admin: SupabaseClient): SyncDeps {
 			async hasCoveringEvent(propertyId, startDate, endDate, excludeFeedId) {
 				const { data, error } = await admin
 					.from('ical_events')
-					.select('id, ical_feeds(property_id)')
+					.select('id, ical_feeds(property_id), cleanings(status, deleted_at)')
 					.eq('status', 'active')
 					.eq('start_date', startDate)
 					.eq('end_date', endDate)
 					.neq('feed_id', excludeFeedId);
 				if (error) throw new Error(`Failed to find covering event: ${error.message}`);
-				return (data ?? []).some(
-					(row) => (row.ical_feeds as { property_id: string } | null)?.property_id === propertyId,
-				);
+				return (data ?? []).some((row) => {
+					const propertyMatch =
+						(row.ical_feeds as { property_id: string } | null)?.property_id === propertyId;
+					const cleaning = row.cleanings as { status: string | null; deleted_at: string | null } | null;
+					const cleaningActive =
+						!cleaning || (cleaning.status !== 'cancelled' && cleaning.deleted_at === null);
+					return propertyMatch && cleaningActive;
+				});
 			},
 			async createCleaning(input) {
 				const { data, error } = await admin.rpc('create_cleaning_request', {
@@ -257,7 +262,8 @@ function createSyncDeps(admin: SupabaseClient): SyncDeps {
 					p_information: input.information,
 					p_scheduled_start: input.scheduledStart,
 					p_stocks_included: false,
-					p_source: 'ical',
+					p_source: input.source,
+					p_confidence: input.confidence,
 				});
 				if (error) throw new Error(`Failed to create cleaning: ${error.message}`);
 				if (typeof data !== 'string') throw new Error('Failed to create cleaning: invalid response');

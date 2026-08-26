@@ -64,6 +64,14 @@
 	--color-gray-background: oklch(0.97 0 265);
 	--color-gray-border: oklch(0.93 0.01 265);
 
+	--color-teal: oklch(0.6 0.1 185);
+	--color-teal-background: oklch(0.95 0.05 181);
+	--color-teal-border: oklch(0.91 0.09 180);
+
+	--color-amber: oklch(0.67 0.16 58);
+	--color-amber-background: oklch(0.96 0.06 96);
+	--color-amber-border: oklch(0.92 0.12 96);
+
 	--color-card: oklch(1 0 0);
 	--color-card-foreground: oklch(0.129 0.042 264.695);
 	--color-border: oklch(0.929 0.013 255.508);

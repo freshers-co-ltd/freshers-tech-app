@@ -70,7 +70,7 @@ export function ManagementLayout({
 				{isLoading ? <Loading /> : hasResources ? grid : emptyState}
 			</section>
 
-			<Dialog open={isViewOpen} onOpenChange={(open) => !open && onClose()}>
+			<Dialog open={isViewOpen && !isEditOrCreateOpen} onOpenChange={(open) => !open && onClose()}>
 				<DialogContent className="max-w-xl! w-screen sm:w-full h-[95svh] flex flex-col p-0 gap-0 overflow-hidden">
 					{viewContent}
 				</DialogContent>

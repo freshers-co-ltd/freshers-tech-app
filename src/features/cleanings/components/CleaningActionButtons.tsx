@@ -1,6 +1,6 @@
 'use client';
 
-import { Pencil, Trash2 } from 'lucide-react';
+import { Check, Pencil, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DICT } from '@/dictionary';
 import type { UserRole } from '@/features/auth/types';
@@ -15,6 +15,7 @@ interface CleaningActionButtonsProps {
 	onFinish?: () => void;
 	onEdit?: (id: string) => void;
 	onDelete?: (id: string) => void;
+	onVerify?: (id: string) => void;
 	cleaningId?: string;
 	isClockInDisabled?: boolean;
 	isFinishDisabled?: boolean;
@@ -28,6 +29,7 @@ export function CleaningActionButtons({
 	onFinish,
 	onEdit,
 	onDelete,
+	onVerify,
 	cleaningId,
 	isClockInDisabled = false,
 	isFinishDisabled = true,
@@ -38,6 +40,7 @@ export function CleaningActionButtons({
 
 	const isConfirmed = status === CLEANING_STATUS.CONFIRMED;
 	const isInProgress = status === CLEANING_STATUS.IN_PROGRESS;
+	const isUnverified = status === CLEANING_STATUS.UNVERIFIED;
 	const canEdit = (isHost || isAdmin) && STATUS_GROUPS.CAN_EDIT.includes(status);
 	const canDelete = isAdmin || (isHost && STATUS_GROUPS.CAN_CANCEL.includes(status));
 
@@ -57,6 +60,26 @@ export function CleaningActionButtons({
 						{allTasksCompleted ? 'Finish & Submit Report' : 'Complete All Tasks to Finish'}
 					</Button>
 				)}
+			</div>
+		);
+	}
+
+	if (isHost && isUnverified) {
+		return (
+			<div className="p-3 border-t shrink-0">
+				<div className="flex flex-col sm:flex-row gap-3">
+					<Button className="flex-1 font-bold" onClick={() => cleaningId && onVerify?.(cleaningId)}>
+						<Check className="mr-1 size-4" />
+						{DICT.ICAL.VERIFY}
+					</Button>
+					<Button
+						variant="destructive"
+						className="flex-1"
+						onClick={() => cleaningId && onDelete?.(cleaningId)}>
+						<X className="mr-1 size-4" />
+						{DICT.ICAL.REJECT}
+					</Button>
+				</div>
 			</div>
 		);
 	}

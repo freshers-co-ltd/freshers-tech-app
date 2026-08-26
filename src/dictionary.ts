@@ -463,6 +463,11 @@ export const DICT = {
 			ADMIN_TITLE: 'Delete this cleaning request?',
 			ADMIN_TOAST_SUCCESS: 'Cleaning request deleted successfully',
 		},
+		REJECT: {
+			TITLE: 'Reject this cleaning?',
+			MESSAGE: "This calendar event will be removed and won't create a cleaning.",
+			TOAST_SUCCESS: 'Cleaning rejected',
+		},
 		ASSIGN_CLEANER: {
 			TITLE: 'Assign Cleaner',
 			DESCRIPTION: 'Select which cleaner to assign',
@@ -749,6 +754,11 @@ export const DICT = {
 			MESSAGE: 'Paste the link from your booking platform calendar.',
 			TOAST_SUCCESS: 'Calendar connected',
 		},
+		UPDATE: {
+			TITLE: 'Edit calendar link',
+			MESSAGE: 'Update the calendar link or platform for this feed.',
+			TOAST_SUCCESS: 'Calendar link updated',
+		},
 		DELETE: {
 			TITLE: 'Remove calendar link',
 			MESSAGE:
@@ -756,6 +766,10 @@ export const DICT = {
 			TOAST_SUCCESS: 'Calendar link removed',
 		},
 		TOAST_SYNC_STARTED: 'Sync started',
+		VERIFY: 'Verify',
+		REJECT: 'Reject',
+		TOAST_VERIFIED: 'Cleaning confirmed',
+		TOAST_REJECTED: 'Cleaning rejected',
 		ERRORS: {
 			FETCH_FAILED: 'Could not fetch the calendar. Please check the link.',
 			INVALID_URL: 'Enter a valid calendar link.',

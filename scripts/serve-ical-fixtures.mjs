@@ -1,6 +1,7 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize, sep } from 'node:path';
+import { networkInterfaces } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
 const PORT = Number(process.env.ICAL_FIXTURES_PORT ?? 8899);
@@ -42,7 +43,24 @@ const server = createServer(async (req, res) => {
 	}
 });
 
+function detectHostIp() {
+	const interfaces = networkInterfaces();
+	for (const name of Object.keys(interfaces)) {
+		for (const iface of interfaces[name] ?? []) {
+			if (
+				iface.family === 'IPv4' &&
+				!iface.internal &&
+				/^172\.\d+\.\d+\.\d+$|192\.168\.\d+\.\d+$|10\.\d+\.\d+\.\d+$/.test(iface.address)
+			) {
+				return iface.address;
+			}
+		}
+	}
+	return '127.0.0.1';
+}
+
 server.listen(PORT, '0.0.0.0', () => {
+	const hostIp = detectHostIp();
 	const fixtures = [
 		['airbnb', 'airbnb/calendar.ics'],
 		['booking.com', 'booking.com/calendar.ics'],
@@ -54,9 +72,9 @@ server.listen(PORT, '0.0.0.0', () => {
 	console.log(`iCal fixtures serving on port ${PORT}`);
 	console.log('');
 	for (const [label, path] of fixtures) {
-		console.log(`  ${label.padEnd(24)} http://host.docker.internal:${PORT}/${path}`);
+		console.log(`  ${label.padEnd(24)} http://${hostIp}:${PORT}/${path}`);
 	}
 	console.log('');
-	console.log('Paste the host.docker.internal URL into the app; the edge function container can reach it.');
+	console.log(`Use the URL above in the app. The edge function container can reach ${hostIp}:${PORT}.`);
 	console.log('Press Ctrl+C to stop.');
 });

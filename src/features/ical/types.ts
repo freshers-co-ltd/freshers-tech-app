@@ -28,3 +28,10 @@ export type DeleteFeedPayload = {
 	feedId: string;
 	cancelCleanings: boolean;
 };
+
+export type UpdateFeedPayload = {
+	feedId: string;
+	url?: string;
+	source?: IcalSource;
+	confirmGeneric?: boolean;
+};

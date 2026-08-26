@@ -10,6 +10,7 @@ export default defineConfig({
 		alias: {
 			'@': path.resolve(__dirname, './src'),
 			'~': path.resolve(__dirname, './tests'),
+			'npm:ical.js@2.2.1': 'ical.js',
 		},
 	},
 	test: {

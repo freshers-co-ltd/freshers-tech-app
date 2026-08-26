@@ -7,7 +7,7 @@ import { cleaningRequestService } from '@/features/cleanings/services/cleaningRe
 import { useResourceModals } from '@/hooks/useResourceModals';
 
 export function useHostCleanings() {
-	const { cleanings, isLoading, upsertCleaning, deleteCleaning } = useCleanings();
+	const { cleanings, isLoading, upsertCleaning, verifyCleaning, deleteCleaning } = useCleanings();
 	const modal = useResourceModals({ resourceName: 'cleaning' });
 	const [pendingFormValues, setPendingFormValues] = useState<CleaningFormValues | null>(null);
 	const [isDeleting, setIsDeleting] = useState(false);
@@ -63,7 +63,8 @@ export function useHostCleanings() {
 		if (modal.deletingId) {
 			setIsDeleting(true);
 			try {
-				const result = await deleteCleaning(modal.deletingId);
+				const deleting = cleanings.find((c) => c.id === modal.deletingId);
+				const result = await deleteCleaning(modal.deletingId, false, deleting?.status);
 				if (result.success) {
 					if (modal.viewId === modal.deletingId) {
 						modal.handleClose();
@@ -74,7 +75,7 @@ export function useHostCleanings() {
 				setIsDeleting(false);
 			}
 		}
-	}, [deleteCleaning, modal]);
+	}, [deleteCleaning, modal, cleanings]);
 
 	const confirmCreate = useCallback(() => {
 		if (pendingFormValues) {
@@ -87,6 +88,16 @@ export function useHostCleanings() {
 		setPendingFormValues(null);
 	}, []);
 
+	const handleVerify = useCallback(
+		async (id: string) => {
+			const result = await verifyCleaning(id);
+			if (result.success) {
+				modal.handleClose();
+			}
+		},
+		[verifyCleaning, modal],
+	);
+
 	return {
 		cleanings,
 		isLoading,
@@ -95,6 +106,7 @@ export function useHostCleanings() {
 		modal,
 		handleUpsert,
 		handleDelete,
+		handleVerify,
 		isDeleting,
 		pendingFormValues,
 		confirmCreate,

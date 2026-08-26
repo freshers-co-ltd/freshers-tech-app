@@ -6,15 +6,16 @@ export type IcalSource = 'airbnb' | 'booking' | 'vrbo' | 'generic';
 export interface PlatformDialect {
 	urlHostPatterns: RegExp[];
 	prodidPatterns: RegExp[];
-	bookingSummaryPatterns: RegExp[];
 	blockSummaryPatterns: RegExp[];
 	tentativePatterns: RegExp[];
 	uidPrefixes: { booking: RegExp; block: RegExp };
 	bookingDescriptionPatterns: RegExp[];
+	lowConfidence: boolean;
 }
 
 export interface EventClassification {
 	kind: 'booking' | 'block' | 'tentative';
+	confidence?: 'high' | 'low';
 }
 
 export interface FetchIcsLike {
@@ -33,41 +34,41 @@ const PERSONAL_CALENDAR_PATTERNS = [/google calendar/i, /apple inc/i, /microsoft
 const AIRBNB_DIALECT: PlatformDialect = {
 	urlHostPatterns: [/airbnb/i],
 	prodidPatterns: [/airbnb/i],
-	bookingSummaryPatterns: [/reserved/i, /not available/i],
 	blockSummaryPatterns: [/^block/i, /-block@/i, /not available/i],
 	tentativePatterns: [/tentative/i],
 	uidPrefixes: { booking: /$^/, block: /-block@/i },
 	bookingDescriptionPatterns: [/check[\s_-]*in/i, /check[\s_-]*out/i, /reservation/i],
+	lowConfidence: false,
 };
 
 const BOOKING_DIALECT: PlatformDialect = {
 	urlHostPatterns: [/booking\.com/i],
 	prodidPatterns: [/booking/i],
-	bookingSummaryPatterns: [/closed - not available/i],
 	blockSummaryPatterns: [/^block/i, /-block@/i],
 	tentativePatterns: [],
 	uidPrefixes: { booking: /$^/, block: /-block@/i },
 	bookingDescriptionPatterns: [],
+	lowConfidence: false,
 };
 
 const VRBO_DIALECT: PlatformDialect = {
 	urlHostPatterns: [/vrbo/i],
 	prodidPatterns: [/vrbo/i],
-	bookingSummaryPatterns: [],
 	blockSummaryPatterns: [/^block/i, /-block@/i, /owner stay/i],
 	tentativePatterns: [/tentative/i],
 	uidPrefixes: { booking: /^res-/i, block: /^blk-/i },
 	bookingDescriptionPatterns: [],
+	lowConfidence: false,
 };
 
 const GENERIC_DIALECT: PlatformDialect = {
 	urlHostPatterns: [],
 	prodidPatterns: [],
-	bookingSummaryPatterns: [],
 	blockSummaryPatterns: [/^block/i, /-block@/i, /maintenance/i, /not available/i, /closed/i, /owner stay/i],
 	tentativePatterns: [/tentative/i],
 	uidPrefixes: { booking: /$^/, block: /-block@/i },
-	bookingDescriptionPatterns: [],
+	bookingDescriptionPatterns: [/maintenance/i, /owner stay/i, /not available/i, /blocked/i, /closed/i],
+	lowConfidence: true,
 };
 
 const DIALECTS: Record<IcalSource, PlatformDialect> = {
@@ -100,11 +101,11 @@ export function classifyEvent(dialect: PlatformDialect, event: IcalRawEvent): Ev
 			dialect.bookingDescriptionPatterns.length > 0 &&
 			dialect.bookingDescriptionPatterns.some((pattern) => pattern.test(description))
 		) {
-			return { kind: 'booking' };
+			return { kind: 'booking', confidence: dialect.lowConfidence ? 'low' : 'high' };
 		}
 		return { kind: 'block' };
 	}
-	return { kind: 'booking' };
+	return { kind: 'booking', confidence: dialect.lowConfidence ? 'low' : 'high' };
 }
 
 export function detectPlatformFromUrl(url: string): IcalSource {

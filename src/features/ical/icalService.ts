@@ -9,6 +9,7 @@ import {
 	type DeleteFeedPayload,
 	type IcalFeed,
 	isIcalSource,
+	type UpdateFeedPayload,
 } from './types';
 
 const FUNCTION_NAME = 'ical-feeds';
@@ -148,5 +149,14 @@ export const icalService = {
 			},
 		);
 		return { error: result.error };
+	},
+
+	async updateFeed(payload: UpdateFeedPayload): Promise<ActionResult<IcalFeed>> {
+		const result = await invokeFeedFunction<FeedResponse>('/update', { body: payload });
+		if (result.error) {
+			return { data: null, error: result.error };
+		}
+		const feed = isFeedObject(result.data?.data) ? result.data.data : null;
+		return { data: feed, error: null };
 	},
 };
