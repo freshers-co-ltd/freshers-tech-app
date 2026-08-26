@@ -209,6 +209,11 @@ describe('Admin Host Detail - Cleanings Filter', () => {
 			DICT.ADMIN.CLEANINGS.FILTERS.SEARCH_PLACEHOLDER,
 		);
 		await user.type(searchInput, 'Danny');
+
+		await waitFor(() => {
+			expect(screen.queryAllByText('Unassigned').length).toBe(0);
+		});
+
 		const cleanerTrigger = screen.getByRole('combobox', {
 			name: DICT.ADMIN.CLEANINGS.FILTERS.CLEANER,
 		});

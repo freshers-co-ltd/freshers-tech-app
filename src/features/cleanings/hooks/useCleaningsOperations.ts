@@ -19,6 +19,7 @@ import type {
 	TaskUpdate,
 	UpdateCleaningRequestPayload,
 } from '@/features/cleanings/types';
+import { CLEANING_STATUS, type CleaningStatus } from '@/features/cleanings/types';
 
 export function useCleaningsOperations(setCleanings: Dispatch<SetStateAction<CleaningRequest[]>>) {
 	const upsertCleaning = useCallback(
@@ -74,8 +75,15 @@ export function useCleaningsOperations(setCleanings: Dispatch<SetStateAction<Cle
 		[setCleanings],
 	);
 
+	const verifyCleaning = useCallback(
+		async (id: string) => {
+			return updateCleaning(id, { status: 'requested' });
+		},
+		[updateCleaning],
+	);
+
 	const deleteCleaning = useCallback(
-		async (id: string, hard: boolean = false) => {
+		async (id: string, hard: boolean = false, status?: CleaningStatus) => {
 			const { error } = hard
 				? await cleaningsService.hardDeleteCleaningRequest(id)
 				: await cleaningsService.softDeleteCleaningRequest(id);
@@ -86,7 +94,11 @@ export function useCleaningsOperations(setCleanings: Dispatch<SetStateAction<Cle
 			}
 
 			setCleanings((prev) => prev.filter((c) => c.id !== id));
-			toast.success(DICT.CLEANINGS.DELETE.TOAST_SUCCESS);
+			toast.success(
+				status === CLEANING_STATUS.UNVERIFIED
+					? DICT.CLEANINGS.REJECT.TOAST_SUCCESS
+					: DICT.CLEANINGS.DELETE.TOAST_SUCCESS,
+			);
 			return { success: true };
 		},
 		[setCleanings],
@@ -288,6 +300,7 @@ export function useCleaningsOperations(setCleanings: Dispatch<SetStateAction<Cle
 	return {
 		upsertCleaning,
 		updateCleaning,
+		verifyCleaning,
 		deleteCleaning,
 		insertTask,
 		updateTask,

@@ -154,7 +154,7 @@ export const DICT = {
 				ASSIGNED: 'Assigned Cleanings',
 				ACTIVE: 'Active Cleanings',
 				COMPLETED: 'Completed Cleanings',
-				TOTAL_EARNINGS: 'Total Earnings',
+				TOTAL_EARNINGS: 'Earnings for',
 			},
 		},
 		ADMIN: {
@@ -197,6 +197,14 @@ export const DICT = {
 				SAVE: 'Save Changes',
 			},
 		},
+	},
+	ICAL: {
+		TITLE: 'Calendar Sync',
+		EMPTY: 'No calendar links connected yet.',
+		ADD: 'Add calendar link',
+		SYNC_NOW: 'Sync now',
+		NEVER_SYNCED: 'Not synced yet',
+		CREATE: { TITLE: 'Connect a calendar' },
 	},
 	TOASTS: {
 		PAY_RATES_UPDATED: 'Pay rates updated successfully',

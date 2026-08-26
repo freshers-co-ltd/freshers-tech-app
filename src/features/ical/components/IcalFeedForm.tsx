@@ -20,6 +20,7 @@ import {
 	ICAL_SOURCES,
 	type IcalSource,
 	isIcalSource,
+	type UpdateFeedPayload,
 } from '@/features/ical/types';
 
 const isHttpUrl = (value: string): boolean => /^https?:\/\//i.test(value);
@@ -67,7 +68,8 @@ export type FeedFormValues = z.infer<typeof feedSchema>;
 
 interface IcalFeedFormProps {
 	propertyId: string;
-	onSubmit: (payload: CreateFeedPayload) => Promise<{ success: boolean }>;
+	initialValues?: { url: string; source: IcalSource };
+	onSubmit: (payload: CreateFeedPayload | UpdateFeedPayload) => Promise<{ success: boolean }>;
 	onCancel: () => void;
 }
 
@@ -78,13 +80,14 @@ const SOURCE_LABEL_KEY = {
 	generic: 'GENERIC',
 } as const satisfies Record<IcalSource, string>;
 
-export function IcalFeedForm({ propertyId, onSubmit, onCancel }: IcalFeedFormProps) {
+export function IcalFeedForm({ propertyId, initialValues, onSubmit, onCancel }: IcalFeedFormProps) {
+	const isEdit = !!initialValues;
 	const form = useForm<FeedFormValues>({
 		resolver: zodResolver(feedSchema),
 		defaultValues: {
-			url: '',
-			source: 'airbnb',
-			confirmGeneric: false,
+			url: initialValues?.url ?? '',
+			source: initialValues?.source ?? 'airbnb',
+			confirmGeneric: isEdit,
 		},
 	});
 
@@ -101,11 +104,11 @@ export function IcalFeedForm({ propertyId, onSubmit, onCancel }: IcalFeedFormPro
 
 	const handleFormSubmit = async (values: FeedFormValues) => {
 		await onSubmit({
-			propertyId,
+			...(isEdit ? { feedId: '' } : { propertyId }),
 			url: values.url,
 			source: values.source,
 			confirmGeneric: values.confirmGeneric,
-		});
+		} as CreateFeedPayload | UpdateFeedPayload);
 	};
 
 	return (
@@ -183,7 +186,7 @@ export function IcalFeedForm({ propertyId, onSubmit, onCancel }: IcalFeedFormPro
 					{DICT.COMMON.ACTIONS.CANCEL}
 				</Button>
 				<Button type="submit" disabled={form.formState.isSubmitting}>
-					{DICT.COMMON.ACTIONS.CREATE}
+					{isEdit ? DICT.COMMON.ACTIONS.SAVE : DICT.COMMON.ACTIONS.CREATE}
 				</Button>
 			</div>
 		</form>

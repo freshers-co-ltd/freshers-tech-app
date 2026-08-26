@@ -1049,10 +1049,12 @@ export type Database = {
 			};
 			create_cleaning_request: {
 				Args: {
+					p_confidence?: string;
 					p_custom_tasks: string[];
 					p_information: string;
 					p_property_id: string;
 					p_scheduled_start: string;
+					p_source?: string;
 					p_stocks_included?: boolean;
 				};
 				Returns: string;
@@ -1150,7 +1152,13 @@ export type Database = {
 			update_user_presence: { Args: never; Returns: undefined };
 		};
 		Enums: {
-			cleaning_status: 'requested' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
+			cleaning_status:
+				| 'requested'
+				| 'confirmed'
+				| 'in_progress'
+				| 'completed'
+				| 'cancelled'
+				| 'unverified';
 			media_type: 'image' | 'video';
 			notification_type:
 				| 'cleaning_requested'
@@ -1164,7 +1172,8 @@ export type Database = {
 				| 'cleaning_reminder'
 				| 'cleaning_starting_soon'
 				| 'cleaning_missed_clockin'
-				| 'ical_sync_alert';
+				| 'ical_sync_alert'
+				| 'cleaning_needs_verification';
 			property_type: 'house' | 'apartment' | 'studio';
 			user_role: 'cleaner' | 'host' | 'admin';
 		};
@@ -1837,7 +1846,14 @@ export type CompositeTypes<
 export const Constants = {
 	public: {
 		Enums: {
-			cleaning_status: ['requested', 'confirmed', 'in_progress', 'completed', 'cancelled'],
+			cleaning_status: [
+				'requested',
+				'confirmed',
+				'in_progress',
+				'completed',
+				'cancelled',
+				'unverified',
+			],
 			media_type: ['image', 'video'],
 			notification_type: [
 				'cleaning_requested',
@@ -1852,6 +1868,7 @@ export const Constants = {
 				'cleaning_starting_soon',
 				'cleaning_missed_clockin',
 				'ical_sync_alert',
+				'cleaning_needs_verification',
 			],
 			property_type: ['house', 'apartment', 'studio'],
 			user_role: ['cleaner', 'host', 'admin'],

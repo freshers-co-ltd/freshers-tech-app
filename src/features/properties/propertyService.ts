@@ -18,7 +18,9 @@ export const propertyService = {
 			query = query.abortSignal(signal);
 		}
 
-		const { data, error } = await query.order('created_at', { ascending: false });
+		const { data, error } = await query
+			.order('created_at', { ascending: false })
+			.order('id', { ascending: false });
 
 		if (error) {
 			return { data: null, error: mapDatabaseError(error) };

@@ -31,6 +31,7 @@ interface CleaningDetailViewProps {
 	userRole: UserRole;
 	onEdit?: (id: string) => void;
 	onDelete?: (id: string) => void;
+	onVerify?: (id: string) => void;
 }
 
 export function CleaningDetailView({
@@ -38,6 +39,7 @@ export function CleaningDetailView({
 	userRole,
 	onEdit,
 	onDelete,
+	onVerify,
 }: CleaningDetailViewProps) {
 	const isCleaner = userRole === 'cleaner';
 	const isHost = userRole === 'host';
@@ -198,13 +200,19 @@ export function CleaningDetailView({
 						)}
 					</div>
 					{!showEvidenceForm && (
-						<EntityBadge
-							className="mr-8"
-							variant={{ type: 'cleaning', value: cleaning.status }}
-							customLabel={
-								isCleaner && cleaning.status === CLEANING_STATUS.CONFIRMED ? 'ASSIGNED' : undefined
-							}
-						/>
+						<div className="flex items-center gap-2 mr-8">
+							<EntityBadge
+								variant={{ type: 'cleaning', value: cleaning.status }}
+								customLabel={
+									isCleaner && cleaning.status === CLEANING_STATUS.CONFIRMED
+										? 'ASSIGNED'
+										: undefined
+								}
+							/>
+							{cleaning.source !== 'manual' && cleaning.status !== CLEANING_STATUS.UNVERIFIED && (
+								<EntityBadge variant={{ type: 'ical', value: 'generated' }} />
+							)}
+						</div>
 					)}
 				</div>
 			</DialogHeader>
@@ -263,6 +271,7 @@ export function CleaningDetailView({
 					onFinish={isCleaner ? () => setShowEvidenceForm(true) : undefined}
 					onEdit={onEdit}
 					onDelete={onDelete}
+					onVerify={onVerify}
 					cleaningId={cleaning.id}
 					isClockInDisabled={isClockInDisabled}
 					isFinishDisabled={isFinishDisabled}

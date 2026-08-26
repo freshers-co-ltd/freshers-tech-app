@@ -5,6 +5,9 @@ ADD COLUMN default_cleaning_time TIME NOT NULL DEFAULT '11:00';
 ALTER TABLE public.cleanings
 ADD COLUMN source TEXT NOT NULL DEFAULT 'manual';
 
+ALTER TYPE public.cleaning_status
+ADD VALUE IF NOT EXISTS 'unverified';
+
 CREATE
 OR REPLACE FUNCTION public.enforce_cleaning_immutability () RETURNS TRIGGER SECURITY DEFINER
 SET
@@ -236,6 +239,12 @@ CREATE INDEX idx_ical_events_status ON public.ical_events (feed_id, status);
 
 CREATE INDEX idx_ical_events_cleaning_id ON public.ical_events (cleaning_id);
 
+CREATE UNIQUE INDEX idx_unique_active_cleaning_per_date ON public.cleanings (property_id, (CAST(scheduled_start AT TIME ZONE 'UTC' AS date)))
+WHERE
+    deleted_at IS NULL
+    AND status NOT IN ('cancelled')
+    AND source = 'ical';
+
 ALTER TABLE public.ical_events ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Feed owners and admins can view ical events" ON public.ical_events FOR
@@ -275,6 +284,9 @@ SELECT
 GRANT INSERT,
 UPDATE,
 DELETE ON public.ical_feeds TO authenticated;
+
+ALTER PUBLICATION supabase_realtime
+ADD TABLE public.ical_feeds;
 
 GRANT
 SELECT
@@ -320,6 +332,123 @@ EXECUTE ON FUNCTION public.calculate_cleaner_pay (uuid) TO service_role;
 
 ALTER TYPE public.notification_type
 ADD VALUE IF NOT EXISTS 'ical_sync_alert';
+
+ALTER TYPE public.notification_type
+ADD VALUE IF NOT EXISTS 'cleaning_needs_verification';
+
+ALTER POLICY "Authorised users can update cleanings" ON public.cleanings USING (
+    public.is_not_banned ()
+    AND (
+        (
+            (
+                SELECT
+                    auth.jwt ()
+            ) -> 'app_metadata' ->> 'role'
+        ) = 'admin'
+        OR (
+            host_id = (
+                SELECT
+                    auth.uid ()
+            )
+            AND status::text IN ('requested', 'confirmed', 'unverified')
+        )
+        OR (
+            cleaner_id = (
+                SELECT
+                    auth.uid ()
+            )
+            AND status::text IN ('confirmed', 'in_progress')
+        )
+    )
+);
+
+CREATE
+OR REPLACE FUNCTION public.host_cancel_cleaning (p_cleaning_id UUID) RETURNS VOID SECURITY DEFINER
+SET
+    search_path = public AS $$
+DECLARE
+    v_status public.cleaning_status;
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM public.cleanings 
+        WHERE id = p_cleaning_id 
+        AND host_id = (SELECT auth.uid()) 
+        AND deleted_at IS NULL
+    ) THEN
+        RAISE EXCEPTION 'Unauthorised or cleaning not found' USING ERRCODE = 'P0001';
+    END IF;
+
+    SELECT status INTO v_status FROM public.cleanings WHERE id = p_cleaning_id;
+
+    IF v_status NOT IN ('requested', 'unverified') THEN
+        RAISE EXCEPTION 'Cannot cancel a cleaning that is already in progress, confirmed, or completed' USING ERRCODE = 'P0001';
+    END IF;
+
+    UPDATE public.cleanings SET status = 'cancelled', updated_at = now() WHERE id = p_cleaning_id;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE
+OR REPLACE FUNCTION public.handle_cleaning_status_transitions () RETURNS TRIGGER SECURITY DEFINER
+SET
+    search_path = public AS $$
+BEGIN
+    IF OLD.cleaner_id IS NULL AND NEW.cleaner_id IS NOT NULL THEN
+        NEW.status := 'confirmed';
+    END IF;
+    IF OLD.clock_in_time IS NULL AND NEW.clock_in_time IS NOT NULL THEN
+        IF NEW.clock_in_time::DATE != NEW.scheduled_start::DATE THEN
+            RAISE EXCEPTION 'Cannot clock in: must be on the same day as the scheduled cleaning.';
+        END IF;
+        IF NEW.clock_in_time < NEW.scheduled_start - INTERVAL '10 minutes' THEN
+            RAISE EXCEPTION 'Cannot clock in: can only clock in up to 10 minutes before the scheduled start time.';
+        END IF;
+        NEW.status := 'in_progress';
+    END IF;
+    IF OLD.clock_out_time IS NULL AND NEW.clock_out_time IS NOT NULL THEN
+        NEW.status := 'completed';
+    END IF;
+    IF OLD.status = 'unverified' AND NEW.status = 'requested' THEN
+        IF NEW.cleaner_id IS NOT NULL THEN
+            NEW.status := 'confirmed';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE
+OR REPLACE FUNCTION public.soft_delete_cleaning (p_cleaning_id UUID) RETURNS VOID SECURITY DEFINER
+SET
+    search_path = public AS $$
+DECLARE
+    v_status public.cleaning_status;
+    v_is_admin BOOLEAN;
+BEGIN
+    v_is_admin := (SELECT auth.jwt() -> 'app_metadata' ->> 'role') = 'admin';
+
+    IF NOT v_is_admin THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM public.cleanings 
+            WHERE id = p_cleaning_id 
+            AND host_id = (SELECT auth.uid()) 
+            AND deleted_at IS NULL
+        ) THEN
+            RAISE EXCEPTION 'Unauthorised or record already deleted' USING ERRCODE = 'P0001';
+        END IF;
+
+        SELECT status INTO v_status FROM public.cleanings WHERE id = p_cleaning_id;
+        IF v_status NOT IN ('completed', 'cancelled', 'unverified') THEN
+            RAISE EXCEPTION 'Only completed or cancelled cleanings can be deleted.' USING ERRCODE = 'P0001';
+        END IF;
+    END IF;
+
+    UPDATE public.cleanings SET deleted_at = now() WHERE id = p_cleaning_id;
+    UPDATE public.cleaning_tasks SET deleted_at = now() WHERE cleaning_id = p_cleaning_id AND deleted_at IS NULL;
+    UPDATE public.evidence_media SET deleted_at = now() WHERE cleaning_id = p_cleaning_id AND deleted_at IS NULL;
+    UPDATE public.cleaning_reports SET deleted_at = now() WHERE cleaning_id = p_cleaning_id AND deleted_at IS NULL;
+END;
+$$ LANGUAGE plpgsql;
 
 CREATE EXTENSION IF NOT EXISTS supabase_vault;
 
@@ -420,8 +549,7 @@ BEGIN
     WHERE name = 'ical_webhook_secret';
 
     IF v_url IS NULL OR v_secret IS NULL THEN
-        RAISE NOTICE 'ical_sync_url or ical_webhook_secret not configured';
-        RETURN;
+        RAISE EXCEPTION 'ical_sync_url or ical_webhook_secret not configured in vault';
     END IF;
 
     v_body := CASE
@@ -487,7 +615,7 @@ BEGIN
         FROM public.profiles WHERE id = NEW.cleaner_id;
     END IF;
 
-    IF TG_OP = 'INSERT' AND NEW.status = 'requested' AND NEW.source != 'ical' THEN
+    IF TG_OP = 'INSERT' AND NEW.status = 'requested' AND NEW.source = 'manual' THEN
         INSERT INTO public.notifications (user_id, type, title, message, data, link)
         SELECT p.id, 'cleaning_requested', 'New Cleaning Requested',
             'Host ' || COALESCE(hp.full_name, 'Unknown') || ' has requested a cleaning at ' || v_property_address,
@@ -497,6 +625,18 @@ BEGIN
         CROSS JOIN (SELECT full_name FROM public.profiles WHERE id = v_host_id) hp
         WHERE p.role = 'admin'
         ON CONFLICT DO NOTHING;
+    END IF;
+
+    IF TG_OP = 'INSERT' AND NEW.status = 'unverified' THEN
+        INSERT INTO public.notifications (user_id, type, title, message, data, link)
+        VALUES (
+            v_host_id,
+            'cleaning_needs_verification',
+            'Calendar Cleaning Needs Verification',
+            'A calendar event at ' || v_property_address || ' on ' || v_scheduled_date || ' needs your confirmation.',
+            jsonb_build_object('cleaning_id', NEW.id, 'property_id', NEW.property_id, 'property_address', v_property_address),
+            '/host/cleanings?cleaning_view=' || NEW.id::TEXT
+        );
     END IF;
 
     IF NEW.cleaner_id IS DISTINCT FROM OLD.cleaner_id AND NEW.cleaner_id IS NOT NULL THEN
@@ -616,7 +756,7 @@ BEGIN
         ON CONFLICT DO NOTHING;
     END IF;
 
-    IF NEW.status = 'cancelled' AND OLD.status != 'cancelled' AND NEW.source != 'ical' THEN
+    IF NEW.status = 'cancelled' AND OLD.status != 'cancelled' AND NEW.source = 'manual' THEN
         INSERT INTO public.notifications (user_id, type, title, message, data, link)
         SELECT p.id, 'cleaning_cancelled', 'Cleaning Cancelled',
             'Cleaning at ' || v_property_address || ' has been cancelled.',
@@ -627,7 +767,7 @@ BEGIN
         ON CONFLICT DO NOTHING;
     END IF;
 
-    IF NEW.status = 'requested' AND OLD.status = 'requested' AND NEW.source != 'ical' THEN
+    IF NEW.status = 'requested' AND OLD.status = 'requested' AND NEW.source = 'manual' THEN
         IF NEW.scheduled_start IS DISTINCT FROM OLD.scheduled_start
             OR NEW.information IS DISTINCT FROM OLD.information
             OR NEW.stocks_included IS DISTINCT FROM OLD.stocks_included
@@ -675,7 +815,8 @@ OR REPLACE FUNCTION public.create_cleaning_request (
     p_information TEXT,
     p_scheduled_start TIMESTAMPTZ,
     p_stocks_included BOOLEAN DEFAULT FALSE,
-    p_source TEXT DEFAULT 'manual'
+    p_source TEXT DEFAULT 'manual',
+    p_confidence TEXT DEFAULT 'high'
 ) RETURNS UUID SECURITY DEFINER
 SET
     search_path = public AS $$
@@ -702,7 +843,11 @@ BEGIN
         p_property_id,
         v_host_id,
         p_scheduled_start,
-        CASE WHEN v_main_cleaner_id IS NOT NULL THEN 'confirmed'::cleaning_status ELSE 'requested'::cleaning_status END,
+        CASE
+            WHEN p_source = 'generic' AND p_confidence = 'low' THEN 'unverified'::cleaning_status
+            WHEN v_main_cleaner_id IS NOT NULL THEN 'confirmed'::cleaning_status
+            ELSE 'requested'::cleaning_status
+        END,
         p_information,
         p_stocks_included,
         v_price_per_cleaning,
@@ -725,14 +870,16 @@ $$ LANGUAGE plpgsql;
 
 DROP FUNCTION IF EXISTS public.create_cleaning_request (UUID, TEXT[], TEXT, TIMESTAMPTZ, BOOLEAN);
 
+DROP FUNCTION IF EXISTS public.create_cleaning_request (UUID, TEXT[], TEXT, TIMESTAMPTZ, BOOLEAN, TEXT);
+
 REVOKE
-EXECUTE ON FUNCTION public.create_cleaning_request (UUID, TEXT[], TEXT, TIMESTAMPTZ, BOOLEAN, TEXT)
+EXECUTE ON FUNCTION public.create_cleaning_request (UUID, TEXT[], TEXT, TIMESTAMPTZ, BOOLEAN, TEXT, TEXT)
 FROM
     PUBLIC,
     anon;
 
 GRANT
-EXECUTE ON FUNCTION public.create_cleaning_request (UUID, TEXT[], TEXT, TIMESTAMPTZ, BOOLEAN, TEXT) TO authenticated;
+EXECUTE ON FUNCTION public.create_cleaning_request (UUID, TEXT[], TEXT, TIMESTAMPTZ, BOOLEAN, TEXT, TEXT) TO authenticated;
 
 GRANT
-EXECUTE ON FUNCTION public.create_cleaning_request (UUID, TEXT[], TEXT, TIMESTAMPTZ, BOOLEAN, TEXT) TO service_role;
+EXECUTE ON FUNCTION public.create_cleaning_request (UUID, TEXT[], TEXT, TIMESTAMPTZ, BOOLEAN, TEXT, TEXT) TO service_role;

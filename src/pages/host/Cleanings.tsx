@@ -8,6 +8,7 @@ import { CleaningDetailView } from '@/features/cleanings/components/CleaningDeta
 import { CleaningForm } from '@/features/cleanings/components/CleaningForm';
 import { CleaningGrid } from '@/features/cleanings/components/CleaningGrid';
 import { useHostCleanings } from '@/features/cleanings/hooks/useHostCleanings';
+import { CLEANING_STATUS } from '@/features/cleanings/types';
 import { ManagementLayout } from '@/layouts/ManagementLayout';
 
 export function HostCleaningsPage() {
@@ -19,11 +20,15 @@ export function HostCleaningsPage() {
 		modal,
 		handleUpsert,
 		handleDelete,
+		handleVerify,
 		isDeleting,
 		pendingFormValues,
 		confirmCreate,
 		cancelCreate,
 	} = useHostCleanings();
+
+	const deletingCleaning = cleanings.find((c) => c.id === modal.deletingId);
+	const isUnverifiedDelete = deletingCleaning?.status === CLEANING_STATUS.UNVERIFIED;
 
 	return (
 		<>
@@ -63,6 +68,7 @@ export function HostCleaningsPage() {
 							userRole="host"
 							onEdit={modal.openEdit}
 							onDelete={modal.setDeletingId}
+							onVerify={handleVerify}
 						/>
 					) : (
 						<div className="p-6 text-center text-muted-foreground">{DICT.CLEANINGS.NOT_FOUND}</div>
@@ -83,8 +89,10 @@ export function HostCleaningsPage() {
 				onDeleteCancel={() => modal.setDeletingId(null)}
 				onDeleteConfirm={handleDelete}
 				isDeleting={isDeleting}
-				deleteTitle={DICT.CLEANINGS.DELETE.TITLE}
-				deleteMessage={DICT.CLEANINGS.DELETE.MESSAGE}
+				deleteTitle={isUnverifiedDelete ? DICT.CLEANINGS.REJECT.TITLE : DICT.CLEANINGS.DELETE.TITLE}
+				deleteMessage={
+					isUnverifiedDelete ? DICT.CLEANINGS.REJECT.MESSAGE : DICT.CLEANINGS.DELETE.MESSAGE
+				}
 			/>
 
 			{pendingFormValues && (

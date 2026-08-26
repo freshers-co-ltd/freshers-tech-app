@@ -15,6 +15,7 @@ import { useAuth } from '@/features/auth/AuthContext';
 import { cleaningsService } from '@/features/cleanings/services/cleaningsService';
 import type {
 	CleaningRequest,
+	CleaningStatus,
 	CleaningUpdate,
 	CreateCleaningRequestPayload,
 	EvidenceInsert,
@@ -39,7 +40,12 @@ interface CleaningContextType {
 		id: string,
 		payload: CleaningUpdate,
 	) => Promise<{ success: boolean; data?: CleaningRequest }>;
-	deleteCleaning: (id: string, hard?: boolean) => Promise<{ success: boolean }>;
+	verifyCleaning: (id: string) => Promise<{ success: boolean; data?: CleaningRequest }>;
+	deleteCleaning: (
+		id: string,
+		hard?: boolean,
+		status?: CleaningStatus,
+	) => Promise<{ success: boolean }>;
 	insertTask: (payload: TaskInsert) => Promise<{ success: boolean }>;
 	updateTask: (payload: TaskUpdate) => Promise<{ success: boolean }>;
 	updateTasksBatch: (cleaningId: string, updates: TaskUpdate[]) => Promise<{ success: boolean }>;
@@ -138,6 +144,7 @@ export function CleaningProvider({ children }: { children: ReactNode }) {
 			fetchCleanings,
 			upsertCleaning: operations.upsertCleaning,
 			updateCleaning: operations.updateCleaning,
+			verifyCleaning: operations.verifyCleaning,
 			deleteCleaning: operations.deleteCleaning,
 			insertTask: operations.insertTask,
 			updateTask: operations.updateTask,

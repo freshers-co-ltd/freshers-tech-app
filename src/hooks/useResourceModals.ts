@@ -40,12 +40,9 @@ export function useResourceModals(options: UseResourceModalsOptions) {
 		}, 0);
 	};
 
-	// Same sequencing as handleClose: close the view Dialog before opening edit.
 	const openEdit = (id: string) => {
 		setViewId(null);
-		setTimeout(() => {
-			setEditId(id);
-		}, 0);
+		setEditId(id);
 	};
 
 	const openView = (id: string) => {

@@ -69,13 +69,16 @@ export const CleaningCard = memo(
 						</div>
 					)}
 
-					<div className="absolute top-2 left-2">
+					<div className="absolute top-2 left-2 flex items-center gap-1">
 						<EntityBadge
 							variant={{ type: 'cleaning', value: cleaning.status }}
 							customLabel={
 								isCleaner && cleaning.status === CLEANING_STATUS.CONFIRMED ? 'assigned' : undefined
 							}
 						/>
+						{cleaning.source !== 'manual' && cleaning.status !== CLEANING_STATUS.UNVERIFIED && (
+							<EntityBadge variant={{ type: 'ical', value: 'generated' }} />
+						)}
 					</div>
 
 					{isHost && (
