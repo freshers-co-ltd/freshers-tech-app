@@ -167,7 +167,6 @@ export type Database = {
 					property_id: string;
 					scheduled_start: string;
 					service_cost: number | null;
-					source: string;
 					status: Database['public']['Enums']['cleaning_status'];
 					stocks_included: boolean;
 					updated_at: string;
@@ -185,7 +184,6 @@ export type Database = {
 					property_id: string;
 					scheduled_start: string;
 					service_cost?: number | null;
-					source?: string;
 					status?: Database['public']['Enums']['cleaning_status'];
 					stocks_included?: boolean;
 					updated_at?: string;
@@ -203,7 +201,6 @@ export type Database = {
 					property_id?: string;
 					scheduled_start?: string;
 					service_cost?: number | null;
-					source?: string;
 					status?: Database['public']['Enums']['cleaning_status'];
 					stocks_included?: boolean;
 					updated_at?: string;
@@ -294,139 +291,6 @@ export type Database = {
 						columns: ['uploader_id'];
 						isOneToOne: false;
 						referencedRelation: 'profiles_public';
-						referencedColumns: ['id'];
-					},
-				];
-			};
-			ical_events: {
-				Row: {
-					cleaning_id: string | null;
-					created_at: string;
-					end_date: string;
-					feed_id: string;
-					id: string;
-					start_date: string;
-					status: string;
-					summary: string | null;
-					uid: string;
-					updated_at: string;
-				};
-				Insert: {
-					cleaning_id?: string | null;
-					created_at?: string;
-					end_date: string;
-					feed_id: string;
-					id?: string;
-					start_date: string;
-					status?: string;
-					summary?: string | null;
-					uid: string;
-					updated_at?: string;
-				};
-				Update: {
-					cleaning_id?: string | null;
-					created_at?: string;
-					end_date?: string;
-					feed_id?: string;
-					id?: string;
-					start_date?: string;
-					status?: string;
-					summary?: string | null;
-					uid?: string;
-					updated_at?: string;
-				};
-				Relationships: [
-					{
-						foreignKeyName: 'ical_events_cleaning_id_fkey';
-						columns: ['cleaning_id'];
-						isOneToOne: false;
-						referencedRelation: 'cleanings';
-						referencedColumns: ['id'];
-					},
-					{
-						foreignKeyName: 'ical_events_feed_id_fkey';
-						columns: ['feed_id'];
-						isOneToOne: false;
-						referencedRelation: 'ical_feeds';
-						referencedColumns: ['id'];
-					},
-				];
-			};
-			ical_feeds: {
-				Row: {
-					consecutive_failures: number;
-					created_at: string;
-					etag: string | null;
-					id: string;
-					is_active: boolean;
-					last_modified: string | null;
-					last_sync_error: string | null;
-					last_sync_status: string | null;
-					last_synced_at: string | null;
-					owner_id: string;
-					property_id: string;
-					source: string;
-					updated_at: string;
-					url_display: string;
-					url_hash: string;
-					url_secret_id: string | null;
-				};
-				Insert: {
-					consecutive_failures?: number;
-					created_at?: string;
-					etag?: string | null;
-					id?: string;
-					is_active?: boolean;
-					last_modified?: string | null;
-					last_sync_error?: string | null;
-					last_sync_status?: string | null;
-					last_synced_at?: string | null;
-					owner_id: string;
-					property_id: string;
-					source: string;
-					updated_at?: string;
-					url_display: string;
-					url_hash: string;
-					url_secret_id?: string | null;
-				};
-				Update: {
-					consecutive_failures?: number;
-					created_at?: string;
-					etag?: string | null;
-					id?: string;
-					is_active?: boolean;
-					last_modified?: string | null;
-					last_sync_error?: string | null;
-					last_sync_status?: string | null;
-					last_synced_at?: string | null;
-					owner_id?: string;
-					property_id?: string;
-					source?: string;
-					updated_at?: string;
-					url_display?: string;
-					url_hash?: string;
-					url_secret_id?: string | null;
-				};
-				Relationships: [
-					{
-						foreignKeyName: 'ical_feeds_owner_id_fkey';
-						columns: ['owner_id'];
-						isOneToOne: false;
-						referencedRelation: 'profiles';
-						referencedColumns: ['id'];
-					},
-					{
-						foreignKeyName: 'ical_feeds_owner_id_fkey';
-						columns: ['owner_id'];
-						isOneToOne: false;
-						referencedRelation: 'profiles_public';
-						referencedColumns: ['id'];
-					},
-					{
-						foreignKeyName: 'ical_feeds_property_id_fkey';
-						columns: ['property_id'];
-						isOneToOne: false;
-						referencedRelation: 'properties';
 						referencedColumns: ['id'];
 					},
 				];
@@ -541,7 +405,6 @@ export type Database = {
 					bedrooms: number;
 					cleaner_pay_override: number | null;
 					created_at: string;
-					default_cleaning_time: string;
 					deleted_at: string | null;
 					extra_images_urls: string[] | null;
 					host_id: string;
@@ -550,7 +413,6 @@ export type Database = {
 					main_image_url: string;
 					postcode: string;
 					price_per_cleaning: number | null;
-					timezone: string;
 					town_city: string;
 					type: Database['public']['Enums']['property_type'];
 					updated_at: string;
@@ -562,7 +424,6 @@ export type Database = {
 					bedrooms?: number;
 					cleaner_pay_override?: number | null;
 					created_at?: string;
-					default_cleaning_time?: string;
 					deleted_at?: string | null;
 					extra_images_urls?: string[] | null;
 					host_id: string;
@@ -571,7 +432,6 @@ export type Database = {
 					main_image_url: string;
 					postcode: string;
 					price_per_cleaning?: number | null;
-					timezone?: string;
 					town_city: string;
 					type?: Database['public']['Enums']['property_type'];
 					updated_at?: string;
@@ -583,7 +443,6 @@ export type Database = {
 					bedrooms?: number;
 					cleaner_pay_override?: number | null;
 					created_at?: string;
-					default_cleaning_time?: string;
 					deleted_at?: string | null;
 					extra_images_urls?: string[] | null;
 					host_id?: string;
@@ -592,7 +451,6 @@ export type Database = {
 					main_image_url?: string;
 					postcode?: string;
 					price_per_cleaning?: number | null;
-					timezone?: string;
 					town_city?: string;
 					type?: Database['public']['Enums']['property_type'];
 					updated_at?: string;
@@ -1032,10 +890,6 @@ export type Database = {
 				Args: { p_tasks: Json; p_tasks_to_delete: string[] };
 				Returns: undefined;
 			};
-			calculate_cleaner_pay: {
-				Args: { p_property_id: string };
-				Returns: number;
-			};
 			check_property_cleaning_on_date: {
 				Args: { p_check_date: string; p_property_id: string };
 				Returns: {
@@ -1049,12 +903,10 @@ export type Database = {
 			};
 			create_cleaning_request: {
 				Args: {
-					p_confidence?: string;
 					p_custom_tasks: string[];
 					p_information: string;
 					p_property_id: string;
 					p_scheduled_start: string;
-					p_source?: string;
 					p_stocks_included?: boolean;
 				};
 				Returns: string;
@@ -1080,7 +932,6 @@ export type Database = {
 					updated_at: string;
 				}[];
 			};
-			get_ical_feed_url: { Args: { p_feed_id: string }; Returns: string };
 			get_login_lock_status: {
 				Args: { p_email: string };
 				Returns: {
@@ -1105,7 +956,6 @@ export type Database = {
 					is_locked: boolean;
 				}[];
 			};
-			run_ical_sync: { Args: { p_feed_id?: string }; Returns: undefined };
 			soft_delete_cleaning: {
 				Args: { p_cleaning_id: string };
 				Returns: undefined;
@@ -1126,7 +976,6 @@ export type Database = {
 				Args: { p_property_id: string };
 				Returns: undefined;
 			};
-			store_ical_feed_url: { Args: { p_url: string }; Returns: string };
 			update_cleaner_pay_config: {
 				Args: {
 					p_bathroom_time?: number;
@@ -1145,20 +994,10 @@ export type Database = {
 				};
 				Returns: string;
 			};
-			update_ical_feed_url: {
-				Args: { p_secret_id: string; p_url: string };
-				Returns: undefined;
-			};
 			update_user_presence: { Args: never; Returns: undefined };
 		};
 		Enums: {
-			cleaning_status:
-				| 'requested'
-				| 'confirmed'
-				| 'in_progress'
-				| 'completed'
-				| 'cancelled'
-				| 'unverified';
+			cleaning_status: 'requested' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
 			media_type: 'image' | 'video';
 			notification_type:
 				| 'cleaning_requested'
@@ -1171,9 +1010,7 @@ export type Database = {
 				| 'cleaning_updated'
 				| 'cleaning_reminder'
 				| 'cleaning_starting_soon'
-				| 'cleaning_missed_clockin'
-				| 'ical_sync_alert'
-				| 'cleaning_needs_verification';
+				| 'cleaning_missed_clockin';
 			property_type: 'house' | 'apartment' | 'studio';
 			user_role: 'cleaner' | 'host' | 'admin';
 		};
@@ -1846,14 +1683,7 @@ export type CompositeTypes<
 export const Constants = {
 	public: {
 		Enums: {
-			cleaning_status: [
-				'requested',
-				'confirmed',
-				'in_progress',
-				'completed',
-				'cancelled',
-				'unverified',
-			],
+			cleaning_status: ['requested', 'confirmed', 'in_progress', 'completed', 'cancelled'],
 			media_type: ['image', 'video'],
 			notification_type: [
 				'cleaning_requested',
@@ -1867,8 +1697,6 @@ export const Constants = {
 				'cleaning_reminder',
 				'cleaning_starting_soon',
 				'cleaning_missed_clockin',
-				'ical_sync_alert',
-				'cleaning_needs_verification',
 			],
 			property_type: ['house', 'apartment', 'studio'],
 			user_role: ['cleaner', 'host', 'admin'],
