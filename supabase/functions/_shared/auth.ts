@@ -1,25 +1,37 @@
 // @ts-nocheck
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-export interface AuthUser {
+interface AuthResult {
 	userId: string;
 	role: string;
+	email: string;
 }
 
 export async function authenticateRequest(
 	req: Request,
-	options: { supabaseUrl: string; anonKey: string },
-): Promise<AuthUser | null> {
-	const authHeader = req.headers.get('Authorization') ?? '';
+	config: { supabaseUrl: string; anonKey: string },
+): Promise<AuthResult | null> {
+	const authHeader = req.headers.get('Authorization');
 	if (!authHeader) return null;
-	const client = createClient(options.supabaseUrl, options.anonKey, {
+
+	const supabase = createClient(config.supabaseUrl, config.anonKey, {
 		global: { headers: { Authorization: authHeader } },
 	});
-	const {
-		data: { user },
-	} = await client.auth.getUser();
-	if (!user) return null;
-	const { data: profile } = await client.from('profiles').select('role').eq('id', user.id).single();
-	if (!profile) return null;
-	return { userId: user.id, role: profile.role };
+
+	const { data: { user }, error: authError } = await supabase.auth.getUser();
+	if (authError || !user) return null;
+
+	const { data: profile, error: profileError } = await supabase
+		.from('profiles')
+		.select('role')
+		.eq('id', user.id)
+		.single();
+
+	if (profileError || !profile) return null;
+
+	return {
+		userId: user.id,
+		role: profile.role,
+		email: user.email || '',
+	};
 }

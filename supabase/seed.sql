@@ -882,32 +882,32 @@ VALUES
 
 -- 4. PUBLIC PROFILES
 INSERT INTO
-    public.profiles (id, email, ROLE, full_name, is_verified)
+    public.profiles (id, email, ROLE, full_name, is_verified, is_invited)
 VALUES
-    ('00000000-0000-0000-0000-000000000001', 'admin@test.com', 'admin', 'Steve Admin', TRUE),
-    ('00000000-0000-0000-0000-000000000002', 'host@test.com', 'host', 'John Host', TRUE),
-    ('00000000-0000-0000-0000-000000000003', 'cleaner@test.com', 'cleaner', 'Mark Cleaner', TRUE),
-    ('00000000-0000-0000-0000-000000000004', 'sarah@test.com', 'host', 'Sarah Smith', TRUE),
-    ('00000000-0000-0000-0000-000000000005', 'emily@test.com', 'cleaner', 'Emily Johnson', TRUE),
-    ('00000000-0000-0000-0000-000000000006', 'david@test.com', 'host', 'David Brown', TRUE),
-    ('00000000-0000-0000-0000-000000000007', 'lisa@test.com', 'cleaner', 'Lisa Williams', TRUE),
-    ('00000000-0000-0000-0000-000000000008', 'james@test.com', 'host', 'James Wilson', TRUE),
-    ('00000000-0000-0000-0000-000000000009', 'jessica@test.com', 'cleaner', 'Jessica Taylor', TRUE),
-    ('00000000-0000-0000-0000-000000000010', 'michael@test.com', 'host', 'Michael Davis', TRUE),
-    ('00000000-0000-0000-0000-000000000011', 'amanda@test.com', 'cleaner', 'Amanda Martinez', TRUE),
-    ('00000000-0000-0000-0000-000000000012', 'robert@test.com', 'host', 'Robert Anderson', TRUE),
-    ('00000000-0000-0000-0000-000000000013', 'rachel@test.com', 'cleaner', 'Rachel White', TRUE),
-    ('00000000-0000-0000-0000-000000000014', 'chris@test.com', 'host', 'Chris Thompson', TRUE),
-    ('00000000-0000-0000-0000-000000000015', 'sophie@test.com', 'cleaner', 'Sophie Garcia', TRUE),
-    ('00000000-0000-0000-0000-000000000016', 'daniel@test.com', 'host', 'Daniel Lee', TRUE),
-    ('00000000-0000-0000-0000-000000000017', 'natalie@test.com', 'cleaner', 'Natalie Clark', TRUE),
-    ('00000000-0000-0000-0000-000000000018', 'paul@test.com', 'host', 'Paul Harris', TRUE),
-    ('00000000-0000-0000-0000-000000000019', 'ashley@test.com', 'cleaner', 'Ashley Robinson', TRUE),
-    ('00000000-0000-0000-0000-000000000020', 'kevin@test.com', 'host', 'Kevin Lewis', TRUE),
-    ('00000000-0000-0000-0000-000000000021', 'bruce@test.com', 'admin', 'Bruce Green', TRUE),
-    ('00000000-0000-0000-0000-000000000022', 'linda@test.com', 'admin', 'Linda Smith', TRUE),
-    ('00000000-0000-0000-0000-000000000023', 'marta@test.com', 'admin', 'Marta Hansen', TRUE),
-    ('00000000-0000-0000-0000-000000000024', 'joe@test.com', 'admin', 'Joe Stu', TRUE);
+    ('00000000-0000-0000-0000-000000000001', 'admin@test.com', 'admin', 'Steve Admin', TRUE, FALSE),
+    ('00000000-0000-0000-0000-000000000002', 'host@test.com', 'host', 'John Host', TRUE, TRUE),
+    ('00000000-0000-0000-0000-000000000003', 'cleaner@test.com', 'cleaner', 'Mark Cleaner', TRUE, FALSE),
+    ('00000000-0000-0000-0000-000000000004', 'sarah@test.com', 'host', 'Sarah Smith', TRUE, TRUE),
+    ('00000000-0000-0000-0000-000000000005', 'emily@test.com', 'cleaner', 'Emily Johnson', TRUE, FALSE),
+    ('00000000-0000-0000-0000-000000000006', 'david@test.com', 'host', 'David Brown', TRUE, TRUE),
+    ('00000000-0000-0000-0000-000000000007', 'lisa@test.com', 'cleaner', 'Lisa Williams', TRUE, FALSE),
+    ('00000000-0000-0000-0000-000000000008', 'james@test.com', 'host', 'James Wilson', TRUE, TRUE),
+    ('00000000-0000-0000-0000-000000000009', 'jessica@test.com', 'cleaner', 'Jessica Taylor', TRUE, FALSE),
+    ('00000000-0000-0000-0000-000000000010', 'michael@test.com', 'host', 'Michael Davis', TRUE, TRUE),
+    ('00000000-0000-0000-0000-000000000011', 'amanda@test.com', 'cleaner', 'Amanda Martinez', TRUE, FALSE),
+    ('00000000-0000-0000-0000-000000000012', 'robert@test.com', 'host', 'Robert Anderson', TRUE, TRUE),
+    ('00000000-0000-0000-0000-000000000013', 'rachel@test.com', 'cleaner', 'Rachel White', TRUE, FALSE),
+    ('00000000-0000-0000-0000-000000000014', 'chris@test.com', 'host', 'Chris Thompson', TRUE, TRUE),
+    ('00000000-0000-0000-0000-000000000015', 'sophie@test.com', 'cleaner', 'Sophie Garcia', TRUE, FALSE),
+    ('00000000-0000-0000-0000-000000000016', 'daniel@test.com', 'host', 'Daniel Lee', TRUE, TRUE),
+    ('00000000-0000-0000-0000-000000000017', 'natalie@test.com', 'cleaner', 'Natalie Clark', TRUE, FALSE),
+    ('00000000-0000-0000-0000-000000000018', 'paul@test.com', 'host', 'Paul Harris', TRUE, TRUE),
+    ('00000000-0000-0000-0000-000000000019', 'ashley@test.com', 'cleaner', 'Ashley Robinson', TRUE, FALSE),
+    ('00000000-0000-0000-0000-000000000020', 'kevin@test.com', 'host', 'Kevin Lewis', TRUE, TRUE),
+    ('00000000-0000-0000-0000-000000000021', 'bruce@test.com', 'admin', 'Bruce Green', TRUE, FALSE),
+    ('00000000-0000-0000-0000-000000000022', 'linda@test.com', 'admin', 'Linda Smith', TRUE, FALSE),
+    ('00000000-0000-0000-0000-000000000023', 'marta@test.com', 'admin', 'Marta Hansen', TRUE, FALSE),
+    ('00000000-0000-0000-0000-000000000024', 'joe@test.com', 'admin', 'Joe Stu', TRUE, FALSE);
 
 SET
     session_replication_role = 'origin';
