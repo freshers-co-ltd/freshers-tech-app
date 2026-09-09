@@ -142,4 +142,49 @@ describe('Account Page', () => {
 		const privacyElements = screen.getAllByText(DICT.ACCOUNT.CONTACT.PRIVACY.TITLE);
 		expect(privacyElements.length).toBeGreaterThanOrEqual(2);
 	});
+
+	it('shows billing section for non-invited host', async () => {
+		setMockUserRole('host');
+		renderPage();
+
+		expect(
+			await screen.findByRole('heading', { name: DICT.ACCOUNT.SUBSCRIPTION.TITLE, level: 2 }),
+		).toBeInTheDocument();
+	});
+
+	it('hides billing section for invited host', async () => {
+		setMockUserRole('host');
+		vi.spyOn(profileService, 'getProfileWithFallback').mockResolvedValue({
+			data: {
+				id: 'user_123',
+				email: 'test@example.com',
+				role: 'host',
+				full_name: 'Test User',
+				avatar_url: null,
+				is_verified: false,
+				is_invited: true,
+				host_subscription_status: null,
+			},
+			error: null,
+		});
+
+		renderPage();
+
+		await waitFor(() => {
+			expect(
+				screen.queryByRole('heading', { name: DICT.ACCOUNT.SUBSCRIPTION.TITLE, level: 2 }),
+			).not.toBeInTheDocument();
+		});
+	});
+
+	it('hides billing section for cleaner users', async () => {
+		setMockUserRole('cleaner');
+		renderPage();
+
+		await waitFor(() => {
+			expect(
+				screen.queryByRole('heading', { name: DICT.ACCOUNT.SUBSCRIPTION.TITLE, level: 2 }),
+			).not.toBeInTheDocument();
+		});
+	});
 });

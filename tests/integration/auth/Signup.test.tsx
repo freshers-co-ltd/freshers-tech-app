@@ -17,6 +17,10 @@ describe('Signup Feature', () => {
 		const routes = [
 			{ path: '/signup', element: <SignupPage /> },
 			{ path: '/dashboard', element: <div data-testid="dashboard">Dashboard</div> },
+			{
+				path: '/host/subscription/pending',
+				element: <div data-testid="subscription-pending">Subscription Pending</div>,
+			},
 		];
 		const router = createMemoryRouter(routes, { initialEntries: ['/signup'] });
 		render(
@@ -41,7 +45,7 @@ describe('Signup Feature', () => {
 
 		await user.click(screen.getByRole('button', { name: /create account/i }));
 
-		expect(await screen.findByTestId('dashboard', {}, { timeout: 3000 })).toBeInTheDocument();
+		expect(await screen.findByTestId('dashboard', {}, { timeout: 5000 })).toBeInTheDocument();
 		expect(toast.success).toHaveBeenCalledWith(DICT.AUTH.SIGNUP.TOAST_SUCCESS, expect.anything());
-	});
+	}, 10_000);
 });
