@@ -38,6 +38,8 @@ function buildHostDetail(overrides?: Record<string, unknown>) {
 		is_online: true,
 		last_seen_at: '2026-06-01T00:00:00Z',
 		deleted_at: null,
+		is_invited: false,
+		host_subscription_status: null,
 		properties: [bakerStreet, highRoad],
 		cleanings: [
 			{
@@ -188,7 +190,33 @@ describe('Admin Host Detail - Cleanings Filter', () => {
 
 	it('filters rows to only upcoming cleanings', async () => {
 		const user = userEvent.setup();
-		mockDetail();
+		mockDetail({
+			...buildHostDetail(),
+			cleanings: [
+				{
+					id: 'cln_1',
+					status: 'confirmed',
+					scheduled_start: '2026-12-10T10:00:00Z',
+					service_cost: 100,
+					cleaner_pay: 50,
+					cleaner_id: 'cleaner_1',
+					cleaner_name: 'Danny Cleaner',
+					property_id: 'prop_1',
+					created_at: '2026-07-01T00:00:00Z',
+				},
+				{
+					id: 'cln_2',
+					status: 'completed',
+					scheduled_start: '2026-06-01T10:00:00Z',
+					service_cost: 120,
+					cleaner_pay: 60,
+					cleaner_id: null,
+					cleaner_name: null,
+					property_id: 'prop_2',
+					created_at: '2026-05-01T00:00:00Z',
+				},
+			],
+		});
 		renderPage();
 
 		const upcomingCheckbox = await screen.findByRole('checkbox', {
