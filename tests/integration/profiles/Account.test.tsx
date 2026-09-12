@@ -1,8 +1,9 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { toast } from '@/components/Toast';
 import { DICT } from '@/dictionary';
+import { profileService } from '@/features/auth/services/profileService';
 import { AccountPage } from '@/pages/Account';
 import { renderWithProviders } from '~/utils';
 import { mockRpcData, setMockUserRole } from '~/utils/supabaseMocks';

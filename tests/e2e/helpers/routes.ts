@@ -11,6 +11,7 @@ import {
 	type MockData,
 	type MockProperty,
 	type MockStandardTask,
+	type MockSubscription,
 	type MockTask,
 	type MockUser,
 	now,
@@ -68,6 +69,8 @@ function toAdminUser(u: MockUser): Record<string, unknown> {
 		is_online: u.is_online,
 		last_sign_in_text: null,
 		deleted_at: null,
+		is_invited: u.is_invited,
+		host_subscription_status: u.host_subscription_status,
 	};
 }
 
@@ -118,10 +121,11 @@ export async function setupSupabaseMocks(
 		tasks = [],
 		standardTasks = [],
 		users = [],
+		subscriptions = [],
 	} = data;
 	const _allUsers = [user, ...users];
 
-	// ── Catch-all for any unhandled Supabase requests ──────
+	// Catch-all for any unhandled Supabase requests
 
 	await page.route(/(supabase\.co|127\.0\.0\.1:54321)/, async (route: Route) => {
 		const method = route.request().method();
@@ -150,12 +154,12 @@ export async function setupSupabaseMocks(
 		}
 	});
 
-	// ── Auth catch-all ─────
+	// Auth catch-all
 	await page.route(/\/auth\/v1\//, async (route: Route) => {
 		await fulfillJson(route, { currentLevel: 'aal1' });
 	});
 
-	// ── Auth endpoints ────────────────────────────────────
+	// Auth endpoints
 
 	await page.route(/\/auth\/v1\/token(\?.*)?$/, async (route: Route) => {
 		if (route.request().method() === 'POST') {
@@ -177,7 +181,7 @@ export async function setupSupabaseMocks(
 		await route.fulfill({ status: 204 });
 	});
 
-	// ── MFA endpoints (only for admin) ────────────────────
+	// MFA endpoints
 
 	if (_options?.isAdmin) {
 		await page.route(/\/auth\/v1\/(factors|mfa)/, async (route: Route) => {
@@ -190,7 +194,7 @@ export async function setupSupabaseMocks(
 		});
 	}
 
-	// ── Signup endpoint (POST) ──────────────────────────────────
+	// Signup endpoint (POST)
 	await page.route(/\/auth\/v1\/signup(\?.*)?$/, async (route: Route) => {
 		if (route.request().method() !== 'POST') {
 			await route.fallback();
@@ -223,7 +227,7 @@ export async function setupSupabaseMocks(
 		await fulfillJson(route, { user: signupUser, session: null });
 	});
 
-	// ── Verify OTP endpoint (POST) ─────────────────────────────
+	// Verify OTP endpoint (POST)
 	await page.route(/\/auth\/v1\/verify(\?.*)?$/, async (route: Route) => {
 		if (route.request().method() !== 'POST') {
 			await route.fallback();
@@ -233,10 +237,10 @@ export async function setupSupabaseMocks(
 		await fulfillJson(route, session);
 	});
 
-	// ── REST table endpoints ──────────────────────────────
+	// REST table endpoints
 
 	await page.route(
-		/\/rest\/v1\/(profiles|properties|cleanings|cleaning_tasks|evidence_media|cleaning_reports|standard_tasks|platform_stats|notifications|notification_preferences)/,
+		/\/rest\/v1\/(profiles|properties|cleanings|cleaning_tasks|evidence_media|cleaning_reports|standard_tasks|platform_stats|notifications|notification_preferences|subscriptions)/,
 		async (route: Route) => {
 			const url = new URL(route.request().url());
 			const table = url.pathname.split('/').pop() ?? '';
@@ -436,29 +440,33 @@ export async function setupSupabaseMocks(
 					return;
 				}
 
+				case 'subscriptions': {
+					if (method === 'GET') {
+						const filterHostId = eqFilter(url, 'host_id');
+						let result = [...subscriptions];
+						if (filterHostId) {
+							result = result.filter((s) => s.host_id === filterHostId);
+						}
+						await fulfillJson(route, result);
+					} else if (method === 'POST' || method === 'PATCH') {
+						await fulfillJson(route, {});
+					} else {
+						await route.fallback();
+					}
+					return;
+				}
+
 				default:
 					await route.fallback();
 			}
 		},
 	);
 
-	// ── Stripe billing function ──────────────────────────
+	// Stripe billing function
 
 	await page.route(/\/functions\/v1\/stripe-billing\//, async (route: Route) => {
 		const url = route.request().url();
 		const method = route.request().method();
-		if (url.includes('/pricing')) {
-			await fulfillJson(route, {
-				amount: 2900,
-				currency: 'gbp',
-				interval: 'month',
-			});
-			return;
-		}
-		if (url.includes('/cancel-subscription')) {
-			await fulfillJson(route, { success: true });
-			return;
-		}
 		if (method !== 'POST') {
 			await route.fallback();
 			return;
@@ -484,7 +492,7 @@ export async function setupSupabaseMocks(
 		}
 	});
 
-	// ── RPC endpoints ─────────────────────────────────────
+	// RPC endpoints
 
 	await page.route(/\/rest\/v1\/rpc\//, async (route: Route) => {
 		if (route.request().method() !== 'POST') {
@@ -717,7 +725,7 @@ export async function setupSupabaseMocks(
 		}
 	});
 
-	// ── Mock geolocation so clock-in doesn't hang ──────────
+	// Mock geolocation so clock-in doesn't hang
 	await page.addInitScript(() => {
 		const mockLat = 51.5074;
 		const mockLng = -0.1278;
@@ -759,7 +767,7 @@ export async function setupSupabaseMocks(
 		};
 	});
 
-	// ── Storage (file uploads) ─────────────────────────────
+	// Storage (file uploads)
 
 	await page.route(/\/storage\/v1\/object\//, async (route: Route) => {
 		const method = route.request().method();
@@ -776,7 +784,7 @@ export async function setupSupabaseMocks(
 		}
 	});
 
-	// ── Postcodes.io geolocation ───────────────────────────
+	// Postcodes.io geolocation
 
 	await page.route(/\/\/api\.postcodes\.io\/postcodes\//, async (route: Route) => {
 		await route.fulfill({
@@ -787,7 +795,7 @@ export async function setupSupabaseMocks(
 	});
 }
 
-// ── High-Level Convenience Wrappers ──────────────────────────
+// High-Level Convenience Wrappers
 
 export async function setupHostMocks(
 	page: Page,
@@ -795,6 +803,7 @@ export async function setupHostMocks(
 		properties?: MockProperty[];
 		cleanings?: MockCleaning[];
 		tasks?: MockTask[];
+		subscriptions?: MockSubscription[];
 	},
 ): Promise<MockUser> {
 	const user = buildUser('host');
@@ -804,6 +813,7 @@ export async function setupHostMocks(
 		properties: overrides?.properties ?? [buildProperty()],
 		cleanings: overrides?.cleanings ?? [buildCleaning()],
 		tasks: overrides?.tasks ?? [],
+		subscriptions: overrides?.subscriptions ?? [],
 	});
 	return user;
 }

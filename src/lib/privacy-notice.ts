@@ -28,13 +28,13 @@ export const privacyNotice: PrivacyNotice = {
 			title: `Introduction`,
 			blocks: [
 				{
-		kind: 'paragraph',
-		text: `FreshersCo (“we”, “our”, “us”) is committed to protecting your privacy and handling your
+					kind: 'paragraph',
+					text: `FreshersCo (“we”, “our”, “us”) is committed to protecting your privacy and handling your
 personal information transparently and securely.
 This Privacy Notice explains how we collect, use, store and protect your personal data when
 you use the FreshersCo web application (“the Platform”). It also explains your rights under
 the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018.`,
-	},
+				},
 			],
 		},
 
@@ -43,21 +43,21 @@ the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 
 			title: `Who We Are`,
 			blocks: [
 				{
-		kind: 'paragraph',
-		text: `FreshersCo provides a platform that connects property hosts with cleaning professionals,
+					kind: 'paragraph',
+					text: `FreshersCo provides a platform that connects property hosts with cleaning professionals,
 enabling the management of cleaning requests, scheduling, task completion, reporting and
 administration.`,
-	},
+				},
 				{
-		kind: 'subheading',
-		text: `Data Controller`,
-	},
+					kind: 'subheading',
+					text: `Data Controller`,
+				},
 				{
-		kind: 'paragraph',
-		text: `Freshers Co Ltd
+					kind: 'paragraph',
+					text: `Freshers Co Ltd
 Address: 78 Birkhall Road, SE6 1TD
 Email: Freshersco@outlook.com`,
-	},
+				},
 			],
 		},
 
@@ -66,119 +66,119 @@ Email: Freshersco@outlook.com`,
 			title: `Information We Collect`,
 			blocks: [
 				{
-		kind: 'paragraph',
-		text: `Depending on how you use the Platform, we may collect:`,
-	},
+					kind: 'paragraph',
+					text: `Depending on how you use the Platform, we may collect:`,
+				},
 				{
-		kind: 'subheading',
-		text: `Account Information`,
-	},
+					kind: 'subheading',
+					text: `Account Information`,
+				},
 				{
-		kind: 'list',
-		items: [
-			`Full name`,
-			`Email address`,
-			`Password (stored securely in encrypted/hashed form)`,
-			`User role (Host, Cleaner or Administrator)`,
-			`Telephone number (if provided)`,
-			`Profile photograph (optional)`,
-		],
-	},
+					kind: 'list',
+					items: [
+						`Full name`,
+						`Email address`,
+						`Password (stored securely in encrypted/hashed form)`,
+						`User role (Host, Cleaner or Administrator)`,
+						`Telephone number (if provided)`,
+						`Profile photograph (optional)`,
+					],
+				},
 				{
-		kind: 'subheading',
-		text: `Property Information (Hosts)`,
-	},
+					kind: 'subheading',
+					text: `Property Information (Hosts)`,
+				},
 				{
-		kind: 'list',
-		items: [
-			`Property addresses`,
-			`Property type`,
-			`Number of bedrooms and bathrooms`,
-			`Property photographs`,
-		],
-	},
+					kind: 'list',
+					items: [
+						`Property addresses`,
+						`Property type`,
+						`Number of bedrooms and bathrooms`,
+						`Property photographs`,
+					],
+				},
 				{
-		kind: 'subheading',
-		text: `Cleaning Information`,
-	},
+					kind: 'subheading',
+					text: `Cleaning Information`,
+				},
 				{
-		kind: 'list',
-		items: [
-			`Cleaning requests`,
-			`Scheduled dates and times`,
-			`Cleaning task lists`,
-			`Notes and instructions`,
-			`Assigned cleaner`,
-			`Cleaning status`,
-		],
-	},
+					kind: 'list',
+					items: [
+						`Cleaning requests`,
+						`Scheduled dates and times`,
+						`Cleaning task lists`,
+						`Notes and instructions`,
+						`Assigned cleaner`,
+						`Cleaning status`,
+					],
+				},
 				{
-		kind: 'subheading',
-		text: `Media Uploaded by Cleaners`,
-	},
+					kind: 'subheading',
+					text: `Media Uploaded by Cleaners`,
+				},
 				{
-		kind: 'list',
-		items: [
-			`Photographs`,
-			`Videos`,
-			`Reports of damaged items`,
-			`Reports of missing or low supplies`,
-		],
-	},
+					kind: 'list',
+					items: [
+						`Photographs`,
+						`Videos`,
+						`Reports of damaged items`,
+						`Reports of missing or low supplies`,
+					],
+				},
 				{
-		kind: 'subheading',
-		text: `Usage Information`,
-	},
+					kind: 'subheading',
+					text: `Usage Information`,
+				},
 				{
-		kind: 'paragraph',
-		text: `When you use the Platform we automatically collect certain technical information including:`,
-	},
+					kind: 'paragraph',
+					text: `When you use the Platform we automatically collect certain technical information including:`,
+				},
 				{
-		kind: 'list',
-		items: [
-			`IP address`,
-			`Browser type`,
-			`Device type`,
-			`Operating system`,
-			`Session information`,
-			`Login history`,
-			`Error logs`,
-		],
-	},
+					kind: 'list',
+					items: [
+						`IP address`,
+						`Browser type`,
+						`Device type`,
+						`Operating system`,
+						`Session information`,
+						`Login history`,
+						`Error logs`,
+					],
+				},
 				{
-		kind: 'subheading',
-		text: `Notifications`,
-	},
+					kind: 'subheading',
+					text: `Notifications`,
+				},
 				{
-		kind: 'paragraph',
-		text: `If you enable notifications we store:`,
-	},
+					kind: 'paragraph',
+					text: `If you enable notifications we store:`,
+				},
 				{
-		kind: 'list',
-		items: [
-			`Push notification subscription details`,
-			`Notification preferences`,
-			`Notification history`,
-		],
-	},
+					kind: 'list',
+					items: [
+						`Push notification subscription details`,
+						`Notification preferences`,
+						`Notification history`,
+					],
+				},
 				{
-		kind: 'subheading',
-		text: `Administrative Records`,
-	},
+					kind: 'subheading',
+					text: `Administrative Records`,
+				},
 				{
-		kind: 'paragraph',
-		text: `For security and accountability we maintain audit logs of administrative actions including:`,
-	},
+					kind: 'paragraph',
+					text: `For security and accountability we maintain audit logs of administrative actions including:`,
+				},
 				{
-		kind: 'list',
-		items: [
-			`User management actions`,
-			`Password resets`,
-			`Account bans`,
-			`Assignment changes`,
-			`Configuration changes`,
-		],
-	},
+					kind: 'list',
+					items: [
+						`User management actions`,
+						`Password resets`,
+						`Account bans`,
+						`Assignment changes`,
+						`Configuration changes`,
+					],
+				},
 			],
 		},
 
@@ -187,33 +187,33 @@ Email: Freshersco@outlook.com`,
 			title: `How We Use Your Information`,
 			blocks: [
 				{
-		kind: 'paragraph',
-		text: `We process your personal information to:`,
-	},
+					kind: 'paragraph',
+					text: `We process your personal information to:`,
+				},
 				{
-		kind: 'list',
-		items: [
-			`Create and manage user accounts`,
-			`Authenticate users securely`,
-			`Provide access based on user roles`,
-			`Manage cleaning bookings`,
-			`Assign cleaners to cleaning requests`,
-			`Record cleaning progress`,
-			`Allow cleaners to upload completion evidence`,
-			`Notify users about booking updates`,
-			`Process reports submitted by cleaners`,
-			`Improve platform performance`,
-			`Monitor platform security`,
-			`Prevent fraud and unauthorised access`,
-			`Maintain audit records`,
-			`Comply with legal obligations`,
-		],
-	},
+					kind: 'list',
+					items: [
+						`Create and manage user accounts`,
+						`Authenticate users securely`,
+						`Provide access based on user roles`,
+						`Manage cleaning bookings`,
+						`Assign cleaners to cleaning requests`,
+						`Record cleaning progress`,
+						`Allow cleaners to upload completion evidence`,
+						`Notify users about booking updates`,
+						`Process reports submitted by cleaners`,
+						`Improve platform performance`,
+						`Monitor platform security`,
+						`Prevent fraud and unauthorised access`,
+						`Maintain audit records`,
+						`Comply with legal obligations`,
+					],
+				},
 				{
-		kind: 'paragraph',
-		text: `We do not use your personal information for automated decision-making or profiling that
+					kind: 'paragraph',
+					text: `We do not use your personal information for automated decision-making or profiling that
 produces legal or similarly significant effects.`,
-	},
+				},
 			],
 		},
 
@@ -222,43 +222,43 @@ produces legal or similarly significant effects.`,
 			title: `Legal Basis for Processing`,
 			blocks: [
 				{
-		kind: 'paragraph',
-		text: `We process personal data under one or more of the following lawful bases:`,
-	},
+					kind: 'paragraph',
+					text: `We process personal data under one or more of the following lawful bases:`,
+				},
 				{
-		kind: 'subheading',
-		text: `Performance of a Contract`,
-	},
+					kind: 'subheading',
+					text: `Performance of a Contract`,
+				},
 				{
-		kind: 'paragraph',
-		text: `To provide the services requested through the Platform.`,
-	},
+					kind: 'paragraph',
+					text: `To provide the services requested through the Platform.`,
+				},
 				{
-		kind: 'subheading',
-		text: `Legitimate Interests`,
-	},
+					kind: 'subheading',
+					text: `Legitimate Interests`,
+				},
 				{
-		kind: 'paragraph',
-		text: `To maintain platform security, improve our services, investigate misuse and administer the
+					kind: 'paragraph',
+					text: `To maintain platform security, improve our services, investigate misuse and administer the
 Platform.`,
-	},
+				},
 				{
-		kind: 'subheading',
-		text: `Consent`,
-	},
+					kind: 'subheading',
+					text: `Consent`,
+				},
 				{
-		kind: 'paragraph',
-		text: `Where you choose to receive push notifications or where consent is otherwise required.
+					kind: 'paragraph',
+					text: `Where you choose to receive push notifications or where consent is otherwise required.
 You may withdraw your consent at any time through your account settings where applicable.`,
-	},
+				},
 				{
-		kind: 'subheading',
-		text: `Legal Obligation`,
-	},
+					kind: 'subheading',
+					text: `Legal Obligation`,
+				},
 				{
-		kind: 'paragraph',
-		text: `Where we are required to retain or disclose information to comply with applicable law.`,
-	},
+					kind: 'paragraph',
+					text: `Where we are required to retain or disclose information to comply with applicable law.`,
+				},
 			],
 		},
 
@@ -267,26 +267,26 @@ You may withdraw your consent at any time through your account settings where ap
 			title: `Sharing Your Information`,
 			blocks: [
 				{
-		kind: 'paragraph',
-		text: `We only share personal information where necessary.
+					kind: 'paragraph',
+					text: `We only share personal information where necessary.
 Information may be shared with:`,
-	},
+				},
 				{
-		kind: 'list',
-		items: [
-			`Hosts and assigned Cleaners where required to deliver cleaning services`,
-			`Authorised FreshersCo administrators`,
-			`Cloud hosting and database providers`,
-			`Authentication service providers`,
-			`Notification delivery services`,
-			`Professional advisers where legally required`,
-			`Law enforcement or regulatory authorities where required by law`,
-		],
-	},
+					kind: 'list',
+					items: [
+						`Hosts and assigned Cleaners where required to deliver cleaning services`,
+						`Authorised FreshersCo administrators`,
+						`Cloud hosting and database providers`,
+						`Authentication service providers`,
+						`Notification delivery services`,
+						`Professional advisers where legally required`,
+						`Law enforcement or regulatory authorities where required by law`,
+					],
+				},
 				{
-		kind: 'paragraph',
-		text: `We do not sell your personal information.`,
-	},
+					kind: 'paragraph',
+					text: `We do not sell your personal information.`,
+				},
 			],
 		},
 
@@ -295,11 +295,11 @@ Information may be shared with:`,
 			title: `International Transfers`,
 			blocks: [
 				{
-		kind: 'paragraph',
-		text: `Where personal data is stored or processed outside the United Kingdom, we ensure
+					kind: 'paragraph',
+					text: `Where personal data is stored or processed outside the United Kingdom, we ensure
 appropriate safeguards are in place in accordance with UK GDPR, including approved
 contractual safeguards where required.`,
-	},
+				},
 			],
 		},
 
@@ -308,29 +308,29 @@ contractual safeguards where required.`,
 			title: `Data Security`,
 			blocks: [
 				{
-		kind: 'paragraph',
-		text: `We implement appropriate technical and organisational measures including:`,
-	},
+					kind: 'paragraph',
+					text: `We implement appropriate technical and organisational measures including:`,
+				},
 				{
-		kind: 'list',
-		items: [
-			`Encrypted communications using HTTPS`,
-			`Secure password hashing`,
-			`Multi-factor authentication for administrator accounts`,
-			`Role-based access controls`,
-			`Row-level security`,
-			`Secure cloud storage`,
-			`Signed URLs for media access`,
-			`Audit logging`,
-			`Session management`,
-			`Account lockout following repeated unsuccessful login attempts`,
-		],
-	},
+					kind: 'list',
+					items: [
+						`Encrypted communications using HTTPS`,
+						`Secure password hashing`,
+						`Multi-factor authentication for administrator accounts`,
+						`Role-based access controls`,
+						`Row-level security`,
+						`Secure cloud storage`,
+						`Signed URLs for media access`,
+						`Audit logging`,
+						`Session management`,
+						`Account lockout following repeated unsuccessful login attempts`,
+					],
+				},
 				{
-		kind: 'paragraph',
-		text: `Although we take appropriate security measures, no internet-based service can guarantee
+					kind: 'paragraph',
+					text: `Although we take appropriate security measures, no internet-based service can guarantee
 absolute security.`,
-	},
+				},
 			],
 		},
 
@@ -339,21 +339,21 @@ absolute security.`,
 			title: `Data Retention`,
 			blocks: [
 				{
-		kind: 'paragraph',
-		text: `We retain personal information only for as long as necessary to provide the Platform and
+					kind: 'paragraph',
+					text: `We retain personal information only for as long as necessary to provide the Platform and
 comply with legal obligations.
 Generally:`,
-	},
+				},
 				{
-		kind: 'list',
-		items: [
-			`Account information is retained while your account remains active.`,
-			`Cleaning records are retained for operational and legal purposes.`,
-			`Audit logs are retained for security and compliance.`,
-			`Uploaded media may be automatically deleted after the configured retention period.`,
-			`Where accounts are deleted, certain information may be retained where required for legal, security or financial record-keeping.`,
-		],
-	},
+					kind: 'list',
+					items: [
+						`Account information is retained while your account remains active.`,
+						`Cleaning records are retained for operational and legal purposes.`,
+						`Audit logs are retained for security and compliance.`,
+						`Uploaded media may be automatically deleted after the configured retention period.`,
+						`Where accounts are deleted, certain information may be retained where required for legal, security or financial record-keeping.`,
+					],
+				},
 			],
 		},
 
@@ -362,26 +362,26 @@ Generally:`,
 			title: `Your Rights`,
 			blocks: [
 				{
-		kind: 'paragraph',
-		text: `Under UK GDPR you have the right to:`,
-	},
+					kind: 'paragraph',
+					text: `Under UK GDPR you have the right to:`,
+				},
 				{
-		kind: 'list',
-		items: [
-			`Access your personal data`,
-			`Correct inaccurate information`,
-			`Request deletion of your data`,
-			`Restrict processing`,
-			`Object to processing based on legitimate interests`,
-			`Receive a copy of your data (data portability)`,
-			`Withdraw consent where processing relies on consent`,
-			`Lodge a complaint with the Information Commissioner’s Office (ICO)`,
-		],
-	},
+					kind: 'list',
+					items: [
+						`Access your personal data`,
+						`Correct inaccurate information`,
+						`Request deletion of your data`,
+						`Restrict processing`,
+						`Object to processing based on legitimate interests`,
+						`Receive a copy of your data (data portability)`,
+						`Withdraw consent where processing relies on consent`,
+						`Lodge a complaint with the Information Commissioner’s Office (ICO)`,
+					],
+				},
 				{
-		kind: 'paragraph',
-		text: `To exercise your rights please contact us using the details provided above.`,
-	},
+					kind: 'paragraph',
+					text: `To exercise your rights please contact us using the details provided above.`,
+				},
 			],
 		},
 
@@ -390,23 +390,23 @@ Generally:`,
 			title: `Cookies and Similar Technologies`,
 			blocks: [
 				{
-		kind: 'paragraph',
-		text: `The Platform uses essential cookies and similar technologies required for:`,
-	},
+					kind: 'paragraph',
+					text: `The Platform uses essential cookies and similar technologies required for:`,
+				},
 				{
-		kind: 'list',
-		items: [
-			`User authentication`,
-			`Session management`,
-			`Security`,
-			`Remembering user preferences`,
-		],
-	},
+					kind: 'list',
+					items: [
+						`User authentication`,
+						`Session management`,
+						`Security`,
+						`Remembering user preferences`,
+					],
+				},
 				{
-		kind: 'paragraph',
-		text: `We may also use analytics cookies to improve the Platform. Where required by law, these
+					kind: 'paragraph',
+					text: `We may also use analytics cookies to improve the Platform. Where required by law, these
 will only be used with your consent.`,
-	},
+				},
 			],
 		},
 
@@ -415,22 +415,22 @@ will only be used with your consent.`,
 			title: `Push Notifications`,
 			blocks: [
 				{
-		kind: 'paragraph',
-		text: `If you enable push notifications, we will send notifications relating to:`,
-	},
+					kind: 'paragraph',
+					text: `If you enable push notifications, we will send notifications relating to:`,
+				},
 				{
-		kind: 'list',
-		items: [
-			`Cleaning assignments`,
-			`Booking updates`,
-			`Cleaning reminders`,
-			`Status changes`,
-		],
-	},
+					kind: 'list',
+					items: [
+						`Cleaning assignments`,
+						`Booking updates`,
+						`Cleaning reminders`,
+						`Status changes`,
+					],
+				},
 				{
-		kind: 'paragraph',
-		text: `You may disable notifications at any time through your browser or account settings.`,
-	},
+					kind: 'paragraph',
+					text: `You may disable notifications at any time through your browser or account settings.`,
+				},
 			],
 		},
 
@@ -439,10 +439,10 @@ will only be used with your consent.`,
 			title: `Children’s Privacy`,
 			blocks: [
 				{
-		kind: 'paragraph',
-		text: `The Platform is intended for users aged 18 years and over. We do not knowingly collect
+					kind: 'paragraph',
+					text: `The Platform is intended for users aged 18 years and over. We do not knowingly collect
 personal information from children.`,
-	},
+				},
 			],
 		},
 
@@ -451,11 +451,11 @@ personal information from children.`,
 			title: `Changes to this Privacy Notice`,
 			blocks: [
 				{
-		kind: 'paragraph',
-		text: `We may update this Privacy Notice from time to time.
+					kind: 'paragraph',
+					text: `We may update this Privacy Notice from time to time.
 Where significant changes are made we will notify users through the Platform or by email
 where appropriate.`,
-	},
+				},
 			],
 		},
 
@@ -464,21 +464,21 @@ where appropriate.`,
 			title: `Contact Us`,
 			blocks: [
 				{
-		kind: 'paragraph',
-		text: `If you have any questions about this Privacy Notice or how we process your personal
+					kind: 'paragraph',
+					text: `If you have any questions about this Privacy Notice or how we process your personal
 information, please contact:`,
-	},
+				},
 				{
-		kind: 'subheading',
-		text: `FreshersCo`,
-	},
+					kind: 'subheading',
+					text: `FreshersCo`,
+				},
 				{
-		kind: 'paragraph',
-		text: `Email: freshersco@outlook.com
+					kind: 'paragraph',
+					text: `Email: freshersco@outlook.com
 Address: 78 Birkhall Road SE6 1TD
 If you are not satisfied with our response, you have the right to complain to the Information
 Commissioner’s Office (ICO) at www.ico.org.uk.`,
-	},
+				},
 			],
 		},
 	],
