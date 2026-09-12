@@ -7,6 +7,7 @@ export type {
 	MockProperty,
 	MockReport,
 	MockStandardTask,
+	MockSubscription,
 	MockTask,
 	MockUser,
 } from './mock-data';
@@ -14,6 +15,7 @@ export {
 	buildCleaning,
 	buildProperty,
 	buildStandardTask,
+	buildSubscription,
 	buildTask,
 	buildUser,
 	now,

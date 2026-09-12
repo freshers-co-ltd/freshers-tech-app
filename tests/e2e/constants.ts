@@ -183,6 +183,8 @@ export const DICT = {
 			DETAIL: {
 				TITLE_HOST: 'Host Details',
 				TITLE_CLEANER: 'Cleaner Details',
+				INVITED_HOST: 'Free (Invited)',
+				INACTIVE_HOST: 'No Active Subscription',
 			},
 		},
 		CLEANINGS: {
@@ -214,13 +216,12 @@ export const DICT = {
 	SUBSCRIPTION: {
 		PENDING: {
 			TITLE: 'Complete Your Subscription',
-			MESSAGE:
-				'Subscribe for {price} to access the platform. Click below to get redirected to Stripe for payment.',
-			BUTTON_SUBSCRIBE: 'Subscribe Now With Stripe',
+			MESSAGE: 'Subscribe for £29/month to access the platform.',
+			BUTTON_SUBSCRIBE: 'Subscribe Now',
 		},
 		SUCCESS: {
 			TITLE: 'Subscription Activated',
-			MESSAGE: 'Your subscription is now active. Welcome to Freshers!',
+			MESSAGE: 'Your subscription is now active. Welcome to CleanerHire!',
 			BUTTON_DASHBOARD: 'Go to Dashboard',
 		},
 		CANCELED: {
@@ -237,11 +238,12 @@ export const DICT = {
 		STATUS_PAYMENT_ISSUE: 'Payment Issue',
 		STATUS_INACTIVE: 'Inactive',
 		STATUS_PENDING: 'Pending',
-		MANAGE: 'Manage Subscription',
+		FREE_ACCESS: 'Free Access',
+		MANAGE_BILLING: 'Manage Subscription',
 		RESUBSCRIBE: 'Resubscribe',
 		RENEWAL_DATE: 'Renewal Date',
-		STATUS_LABEL: 'Status',
-		SECTION_TITLE: 'Subscription',
+		PRICE: { LABEL: 'Plan', VALUE: '£29/month' },
+		BILLING_TITLE: 'Billing & Subscription',
 		PROCESSING: 'Processing...',
 	},
 	ACCOUNT: {
@@ -298,4 +300,5 @@ export const MOCK_UUIDS = {
 	EVIDENCE_1: '00000000-0000-0000-0000-000000000050',
 	REPORT_1: '00000000-0000-0000-0000-000000000060',
 	NEW_PROPERTY: '00000000-0000-0000-0000-000000000100',
+	SUBSCRIPTION_1: '00000000-0000-0000-0000-000000000070',
 } as const;

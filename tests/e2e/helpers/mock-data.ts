@@ -7,6 +7,8 @@ export interface MockUser {
 	role: 'host' | 'cleaner' | 'admin';
 	avatar_url: string | null;
 	is_verified: boolean;
+	is_invited: boolean;
+	host_subscription_status: 'active' | 'past_due' | 'unpaid' | 'incomplete' | null;
 	created_at: string;
 	last_seen_at: string;
 	is_online: boolean;
@@ -82,6 +84,21 @@ export interface MockReport {
 	created_at: string;
 }
 
+export interface MockSubscription {
+	id: string;
+	host_id: string;
+	stripe_customer_id: string;
+	stripe_subscription_id: string;
+	stripe_price_id: string;
+	status: string;
+	current_period_start: string | null;
+	current_period_end: string | null;
+	cancel_at: string | null;
+	canceled_at: string | null;
+	created_at: string;
+	updated_at: string;
+}
+
 export interface MockData {
 	user: MockUser;
 	properties?: MockProperty[];
@@ -89,6 +106,7 @@ export interface MockData {
 	tasks?: MockTask[];
 	standardTasks?: MockStandardTask[];
 	users?: MockUser[];
+	subscriptions?: MockSubscription[];
 }
 
 function now(): string {
@@ -119,6 +137,8 @@ export function buildUser(
 			full_name: 'Alice Host',
 			avatar_url: null,
 			is_verified: false,
+			is_invited: false,
+			host_subscription_status: 'active',
 			created_at: '2025-01-01T00:00:00Z',
 			last_seen_at: '2025-06-28T12:00:00Z',
 			is_online: true,
@@ -130,6 +150,8 @@ export function buildUser(
 			full_name: 'Bob Cleaner',
 			avatar_url: null,
 			is_verified: true,
+			is_invited: false,
+			host_subscription_status: null,
 			created_at: '2025-01-15T00:00:00Z',
 			last_seen_at: '2025-06-29T08:00:00Z',
 			is_online: true,
@@ -141,6 +163,8 @@ export function buildUser(
 			full_name: 'Charlie Admin',
 			avatar_url: null,
 			is_verified: true,
+			is_invited: false,
+			host_subscription_status: null,
 			created_at: '2024-12-01T00:00:00Z',
 			last_seen_at: '2025-06-29T09:00:00Z',
 			is_online: true,
@@ -210,6 +234,24 @@ export function buildStandardTask(overrides?: Partial<MockStandardTask>): MockSt
 		is_active: true,
 		sort_order: 0,
 		created_at: '2025-01-01T00:00:00Z',
+		...overrides,
+	};
+}
+
+export function buildSubscription(overrides?: Partial<MockSubscription>): MockSubscription {
+	return {
+		id: MOCK_UUIDS.SUBSCRIPTION_1,
+		host_id: MOCK_UUIDS.HOST,
+		stripe_customer_id: 'cus_mock_123',
+		stripe_subscription_id: 'sub_mock_123',
+		stripe_price_id: 'price_mock_123',
+		status: 'active',
+		current_period_start: '2025-07-01T00:00:00Z',
+		current_period_end: new Date(Date.now() + 30 * 86_400_000).toISOString(),
+		cancel_at: null,
+		canceled_at: null,
+		created_at: '2025-07-01T00:00:00Z',
+		updated_at: '2025-07-01T00:00:00Z',
 		...overrides,
 	};
 }

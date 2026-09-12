@@ -50,10 +50,6 @@ describe('Subscription Pages', () => {
 				data: profile,
 				error: null,
 			});
-			vi.spyOn(subscriptionService, 'getPricing').mockResolvedValue({
-				data: { amount: 2900, currency: 'gbp', interval: 'month' },
-				error: null,
-			});
 
 			return renderWithProviders(<SubscriptionPendingPage />, {
 				routes: [
@@ -64,7 +60,7 @@ describe('Subscription Pages', () => {
 			});
 		};
 
-		it('shows subscribe button for non-invited host', async () => {
+		it('shows subscription pricing and subscribe button for non-invited host', async () => {
 			setMockUserRole('host');
 			renderPendingPage({
 				id: 'user_123',
@@ -80,6 +76,7 @@ describe('Subscription Pages', () => {
 			expect(
 				await screen.findByRole('heading', { name: DICT.SUBSCRIPTION.PENDING.TITLE }),
 			).toBeInTheDocument();
+			expect(screen.getByText('£29')).toBeInTheDocument();
 			expect(
 				screen.getByRole('button', { name: DICT.SUBSCRIPTION.PENDING.BUTTON_SUBSCRIBE }),
 			).toBeInTheDocument();
@@ -172,10 +169,6 @@ describe('Subscription Pages', () => {
 					is_invited: false,
 					host_subscription_status: 'incomplete',
 				},
-				error: null,
-			});
-			vi.spyOn(subscriptionService, 'verifyCheckoutSession').mockResolvedValue({
-				data: null,
 				error: null,
 			});
 
