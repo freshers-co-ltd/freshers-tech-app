@@ -1,3 +1,10 @@
+## 0.18.0 (2026-09-18)
+
+* chore: Pin conventional-changelog to v7 in production workflow ([56b6dd4](https://github.com/freshers-co-ltd/freshers-tech-app/commit/56b6dd4))
+* feat(ical): Add calendar sync and feed management backend ([f50d135](https://github.com/freshers-co-ltd/freshers-tech-app/commit/f50d135))
+* feat(ical): Add feed management UI and sync status ([71519b8](https://github.com/freshers-co-ltd/freshers-tech-app/commit/71519b8))
+* feat(ical): Add tests, unverified workflow, and confidence filtering ([f0b6027](https://github.com/freshers-co-ltd/freshers-tech-app/commit/f0b6027))
+
 ## [0.17.1](https://github.com/freshers-co-ltd/freshers-tech-app/compare/v0.17.0...v0.17.1) (2026-08-08)
 
 ## [0.17.0](https://github.com/freshers-co-ltd/freshers-tech-app/compare/v0.16.0...v0.17.0) (2026-08-05)
