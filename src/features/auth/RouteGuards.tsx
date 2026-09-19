@@ -3,6 +3,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Loading } from '@/components/Loading';
 import { useAuth } from '@/features/auth/AuthContext';
 import type { UserRole } from '@/features/auth/types';
+import { needsSubscription } from '@/features/subscription/utils/subscriptionUtils';
 
 const ROLE_DASHBOARDS: Record<UserRole, string> = {
 	host: '/host/dashboard',
@@ -66,6 +67,10 @@ export const PublicRoute = () => {
 	const isLoggingOut = logoutReason === 'inactivity' || logoutReason === 'session_expired';
 
 	if (user && profile && !isLoggingOut) {
+		if (profile.role === 'host' && needsSubscription(profile)) {
+			return <Navigate to="/host/subscription/pending" replace />;
+		}
+
 		const fallbackPath = state?.from && typeof state.from === 'string' ? state.from : '/dashboard';
 
 		if (
@@ -96,6 +101,10 @@ export const DashboardRedirect = () => {
 
 	if (!profile) {
 		return <Loading />;
+	}
+
+	if (needsSubscription(profile)) {
+		return <Navigate to="/host/subscription/pending" replace />;
 	}
 
 	const destination = ROLE_DASHBOARDS[profile.role as UserRole] || '/error/403';

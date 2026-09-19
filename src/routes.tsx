@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate, Outlet, type RouteObject } from 'react-router-dom';
 import { DashboardRedirect, ProtectedRoute, PublicRoute } from '@/features/auth/RouteGuards';
+import { SubscriptionGate } from '@/features/subscription/SubscriptionGate';
 import { AppLayout } from '@/layouts/AppLayout';
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { lazyLoad } from '@/lib/LazyLoad';
@@ -88,15 +89,27 @@ const routesConfig: RouteObject[] = [
 					},
 					{
 						path: 'dashboard',
-						element: lazyLoad(() => import('@/pages/host/Dashboard'), 'HostDashboardPage'),
+						element: (
+							<SubscriptionGate>
+								{lazyLoad(() => import('@/pages/host/Dashboard'), 'HostDashboardPage')}
+							</SubscriptionGate>
+						),
 					},
 					{
 						path: 'cleanings',
-						element: lazyLoad(() => import('@/pages/host/Cleanings'), 'HostCleaningsPage'),
+						element: (
+							<SubscriptionGate>
+								{lazyLoad(() => import('@/pages/host/Cleanings'), 'HostCleaningsPage')}
+							</SubscriptionGate>
+						),
 					},
 					{
 						path: 'properties',
-						element: lazyLoad(() => import('@/pages/host/Properties'), 'HostPropertiesPage'),
+						element: (
+							<SubscriptionGate>
+								{lazyLoad(() => import('@/pages/host/Properties'), 'HostPropertiesPage')}
+							</SubscriptionGate>
+						),
 					},
 					{
 						path: 'account',
@@ -104,7 +117,37 @@ const routesConfig: RouteObject[] = [
 					},
 					{
 						path: 'notifications',
-						element: lazyLoad(() => import('@/pages/Notifications'), 'NotificationsPage'),
+						element: (
+							<SubscriptionGate>
+								{lazyLoad(() => import('@/pages/Notifications'), 'NotificationsPage')}
+							</SubscriptionGate>
+						),
+					},
+					{
+						path: 'subscription',
+						children: [
+							{
+								path: 'pending',
+								element: lazyLoad(
+									() => import('@/pages/host/SubscriptionPending'),
+									'SubscriptionPendingPage',
+								),
+							},
+							{
+								path: 'success',
+								element: lazyLoad(
+									() => import('@/pages/host/SubscriptionSuccess'),
+									'SubscriptionSuccessPage',
+								),
+							},
+							{
+								path: 'canceled',
+								element: lazyLoad(
+									() => import('@/pages/host/SubscriptionCanceled'),
+									'SubscriptionCanceledPage',
+								),
+							},
+						],
 					},
 				],
 			},

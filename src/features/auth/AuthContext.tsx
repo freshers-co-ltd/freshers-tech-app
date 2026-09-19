@@ -95,6 +95,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 						avatar_url: metadata?.avatar_url || null,
 						email: currentUser.email || '',
 						is_verified: false,
+						is_invited: false,
+						host_subscription_status: null,
 					};
 					setProfile(initialProfile);
 				}
