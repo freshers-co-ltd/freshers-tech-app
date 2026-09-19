@@ -1,6 +1,7 @@
 import type { Database } from '@/lib/database.types';
 
 export type UserRole = Database['public']['Enums']['user_role'];
+export type SubscriptionStatus = Database['public']['Enums']['subscription_status'];
 
 export interface Profile {
 	id: string;
@@ -9,6 +10,8 @@ export interface Profile {
 	full_name: string;
 	avatar_url: string | null;
 	is_verified: boolean;
+	is_invited: boolean;
+	host_subscription_status: SubscriptionStatus | null;
 }
 
 export interface AuthActionResult {

@@ -6,7 +6,9 @@ export const profileService = {
 	async getProfile(userId: string): Promise<{ data: Profile | null; error: string | null }> {
 		const { data, error } = await supabase
 			.from('profiles')
-			.select('id, email, full_name, avatar_url, role, deleted_at, is_verified')
+			.select(
+				'id, email, full_name, avatar_url, role, deleted_at, is_verified, is_invited, host_subscription_status',
+			)
 			.eq('id', userId)
 			.single();
 
@@ -42,7 +44,9 @@ export const profileService = {
 		try {
 			const fetchPromise = supabase
 				.from('profiles')
-				.select('id, email, full_name, avatar_url, role, deleted_at, is_verified')
+				.select(
+					'id, email, full_name, avatar_url, role, deleted_at, is_verified, is_invited, host_subscription_status',
+				)
 				.eq('id', userId)
 				.single();
 			const { data, error } = (await Promise.race([
@@ -79,6 +83,8 @@ export const profileService = {
 					avatar_url: user.user_metadata?.avatar_url || null,
 					email: user.email || '',
 					is_verified: false,
+					is_invited: false,
+					host_subscription_status: null,
 				};
 				return { data: fallback, error: null };
 			}

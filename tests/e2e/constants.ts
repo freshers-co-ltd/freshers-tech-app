@@ -211,6 +211,39 @@ export const DICT = {
 		STANDARD_TASKS_UPDATED: 'Standard tasks updated successfully',
 		INVITATION_SENT: 'Invitation sent successfully',
 	},
+	SUBSCRIPTION: {
+		PENDING: {
+			TITLE: 'Complete Your Subscription',
+			MESSAGE:
+				'Subscribe for {price} to access the platform. Click below to get redirected to Stripe for payment.',
+			BUTTON_SUBSCRIBE: 'Subscribe Now With Stripe',
+		},
+		SUCCESS: {
+			TITLE: 'Subscription Activated',
+			MESSAGE: 'Your subscription is now active. Welcome to Freshers!',
+			BUTTON_DASHBOARD: 'Go to Dashboard',
+		},
+		CANCELED: {
+			TITLE: 'Subscription Required',
+			MESSAGE: 'You need an active subscription to access the platform.',
+			BUTTON_RETRY: 'Try Again',
+			BUTTON_SUPPORT: 'Contact Support',
+		},
+		PAYMENT_FAILED: {
+			MESSAGE: 'Your subscription payment failed. Please update your payment method.',
+			BUTTON_UPDATE: 'Update Payment Method',
+		},
+		STATUS_ACTIVE: 'Active',
+		STATUS_PAYMENT_ISSUE: 'Payment Issue',
+		STATUS_INACTIVE: 'Inactive',
+		STATUS_PENDING: 'Pending',
+		MANAGE: 'Manage Subscription',
+		RESUBSCRIBE: 'Resubscribe',
+		RENEWAL_DATE: 'Renewal Date',
+		STATUS_LABEL: 'Status',
+		SECTION_TITLE: 'Subscription',
+		PROCESSING: 'Processing...',
+	},
 	ACCOUNT: {
 		TITLE: 'Account Settings',
 		BUTTON_SIGN_OUT: 'Sign out',

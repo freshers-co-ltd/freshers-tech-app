@@ -36,17 +36,31 @@ serve(async (req: Request) => {
 		const path = pathSegments[pathSegments.length - 1];
 
 		if (path === 'cancel-subscription') {
-			const authHeader = req.headers.get('Authorization');
-			const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-			if (!authHeader || authHeader !== `Bearer ${serviceRoleKey}`) {
-				return jsonResponse({ error: 'Unauthorized' }, 401, origin);
-			}
-
 			const { host_id } = await req.json();
 			if (!host_id) return jsonResponse({ error: 'host_id required' }, 400, origin);
 
+			const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+			const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+			const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+			const authHeader = req.headers.get('Authorization');
+			const isServiceRole = Boolean(authHeader && serviceRoleKey && authHeader === `Bearer ${serviceRoleKey}`);
+
+			if (!isServiceRole) {
+				const auth = await authenticateRequest(req, { supabaseUrl, anonKey: supabaseAnonKey });
+				if (!auth) return jsonResponse({ error: 'Unauthorized' }, 401, origin);
+
+				if (auth.userId !== host_id) {
+					const supabaseAdmin = createClient(supabaseUrl, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+					const { data: callerProfile } = await supabaseAdmin
+						.from('profiles').select('role').eq('id', auth.userId).single();
+					if (callerProfile?.role !== 'admin') {
+						return jsonResponse({ error: 'Forbidden' }, 403, origin);
+					}
+				}
+			}
+
 			const supabase = createClient(
-				Deno.env.get('SUPABASE_URL')!,
+				supabaseUrl || Deno.env.get('SUPABASE_URL')!,
 				Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
 			);
 
@@ -67,6 +81,22 @@ serve(async (req: Request) => {
 			}
 
 			return jsonResponse({ success: true }, 200, origin);
+		}
+
+		if (path === 'pricing') {
+			if (!STRIPE_PRICE_ID) {
+				return jsonResponse({ error: 'Stripe price not configured' }, 500, origin);
+			}
+			try {
+				const price = await stripe.prices.retrieve(STRIPE_PRICE_ID);
+				return jsonResponse({
+					amount: price.unit_amount,
+					currency: price.currency,
+					interval: price.recurring?.interval ?? 'month',
+				}, 200, origin);
+			} catch {
+				return jsonResponse({ error: 'Failed to fetch pricing' }, 500, origin);
+			}
 		}
 
 		const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
@@ -94,7 +124,7 @@ serve(async (req: Request) => {
 					.single();
 
 				if (profile?.is_invited) {
-					return jsonResponse({ error: 'Free hosts do not need a subscription' }, 400, origin);
+					return jsonResponse({ error: 'Your account includes complimentary platform access and does not require a subscription.' }, 400, origin);
 				}
 
 				const { data: existingSub } = await supabase
@@ -115,6 +145,10 @@ serve(async (req: Request) => {
 					.single();
 
 				if (!user?.email) return jsonResponse({ error: 'Email not found' }, 400, origin);
+
+				if (!STRIPE_PRICE_ID) {
+					return jsonResponse({ error: 'Stripe price not configured' }, 500, origin);
+				}
 
 				const customer = await getOrCreateStripeCustomer(user.email, auth.userId);
 
@@ -173,8 +207,14 @@ serve(async (req: Request) => {
 						stripe_subscription_id: subscription.id,
 						stripe_price_id: subscription.items.data[0]?.price.id ?? '',
 						status: subscription.status,
-						current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-						current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+						current_period_start: (() => {
+							const cps = subscription.items.data[0]?.current_period_start ?? subscription.current_period_start;
+							return cps ? new Date(cps * 1000).toISOString() : null;
+						})(),
+						current_period_end: (() => {
+							const cpe = subscription.items.data[0]?.current_period_end ?? subscription.current_period_end;
+							return cpe ? new Date(cpe * 1000).toISOString() : null;
+						})(),
 						cancel_at: subscription.cancel_at
 							? new Date(subscription.cancel_at * 1000).toISOString()
 							: null,
@@ -211,6 +251,7 @@ serve(async (req: Request) => {
 		}
 	} catch (err) {
 		console.error('stripe-billing error:', err);
-		return jsonResponse({ error: 'Internal server error' }, 500, origin);
+		const message = err instanceof Error ? err.message : 'Unknown error';
+		return jsonResponse({ error: `Internal server error: ${message}` }, 500, origin);
 	}
 });

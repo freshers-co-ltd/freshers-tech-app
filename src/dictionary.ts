@@ -517,6 +517,9 @@ export const DICT = {
 			TOAST_BLOCKED: 'Push notifications are blocked. Please enable them in your browser settings.',
 			TOAST_ERROR: 'Failed to set up push notifications. Please try again.',
 		},
+		SUBSCRIPTION: {
+			TITLE: 'Subscription',
+		},
 		CONTACT: {
 			TITLE: 'Contact',
 			SUPPORT: { TITLE: 'Contact Support', SUBTITLE: 'Get help with any issues.' },
@@ -524,6 +527,42 @@ export const DICT = {
 			PRIVACY: { TITLE: 'Privacy Notice', SUBTITLE: 'Review our privacy policy.' },
 		},
 		TOASTS: {},
+	},
+	SUBSCRIPTION: {
+		PENDING: {
+			TITLE: 'Complete Your Subscription',
+			MESSAGE:
+				'Subscribe for {price} to access the platform. Click below to get redirected to Stripe for payment.',
+			BUTTON_SUBSCRIBE: 'Subscribe Now With Stripe',
+		},
+		SUCCESS: {
+			TITLE: 'Subscription Activated',
+			MESSAGE: 'Your subscription is now active. Welcome to Freshers!',
+			BUTTON_DASHBOARD: 'Go to Dashboard',
+		},
+		CANCELED: {
+			TITLE: 'Subscription Required',
+			MESSAGE: 'You need an active subscription to access the platform.',
+			BUTTON_RETRY: 'Try Again',
+			BUTTON_SUPPORT: 'Contact Support',
+		},
+		PAYMENT_FAILED: {
+			MESSAGE: 'Your subscription payment failed. Please update your payment method.',
+			BUTTON_UPDATE: 'Update Payment Method',
+		},
+		STATUS_LABEL: 'Status',
+		STATUS_ACTIVE: 'Active',
+		STATUS_PAYMENT_ISSUE: 'Payment Issue',
+		STATUS_INACTIVE: 'Inactive',
+		STATUS_PENDING: 'Pending',
+		UNSUBSCRIBED: 'Unsubscribed',
+		MANAGE: 'Manage Subscription',
+		RESUBSCRIBE: 'Resubscribe',
+		RENEWAL_DATE: 'Renewal Date',
+		PROCESSING: 'Processing...',
+		CHECKOUT_ERROR: 'Unable to start payment. Please try again.',
+		FREE_ACCESS_ERROR:
+			'Your account includes complimentary platform access. No subscription is required.',
 	},
 	ADMIN: {
 		USERS: {
@@ -544,6 +583,9 @@ export const DICT = {
 			DETAIL: {
 				TITLE_HOST: 'Host Details',
 				TITLE_CLEANER: 'Cleaner Details',
+				SUBSCRIPTION_TITLE: 'Subscription',
+				INVITED_HOST: 'Free (Invited)',
+				INACTIVE_HOST: 'No Active Subscription',
 			},
 			PASSWORD_RESET: {
 				TITLE: 'Reset Password',

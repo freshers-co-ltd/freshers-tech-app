@@ -442,6 +442,48 @@ export async function setupSupabaseMocks(
 		},
 	);
 
+	// ── Stripe billing function ──────────────────────────
+
+	await page.route(/\/functions\/v1\/stripe-billing\//, async (route: Route) => {
+		const url = route.request().url();
+		const method = route.request().method();
+		if (url.includes('/pricing')) {
+			await fulfillJson(route, {
+				amount: 2900,
+				currency: 'gbp',
+				interval: 'month',
+			});
+			return;
+		}
+		if (url.includes('/cancel-subscription')) {
+			await fulfillJson(route, { success: true });
+			return;
+		}
+		if (method !== 'POST') {
+			await route.fallback();
+			return;
+		}
+		if (url.includes('/checkout')) {
+			await fulfillJson(route, {
+				url: 'https://checkout.stripe.com/mock-session-id',
+			});
+		} else if (url.includes('/portal')) {
+			await fulfillJson(route, {
+				url: 'https://billing.stripe.com/mock-portal-session',
+			});
+		} else if (url.includes('/verify')) {
+			await fulfillJson(route, { status: 'active' });
+		} else if (url.includes('/status')) {
+			await fulfillJson(route, {
+				status: 'active',
+				current_period_end: new Date(Date.now() + 30 * 86_400_000).toISOString(),
+				cancel_at: null,
+			});
+		} else {
+			await fulfillJson(route, {});
+		}
+	});
+
 	// ── RPC endpoints ─────────────────────────────────────
 
 	await page.route(/\/rest\/v1\/rpc\//, async (route: Route) => {

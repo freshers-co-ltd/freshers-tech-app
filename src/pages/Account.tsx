@@ -1,6 +1,17 @@
 'use client';
 
-import { FileText, Globe, LogOut, Mail, Send, Settings, Shield, Trash2, User } from 'lucide-react';
+import {
+	CreditCard,
+	FileText,
+	Globe,
+	LogOut,
+	Mail,
+	Send,
+	Settings,
+	Shield,
+	Trash2,
+	User,
+} from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog';
@@ -15,6 +26,8 @@ import { NotificationPreferencesForm } from '@/features/account/components/Prefe
 import { SecurityForm } from '@/features/account/components/SecurityForm';
 import { userService } from '@/features/admin/services/userService';
 import { useAuth } from '@/features/auth/AuthContext';
+import { SubscriptionStatusCard } from '@/features/subscription/components/SubscriptionStatusCard';
+import { subscriptionService } from '@/features/subscription/services/subscriptionService';
 
 export function AccountPage() {
 	const { loading, signOut, user, profile } = useAuth();
@@ -52,6 +65,16 @@ export function AccountPage() {
 								{dict.SECURITY.TITLE}
 							</Button>
 						</a>
+						{profile?.role === 'host' && !profile?.is_invited && (
+							<a href="#billing">
+								<Button
+									variant="ghost"
+									className="justify-start font-medium text-muted-foreground w-full">
+									<CreditCard className="mr-1 size-4" />
+									{dict.SUBSCRIPTION.TITLE}
+								</Button>
+							</a>
+						)}
 						<a href="#settings">
 							<Button
 								variant="ghost"
@@ -109,6 +132,18 @@ export function AccountPage() {
 							)}
 						</div>
 					</section>
+
+					{profile?.role === 'host' && !profile?.is_invited && (
+						<section id="billing" className="space-y-4 mb-8 md:scroll-mt-22 scroll-mt-20">
+							<div>
+								<h2 className="text-xl font-semibold">{dict.SUBSCRIPTION.TITLE}</h2>
+							</div>
+							<Separator />
+							<div>
+								<SubscriptionStatusCard profile={profile} />
+							</div>
+						</section>
+					)}
 
 					<section id="settings" className="space-y-4 mb-8 md:scroll-mt-22 scroll-mt-20">
 						<div>
@@ -193,6 +228,7 @@ export function AccountPage() {
 							if (!user) {
 								return;
 							}
+							await subscriptionService.cancelSubscription(user.id);
 							const { error } = await userService.purgeUserPii(user.id);
 							if (error) {
 								toast.error(error);

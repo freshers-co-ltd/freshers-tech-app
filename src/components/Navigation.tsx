@@ -2,6 +2,7 @@ import { BarChart3, ClipboardList, Home, LayoutDashboard, User, Users } from 'lu
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/features/auth/AuthContext';
 import type { UserRole } from '@/features/auth/types';
+import { needsSubscription } from '@/features/subscription/utils/subscriptionUtils';
 import { cn } from '@/lib/utils';
 import { Logo } from './Logo';
 
@@ -39,14 +40,26 @@ export function Navigation() {
 	const location = useLocation();
 
 	const role = (profile?.role as UserRole) || 'host';
-	const navItems = NAV_CONFIG[role];
+	const isSubscriptionPage = location.pathname.startsWith('/host/subscription');
+	const isAccountPage = location.pathname.startsWith('/host/account');
+	const isUnsubscribedHost = profile ? needsSubscription(profile) : false;
+
+	const navItems = isUnsubscribedHost
+		? isSubscriptionPage
+			? NAV_CONFIG[role].filter((item) => item.path === '/host/account')
+			: isAccountPage
+				? NAV_CONFIG[role].filter(
+						(item) => item.path === '/host/account' || item.path === '/host/dashboard',
+					)
+				: NAV_CONFIG[role]
+		: NAV_CONFIG[role];
 	return (
 		<>
 			<nav
 				aria-label="Desktop navigation"
 				className="fixed top-0 left-0 right-0 z-50 hidden h-20 border-b bg-background/80 backdrop-blur-md md:block">
 				<div className="flex items-center h-full max-w-6xl px-6 mx-auto gap-4">
-					<Logo className="max-w-[140px] lg:max-w-none" />
+					<Logo className="max-w-35 lg:max-w-none" />
 					<div className="flex items-center gap-2 flex-1 justify-end overflow-x-auto">
 						{navItems.map((item) => (
 							<Link
