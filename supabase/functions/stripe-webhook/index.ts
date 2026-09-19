@@ -47,8 +47,14 @@ serve(async (req: Request) => {
 					stripe_subscription_id: subscription.id,
 					stripe_price_id: subscription.items.data[0]?.price.id ?? '',
 					status: subscription.status,
-					current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-					current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+					current_period_start: (() => {
+						const cps = subscription.items.data[0]?.current_period_start ?? subscription.current_period_start;
+						return cps ? new Date(cps * 1000).toISOString() : null;
+					})(),
+					current_period_end: (() => {
+						const cpe = subscription.items.data[0]?.current_period_end ?? subscription.current_period_end;
+						return cpe ? new Date(cpe * 1000).toISOString() : null;
+					})(),
 					cancel_at: subscription.cancel_at
 						? new Date(subscription.cancel_at * 1000).toISOString()
 						: null,
@@ -69,7 +75,7 @@ serve(async (req: Request) => {
 						user_id: hostId,
 						type: 'subscription_active',
 						title: 'Subscription Activated',
-						message: 'Your subscription is now active. Welcome to CleanerHire!',
+						message: 'Your subscription is now active. Welcome to Freshers!',
 					});
 				}
 				break;
@@ -78,21 +84,27 @@ serve(async (req: Request) => {
 			case 'customer.subscription.updated': {
 				const subscription = event.data.object as Stripe.Subscription;
 
-				await supabase
-					.from('subscriptions')
-					.update({
-						status: subscription.status,
-						current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-						current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-						cancel_at: subscription.cancel_at
-							? new Date(subscription.cancel_at * 1000).toISOString()
-							: null,
-						canceled_at: subscription.canceled_at
-							? new Date(subscription.canceled_at * 1000).toISOString()
-							: null,
-						updated_at: new Date().toISOString(),
-					})
-					.eq('stripe_subscription_id', subscription.id);
+			await supabase
+				.from('subscriptions')
+				.update({
+					status: subscription.status,
+					current_period_start: (() => {
+						const cps = subscription.items.data[0]?.current_period_start ?? subscription.current_period_start;
+						return cps ? new Date(cps * 1000).toISOString() : null;
+					})(),
+					current_period_end: (() => {
+						const cpe = subscription.items.data[0]?.current_period_end ?? subscription.current_period_end;
+						return cpe ? new Date(cpe * 1000).toISOString() : null;
+					})(),
+					cancel_at: subscription.cancel_at
+						? new Date(subscription.cancel_at * 1000).toISOString()
+						: null,
+					canceled_at: subscription.canceled_at
+						? new Date(subscription.canceled_at * 1000).toISOString()
+						: null,
+					updated_at: new Date().toISOString(),
+				})
+				.eq('stripe_subscription_id', subscription.id);
 
 				const hostId = subscription.metadata?.host_id;
 
