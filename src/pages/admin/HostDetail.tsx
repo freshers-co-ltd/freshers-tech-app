@@ -145,7 +145,14 @@ export function AdminHostDetailPage() {
 		if (!host) {
 			return { error: 'No user loaded' };
 		}
-		await subscriptionService.cancelSubscription(host.id);
+		try {
+			const { error: cancelError } = await subscriptionService.cancelSubscription(host.id);
+			if (cancelError) {
+				return { error: cancelError };
+			}
+		} catch {
+			return { error: DICT.SUBSCRIPTION.CHECKOUT_ERROR };
+		}
 		const result = await userService.purgeUserPii(host.id);
 		if (result.error) {
 			return { error: result.error };

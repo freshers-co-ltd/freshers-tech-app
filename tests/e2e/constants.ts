@@ -216,12 +216,13 @@ export const DICT = {
 	SUBSCRIPTION: {
 		PENDING: {
 			TITLE: 'Complete Your Subscription',
-			MESSAGE: 'Subscribe for £29/month to access the platform.',
-			BUTTON_SUBSCRIBE: 'Subscribe Now',
+			MESSAGE:
+				'Subscribe for {price} to access the platform. Click below to get redirected to Stripe for payment.',
+			BUTTON_SUBSCRIBE: 'Subscribe Now With Stripe',
 		},
 		SUCCESS: {
 			TITLE: 'Subscription Activated',
-			MESSAGE: 'Your subscription is now active. Welcome to CleanerHire!',
+			MESSAGE: 'Your subscription is now active. Welcome to Freshers!',
 			BUTTON_DASHBOARD: 'Go to Dashboard',
 		},
 		CANCELED: {
@@ -234,16 +235,16 @@ export const DICT = {
 			MESSAGE: 'Your subscription payment failed. Please update your payment method.',
 			BUTTON_UPDATE: 'Update Payment Method',
 		},
+		STATUS_LABEL: 'Status',
 		STATUS_ACTIVE: 'Active',
 		STATUS_PAYMENT_ISSUE: 'Payment Issue',
 		STATUS_INACTIVE: 'Inactive',
 		STATUS_PENDING: 'Pending',
-		FREE_ACCESS: 'Free Access',
-		MANAGE_BILLING: 'Manage Subscription',
+		UNSUBSCRIBED: 'Unsubscribed',
+		MANAGE: 'Manage Subscription',
 		RESUBSCRIBE: 'Resubscribe',
 		RENEWAL_DATE: 'Renewal Date',
-		PRICE: { LABEL: 'Plan', VALUE: '£29/month' },
-		BILLING_TITLE: 'Billing & Subscription',
+		SECTION_TITLE: 'Subscription',
 		PROCESSING: 'Processing...',
 	},
 	ACCOUNT: {
