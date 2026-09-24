@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { toast } from '@/components/Toast';
 import { DICT } from '@/dictionary';
 import { profileService } from '@/features/auth/services/profileService';
+import { subscriptionService } from '@/features/subscription/services/subscriptionService';
 import { AccountPage } from '@/pages/Account';
 import { renderWithProviders } from '~/utils';
 import { mockRpcData, setMockUserRole } from '~/utils/supabaseMocks';
@@ -85,6 +86,10 @@ describe('Account Page', () => {
 		const user = userEvent.setup();
 		setMockUserRole('host');
 		cleanupRpc = mockRpcData('purge_user_pii', { data: null, error: null });
+		vi.spyOn(subscriptionService, 'cancelSubscription').mockResolvedValue({
+			data: null,
+			error: null,
+		});
 
 		renderPage();
 
@@ -104,6 +109,10 @@ describe('Account Page', () => {
 		const user = userEvent.setup();
 		setMockUserRole('host');
 		cleanupRpc = mockRpcData('purge_user_pii', null, 'Deletion failed');
+		vi.spyOn(subscriptionService, 'cancelSubscription').mockResolvedValue({
+			data: null,
+			error: null,
+		});
 
 		renderPage();
 

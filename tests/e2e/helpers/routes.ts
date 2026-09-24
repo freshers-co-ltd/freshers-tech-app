@@ -467,6 +467,18 @@ export async function setupSupabaseMocks(
 	await page.route(/\/functions\/v1\/stripe-billing\//, async (route: Route) => {
 		const url = route.request().url();
 		const method = route.request().method();
+		if (url.includes('/pricing')) {
+			await fulfillJson(route, {
+				amount: 2900,
+				currency: 'gbp',
+				interval: 'month',
+			});
+			return;
+		}
+		if (url.includes('/cancel-subscription')) {
+			await fulfillJson(route, { success: true });
+			return;
+		}
 		if (method !== 'POST') {
 			await route.fallback();
 			return;

@@ -228,7 +228,18 @@ export function AccountPage() {
 							if (!user) {
 								return;
 							}
-							await subscriptionService.cancelSubscription(user.id);
+							try {
+								const { error: cancelError } = await subscriptionService.cancelSubscription(
+									user.id,
+								);
+								if (cancelError) {
+									toast.error(cancelError);
+									return;
+								}
+							} catch {
+								toast.error(DICT.SUBSCRIPTION.CHECKOUT_ERROR);
+								return;
+							}
 							const { error } = await userService.purgeUserPii(user.id);
 							if (error) {
 								toast.error(error);

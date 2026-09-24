@@ -560,7 +560,7 @@ export const DICT = {
 		RESUBSCRIBE: 'Resubscribe',
 		RENEWAL_DATE: 'Renewal Date',
 		PROCESSING: 'Processing...',
-		CHECKOUT_ERROR: 'Unable to start payment. Please try again.',
+		CHECKOUT_ERROR: 'Unable to connect to Stripe. Please try again.',
 		FREE_ACCESS_ERROR:
 			'Your account includes complimentary platform access. No subscription is required.',
 	},
