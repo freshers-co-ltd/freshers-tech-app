@@ -374,9 +374,6 @@ async function handleDeleteFeed(
 			}
 		}
 	}
-			}
-		}
-	}
 
 	const { error } = await admin.from('ical_feeds').delete().eq('id', feedId);
 	if (error) {
