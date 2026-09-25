@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { stripe, STRIPE_PRICE_ID, SITE_URL, getOrCreateStripeCustomer } from "../_shared/stripe.ts";
 import { authenticateRequest } from "../_shared/auth.ts";
 import { corsHeaders, jsonResponse, getAllowedOrigin } from "../_shared/cors.ts";
+import { resolveAppBaseUrl } from "../_shared/origin.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const rateLimits = new Map<string, { count: number; resetAt: number }>();
@@ -115,6 +116,11 @@ serve(async (req: Request) => {
 			Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
 		);
 
+		const appBaseUrl = resolveAppBaseUrl(req, {
+			siteUrl: SITE_URL,
+			corsOrigin: Deno.env.get('CORS_ORIGIN'),
+		});
+
 		switch (path) {
 			case 'checkout': {
 				const { data: profile } = await supabase
@@ -156,8 +162,8 @@ serve(async (req: Request) => {
 					customer: customer.id,
 					mode: 'subscription',
 					line_items: [{ price: STRIPE_PRICE_ID!, quantity: 1 }],
-					success_url: `${SITE_URL}/host/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-					cancel_url: `${SITE_URL}/host/subscription/canceled`,
+				success_url: `${appBaseUrl}/host/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
+				cancel_url: `${appBaseUrl}/host/subscription/canceled`,
 					metadata: { host_id: auth.userId },
 					subscription_data: { metadata: { host_id: auth.userId } },
 				});
@@ -178,7 +184,7 @@ serve(async (req: Request) => {
 
 				const session = await stripe.billingPortal.sessions.create({
 					customer: sub.stripe_customer_id,
-					return_url: `${SITE_URL}/host/account`,
+					return_url: `${appBaseUrl}/host/account`,
 				});
 
 				return jsonResponse({ url: session.url }, 200, origin);
