@@ -16,7 +16,7 @@ describe('Authentication Routing', () => {
 	it('blocks authenticated users from public routes', () => {
 		vi.mocked(useAuth).mockReturnValue({
 			user: { id: '123' },
-			profile: { role: 'host' },
+			profile: { role: 'host', is_invited: true },
 			loading: false,
 		} as Partial<AuthContextType> as AuthContextType);
 
@@ -57,7 +57,7 @@ describe('Authentication Routing', () => {
 	] as const)('routes %s role to %s', (role, expectedPath) => {
 		vi.mocked(useAuth).mockReturnValue({
 			user: { id: '123' },
-			profile: { role },
+			profile: { role, is_invited: role === 'host' },
 			loading: false,
 		} as Partial<AuthContextType> as AuthContextType);
 

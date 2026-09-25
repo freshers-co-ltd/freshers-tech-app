@@ -59,6 +59,8 @@ const AdminUserSchema = z.object({
 	is_online: z.boolean(),
 	last_sign_in_text: z.string().nullable().optional(),
 	deleted_at: z.string().nullable(),
+	is_invited: z.boolean(),
+	host_subscription_status: z.string().nullable(),
 });
 
 const AdminHostDetailSchema = AdminUserSchema.extend({

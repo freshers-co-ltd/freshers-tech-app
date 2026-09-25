@@ -21,6 +21,8 @@ function buildCleanerDetail(overrides?: Record<string, unknown>) {
 		is_online: true,
 		last_seen_at: '2026-06-01T00:00:00Z',
 		deleted_at: null,
+		is_invited: false,
+		host_subscription_status: null,
 		assigned_cleanings: [
 			{
 				id: 'cln_1',
@@ -153,7 +155,43 @@ describe('Admin Cleaner Detail - Cleanings Filter', () => {
 
 	it('filters rows to only upcoming cleanings', async () => {
 		const user = userEvent.setup();
-		mockDetail();
+		mockDetail({
+			...buildCleanerDetail(),
+			assigned_cleanings: [
+				{
+					id: 'cln_1',
+					status: 'confirmed',
+					scheduled_start: '2026-12-10T10:00:00Z',
+					service_cost: 100,
+					cleaner_pay: 50,
+					host_id: 'host_1',
+					property_id: 'prop_1',
+					clock_in_time: null,
+					clock_out_time: null,
+					created_at: '2026-07-01T00:00:00Z',
+					host_name: 'Host One',
+					property_address: '10 Baker Street',
+					property_postcode: 'SW1A 1AA',
+					property_town_city: 'London',
+				},
+				{
+					id: 'cln_2',
+					status: 'completed',
+					scheduled_start: '2026-06-01T10:00:00Z',
+					service_cost: 120,
+					cleaner_pay: 60,
+					host_id: 'host_2',
+					property_id: 'prop_2',
+					clock_in_time: null,
+					clock_out_time: null,
+					created_at: '2026-05-01T00:00:00Z',
+					host_name: 'Host Two',
+					property_address: '22 High Road',
+					property_postcode: 'M1 1AA',
+					property_town_city: 'Manchester',
+				},
+			],
+		});
 		renderPage();
 
 		const upcomingCheckbox = await screen.findByRole('checkbox', {
@@ -174,13 +212,19 @@ describe('Admin Cleaner Detail - Cleanings Filter', () => {
 			DICT.ADMIN.CLEANINGS.FILTERS.SEARCH_PLACEHOLDER,
 		);
 		await user.type(searchInput, 'Manchester');
+
+		await waitFor(() => {
+			expect(screen.queryAllByText('22 High Road').length).toBeGreaterThan(0);
+			expect(screen.queryAllByText('10 Baker Street').length).toBe(0);
+		});
+
 		const upcomingCheckbox = screen.getByRole('checkbox', {
 			name: DICT.ADMIN.CLEANINGS.FILTERS.ONLY_UPCOMING,
 		});
 		await user.click(upcomingCheckbox);
 
 		await waitFor(() => {
-			expect(screen.queryAllByText('10 Baker Street').length).toBe(0);
+			expect(screen.queryAllByText('22 High Road').length).toBe(0);
 		});
 
 		await user.click(screen.getByRole('button', { name: DICT.ADMIN.CLEANINGS.FILTERS.CLEAR }));

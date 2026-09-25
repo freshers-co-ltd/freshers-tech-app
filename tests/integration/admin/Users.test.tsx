@@ -21,6 +21,8 @@ function buildAdminUser(overrides?: Record<string, unknown>) {
 		last_seen_at: '2026-06-28T08:00:00Z',
 		is_online: true,
 		deleted_at: null,
+		is_invited: false,
+		host_subscription_status: null,
 		...overrides,
 	};
 }

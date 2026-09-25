@@ -498,7 +498,9 @@ export type Database = {
 					email: string | null;
 					failed_login_attempts: number | null;
 					full_name: string | null;
+					host_subscription_status: Database['public']['Enums']['subscription_status'] | null;
 					id: string;
+					is_invited: boolean;
 					is_verified: boolean | null;
 					last_seen_at: string | null;
 					locked_until: string | null;
@@ -511,7 +513,9 @@ export type Database = {
 					email?: string | null;
 					failed_login_attempts?: number | null;
 					full_name?: string | null;
+					host_subscription_status?: Database['public']['Enums']['subscription_status'] | null;
 					id: string;
+					is_invited?: boolean;
 					is_verified?: boolean | null;
 					last_seen_at?: string | null;
 					locked_until?: string | null;
@@ -524,7 +528,9 @@ export type Database = {
 					email?: string | null;
 					failed_login_attempts?: number | null;
 					full_name?: string | null;
+					host_subscription_status?: Database['public']['Enums']['subscription_status'] | null;
 					id?: string;
+					is_invited?: boolean;
 					is_verified?: boolean | null;
 					last_seen_at?: string | null;
 					locked_until?: string | null;
@@ -672,6 +678,69 @@ export type Database = {
 					is_active?: boolean;
 				};
 				Relationships: [];
+			};
+			subscriptions: {
+				Row: {
+					cancel_at: string | null;
+					canceled_at: string | null;
+					created_at: string | null;
+					current_period_end: string | null;
+					current_period_start: string | null;
+					host_id: string;
+					id: string;
+					pending_cancellation: boolean;
+					status: Database['public']['Enums']['subscription_status'];
+					stripe_customer_id: string;
+					stripe_price_id: string;
+					stripe_subscription_id: string;
+					updated_at: string | null;
+				};
+				Insert: {
+					cancel_at?: string | null;
+					canceled_at?: string | null;
+					created_at?: string | null;
+					current_period_end?: string | null;
+					current_period_start?: string | null;
+					host_id: string;
+					id?: string;
+					pending_cancellation?: boolean;
+					status?: Database['public']['Enums']['subscription_status'];
+					stripe_customer_id: string;
+					stripe_price_id: string;
+					stripe_subscription_id: string;
+					updated_at?: string | null;
+				};
+				Update: {
+					cancel_at?: string | null;
+					canceled_at?: string | null;
+					created_at?: string | null;
+					current_period_end?: string | null;
+					current_period_start?: string | null;
+					host_id?: string;
+					id?: string;
+					pending_cancellation?: boolean;
+					status?: Database['public']['Enums']['subscription_status'];
+					stripe_customer_id?: string;
+					stripe_price_id?: string;
+					stripe_subscription_id?: string;
+					updated_at?: string | null;
+				};
+				Relationships: [
+					{
+						foreignKeyName: 'subscriptions_host_id_fkey';
+						columns: ['host_id'];
+						isOneToOne: false;
+						referencedRelation: 'profiles';
+						referencedColumns: ['id'];
+					},
+					{
+						foreignKeyName: 'subscriptions_host_id_fkey';
+						columns: ['host_id'];
+						isOneToOne: false;
+						referencedRelation: 'profiles_public';
+						referencedColumns: ['id'];
+					},
+				];
 			};
 		};
 		Views: {
@@ -873,7 +942,9 @@ export type Database = {
 					deleted_at: string;
 					email: string;
 					full_name: string;
+					host_subscription_status: string;
 					id: string;
+					is_invited: boolean;
 					is_online: boolean;
 					is_verified: boolean;
 					last_seen_at: string;
@@ -984,7 +1055,9 @@ export type Database = {
 					deleted_at: string;
 					email: string;
 					full_name: string;
+					host_subscription_status: string;
 					id: string;
+					is_invited: boolean;
 					is_online: boolean;
 					is_verified: boolean;
 					last_seen_at: string;
@@ -1094,6 +1167,14 @@ export type Database = {
 				Returns: undefined;
 			};
 			is_not_banned: { Args: never; Returns: boolean };
+			notification_exists: {
+				Args: {
+					p_interval?: string;
+					p_type: Database['public']['Enums']['notification_type'];
+					p_user_id: string;
+				};
+				Returns: boolean;
+			};
 			notify_cleaning_reminders: { Args: never; Returns: undefined };
 			notify_cleaning_starting_soon: { Args: never; Returns: undefined };
 			notify_missed_clockin: { Args: never; Returns: undefined };
@@ -1173,8 +1254,19 @@ export type Database = {
 				| 'cleaning_starting_soon'
 				| 'cleaning_missed_clockin'
 				| 'ical_sync_alert'
-				| 'cleaning_needs_verification';
+				| 'cleaning_needs_verification'
+				| 'subscription_active'
+				| 'subscription_payment_failed'
+				| 'subscription_canceled';
 			property_type: 'house' | 'apartment' | 'studio';
+			subscription_status:
+				| 'active'
+				| 'past_due'
+				| 'unpaid'
+				| 'canceled'
+				| 'incomplete'
+				| 'incomplete_expired'
+				| 'paused';
 			user_role: 'cleaner' | 'host' | 'admin';
 		};
 		CompositeTypes: {
@@ -1869,8 +1961,20 @@ export const Constants = {
 				'cleaning_missed_clockin',
 				'ical_sync_alert',
 				'cleaning_needs_verification',
+				'subscription_active',
+				'subscription_payment_failed',
+				'subscription_canceled',
 			],
 			property_type: ['house', 'apartment', 'studio'],
+			subscription_status: [
+				'active',
+				'past_due',
+				'unpaid',
+				'canceled',
+				'incomplete',
+				'incomplete_expired',
+				'paused',
+			],
 			user_role: ['cleaner', 'host', 'admin'],
 		},
 	},

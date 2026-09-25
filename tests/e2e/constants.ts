@@ -183,6 +183,8 @@ export const DICT = {
 			DETAIL: {
 				TITLE_HOST: 'Host Details',
 				TITLE_CLEANER: 'Cleaner Details',
+				INVITED_HOST: 'Free (Invited)',
+				INACTIVE_HOST: 'No Active Subscription',
 			},
 		},
 		CLEANINGS: {
@@ -210,6 +212,40 @@ export const DICT = {
 		PAY_RATES_UPDATED: 'Pay rates updated successfully',
 		STANDARD_TASKS_UPDATED: 'Standard tasks updated successfully',
 		INVITATION_SENT: 'Invitation sent successfully',
+	},
+	SUBSCRIPTION: {
+		PENDING: {
+			TITLE: 'Complete Your Subscription',
+			MESSAGE:
+				'Subscribe for {price} to access the platform. Click below to get redirected to Stripe for payment.',
+			BUTTON_SUBSCRIBE: 'Subscribe Now With Stripe',
+		},
+		SUCCESS: {
+			TITLE: 'Subscription Activated',
+			MESSAGE: 'Your subscription is now active. Welcome to Freshers!',
+			BUTTON_DASHBOARD: 'Go to Dashboard',
+		},
+		CANCELED: {
+			TITLE: 'Subscription Required',
+			MESSAGE: 'You need an active subscription to access the platform.',
+			BUTTON_RETRY: 'Try Again',
+			BUTTON_SUPPORT: 'Contact Support',
+		},
+		PAYMENT_FAILED: {
+			MESSAGE: 'Your subscription payment failed. Please update your payment method.',
+			BUTTON_UPDATE: 'Update Payment Method',
+		},
+		STATUS_LABEL: 'Status',
+		STATUS_ACTIVE: 'Active',
+		STATUS_PAYMENT_ISSUE: 'Payment Issue',
+		STATUS_INACTIVE: 'Inactive',
+		STATUS_PENDING: 'Pending',
+		UNSUBSCRIBED: 'Unsubscribed',
+		MANAGE: 'Manage Subscription',
+		RESUBSCRIBE: 'Resubscribe',
+		RENEWAL_DATE: 'Renewal Date',
+		SECTION_TITLE: 'Subscription',
+		PROCESSING: 'Processing...',
 	},
 	ACCOUNT: {
 		TITLE: 'Account Settings',
@@ -265,4 +301,5 @@ export const MOCK_UUIDS = {
 	EVIDENCE_1: '00000000-0000-0000-0000-000000000050',
 	REPORT_1: '00000000-0000-0000-0000-000000000060',
 	NEW_PROPERTY: '00000000-0000-0000-0000-000000000100',
+	SUBSCRIPTION_1: '00000000-0000-0000-0000-000000000070',
 } as const;

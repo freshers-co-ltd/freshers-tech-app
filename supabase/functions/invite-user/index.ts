@@ -167,7 +167,7 @@ serve(async (req: Request) => {
 			email,
 			{
 				redirectTo,
-				data: { role, full_name },
+				data: { role, full_name, is_invited: true },
 			},
 		)
 

@@ -8,6 +8,8 @@ export function buildProfile(overrides?: Partial<Profile>): Profile {
 		role: 'host',
 		avatar_url: null,
 		is_verified: false,
+		is_invited: false,
+		host_subscription_status: null,
 		...overrides,
 	};
 }

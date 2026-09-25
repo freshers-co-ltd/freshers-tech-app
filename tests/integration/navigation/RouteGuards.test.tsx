@@ -1,6 +1,7 @@
 import { screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ProtectedRoute, PublicRoute } from '@/features/auth/RouteGuards';
+import { profileService } from '@/features/auth/services/profileService';
 import { mockSupabase } from '~/mocks/supabaseClient';
 import { renderWithProviders } from '~/utils';
 import { setMockUserRole } from '~/utils/supabaseMocks';
@@ -98,6 +99,19 @@ describe('RouteGuards', () => {
 	describe('PublicRoute', () => {
 		it('redirects authenticated users to dashboard', async () => {
 			setMockUserRole('host');
+			const spy = vi.spyOn(profileService, 'getProfileWithFallback').mockResolvedValue({
+				data: {
+					id: 'user_123',
+					role: 'host',
+					full_name: 'Test User',
+					email: 'test@example.com',
+					avatar_url: null,
+					is_verified: false,
+					is_invited: true,
+					host_subscription_status: 'active',
+				},
+				error: null,
+			});
 
 			const routes = [
 				{
@@ -107,11 +121,15 @@ describe('RouteGuards', () => {
 				{ path: '/dashboard', element: <div data-testid="dashboard-redirect" /> },
 			];
 
-			renderWithProviders(<div />, { routes, initialEntries: ['/login'] });
+			try {
+				renderWithProviders(<div />, { routes, initialEntries: ['/login'] });
 
-			await waitFor(() => {
-				expect(screen.getByTestId('dashboard-redirect')).toBeInTheDocument();
-			});
+				await waitFor(() => {
+					expect(screen.getByTestId('dashboard-redirect')).toBeInTheDocument();
+				});
+			} finally {
+				spy.mockRestore();
+			}
 		});
 
 		it('renders outlet for unauthenticated users', async () => {
@@ -138,6 +156,19 @@ describe('RouteGuards', () => {
 	describe('DashboardRedirect', () => {
 		it('redirects host to /host/dashboard', async () => {
 			setMockUserRole('host');
+			const spy = vi.spyOn(profileService, 'getProfileWithFallback').mockResolvedValue({
+				data: {
+					id: 'user_123',
+					role: 'host',
+					full_name: 'Test User',
+					email: 'test@example.com',
+					avatar_url: null,
+					is_verified: false,
+					is_invited: true,
+					host_subscription_status: 'active',
+				},
+				error: null,
+			});
 
 			const { DashboardRedirect } = await import('@/features/auth/RouteGuards');
 
@@ -146,11 +177,15 @@ describe('RouteGuards', () => {
 				{ path: '/host/dashboard', element: <div data-testid="host-page" /> },
 			];
 
-			renderWithProviders(<div />, { routes, initialEntries: ['/dashboard'] });
+			try {
+				renderWithProviders(<div />, { routes, initialEntries: ['/dashboard'] });
 
-			await waitFor(() => {
-				expect(screen.getByTestId('host-page')).toBeInTheDocument();
-			});
+				await waitFor(() => {
+					expect(screen.getByTestId('host-page')).toBeInTheDocument();
+				});
+			} finally {
+				spy.mockRestore();
+			}
 		});
 
 		it('redirects cleaner to /cleaner/dashboard', async () => {
