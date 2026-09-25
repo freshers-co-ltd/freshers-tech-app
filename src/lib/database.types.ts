@@ -15,6 +15,7 @@ export type Database = {
 					target_table: string;
 					updated_at: string | null;
 				};
+				ComputedFields: never;
 				Insert: {
 					action_type: string;
 					actor_id?: string | null;
@@ -47,6 +48,7 @@ export type Database = {
 					target_times: NonNullable<Json>;
 					updated_at: string | null;
 				};
+				ComputedFields: never;
 				Insert: {
 					bathroom_time?: number;
 					hourly_rate?: number;
@@ -73,6 +75,7 @@ export type Database = {
 					id: string;
 					low_supplies_report: string | null;
 				};
+				ComputedFields: never;
 				Insert: {
 					broken_items_report?: string | null;
 					cleaner_id: string;
@@ -125,6 +128,7 @@ export type Database = {
 					is_completed: boolean;
 					is_custom: boolean;
 				};
+				ComputedFields: never;
 				Insert: {
 					cleaning_id: string;
 					created_at?: string;
@@ -172,6 +176,7 @@ export type Database = {
 					stocks_included: boolean;
 					updated_at: string;
 				};
+				ComputedFields: never;
 				Insert: {
 					cleaner_id?: string | null;
 					cleaner_pay?: number | null;
@@ -256,6 +261,7 @@ export type Database = {
 					type: Database['public']['Enums']['media_type'];
 					uploader_id: string;
 				};
+				ComputedFields: never;
 				Insert: {
 					cleaning_id: string;
 					created_at?: string;
@@ -310,6 +316,7 @@ export type Database = {
 					uid: string;
 					updated_at: string;
 				};
+				ComputedFields: never;
 				Insert: {
 					cleaning_id?: string | null;
 					created_at?: string;
@@ -368,6 +375,7 @@ export type Database = {
 					url_hash: string;
 					url_secret_id: string | null;
 				};
+				ComputedFields: never;
 				Insert: {
 					consecutive_failures?: number;
 					created_at?: string;
@@ -436,6 +444,7 @@ export type Database = {
 					updated_at: string | null;
 					user_id: string;
 				};
+				ComputedFields: never;
 				Insert: {
 					created_at?: string | null;
 					enabled?: boolean | null;
@@ -464,6 +473,7 @@ export type Database = {
 					type: Database['public']['Enums']['notification_type'];
 					user_id: string;
 				};
+				ComputedFields: never;
 				Insert: {
 					created_at?: string;
 					data?: Json | null;
@@ -504,6 +514,7 @@ export type Database = {
 					role: Database['public']['Enums']['user_role'];
 					updated_at: string | null;
 				};
+				ComputedFields: never;
 				Insert: {
 					avatar_url?: string | null;
 					deleted_at?: string | null;
@@ -558,6 +569,7 @@ export type Database = {
 					type: Database['public']['Enums']['property_type'];
 					updated_at: string;
 				};
+				ComputedFields: never;
 				Insert: {
 					address_line_1: string;
 					address_line_2?: string | null;
@@ -639,6 +651,7 @@ export type Database = {
 					updated_at: string | null;
 					user_id: string;
 				};
+				ComputedFields: never;
 				Insert: {
 					created_at?: string | null;
 					id?: string;
@@ -662,6 +675,7 @@ export type Database = {
 					id: string;
 					is_active: boolean;
 				};
+				ComputedFields: never;
 				Insert: {
 					created_at?: string;
 					description: string;
@@ -692,6 +706,7 @@ export type Database = {
 					stripe_subscription_id: string;
 					updated_at: string | null;
 				};
+				ComputedFields: never;
 				Insert: {
 					cancel_at?: string | null;
 					canceled_at?: string | null;
@@ -755,6 +770,7 @@ export type Database = {
 					total_hosts: number | null;
 					total_properties: number | null;
 				};
+				ComputedFields: never;
 				Relationships: [];
 			};
 			profiles_public: {
@@ -764,6 +780,7 @@ export type Database = {
 					id: string | null;
 					role: Database['public']['Enums']['user_role'] | null;
 				};
+				ComputedFields: never;
 				Insert: {
 					avatar_url?: string | null;
 					full_name?: string | null;
@@ -1242,6 +1259,7 @@ export type Database = {
 					type: Database['storage']['Enums']['buckettype'];
 					updated_at: string | null;
 				};
+				ComputedFields: never;
 				Insert: {
 					allowed_mime_types?: string[] | null;
 					avif_autodetection?: boolean | null;
@@ -1280,6 +1298,7 @@ export type Database = {
 					type: Database['storage']['Enums']['buckettype'];
 					updated_at: string;
 				};
+				ComputedFields: never;
 				Insert: {
 					created_at?: string;
 					deleted_at?: string | null;
@@ -1307,6 +1326,7 @@ export type Database = {
 					type: Database['storage']['Enums']['buckettype'];
 					updated_at: string;
 				};
+				ComputedFields: never;
 				Insert: {
 					created_at?: string;
 					id: string;
@@ -1331,6 +1351,7 @@ export type Database = {
 					name: string;
 					updated_at: string;
 				};
+				ComputedFields: never;
 				Insert: {
 					bucket_name: string;
 					catalog_id: string;
@@ -1373,6 +1394,7 @@ export type Database = {
 					shard_key: string | null;
 					updated_at: string;
 				};
+				ComputedFields: never;
 				Insert: {
 					bucket_name: string;
 					catalog_id: string;
@@ -1423,6 +1445,7 @@ export type Database = {
 					id: number;
 					name: string;
 				};
+				ComputedFields: never;
 				Insert: {
 					executed_at?: string | null;
 					hash: string;
@@ -1452,6 +1475,7 @@ export type Database = {
 					user_metadata: Json | null;
 					version: string | null;
 				};
+				ComputedFields: never;
 				Insert: {
 					bucket_id?: string | null;
 					created_at?: string | null;
@@ -1503,6 +1527,7 @@ export type Database = {
 					user_metadata: Json | null;
 					version: string;
 				};
+				ComputedFields: never;
 				Insert: {
 					bucket_id: string;
 					created_at?: string;
@@ -1550,6 +1575,7 @@ export type Database = {
 					upload_id: string;
 					version: string;
 				};
+				ComputedFields: never;
 				Insert: {
 					bucket_id: string;
 					created_at?: string;
@@ -1603,6 +1629,7 @@ export type Database = {
 					name: string;
 					updated_at: string;
 				};
+				ComputedFields: never;
 				Insert: {
 					bucket_id: string;
 					created_at?: string;

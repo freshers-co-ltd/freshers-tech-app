@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { parseAllowedOrigins } from "./origin.ts";
+
 export function getAllowedOrigin(req: Request): string {
 	const allowed = Deno.env.get('CORS_ORIGIN');
 	const requestOrigin = req.headers.get('Origin');
@@ -8,7 +10,7 @@ export function getAllowedOrigin(req: Request): string {
 	}
 
 	if (allowed) {
-		const origins = allowed.split(',').map((origin) => origin.trim());
+		const origins = parseAllowedOrigins(allowed);
 		if (origins.includes(requestOrigin)) {
 			return requestOrigin;
 		}
