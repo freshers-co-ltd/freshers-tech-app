@@ -46,6 +46,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 				setUnreadCount((prev) => Math.max(0, prev - 1));
 			}
 		}, []),
+		onDelete: useCallback((notificationId: string, wasUnread: boolean) => {
+			setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+			if (wasUnread) {
+				setUnreadCount((prev) => Math.max(0, prev - 1));
+			}
+		}, []),
 		onConnectionChange: useCallback((connected: boolean) => {
 			setIsConnected(connected);
 		}, []),
