@@ -52,10 +52,10 @@ export function formatDate(date: Date | string, options: FormatDateOptions = {})
 	}
 }
 
-export function formatCurrency(value: number): string {
+export function formatCurrency(value: number, currency: string = 'GBP'): string {
 	return new Intl.NumberFormat('en-GB', {
 		style: 'currency',
-		currency: 'GBP',
+		currency: currency.toUpperCase(),
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2,
 	}).format(value);

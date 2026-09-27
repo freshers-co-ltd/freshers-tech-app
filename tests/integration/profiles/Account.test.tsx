@@ -1,8 +1,10 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { toast } from '@/components/Toast';
 import { DICT } from '@/dictionary';
+import { profileService } from '@/features/auth/services/profileService';
+import { subscriptionService } from '@/features/subscription/services/subscriptionService';
 import { AccountPage } from '@/pages/Account';
 import { renderWithProviders } from '~/utils';
 import { mockRpcData, setMockUserRole } from '~/utils/supabaseMocks';
@@ -84,6 +86,10 @@ describe('Account Page', () => {
 		const user = userEvent.setup();
 		setMockUserRole('host');
 		cleanupRpc = mockRpcData('purge_user_pii', { data: null, error: null });
+		vi.spyOn(subscriptionService, 'cancelSubscription').mockResolvedValue({
+			data: null,
+			error: null,
+		});
 
 		renderPage();
 
@@ -103,6 +109,10 @@ describe('Account Page', () => {
 		const user = userEvent.setup();
 		setMockUserRole('host');
 		cleanupRpc = mockRpcData('purge_user_pii', null, 'Deletion failed');
+		vi.spyOn(subscriptionService, 'cancelSubscription').mockResolvedValue({
+			data: null,
+			error: null,
+		});
 
 		renderPage();
 
@@ -141,5 +151,50 @@ describe('Account Page', () => {
 		// "Privacy Notice" appears in both sidebar nav and contact card
 		const privacyElements = screen.getAllByText(DICT.ACCOUNT.CONTACT.PRIVACY.TITLE);
 		expect(privacyElements.length).toBeGreaterThanOrEqual(2);
+	});
+
+	it('shows billing section for non-invited host', async () => {
+		setMockUserRole('host');
+		renderPage();
+
+		expect(
+			await screen.findByRole('heading', { name: DICT.ACCOUNT.SUBSCRIPTION.TITLE, level: 2 }),
+		).toBeInTheDocument();
+	});
+
+	it('hides billing section for invited host', async () => {
+		setMockUserRole('host');
+		vi.spyOn(profileService, 'getProfileWithFallback').mockResolvedValue({
+			data: {
+				id: 'user_123',
+				email: 'test@example.com',
+				role: 'host',
+				full_name: 'Test User',
+				avatar_url: null,
+				is_verified: false,
+				is_invited: true,
+				host_subscription_status: null,
+			},
+			error: null,
+		});
+
+		renderPage();
+
+		await waitFor(() => {
+			expect(
+				screen.queryByRole('heading', { name: DICT.ACCOUNT.SUBSCRIPTION.TITLE, level: 2 }),
+			).not.toBeInTheDocument();
+		});
+	});
+
+	it('hides billing section for cleaner users', async () => {
+		setMockUserRole('cleaner');
+		renderPage();
+
+		await waitFor(() => {
+			expect(
+				screen.queryByRole('heading', { name: DICT.ACCOUNT.SUBSCRIPTION.TITLE, level: 2 }),
+			).not.toBeInTheDocument();
+		});
 	});
 });

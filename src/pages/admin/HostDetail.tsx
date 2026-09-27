@@ -1,6 +1,13 @@
 'use client';
 
-import { BadgeCheck, BrushCleaning, CalendarClock, ClipboardList, Plus } from 'lucide-react';
+import {
+	BadgeCheck,
+	BrushCleaning,
+	CalendarClock,
+	ClipboardList,
+	CreditCard,
+	Plus,
+} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ConfirmActionDialog } from '@/components/ConfirmActionDialog';
@@ -25,6 +32,10 @@ import { useAdminUsers } from '@/features/admin/hooks/useAdminUsers';
 import { useHostDetail } from '@/features/admin/hooks/useHostDetail';
 import { cleaningService as adminCleaningService } from '@/features/admin/services/cleaningService';
 import { userService } from '@/features/admin/services/userService';
+import {
+	getAdminDisplayBadge,
+	getAdminDisplayStatus,
+} from '@/features/admin/utils/subscriptionDisplay';
 import { useCleanings } from '@/features/cleanings/CleaningContext';
 import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
 import { CleaningForm } from '@/features/cleanings/components/CleaningForm';
@@ -33,8 +44,10 @@ import { PropertyDetailView } from '@/features/properties/components/PropertyDet
 import { PropertyForm } from '@/features/properties/components/PropertyForm';
 import { propertyService } from '@/features/properties/propertyService';
 import type { Property, PropertyInsert } from '@/features/properties/types';
+import { subscriptionService } from '@/features/subscription/services/subscriptionService';
 import { useResourceModals } from '@/hooks/useResourceModals';
 import { UserDetailLayout } from '@/layouts/UserDetailLayout';
+import type { Database } from '@/lib/database.types';
 
 export function AdminHostDetailPage() {
 	const { id } = useParams<{ id: string }>();
@@ -85,6 +98,8 @@ export function AdminHostDetailPage() {
 
 	const dict = DICT.ADMIN.CLEANINGS.DETAIL.HOST_DETAIL;
 
+	const adminDetailDict = DICT.ADMIN.USERS.DETAIL;
+
 	const fetchViewingProperty = useCallback(async () => {
 		if (!propertyModal.viewId) {
 			return;
@@ -129,6 +144,14 @@ export function AdminHostDetailPage() {
 	const onDeleteUser = useCallback(async () => {
 		if (!host) {
 			return { error: 'No user loaded' };
+		}
+		try {
+			const { error: cancelError } = await subscriptionService.cancelSubscription(host.id);
+			if (cancelError) {
+				return { error: cancelError };
+			}
+		} catch {
+			return { error: DICT.SUBSCRIPTION.CHECKOUT_ERROR };
 		}
 		const result = await userService.purgeUserPii(host.id);
 		if (result.error) {
@@ -323,6 +346,14 @@ export function AdminHostDetailPage() {
 		return null;
 	}
 
+	const subscriptionDisplayStatus = getAdminDisplayStatus(
+		host.host_subscription_status as Database['public']['Enums']['subscription_status'] | null,
+		host.is_invited,
+	);
+	const subscriptionBadge = subscriptionDisplayStatus
+		? getAdminDisplayBadge(subscriptionDisplayStatus)
+		: null;
+
 	const tableData = filteredCleanings.map((c) => {
 		const property = properties.find((p) => p.id === c.property_id);
 		return {
@@ -391,6 +422,37 @@ export function AdminHostDetailPage() {
 			onDeleteUser={onDeleteUser}
 			stats={statsConfig}
 			sections={[
+				{
+					id: 'subscription',
+					title: adminDetailDict.SUBSCRIPTION_TITLE,
+					content: (
+						<div className="rounded-lg border p-4 space-y-3">
+							<div className="flex items-center gap-2">
+								<CreditCard className="size-4 text-muted-foreground" />
+								{host.is_invited ? (
+									<span className="text-sm">{adminDetailDict.INVITED_HOST}</span>
+								) : subscriptionBadge ? (
+									<span
+										className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium uppercase ${
+											subscriptionBadge.color === 'green'
+												? 'bg-green-background text-green border-green-border'
+												: subscriptionBadge.color === 'yellow'
+													? 'bg-yellow-background text-yellow border-yellow-border'
+													: subscriptionBadge.color === 'red'
+														? 'bg-red-background text-red border-red-border'
+														: 'bg-gray-background text-gray border-gray-border'
+										}`}>
+										{subscriptionBadge.label}
+									</span>
+								) : (
+									<span className="text-sm text-muted-foreground">
+										{adminDetailDict.INACTIVE_HOST}
+									</span>
+								)}
+							</div>
+						</div>
+					),
+				},
 				{
 					title: dict.PROPERTIES_TITLE,
 					content: (

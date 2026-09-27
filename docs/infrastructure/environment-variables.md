@@ -44,3 +44,5 @@ These encrypted credentials are used during the CI/CD pipeline and specific serv
 - `SUPABASE_DB_PASSWORD`: The Supabase database password used for database migrations.
 - `SUPABASE_SERVICE_ROLE_KEY`: An administrative key used to bypass RLS for backend operations.
 - `VAPID_PRIVATE_KEY`: The secret key used to sign and authorise Web Push notifications.
+- `SITE_URL`: The URL for server-generated redirect links.
+- `CORS_ORIGIN`: Comma-separated allowlist of frontend origins. When set, only listed origins resolve dynamically and every other origin falls back to `SITE_URL`. Leave unset on staging.
