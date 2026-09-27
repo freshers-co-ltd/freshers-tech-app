@@ -1,3 +1,8 @@
+## <small>0.18.1 (2026-09-27)</small>
+
+* fix(ical): Accept bare DATE DTSTART/DTEND without VALUE=DATE ([ba4acdd](https://github.com/freshers-co-ltd/freshers-tech-app/commit/ba4acdd))
+* fix(notifications): Stop notifications for deleted cleanings ([79a9061](https://github.com/freshers-co-ltd/freshers-tech-app/commit/79a9061))
+
 ## 0.18.0 (2026-09-18)
 
 * chore: Pin conventional-changelog to v7 in production workflow ([56b6dd4](https://github.com/freshers-co-ltd/freshers-tech-app/commit/56b6dd4))
