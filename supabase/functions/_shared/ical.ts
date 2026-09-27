@@ -171,8 +171,15 @@ function toRawEvent(component: ICAL.Component): IcalRawEvent {
 	};
 }
 
+function normalizeBareDateLines(text: string): string {
+	return text
+		.split(/\r?\n/)
+		.map((line) => line.replace(/^(DTSTART|DTEND):(\d{8})[ \t]*$/i, '$1;VALUE=DATE:$2'))
+		.join('\n');
+}
+
 export function parseIcs(text: string): ParseIcsResult {
-	const jcal = ICAL.parse(text);
+	const jcal = ICAL.parse(normalizeBareDateLines(text));
 	const root = new ICAL.Component(jcal);
 	const prodidValue = root.getFirstPropertyValue('prodid');
 	return {

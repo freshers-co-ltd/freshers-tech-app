@@ -9,7 +9,11 @@ import {
 	utcToZonedDate,
 	zonedToUtc,
 } from '../../../supabase/functions/_shared/ical.ts';
-import { classifyEvent, getDialect } from '../../../supabase/functions/_shared/platform.ts';
+import {
+	classifyEvent,
+	getDialect,
+	validateCalendarSource,
+} from '../../../supabase/functions/_shared/platform.ts';
 import { computeScheduledStart } from '../../../supabase/functions/ical-sync/sync.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -18,6 +22,21 @@ const FIXTURES_DIR = resolve(__dirname, '../../fixtures/ical');
 function readFixture(name: string): string {
 	return readFileSync(resolve(FIXTURES_DIR, `${name}/calendar.ics`), 'utf-8');
 }
+
+const bareDateCalendar = [
+	'BEGIN:VCALENDAR',
+	'VERSION:2.0',
+	'PRODID:-//Example Property Manager//EN',
+	'BEGIN:VEVENT',
+	'UID:bare-8001@example.com',
+	'DTSTAMP:20260116T083235Z',
+	'SUMMARY:Guest booking',
+	'DESCRIPTION:CHECKIN: 2026-01-16\\nCHECKOUT: 2026-01-20\\nNIGHTS: 4\\n',
+	'DTSTART:20260116',
+	'DTEND:20260120',
+	'END:VEVENT',
+	'END:VCALENDAR',
+].join('\r\n');
 
 function findEvent(events: IcalRawEvent[], uid: string): IcalRawEvent {
 	const event = events.find((e) => e.uid === uid);
@@ -80,6 +99,33 @@ describe('parseIcs', () => {
 		for (const event of result.events) {
 			expect(event.uid).not.toBe('');
 		}
+	});
+
+	it('parses bare DATE DTSTART/DTEND without VALUE=DATE as date-only', () => {
+		const result = parseIcs(bareDateCalendar);
+		expect(result.events.length).toBe(1);
+		expect(result.events[0].dtstart).toMatchObject({
+			year: 2026,
+			month: 1,
+			day: 16,
+			isDate: true,
+		});
+		expect(result.events[0].dtend).toMatchObject({
+			year: 2026,
+			month: 1,
+			day: 20,
+			isDate: true,
+		});
+	});
+
+	it('validates bare DATE calendar as generic with confirmGeneric', async () => {
+		const result = await validateCalendarSource({
+			url: 'https://example.com/calendar.ics',
+			source: 'generic',
+			confirmGeneric: true,
+			fetchIcs: async () => ({ status: 'ok' as const, body: bareDateCalendar }),
+		});
+		expect(result.ok).toBe(true);
 	});
 });
 
