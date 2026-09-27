@@ -104,6 +104,20 @@ Deno.serve(async (req: Request) => {
 
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
+    const cleaningId = typeof data?.cleaning_id === 'string' ? data.cleaning_id : null;
+    if (cleaningId) {
+      const { data: cleaning } = await supabaseAdmin
+        .from('cleanings')
+        .select('deleted_at')
+        .eq('id', cleaningId)
+        .maybeSingle();
+      if (cleaning && cleaning.deleted_at) {
+        return new Response(JSON.stringify({ sent: 0, skipped: true }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     const { data: subscriptions, error: fetchError } = await supabaseAdmin
       .from('push_subscriptions')
       .select('subscription, id')
