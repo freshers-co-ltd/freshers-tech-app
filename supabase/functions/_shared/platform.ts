@@ -180,7 +180,11 @@ export async function validateCalendarSource(options: {
 	let parsed: ParseIcsResult;
 	try {
 		parsed = parseIcs(fetched.body);
-	} catch {
+	} catch (error) {
+		console.error(
+			'[ical] Failed to parse calendar body:',
+			error instanceof Error ? error.message : 'Unknown parse error',
+		);
 		return { ok: false, code: 'INVALID_CALENDAR', message: 'The calendar link returned invalid data.' };
 	}
 	const prodid = parsed.prodid ?? '';
