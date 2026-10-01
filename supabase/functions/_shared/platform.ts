@@ -64,7 +64,7 @@ const VRBO_DIALECT: PlatformDialect = {
 const GENERIC_DIALECT: PlatformDialect = {
 	urlHostPatterns: [],
 	prodidPatterns: [],
-	blockSummaryPatterns: [/^block/i, /-block@/i, /maintenance/i, /not available/i, /closed/i, /owner stay/i],
+	blockSummaryPatterns: [/^block/i, /-block@/i, /maintenance/i, /not available/i, /unavailable/i, /closed/i, /owner stay/i],
 	tentativePatterns: [/tentative/i],
 	uidPrefixes: { booking: /$^/, block: /-block@/i },
 	bookingDescriptionPatterns: [/maintenance/i, /owner stay/i, /not available/i, /blocked/i, /closed/i],

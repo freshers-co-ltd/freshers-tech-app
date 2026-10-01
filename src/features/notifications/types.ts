@@ -48,4 +48,7 @@ export const NOTIFICATION_TYPES: Record<NotificationType, NotificationType> = {
 	cleaning_missed_clockin: 'cleaning_missed_clockin',
 	cleaning_needs_verification: 'cleaning_needs_verification',
 	ical_sync_alert: 'ical_sync_alert',
+	subscription_active: 'subscription_active',
+	subscription_payment_failed: 'subscription_payment_failed',
+	subscription_canceled: 'subscription_canceled',
 };

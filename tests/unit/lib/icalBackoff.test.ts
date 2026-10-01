@@ -194,6 +194,8 @@ function buildMockDb(overrides: Partial<SyncDb> = {}): SyncDb {
 		getActiveEvents: vi.fn().mockResolvedValue([]),
 		getCleaning: vi.fn().mockResolvedValue(null),
 		findCleaningForRange: vi.fn().mockResolvedValue(null),
+		findCleaningByScheduledStart: vi.fn().mockResolvedValue(null),
+		findCleaningByDate: vi.fn().mockResolvedValue(null),
 		hasCoveringEvent: vi.fn().mockResolvedValue(false),
 		createCleaning: vi.fn().mockResolvedValue('cleaning-1'),
 		updateCleaningDate: vi.fn().mockResolvedValue(undefined),
