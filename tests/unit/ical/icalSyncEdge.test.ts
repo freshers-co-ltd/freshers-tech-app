@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { parseIcs } from '../../../supabase/functions/_shared/ical.ts';
 import { getDialect } from '../../../supabase/functions/_shared/platform.ts';
 import {
+	CLEANING_SLOT_CONFLICT,
 	type FeedRecord,
 	processFeed,
 	type SyncDb,
@@ -45,6 +46,8 @@ function buildMockDb(overrides: Partial<SyncDb> = {}): SyncDb {
 		getActiveEvents: vi.fn().mockResolvedValue([]),
 		getCleaning: vi.fn().mockResolvedValue(null),
 		findCleaningForRange: vi.fn().mockResolvedValue(null),
+		findCleaningByScheduledStart: vi.fn().mockResolvedValue(null),
+		findCleaningByDate: vi.fn().mockResolvedValue(null),
 		hasCoveringEvent: vi.fn().mockResolvedValue(false),
 		createCleaning: vi.fn().mockResolvedValue('cleaning-1'),
 		updateCleaningDate: vi.fn().mockResolvedValue(undefined),
@@ -121,6 +124,7 @@ describe('processFeed — create', () => {
 		const upsertArg = vi.mocked(db.upsertEvent).mock.calls[0][0];
 		expect(upsertArg.uid).toBe('booking-1001@airbnb');
 		expect(upsertArg.status).toBe('active');
+		expect('summary' in upsertArg).toBe(false);
 	});
 
 	it('passes generic source for generic feed', async () => {
@@ -322,5 +326,248 @@ describe('syncBatch', () => {
 		const result = await syncBatch(deps, 20, 5);
 		expect(result.processed).toBe(2);
 		expect(result.remaining).toBe(false);
+	});
+});
+
+const GENERIC_BOOKING_ICS = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Example Property Manager//EN
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20261005
+DTEND;VALUE=DATE:20261008
+UID:listing-1-2026-10-05-2026-10-08
+DESCRIPTION:CHECKIN: 2026-10-05
+SUMMARY:Skye Murphy (HMB943WXPX)
+END:VEVENT
+END:VCALENDAR`;
+
+const GENERIC_FRAGMENT_ICS = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Example Property Manager//EN
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20261004
+DTEND;VALUE=DATE:20261005
+UID:listing-1-2026-10-04-2026-10-05
+DESCRIPTION:Preparation
+SUMMARY:Skye Murphy (HMB943WXPX)
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20261005
+DTEND;VALUE=DATE:20261008
+UID:listing-1-2026-10-05-2026-10-08
+DESCRIPTION:CHECKIN: 2026-10-05
+SUMMARY:Skye Murphy (HMB943WXPX)
+END:VEVENT
+END:VCALENDAR`;
+
+const GENERIC_TURNOVER_ICS = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Example Property Manager//EN
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20261001
+DTEND;VALUE=DATE:20261005
+UID:listing-1-2026-10-01-2026-10-05
+DESCRIPTION:Stay
+SUMMARY:Guest One (AAA111)
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20261005
+DTEND;VALUE=DATE:20261008
+UID:listing-1-2026-10-05-2026-10-08
+DESCRIPTION:Stay
+SUMMARY:Guest Two (BBB222)
+END:VEVENT
+END:VCALENDAR`;
+
+const GENERIC_UNAVAILABLE_ICS = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Example Property Manager//EN
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:20270329
+DTEND;VALUE=DATE:20281001
+UID:listing-1-block
+DESCRIPTION:Hold
+SUMMARY:Unavailable
+END:VEVENT
+END:VCALENDAR`;
+
+describe('processFeed — unverified lifecycle', () => {
+	it('reuses a linked unverified cleaning instead of creating a duplicate', async () => {
+		const existingEvent = {
+			id: 'evt-u',
+			uid: 'listing-1-2026-10-05-2026-10-08',
+			cleaningId: 'clean-u',
+			status: 'active',
+			startDate: '2026-10-05',
+			endDate: '2026-10-08',
+		};
+		const db = buildMockDb({
+			getEventByUid: vi.fn().mockResolvedValue(existingEvent),
+			getCleaning: vi.fn().mockResolvedValue({
+				id: 'clean-u',
+				status: 'unverified',
+				scheduledStart: '2026-10-08T10:00:00.000Z',
+				cleanerId: null,
+				deletedAt: null,
+			}),
+		});
+		const deps = buildDeps(db, okFetch(GENERIC_BOOKING_ICS));
+
+		const result = await processFeed(deps, buildFeed({ source: 'generic' }));
+		expect(result.ok).toBe(true);
+		expect(db.createCleaning).not.toHaveBeenCalled();
+		expect(db.updateCleaningDate).not.toHaveBeenCalled();
+		const upsertArg = vi.mocked(db.upsertEvent).mock.calls[0][0];
+		expect(upsertArg.cleaningId).toBe('clean-u');
+	});
+
+	it('does not recreate a cleaning for a cancelled linkage', async () => {
+		const existingEvent = {
+			id: 'evt-x',
+			uid: 'booking-1001@airbnb',
+			cleaningId: 'clean-x',
+			status: 'active',
+			startDate: '2026-09-18',
+			endDate: '2026-09-21',
+		};
+		const db = buildMockDb({
+			getEventByUid: vi.fn().mockResolvedValue(existingEvent),
+			getCleaning: vi.fn().mockResolvedValue({
+				id: 'clean-x',
+				status: 'cancelled',
+				scheduledStart: '2026-09-21T10:00:00.000Z',
+				cleanerId: null,
+				deletedAt: null,
+			}),
+		});
+		const deps = buildDeps(db, okFetch(AIRBNB_ICS));
+
+		const result = await processFeed(deps, buildFeed());
+		expect(result.ok).toBe(true);
+		expect(db.createCleaning).not.toHaveBeenCalled();
+		expect(db.upsertEvent).not.toHaveBeenCalled();
+	});
+});
+
+describe('processFeed — same-checkout adoption', () => {
+	it('adopts a cleaning with the same scheduled start from a different range', async () => {
+		const db = buildMockDb({
+			findCleaningByScheduledStart: vi.fn().mockResolvedValue('clean-airbnb'),
+		});
+		const deps = buildDeps(db, okFetch(GENERIC_BOOKING_ICS));
+
+		const result = await processFeed(deps, buildFeed({ source: 'generic' }));
+		expect(result.ok).toBe(true);
+		expect(db.createCleaning).not.toHaveBeenCalled();
+		expect(db.findCleaningByScheduledStart).toHaveBeenCalledWith(
+			'prop-1',
+			'2026-10-08T10:00:00.000Z',
+		);
+		const upsertArg = vi.mocked(db.upsertEvent).mock.calls[0][0];
+		expect(upsertArg.cleaningId).toBe('clean-airbnb');
+	});
+});
+
+describe('processFeed — slot conflict adoption', () => {
+	it('adopts the date-level cleaning when creation hits a slot conflict', async () => {
+		const db = buildMockDb({
+			createCleaning: vi.fn().mockRejectedValue(new Error(CLEANING_SLOT_CONFLICT)),
+			findCleaningByDate: vi.fn().mockResolvedValue('clean-same-day'),
+		});
+		const deps = buildDeps(db, okFetch(GENERIC_BOOKING_ICS));
+
+		const result = await processFeed(deps, buildFeed({ source: 'generic' }));
+		expect(result.ok).toBe(true);
+		expect(db.findCleaningByDate).toHaveBeenCalledWith('prop-1', '2026-10-08T10:00:00.000Z');
+		const upsertArg = vi.mocked(db.upsertEvent).mock.calls[0][0];
+		expect(upsertArg.cleaningId).toBe('clean-same-day');
+	});
+
+	it('rethrows when a slot conflict has no date-level cleaning', async () => {
+		const db = buildMockDb({
+			createCleaning: vi.fn().mockRejectedValue(new Error(CLEANING_SLOT_CONFLICT)),
+		});
+		const deps = buildDeps(db, okFetch(GENERIC_BOOKING_ICS));
+
+		await expect(processFeed(deps, buildFeed({ source: 'generic' }))).rejects.toThrow(
+			CLEANING_SLOT_CONFLICT,
+		);
+	});
+
+	it('rethrows non-conflict creation errors without date lookup', async () => {
+		const db = buildMockDb({
+			createCleaning: vi.fn().mockRejectedValue(new Error('boom')),
+		});
+		const deps = buildDeps(db, okFetch(GENERIC_BOOKING_ICS));
+
+		await expect(processFeed(deps, buildFeed({ source: 'generic' }))).rejects.toThrow('boom');
+		expect(db.findCleaningByDate).not.toHaveBeenCalled();
+	});
+});
+
+describe('processFeed — chained fragments', () => {
+	it('creates a single cleaning for same-guest chained fragments', async () => {
+		const db = buildMockDb();
+		const deps = buildDeps(db, okFetch(GENERIC_FRAGMENT_ICS));
+
+		const result = await processFeed(deps, buildFeed({ source: 'generic' }));
+		expect(result.ok).toBe(true);
+		expect(db.createCleaning).toHaveBeenCalledTimes(1);
+		const createArg = vi.mocked(db.createCleaning).mock.calls[0][0];
+		expect(createArg.scheduledStart).toBe('2026-10-08T10:00:00.000Z');
+		expect(db.upsertEvent).toHaveBeenCalledTimes(2);
+		const fragmentUpsert = vi.mocked(db.upsertEvent).mock.calls[0][0];
+		expect(fragmentUpsert.uid).toBe('listing-1-2026-10-04-2026-10-05');
+		expect(fragmentUpsert.cleaningId).toBeNull();
+	});
+
+	it('keeps cleanings for chained events with different guests', async () => {
+		const db = buildMockDb();
+		const deps = buildDeps(db, okFetch(GENERIC_TURNOVER_ICS));
+
+		const result = await processFeed(deps, buildFeed({ source: 'generic' }));
+		expect(result.ok).toBe(true);
+		expect(db.createCleaning).toHaveBeenCalledTimes(2);
+	});
+});
+
+describe('processFeed — generic blocks', () => {
+	it('treats Unavailable as a block without creating a cleaning', async () => {
+		const db = buildMockDb();
+		const deps = buildDeps(db, okFetch(GENERIC_UNAVAILABLE_ICS));
+
+		const result = await processFeed(deps, buildFeed({ source: 'generic' }));
+		expect(result.ok).toBe(true);
+		expect(db.createCleaning).not.toHaveBeenCalled();
+		expect(db.upsertEvent).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe('processFeed — removal of unverified', () => {
+	it('cancels a linked unverified cleaning on event removal', async () => {
+		const existingEvent = {
+			id: 'evt-r',
+			uid: 'gone-booking',
+			cleaningId: 'clean-r',
+			status: 'active',
+			startDate: '2026-10-05',
+			endDate: '2026-10-08',
+		};
+		const db = buildMockDb({
+			getActiveEvents: vi.fn().mockResolvedValue([existingEvent]),
+			getCleaning: vi.fn().mockResolvedValue({
+				id: 'clean-r',
+				status: 'unverified',
+				scheduledStart: '2026-10-08T10:00:00.000Z',
+				cleanerId: null,
+				deletedAt: null,
+			}),
+			hasCoveringEvent: vi.fn().mockResolvedValue(false),
+		});
+		const deps = buildDeps(db, okFetch(EMPTY_ICS));
+
+		const result = await processFeed(deps, buildFeed());
+		expect(result.ok).toBe(true);
+		expect(db.cancelCleaning).toHaveBeenCalledWith('clean-r');
 	});
 });

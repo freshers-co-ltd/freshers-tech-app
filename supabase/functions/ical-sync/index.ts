@@ -4,6 +4,7 @@ import { corsHeaders, getAllowedOrigin, jsonResponse } from '../_shared/cors.ts'
 import { parseIcs } from '../_shared/ical.ts';
 import { getDialect, type IcalSource } from '../_shared/platform.ts';
 import {
+	CLEANING_SLOT_CONFLICT,
 	isFeedEligible,
 	syncBatch,
 	syncFeedById,
@@ -177,7 +178,6 @@ function createSyncDeps(admin: SupabaseClient): SyncDeps {
 						{
 							feed_id: record.feedId,
 							uid: record.uid,
-							summary: record.summary,
 							start_date: record.startDate,
 							end_date: record.endDate,
 							cleaning_id: record.cleaningId,
@@ -237,6 +237,20 @@ function createSyncDeps(admin: SupabaseClient): SyncDeps {
 				}
 				return null;
 			},
+			async findCleaningByScheduledStart(propertyId, scheduledStart) {
+				const { data, error } = await admin
+					.from('cleanings')
+					.select('id')
+					.eq('property_id', propertyId)
+					.eq('scheduled_start', scheduledStart)
+					.is('deleted_at', null)
+					.neq('status', 'cancelled')
+					.neq('source', 'manual')
+					.limit(1)
+					.maybeSingle();
+				if (error) throw new Error(`Failed to find cleaning by scheduled start: ${error.message}`);
+				return data ? data.id : null;
+			},
 			async hasCoveringEvent(propertyId, startDate, endDate, excludeFeedId) {
 				const { data, error } = await admin
 					.from('ical_events')
@@ -255,6 +269,25 @@ function createSyncDeps(admin: SupabaseClient): SyncDeps {
 					return propertyMatch && cleaningActive;
 				});
 			},
+			async findCleaningByDate(propertyId, scheduledStart) {
+				const dayStart = new Date(scheduledStart);
+				dayStart.setUTCHours(0, 0, 0, 0);
+				const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+				const { data, error } = await admin
+					.from('cleanings')
+					.select('id')
+					.eq('property_id', propertyId)
+					.gte('scheduled_start', dayStart.toISOString())
+					.lt('scheduled_start', dayEnd.toISOString())
+					.is('deleted_at', null)
+					.neq('status', 'cancelled')
+					.neq('source', 'manual')
+					.order('created_at', { ascending: true })
+					.limit(1)
+					.maybeSingle();
+				if (error) throw new Error(`Failed to find cleaning by date: ${error.message}`);
+				return data ? data.id : null;
+			},
 			async createCleaning(input) {
 				const { data, error } = await admin.rpc('create_cleaning_request', {
 					p_property_id: input.propertyId,
@@ -265,7 +298,11 @@ function createSyncDeps(admin: SupabaseClient): SyncDeps {
 					p_source: input.source,
 					p_confidence: input.confidence,
 				});
-				if (error) throw new Error(`Failed to create cleaning: ${error.message}`);
+				if (error) {
+					const code = (error as { code?: string }).code;
+					if (code === '23505') throw new Error(CLEANING_SLOT_CONFLICT);
+					throw new Error(`Failed to create cleaning: ${error.message}`);
+				}
 				if (typeof data !== 'string') throw new Error('Failed to create cleaning: invalid response');
 				return data;
 			},

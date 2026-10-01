@@ -54,13 +54,13 @@ describe('parseIcs', () => {
 		const first = result.events[0];
 		expect(first.uid).toBe('booking-1001@airbnb');
 		expect(first.dtstart).toMatchObject({
-			year: 2026,
+			year: 2027,
 			month: 9,
 			day: 18,
 			isDate: true,
 		});
 		expect(first.dtend).toMatchObject({
-			year: 2026,
+			year: 2027,
 			month: 9,
 			day: 21,
 			isDate: true,
@@ -74,7 +74,7 @@ describe('parseIcs', () => {
 		expect(result.prodid).toContain('Booking.com');
 		expect(result.events[0].uid).toBe('booking-5001@booking.com');
 		expect(result.events[0].dtstart).toMatchObject({
-			year: 2026,
+			year: 2027,
 			month: 9,
 			day: 10,
 			isDate: true,

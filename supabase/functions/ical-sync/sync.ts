@@ -59,7 +59,6 @@ export interface SyncDb {
 	upsertEvent(record: {
 		feedId: string;
 		uid: string;
-		summary: string | null;
 		startDate: string;
 		endDate: string;
 		cleaningId: string | null;
@@ -68,6 +67,8 @@ export interface SyncDb {
 	getActiveEvents(feedId: string): Promise<IcalEventRecord[]>;
 	getCleaning(cleaningId: string): Promise<CleaningRecord | null>;
 	findCleaningForRange(propertyId: string, startDate: string, endDate: string): Promise<string | null>;
+	findCleaningByScheduledStart(propertyId: string, scheduledStart: string): Promise<string | null>;
+	findCleaningByDate(propertyId: string, scheduledStart: string): Promise<string | null>;
 	hasCoveringEvent(propertyId: string, startDate: string, endDate: string, excludeFeedId: string): Promise<boolean>;
 	createCleaning(input: {
 		propertyId: string;
@@ -119,6 +120,63 @@ export interface SyncDeps {
 
 const CYCLE_MS = 30 * 60 * 1000;
 
+export const CLEANING_SLOT_CONFLICT = 'ical_cleaning_slot_conflict';
+
+const REUSABLE_CLEANING_STATUSES: readonly string[] = [
+	'requested',
+	'confirmed',
+	'unverified',
+	'in_progress',
+	'completed',
+];
+
+const RESCHEDULABLE_CLEANING_STATUSES: readonly string[] = ['requested', 'confirmed', 'unverified'];
+
+interface ContinuationEntry {
+	uid: string;
+	summary: string;
+}
+
+function buildContinuationGuests(
+	events: IcalRawEvent[],
+	dialect: PlatformDialect,
+): Map<string, ContinuationEntry[]> {
+	const continuationGuests = new Map<string, ContinuationEntry[]>();
+	for (const rawEvent of events) {
+		const normalized = deriveEndDate(rawEvent);
+		if (!normalized.dtstart || !normalized.dtend || normalized.summary === null) {
+			continue;
+		}
+		if (classifyEvent(dialect, normalized).kind !== 'booking') {
+			continue;
+		}
+		const startDate = formatIsoDate(normalized.dtstart);
+		const entries = continuationGuests.get(startDate);
+		const entry = { uid: normalized.uid, summary: normalized.summary };
+		if (entries) {
+			entries.push(entry);
+		} else {
+			continuationGuests.set(startDate, [entry]);
+		}
+	}
+	return continuationGuests;
+}
+
+function isMidStayEvent(
+	continuationGuests: Map<string, ContinuationEntry[]>,
+	event: IcalRawEvent,
+	endDate: string,
+): boolean {
+	if (event.summary === null) {
+		return false;
+	}
+	const continuers = continuationGuests.get(endDate);
+	if (!continuers) {
+		return false;
+	}
+	return continuers.some((entry) => entry.uid !== event.uid && entry.summary === event.summary);
+}
+
 export function isFeedEligible(feed: FeedRecord, nowMs: number): boolean {
 	if (feed.consecutiveFailures < 3) return true;
 	if (!feed.lastSyncedAt) return true;
@@ -166,6 +224,7 @@ export async function processFeed(
 
 	const dialect = deps.getDialect(feed.source);
 	const seenUids = new Set<string>();
+	const continuationGuests = buildContinuationGuests(parsed.events, dialect);
 
 	for (const rawEvent of parsed.events) {
 		const normalizedEvent = deriveEndDate(rawEvent);
@@ -183,7 +242,18 @@ export async function processFeed(
 			await deps.db.upsertEvent({
 				feedId: feed.id,
 				uid: normalizedEvent.uid,
-				summary: normalizedEvent.summary,
+				startDate,
+				endDate,
+				cleaningId: existingByUid?.cleaningId ?? null,
+				status: 'active',
+			});
+			continue;
+		}
+
+		if (isMidStayEvent(continuationGuests, normalizedEvent, endDate)) {
+			await deps.db.upsertEvent({
+				feedId: feed.id,
+				uid: normalizedEvent.uid,
 				startDate,
 				endDate,
 				cleaningId: existingByUid?.cleaningId ?? null,
@@ -204,41 +274,62 @@ export async function processFeed(
 		let cleaningId = existing?.cleaningId ?? null;
 		if (cleaningId) {
 			const cleaning = await deps.db.getCleaning(cleaningId);
-			if (cleaning && cleaning.deletedAt === null && (cleaning.status === 'requested' || cleaning.status === 'confirmed')) {
+			if (!cleaning) {
+				cleaningId = null;
+			} else if (cleaning.deletedAt !== null || cleaning.status === 'cancelled') {
+				continue;
+			} else if (RESCHEDULABLE_CLEANING_STATUSES.includes(cleaning.status)) {
 				const scheduled = computeScheduledStart(normalizedEvent, property);
 				if (scheduled !== cleaning.scheduledStart) {
 					await deps.db.updateCleaningDate(cleaningId, scheduled);
 				}
-			} else if (cleaning && cleaning.deletedAt !== null) {
-				continue;
-			} else {
-				cleaningId = null;
 			}
 		}
 		if (!cleaningId) {
 			const covering = await deps.db.findCleaningForRange(feed.propertyId, startDate, endDate);
 			if (covering) {
 				const cleaning = await deps.db.getCleaning(covering);
-		if (cleaning && cleaning.deletedAt === null && (cleaning.status === 'requested' || cleaning.status === 'confirmed')) {
+				if (
+					cleaning &&
+					cleaning.deletedAt === null &&
+					REUSABLE_CLEANING_STATUSES.includes(cleaning.status)
+				) {
 					cleaningId = covering;
 				}
 			}
 		}
 		if (!cleaningId) {
 			const scheduled = computeScheduledStart(normalizedEvent, property);
-			cleaningId = await deps.db.createCleaning({
-				propertyId: feed.propertyId,
-				hostId: property.hostId,
-				scheduledStart: scheduled,
-				information: null,
-				source: feed.source,
-				confidence: classification.confidence,
-			});
+			const sameCheckout = await deps.db.findCleaningByScheduledStart(feed.propertyId, scheduled);
+			if (sameCheckout) {
+				cleaningId = sameCheckout;
+			} else {
+				try {
+					cleaningId = await deps.db.createCleaning({
+						propertyId: feed.propertyId,
+						hostId: property.hostId,
+						scheduledStart: scheduled,
+						information: null,
+						source: feed.source,
+						confidence: classification.confidence,
+					});
+				} catch (error) {
+					if (error instanceof Error && error.message === CLEANING_SLOT_CONFLICT) {
+						const existingSlot = await deps.db.findCleaningByDate(feed.propertyId, scheduled);
+						if (existingSlot) {
+							cleaningId = existingSlot;
+						} else {
+							throw error;
+						}
+					} else {
+						throw error;
+					}
+				}
+			}
 		}
 		await deps.db.upsertEvent({
 			feedId: feed.id,
 			uid: normalizedEvent.uid,
-			summary: normalizedEvent.summary,
 			startDate,
 			endDate,
 			cleaningId,
@@ -257,7 +348,7 @@ export async function processFeed(
 		const covered = await deps.db.hasCoveringEvent(feed.propertyId, event.startDate, event.endDate, feed.id);
 		if (covered) continue;
 		const humanDate = formatHumanDate(event.startDate);
-		if (cleaning.status === 'requested' || cleaning.status === 'confirmed') {
+		if (RESCHEDULABLE_CLEANING_STATUSES.includes(cleaning.status)) {
 			await deps.db.cancelCleaning(event.cleaningId);
 			await deps.db.insertNotification({
 				userId: property.hostId,

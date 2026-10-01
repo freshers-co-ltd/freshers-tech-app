@@ -44,21 +44,21 @@ export type Database = {
 					bathroom_time: number;
 					hourly_rate: number;
 					id: number;
-					target_times: Json;
+					target_times: NonNullable<Json>;
 					updated_at: string | null;
 				};
 				Insert: {
 					bathroom_time?: number;
 					hourly_rate?: number;
 					id?: number;
-					target_times?: Json;
+					target_times?: NonNullable<Json>;
 					updated_at?: string | null;
 				};
 				Update: {
 					bathroom_time?: number;
 					hourly_rate?: number;
 					id?: number;
-					target_times?: Json;
+					target_times?: NonNullable<Json>;
 					updated_at?: string | null;
 				};
 				Relationships: [];
@@ -307,7 +307,6 @@ export type Database = {
 					id: string;
 					start_date: string;
 					status: string;
-					summary: string | null;
 					uid: string;
 					updated_at: string;
 				};
@@ -319,7 +318,6 @@ export type Database = {
 					id?: string;
 					start_date: string;
 					status?: string;
-					summary?: string | null;
 					uid: string;
 					updated_at?: string;
 				};
@@ -331,7 +329,6 @@ export type Database = {
 					id?: string;
 					start_date?: string;
 					status?: string;
-					summary?: string | null;
 					uid?: string;
 					updated_at?: string;
 				};
@@ -498,7 +495,9 @@ export type Database = {
 					email: string | null;
 					failed_login_attempts: number | null;
 					full_name: string | null;
+					host_subscription_status: Database['public']['Enums']['subscription_status'] | null;
 					id: string;
+					is_invited: boolean;
 					is_verified: boolean | null;
 					last_seen_at: string | null;
 					locked_until: string | null;
@@ -511,7 +510,9 @@ export type Database = {
 					email?: string | null;
 					failed_login_attempts?: number | null;
 					full_name?: string | null;
+					host_subscription_status?: Database['public']['Enums']['subscription_status'] | null;
 					id: string;
+					is_invited?: boolean;
 					is_verified?: boolean | null;
 					last_seen_at?: string | null;
 					locked_until?: string | null;
@@ -524,7 +525,9 @@ export type Database = {
 					email?: string | null;
 					failed_login_attempts?: number | null;
 					full_name?: string | null;
+					host_subscription_status?: Database['public']['Enums']['subscription_status'] | null;
 					id?: string;
+					is_invited?: boolean;
 					is_verified?: boolean | null;
 					last_seen_at?: string | null;
 					locked_until?: string | null;
@@ -632,21 +635,21 @@ export type Database = {
 				Row: {
 					created_at: string | null;
 					id: string;
-					subscription: Json;
+					subscription: NonNullable<Json>;
 					updated_at: string | null;
 					user_id: string;
 				};
 				Insert: {
 					created_at?: string | null;
 					id?: string;
-					subscription: Json;
+					subscription: NonNullable<Json>;
 					updated_at?: string | null;
 					user_id: string;
 				};
 				Update: {
 					created_at?: string | null;
 					id?: string;
-					subscription?: Json;
+					subscription?: NonNullable<Json>;
 					updated_at?: string | null;
 					user_id?: string;
 				};
@@ -672,6 +675,69 @@ export type Database = {
 					is_active?: boolean;
 				};
 				Relationships: [];
+			};
+			subscriptions: {
+				Row: {
+					cancel_at: string | null;
+					canceled_at: string | null;
+					created_at: string | null;
+					current_period_end: string | null;
+					current_period_start: string | null;
+					host_id: string;
+					id: string;
+					pending_cancellation: boolean;
+					status: Database['public']['Enums']['subscription_status'];
+					stripe_customer_id: string;
+					stripe_price_id: string;
+					stripe_subscription_id: string;
+					updated_at: string | null;
+				};
+				Insert: {
+					cancel_at?: string | null;
+					canceled_at?: string | null;
+					created_at?: string | null;
+					current_period_end?: string | null;
+					current_period_start?: string | null;
+					host_id: string;
+					id?: string;
+					pending_cancellation?: boolean;
+					status?: Database['public']['Enums']['subscription_status'];
+					stripe_customer_id: string;
+					stripe_price_id: string;
+					stripe_subscription_id: string;
+					updated_at?: string | null;
+				};
+				Update: {
+					cancel_at?: string | null;
+					canceled_at?: string | null;
+					created_at?: string | null;
+					current_period_end?: string | null;
+					current_period_start?: string | null;
+					host_id?: string;
+					id?: string;
+					pending_cancellation?: boolean;
+					status?: Database['public']['Enums']['subscription_status'];
+					stripe_customer_id?: string;
+					stripe_price_id?: string;
+					stripe_subscription_id?: string;
+					updated_at?: string | null;
+				};
+				Relationships: [
+					{
+						foreignKeyName: 'subscriptions_host_id_fkey';
+						columns: ['host_id'];
+						isOneToOne: false;
+						referencedRelation: 'profiles';
+						referencedColumns: ['id'];
+					},
+					{
+						foreignKeyName: 'subscriptions_host_id_fkey';
+						columns: ['host_id'];
+						isOneToOne: false;
+						referencedRelation: 'profiles_public';
+						referencedColumns: ['id'];
+					},
+				];
 			};
 		};
 		Views: {
@@ -718,10 +784,7 @@ export type Database = {
 				Args: { p_cleaner_id: string; p_cleaning_id: string };
 				Returns: undefined;
 			};
-			admin_ban_user: {
-				Args: { is_banned: boolean; target_user_id: string };
-				Returns: undefined;
-			};
+			admin_ban_user: { Args: { is_banned: boolean; target_user_id: string }; Returns: undefined };
 			admin_create_cleaning_for_host: {
 				Args: {
 					p_custom_tasks?: string[];
@@ -734,7 +797,7 @@ export type Database = {
 				Returns: string;
 			};
 			admin_get_active_cleanings: {
-				Args: never;
+				Args: Record<PropertyKey, never>;
 				Returns: {
 					count: number;
 					status: string;
@@ -798,7 +861,7 @@ export type Database = {
 				}[];
 			};
 			admin_get_available_cleaners: {
-				Args: never;
+				Args: Record<PropertyKey, never>;
 				Returns: {
 					avatar_url: string;
 					avg_completion_hours: number;
@@ -873,7 +936,9 @@ export type Database = {
 					deleted_at: string;
 					email: string;
 					full_name: string;
+					host_subscription_status: string;
 					id: string;
+					is_invited: boolean;
 					is_online: boolean;
 					is_verified: boolean;
 					last_seen_at: string;
@@ -954,7 +1019,7 @@ export type Database = {
 				}[];
 			};
 			admin_get_user_stats: {
-				Args: never;
+				Args: Record<PropertyKey, never>;
 				Returns: {
 					admins_count: number;
 					banned_users: number;
@@ -984,7 +1049,9 @@ export type Database = {
 					deleted_at: string;
 					email: string;
 					full_name: string;
+					host_subscription_status: string;
 					id: string;
+					is_invited: boolean;
 					is_online: boolean;
 					is_verified: boolean;
 					last_seen_at: string;
@@ -996,18 +1063,12 @@ export type Database = {
 					total_user_count: number;
 				}[];
 			};
-			admin_get_users_count: {
-				Args: { p_role?: string; p_search?: string };
-				Returns: number;
-			};
+			admin_get_users_count: { Args: { p_role?: string; p_search?: string }; Returns: number };
 			admin_set_property_main_cleaner: {
 				Args: { p_cleaner_id?: string; p_property_id: string };
 				Returns: undefined;
 			};
-			admin_unassign_cleaner: {
-				Args: { p_cleaning_id: string };
-				Returns: undefined;
-			};
+			admin_unassign_cleaner: { Args: { p_cleaning_id: string }; Returns: undefined };
 			admin_update_cleaning: {
 				Args: {
 					p_cleaner_pay?: number;
@@ -1021,21 +1082,14 @@ export type Database = {
 				Returns: string;
 			};
 			admin_update_property_price: {
-				Args: {
-					p_cleaner_pay_override?: number;
-					p_price: number;
-					p_property_id: string;
-				};
+				Args: { p_cleaner_pay_override?: number; p_price: number; p_property_id: string };
 				Returns: undefined;
 			};
 			admin_update_standard_tasks: {
 				Args: { p_tasks: Json; p_tasks_to_delete: string[] };
 				Returns: undefined;
 			};
-			calculate_cleaner_pay: {
-				Args: { p_property_id: string };
-				Returns: number;
-			};
+			calculate_cleaner_pay: { Args: { p_property_id: string }; Returns: number };
 			check_property_cleaning_on_date: {
 				Args: { p_check_date: string; p_property_id: string };
 				Returns: {
@@ -1043,10 +1097,7 @@ export type Database = {
 					status: string;
 				}[];
 			};
-			cleanup_unconfirmed_users: {
-				Args: { days_threshold?: number };
-				Returns: number;
-			};
+			cleanup_unconfirmed_users: { Args: { days_threshold?: number }; Returns: number };
 			create_cleaning_request: {
 				Args: {
 					p_confidence?: string;
@@ -1070,9 +1121,9 @@ export type Database = {
 				};
 				Returns: string;
 			};
-			delete_expired_evidence: { Args: never; Returns: undefined };
+			delete_expired_evidence: { Args: Record<PropertyKey, never>; Returns: undefined };
 			get_cleaner_pay_config: {
-				Args: never;
+				Args: Record<PropertyKey, never>;
 				Returns: {
 					bathroom_time: number;
 					hourly_rate: number;
@@ -1088,16 +1139,21 @@ export type Database = {
 					locked_until: string;
 				}[];
 			};
-			get_or_create_notification_preferences: { Args: never; Returns: string };
-			host_cancel_cleaning: {
-				Args: { p_cleaning_id: string };
-				Returns: undefined;
+			get_or_create_notification_preferences: { Args: Record<PropertyKey, never>; Returns: string };
+			host_cancel_cleaning: { Args: { p_cleaning_id: string }; Returns: undefined };
+			is_not_banned: { Args: Record<PropertyKey, never>; Returns: boolean };
+			notification_exists: {
+				Args: {
+					p_interval?: string;
+					p_type: Database['public']['Enums']['notification_type'];
+					p_user_id: string;
+				};
+				Returns: boolean;
 			};
-			is_not_banned: { Args: never; Returns: boolean };
-			notify_cleaning_reminders: { Args: never; Returns: undefined };
-			notify_cleaning_starting_soon: { Args: never; Returns: undefined };
-			notify_missed_clockin: { Args: never; Returns: undefined };
-			purge_soft_deleted_records: { Args: never; Returns: undefined };
+			notify_cleaning_reminders: { Args: Record<PropertyKey, never>; Returns: undefined };
+			notify_cleaning_starting_soon: { Args: Record<PropertyKey, never>; Returns: undefined };
+			notify_missed_clockin: { Args: Record<PropertyKey, never>; Returns: undefined };
+			purge_soft_deleted_records: { Args: Record<PropertyKey, never>; Returns: undefined };
 			purge_user_pii: { Args: { p_user_id: string }; Returns: undefined };
 			record_login_attempt: {
 				Args: { p_email: string; p_success: boolean };
@@ -1106,33 +1162,14 @@ export type Database = {
 				}[];
 			};
 			run_ical_sync: { Args: { p_feed_id?: string }; Returns: undefined };
-			soft_delete_cleaning: {
-				Args: { p_cleaning_id: string };
-				Returns: undefined;
-			};
-			soft_delete_cleaning_report: {
-				Args: { p_report_id: string };
-				Returns: undefined;
-			};
-			soft_delete_cleaning_task: {
-				Args: { p_task_id: string };
-				Returns: undefined;
-			};
-			soft_delete_evidence_media: {
-				Args: { p_evidence_id: string };
-				Returns: undefined;
-			};
-			soft_delete_property: {
-				Args: { p_property_id: string };
-				Returns: undefined;
-			};
+			soft_delete_cleaning: { Args: { p_cleaning_id: string }; Returns: undefined };
+			soft_delete_cleaning_report: { Args: { p_report_id: string }; Returns: undefined };
+			soft_delete_cleaning_task: { Args: { p_task_id: string }; Returns: undefined };
+			soft_delete_evidence_media: { Args: { p_evidence_id: string }; Returns: undefined };
+			soft_delete_property: { Args: { p_property_id: string }; Returns: undefined };
 			store_ical_feed_url: { Args: { p_url: string }; Returns: string };
 			update_cleaner_pay_config: {
-				Args: {
-					p_bathroom_time?: number;
-					p_hourly_rate: number;
-					p_target_times: Json;
-				};
+				Args: { p_bathroom_time?: number; p_hourly_rate: number; p_target_times: Json };
 				Returns: undefined;
 			};
 			update_cleaning_request: {
@@ -1145,11 +1182,8 @@ export type Database = {
 				};
 				Returns: string;
 			};
-			update_ical_feed_url: {
-				Args: { p_secret_id: string; p_url: string };
-				Returns: undefined;
-			};
-			update_user_presence: { Args: never; Returns: undefined };
+			update_ical_feed_url: { Args: { p_secret_id: string; p_url: string }; Returns: undefined };
+			update_user_presence: { Args: Record<PropertyKey, never>; Returns: undefined };
 		};
 		Enums: {
 			cleaning_status:
@@ -1173,8 +1207,19 @@ export type Database = {
 				| 'cleaning_starting_soon'
 				| 'cleaning_missed_clockin'
 				| 'ical_sync_alert'
-				| 'cleaning_needs_verification';
+				| 'cleaning_needs_verification'
+				| 'subscription_active'
+				| 'subscription_payment_failed'
+				| 'subscription_canceled';
 			property_type: 'house' | 'apartment' | 'studio';
+			subscription_status:
+				| 'active'
+				| 'past_due'
+				| 'unpaid'
+				| 'canceled'
+				| 'incomplete'
+				| 'incomplete_expired'
+				| 'paused';
 			user_role: 'cleaner' | 'host' | 'admin';
 		};
 		CompositeTypes: {
@@ -1282,7 +1327,7 @@ export type Database = {
 					catalog_id: string;
 					created_at: string;
 					id: string;
-					metadata: Json;
+					metadata: NonNullable<Json>;
 					name: string;
 					updated_at: string;
 				};
@@ -1291,7 +1336,7 @@ export type Database = {
 					catalog_id: string;
 					created_at?: string;
 					id?: string;
-					metadata?: Json;
+					metadata?: NonNullable<Json>;
 					name: string;
 					updated_at?: string;
 				};
@@ -1300,7 +1345,7 @@ export type Database = {
 					catalog_id?: string;
 					created_at?: string;
 					id?: string;
-					metadata?: Json;
+					metadata?: NonNullable<Json>;
 					name?: string;
 					updated_at?: string;
 				};
@@ -1416,7 +1461,7 @@ export type Database = {
 					name?: string | null;
 					owner?: string | null;
 					owner_id?: string | null;
-					path_tokens?: string[] | null;
+					path_tokens?: never;
 					updated_at?: string | null;
 					user_metadata?: Json | null;
 					version?: string | null;
@@ -1430,7 +1475,7 @@ export type Database = {
 					name?: string | null;
 					owner?: string | null;
 					owner_id?: string | null;
-					path_tokens?: string[] | null;
+					path_tokens?: never;
 					updated_at?: string | null;
 					user_metadata?: Json | null;
 					version?: string | null;
@@ -1595,14 +1640,8 @@ export type Database = {
 			[_ in never]: never;
 		};
 		Functions: {
-			allow_any_operation: {
-				Args: { expected_operations: string[] };
-				Returns: boolean;
-			};
-			allow_only_operation: {
-				Args: { expected_operation: string };
-				Returns: boolean;
-			};
+			allow_any_operation: { Args: { expected_operations: string[] }; Returns: boolean };
+			allow_only_operation: { Args: { expected_operation: string }; Returns: boolean };
 			can_insert_object: {
 				Args: { bucketid: string; metadata: Json; name: string; owner: string };
 				Returns: undefined;
@@ -1615,7 +1654,7 @@ export type Database = {
 				Returns: string;
 			};
 			get_size_by_bucket: {
-				Args: never;
+				Args: Record<PropertyKey, never>;
 				Returns: {
 					bucket_id: string;
 					size: number;
@@ -1655,7 +1694,7 @@ export type Database = {
 					updated_at: string;
 				}[];
 			};
-			operation: { Args: never; Returns: string };
+			operation: { Args: Record<PropertyKey, never>; Returns: string };
 			search: {
 				Args: {
 					bucketname: string;
@@ -1742,9 +1781,7 @@ export type Tables<
 		? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
 				DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
 		: never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-	schema: keyof DatabaseWithoutInternals;
-}
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
 	? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
 			DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
 			Row: infer R;
@@ -1768,9 +1805,7 @@ export type TablesInsert<
 	}
 		? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
 		: never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-	schema: keyof DatabaseWithoutInternals;
-}
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
 	? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
 			Insert: infer I;
 		}
@@ -1793,9 +1828,7 @@ export type TablesUpdate<
 	}
 		? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
 		: never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-	schema: keyof DatabaseWithoutInternals;
-}
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
 	? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
 			Update: infer U;
 		}
@@ -1818,9 +1851,7 @@ export type Enums<
 	}
 		? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
 		: never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-	schema: keyof DatabaseWithoutInternals;
-}
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
 	? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
 	: DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
 		? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
@@ -1835,9 +1866,7 @@ export type CompositeTypes<
 	}
 		? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
 		: never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-	schema: keyof DatabaseWithoutInternals;
-}
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
 	? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
 	: PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
 		? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
@@ -1869,8 +1898,20 @@ export const Constants = {
 				'cleaning_missed_clockin',
 				'ical_sync_alert',
 				'cleaning_needs_verification',
+				'subscription_active',
+				'subscription_payment_failed',
+				'subscription_canceled',
 			],
 			property_type: ['house', 'apartment', 'studio'],
+			subscription_status: [
+				'active',
+				'past_due',
+				'unpaid',
+				'canceled',
+				'incomplete',
+				'incomplete_expired',
+				'paused',
+			],
 			user_role: ['cleaner', 'host', 'admin'],
 		},
 	},

@@ -5,7 +5,7 @@ import { type ActionResult, mapDatabaseError } from '@/lib/serviceUtils';
 import { supabase } from '@/lib/supabaseClient';
 
 export const pushSubscriptionsService = {
-	async upsert(userId: string, subscription: Json): Promise<ActionResult<void>> {
+	async upsert(userId: string, subscription: NonNullable<Json>): Promise<ActionResult<void>> {
 		const { error } = await supabase
 			.from('push_subscriptions')
 			.upsert(

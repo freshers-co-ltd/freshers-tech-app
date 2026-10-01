@@ -52,6 +52,8 @@ function buildMockDb(overrides: Partial<SyncDb> = {}): SyncDb {
 		getActiveEvents: vi.fn().mockResolvedValue([]),
 		getCleaning: vi.fn().mockResolvedValue(null),
 		findCleaningForRange: vi.fn().mockResolvedValue(null),
+		findCleaningByScheduledStart: vi.fn().mockResolvedValue(null),
+		findCleaningByDate: vi.fn().mockResolvedValue(null),
 		hasCoveringEvent: vi.fn().mockResolvedValue(false),
 		createCleaning: vi.fn().mockResolvedValue('cleaning-1'),
 		updateCleaningDate: vi.fn().mockResolvedValue(undefined),
@@ -88,8 +90,8 @@ function buildEventOpts(opts: {
 		uid: opts.uid ?? 'uid-1',
 		cleaningId: opts.cleaningId ?? null,
 		status: opts.status ?? 'active',
-		startDate: opts.startDate ?? '2026-09-18',
-		endDate: opts.endDate ?? '2026-09-21',
+		startDate: opts.startDate ?? '2027-09-18',
+		endDate: opts.endDate ?? '2027-09-21',
 	};
 }
 
@@ -98,8 +100,8 @@ describe('processFeed — UID fallback', () => {
 		const existingEvent = buildEventOpts({
 			uid: 'old-uid',
 			status: 'active',
-			startDate: '2026-09-18',
-			endDate: '2026-09-21',
+			startDate: '2027-09-18',
+			endDate: '2027-09-21',
 		});
 		const db = buildMockDb({
 			getEventByUid: vi.fn().mockResolvedValue(null),
@@ -124,7 +126,7 @@ describe('processFeed — UID fallback', () => {
 });
 
 describe('processFeed — existing event with cancelled cleaning', () => {
-	it('nullifies cleaningId when cleaning is cancelled', async () => {
+	it('does not recreate a cleaning when the linked cleaning was cancelled', async () => {
 		const existingEvent = buildEventOpts({
 			uid: 'booking-1001@airbnb',
 			cleaningId: 'clean-old',
@@ -151,7 +153,11 @@ describe('processFeed — existing event with cancelled cleaning', () => {
 
 		const result = await processFeed(deps, buildFeed());
 		expect(result.ok).toBe(true);
-		expect(db.createCleaning).toHaveBeenCalled();
+		expect(db.createCleaning).not.toHaveBeenCalled();
+		const bookingUpserts = vi
+			.mocked(db.upsertEvent)
+			.mock.calls.filter((call) => call[0].uid === 'booking-1001@airbnb');
+		expect(bookingUpserts).toHaveLength(0);
 	});
 });
 

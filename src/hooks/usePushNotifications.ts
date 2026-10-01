@@ -107,7 +107,7 @@ export function usePushNotifications(
 					applicationServerKey: vapidPublicKey,
 				});
 
-				const subscriptionJson = subscription.toJSON() as unknown as Json;
+				const subscriptionJson = subscription.toJSON() as unknown as NonNullable<Json>;
 
 				const { error } = await pushSubscriptionsService.upsert(userId, subscriptionJson);
 
