@@ -1,3 +1,7 @@
+## <small>0.18.2 (2026-10-01)</small>
+
+* fix(ical): stop duplicate sync cleanings ([c7dae07](https://github.com/freshers-co-ltd/freshers-tech-app/commit/c7dae07))
+
 ## <small>0.18.1 (2026-09-27)</small>
 
 * fix(ical): Accept bare DATE DTSTART/DTEND without VALUE=DATE ([ba4acdd](https://github.com/freshers-co-ltd/freshers-tech-app/commit/ba4acdd))
