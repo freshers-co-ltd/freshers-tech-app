@@ -4,16 +4,19 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { toast } from '@/components/Toast';
 import { DICT } from '@/dictionary';
 import { AdminCleaningsPage } from '@/pages/admin/Cleanings';
-import { buildAdminCleaning } from '~/factories';
+import { buildAdminCleaning, buildRawCleaning } from '~/factories';
 import { renderWithProviders } from '~/utils';
-import { mockRpcData } from '~/utils/supabaseMocks';
+import { mockRpcData, mockTableData } from '~/utils/supabaseMocks';
 
 describe('Admin Cleanings Page', () => {
 	let cleanupRpc: (() => void) | null = null;
+	let cleanupTable: (() => void) | null = null;
 
 	afterEach(() => {
 		cleanupRpc?.();
+		cleanupTable?.();
 		cleanupRpc = null;
+		cleanupTable = null;
 	});
 
 	const renderPage = () => {
@@ -56,6 +59,58 @@ describe('Admin Cleanings Page', () => {
 		await waitFor(() => {
 			expect(toast.error).toHaveBeenCalledWith('Failed to load admin cleanings');
 		});
+	});
+
+	it('shows Verify and Reject buttons to admins for unverified cleanings', async () => {
+		const user = userEvent.setup();
+		cleanupRpc = mockRpcData({
+			admin_get_all_cleanings: {
+				data: [buildAdminCleaning({ id: 'unv_1', status: 'unverified' })],
+			},
+			admin_get_cleanings_count: { data: 1 },
+		});
+		cleanupTable = mockTableData('cleanings', [
+			buildRawCleaning({ id: 'unv_1', status: 'unverified' }),
+		]);
+
+		renderPage();
+
+		const viewButtons = await screen.findAllByRole('button', { name: 'View details' });
+		await user.click(viewButtons[0]);
+
+		expect(await screen.findByRole('button', { name: DICT.ICAL.VERIFY })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: DICT.ICAL.REJECT })).toBeInTheDocument();
+
+		await user.keyboard('{Escape}');
+		await waitFor(() => {
+			expect(screen.queryByRole('button', { name: DICT.ICAL.VERIFY })).not.toBeInTheDocument();
+		});
+	});
+
+	it('closes the dialog after an admin verifies an unverified cleaning', async () => {
+		const user = userEvent.setup();
+		cleanupRpc = mockRpcData({
+			admin_get_all_cleanings: {
+				data: [buildAdminCleaning({ id: 'unv_1', status: 'unverified' })],
+			},
+			admin_get_cleanings_count: { data: 1 },
+		});
+		cleanupTable = mockTableData('cleanings', [
+			buildRawCleaning({ id: 'unv_1', status: 'unverified' }),
+		]);
+
+		renderPage();
+
+		const viewButtons = await screen.findAllByRole('button', { name: 'View details' });
+		await user.click(viewButtons[0]);
+		await user.click(await screen.findByRole('button', { name: DICT.ICAL.VERIFY }));
+
+		await waitFor(
+			() => {
+				expect(screen.queryByRole('button', { name: DICT.ICAL.VERIFY })).not.toBeInTheDocument();
+			},
+			{ timeout: 5000 },
+		);
 	});
 
 	it('shows cleaner filter dropdown with options', async () => {
