@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DICT } from '@/dictionary';
@@ -81,6 +81,22 @@ describe('IcalFeedManager', () => {
 		const deleteButtons = screen.getAllByRole('button', { name: DICT.COMMON.ACTIONS.DELETE });
 		await user.click(deleteButtons[0]);
 		expect(screen.getByText(DICT.ICAL.DELETE.TITLE)).toBeInTheDocument();
+	});
+
+	it('deletes feed with cleanings when checkbox is ticked', async () => {
+		setMockUserRole('host');
+		const user = userEvent.setup();
+		renderWithProviders(<IcalFeedManager propertyId="prop-1" />);
+		await screen.findByText(/••••abcd/);
+		const deleteButtons = screen.getAllByRole('button', { name: DICT.COMMON.ACTIONS.DELETE });
+		await user.click(deleteButtons[0]);
+		await user.click(screen.getByRole('checkbox'));
+		expect(screen.getByText(DICT.ICAL.DELETE_WITH_CLEANINGS_MESSAGE)).toBeInTheDocument();
+		const dialog = screen.getByRole('alertdialog');
+		await user.click(within(dialog).getByRole('button', { name: DICT.COMMON.ACTIONS.DELETE }));
+		await waitFor(() => {
+			expect(mockDeleteFeed).toHaveBeenCalledWith({ feedId: 'feed-1', deleteCleanings: true });
+		});
 	});
 
 	it('shows empty state when no feeds exist', async () => {

@@ -328,7 +328,7 @@ async function handleDeleteFeed(
 	if (!feed) return jsonResponse({ error: 'Calendar feed not found' }, 404, origin);
 	if (!assertOwnership(feed, auth, isAdmin)) return jsonResponse({ error: 'Forbidden' }, 403, origin);
 
-	if (body.cancelCleanings === true) {
+	if (body.deleteCleanings === true) {
 		const { data: events } = await admin
 			.from('ical_events')
 			.select('cleaning_id')
@@ -346,18 +346,34 @@ async function handleDeleteFeed(
 				.from('cleanings')
 				.select('id')
 				.in('id', cleaningIds)
-				.in('status', ['requested', 'confirmed'])
+				.not('status', 'in', '(completed,in_progress)')
 				.is('deleted_at', null);
-			const cancelIds = (cleanings ?? []).map((cleaning) => cleaning.id);
-			if (cancelIds.length > 0) {
-				const { error: cancelError } = await admin
-					.from('cleanings')
-					.update({ status: 'cancelled' })
-					.in('id', cancelIds);
-				if (cancelError) {
-					console.error('[ical-feeds] Failed to cancel cleanings:', cancelError.message);
-					return jsonResponse({ error: 'Failed to cancel cleanings' }, 500, origin);
+			const deleteIds = (cleanings ?? []).map((cleaning) => cleaning.id);
+			if (deleteIds.length > 0) {
+				const timestamp = new Date().toISOString();
+				const childTables = ['cleaning_tasks', 'evidence_media', 'cleaning_reports'];
+				for (const table of childTables) {
+					const { error: childError } = await admin
+						.from(table)
+						.update({ deleted_at: timestamp })
+						.in('cleaning_id', deleteIds)
+						.is('deleted_at', null);
+					if (childError) {
+						console.error(`[ical-feeds] Failed to delete ${table}:`, childError.message);
+						return jsonResponse({ error: 'Failed to delete cleanings' }, 500, origin);
+					}
 				}
+				const { error: deleteError } = await admin
+					.from('cleanings')
+					.update({ deleted_at: timestamp })
+					.in('id', deleteIds);
+				if (deleteError) {
+					console.error('[ical-feeds] Failed to delete cleanings:', deleteError.message);
+					return jsonResponse({ error: 'Failed to delete cleanings' }, 500, origin);
+				}
+			}
+		}
+	}
 			}
 		}
 	}

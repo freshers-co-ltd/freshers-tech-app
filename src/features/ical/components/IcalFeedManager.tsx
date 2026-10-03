@@ -71,7 +71,7 @@ export function IcalFeedManager({ propertyId }: IcalFeedManagerProps) {
 	const [isEditFormOpen, setIsEditFormOpen] = useState(false);
 	const [deletingFeed, setDeletingFeed] = useState<IcalFeed | null>(null);
 	const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-	const [cancelCleanings, setCancelCleanings] = useState(false);
+	const [deleteCleanings, setDeleteCleanings] = useState(false);
 
 	const handleFormSubmit = async (payload: CreateFeedPayload | UpdateFeedPayload) => {
 		const result = await createFeed(payload as CreateFeedPayload);
@@ -100,7 +100,7 @@ export function IcalFeedManager({ propertyId }: IcalFeedManagerProps) {
 
 	const openDeleteConfirm = (feed: IcalFeed) => {
 		setDeletingFeed(feed);
-		setCancelCleanings(false);
+		setDeleteCleanings(false);
 		setIsDeleteConfirmOpen(true);
 	};
 
@@ -108,7 +108,7 @@ export function IcalFeedManager({ propertyId }: IcalFeedManagerProps) {
 		if (!deletingFeed) {
 			return;
 		}
-		void deleteFeed({ feedId: deletingFeed.id, cancelCleanings }).then((result) => {
+		void deleteFeed({ feedId: deletingFeed.id, deleteCleanings }).then((result) => {
 			if (result.success) {
 				setDeletingFeed(null);
 				setIsDeleteConfirmOpen(false);
@@ -228,15 +228,15 @@ export function IcalFeedManager({ propertyId }: IcalFeedManagerProps) {
 					</AlertDialogHeader>
 					<div className="flex items-start gap-2">
 						<Checkbox
-							id="ical-delete-cancel"
-							checked={cancelCleanings}
-							onCheckedChange={(checked) => setCancelCleanings(checked === true)}
+							id="ical-delete-with-cleanings"
+							checked={deleteCleanings}
+							onCheckedChange={(checked) => setDeleteCleanings(checked === true)}
 						/>
-						<label htmlFor="ical-delete-cancel" className="text-sm">
-							{DICT.ICAL.DELETE_CANCEL_CLEANINGS}
+						<label htmlFor="ical-delete-with-cleanings" className="text-sm">
+							{DICT.ICAL.DELETE_WITH_CLEANINGS}
 						</label>
 					</div>
-					{cancelCleanings && (
+					{deleteCleanings && (
 						<p className="text-xs text-muted-foreground">
 							{DICT.ICAL.DELETE_WITH_CLEANINGS_MESSAGE}
 						</p>

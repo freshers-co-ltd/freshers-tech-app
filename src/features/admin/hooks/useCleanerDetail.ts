@@ -28,29 +28,38 @@ export function useCleanerDetail(
 
 	const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-	const fetchCleanerDetail = useCallback(async () => {
-		if (!cleanerId) {
-			setCleaner(null);
-			setLoading(false);
-			return;
-		}
+	const fetchCleanerDetail = useCallback(
+		async (skipLoadingState = false) => {
+			if (!cleanerId) {
+				setCleaner(null);
+				if (!skipLoadingState) {
+					setLoading(false);
+				}
+				return;
+			}
 
-		setLoading(true);
-		const result = await userService.getCleanerDetail(
-			cleanerId,
-			cleaningsSortField,
-			cleaningsSortDirection,
-		);
+			if (!skipLoadingState) {
+				setLoading(true);
+			}
+			const result = await userService.getCleanerDetail(
+				cleanerId,
+				cleaningsSortField,
+				cleaningsSortDirection,
+			);
 
-		if (result.error) {
-			toast.error(result.error);
-			setCleaner(null);
-		} else {
-			setCleaner(result.data as AdminCleanerDetail | null);
-		}
+			if (result.error) {
+				toast.error(result.error);
+				setCleaner(null);
+			} else {
+				setCleaner(result.data as AdminCleanerDetail | null);
+			}
 
-		setLoading(false);
-	}, [cleanerId, cleaningsSortField, cleaningsSortDirection]);
+			if (!skipLoadingState) {
+				setLoading(false);
+			}
+		},
+		[cleanerId, cleaningsSortField, cleaningsSortDirection],
+	);
 
 	const refresh = useCallback(async () => {
 		await fetchCleanerDetail();
@@ -85,7 +94,7 @@ export function useCleanerDetail(
 					table: 'cleanings',
 				},
 				() => {
-					fetchCleanerDetail();
+					fetchCleanerDetail(true);
 				},
 			)
 			.subscribe((status: string, err?: unknown) => {

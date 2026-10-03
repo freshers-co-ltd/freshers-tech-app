@@ -64,7 +64,7 @@ export function CleaningActionButtons({
 		);
 	}
 
-	if (isHost && isUnverified) {
+	if ((isHost || isAdmin) && isUnverified) {
 		return (
 			<div className="p-3 border-t shrink-0">
 				<div className="flex flex-col sm:flex-row gap-3">

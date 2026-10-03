@@ -13,6 +13,7 @@ import { AssignCleanerDialog } from '@/features/admin/components/AssignCleanerDi
 import { cleaningService as adminCleaningService } from '@/features/admin/services/cleaningService';
 import type { AdminCleaning } from '@/features/admin/types';
 import type { UserRole } from '@/features/auth/types';
+import { useCleanings } from '@/features/cleanings/CleaningContext';
 import { CleaningDialogs } from '@/features/cleanings/components/CleaningDialogs';
 import type { CleaningFormValues } from '@/features/cleanings/components/CleaningForm';
 import type { CleaningRequest } from '@/features/cleanings/types';
@@ -90,6 +91,18 @@ export function CleaningsTable({
 	const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
 	const [selectedCleaningId, setSelectedCleaningId] = useState<string>('');
 	const [selectedCleanerId, setSelectedCleanerId] = useState<string>('');
+	const { verifyCleaning } = useCleanings();
+
+	const handleVerify = useCallback(
+		async (id: string) => {
+			const result = await verifyCleaning(id);
+			if (result.success) {
+				modal.handleClose();
+				onRefresh?.();
+			}
+		},
+		[verifyCleaning, modal, onRefresh],
+	);
 
 	const handleSort = useCallback(
 		(field: string) => {
@@ -462,6 +475,7 @@ export function CleaningsTable({
 				deletingId={modal.deletingId}
 				onEdit={modal.openEdit}
 				onDelete={(id) => modal.setDeletingId(id)}
+				onVerify={handleVerify}
 				onDeleteConfirm={async () => {
 					if (modal.deletingId) {
 						await handleDelete();

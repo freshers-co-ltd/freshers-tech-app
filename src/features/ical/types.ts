@@ -26,7 +26,7 @@ export type CreateFeedPayload = {
 
 export type DeleteFeedPayload = {
 	feedId: string;
-	cancelCleanings: boolean;
+	deleteCleanings: boolean;
 };
 
 export type UpdateFeedPayload = {

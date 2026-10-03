@@ -135,7 +135,7 @@ export function UserDetailLayout({
 		dialogs.close();
 	};
 
-	if (isLoading) {
+	if (isLoading && !user) {
 		return (
 			<main className="max-width-container">
 				<header className="mb-6">

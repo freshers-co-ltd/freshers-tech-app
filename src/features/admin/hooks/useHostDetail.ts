@@ -35,37 +35,46 @@ export function useHostDetail(
 
 	const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-	const fetchHostDetail = useCallback(async () => {
-		if (!hostId) {
-			setHost(null);
-			setLoading(false);
-			return;
-		}
+	const fetchHostDetail = useCallback(
+		async (skipLoadingState = false) => {
+			if (!hostId) {
+				setHost(null);
+				if (!skipLoadingState) {
+					setLoading(false);
+				}
+				return;
+			}
 
-		setLoading(true);
-		const result = await userService.getHostDetail(
+			if (!skipLoadingState) {
+				setLoading(true);
+			}
+			const result = await userService.getHostDetail(
+				hostId,
+				propertiesSortField,
+				propertiesSortDirection,
+				cleaningsSortField,
+				cleaningsSortDirection,
+			);
+
+			if (result.error) {
+				toast.error(result.error);
+				setHost(null);
+			} else {
+				setHost(result.data as AdminHostDetail | null);
+			}
+
+			if (!skipLoadingState) {
+				setLoading(false);
+			}
+		},
+		[
 			hostId,
 			propertiesSortField,
 			propertiesSortDirection,
 			cleaningsSortField,
 			cleaningsSortDirection,
-		);
-
-		if (result.error) {
-			toast.error(result.error);
-			setHost(null);
-		} else {
-			setHost(result.data as AdminHostDetail | null);
-		}
-
-		setLoading(false);
-	}, [
-		hostId,
-		propertiesSortField,
-		propertiesSortDirection,
-		cleaningsSortField,
-		cleaningsSortDirection,
-	]);
+		],
+	);
 
 	const refresh = useCallback(async () => {
 		await fetchHostDetail();
@@ -101,7 +110,7 @@ export function useHostDetail(
 					filter: `host_id=eq.${hostId}`,
 				},
 				() => {
-					fetchHostDetail();
+					fetchHostDetail(true);
 				},
 			)
 			.subscribe((status: string, err?: unknown) => {

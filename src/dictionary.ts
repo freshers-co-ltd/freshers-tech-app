@@ -746,9 +746,9 @@ export const DICT = {
 		},
 		GENERIC_CONFIRM: 'This link is from a booking platform calendar.',
 		DETECTED_SOURCE_HINT: 'Looks like a {platform} calendar link.',
-		DELETE_CANCEL_CLEANINGS: 'Cancel the cleanings created by this calendar',
+		DELETE_WITH_CLEANINGS: 'Delete the cleanings created by this calendar',
 		DELETE_WITH_CLEANINGS_MESSAGE:
-			'The cleanings created by this calendar will be cancelled. Cleanings that already started will stay.',
+			'The cleanings created by this calendar will be permanently deleted. Cleanings that already started will stay.',
 		CREATE: {
 			TITLE: 'Connect a calendar',
 			MESSAGE: 'Paste the link from your booking platform calendar.',
