@@ -1,3 +1,7 @@
+## 0.19.0 (2026-10-03)
+
+* feat(ical): Add imported cleanings verify workflow for admins ([abd82aa](https://github.com/freshers-co-ltd/freshers-tech-app/commit/abd82aa))
+
 ## <small>0.18.2 (2026-10-01)</small>
 
 * fix(ical): stop duplicate sync cleanings ([c7dae07](https://github.com/freshers-co-ltd/freshers-tech-app/commit/c7dae07))
