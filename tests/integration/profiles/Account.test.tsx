@@ -124,7 +124,7 @@ describe('Account Page', () => {
 		);
 
 		await waitFor(() => {
-			expect(toast.error).toHaveBeenCalledWith('Deletion failed');
+			expect(toast.error).toHaveBeenCalledWith(DICT.ACCOUNT.DELETE_ACCOUNT.TOAST_ERROR);
 		});
 	});
 
