@@ -114,13 +114,13 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 								<ImageWithFallback
 									key={activeImage}
 									src={activeImage}
-									className="size-full object-contain"
+									className="absolute inset-0 size-full object-cover"
 									alt="Property"
 								/>
 								<Button
 									size="icon"
 									variant="secondary"
-									className="absolute bottom-2 right-2"
+									className="absolute bottom-2 right-2 z-10"
 									onClick={() => setIsFullScreen(true)}>
 									<Maximize2 className="size-4" />
 								</Button>

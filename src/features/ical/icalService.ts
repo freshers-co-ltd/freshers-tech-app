@@ -107,7 +107,13 @@ const invokeFeedFunction = async <T>(
 	});
 
 	if (error) {
+		if (!(error instanceof FunctionsHttpError)) {
+			return { data: null, error: DICT.ICAL.ERRORS.SERVICE_UNAVAILABLE };
+		}
 		const body = await readErrorBody(error);
+		if (!body.code && !body.error) {
+			return { data: null, error: DICT.ICAL.ERRORS.SERVICE_UNAVAILABLE };
+		}
 		return { data: null, error: mapFunctionError(body) };
 	}
 
