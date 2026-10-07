@@ -242,7 +242,7 @@ export function AccountPage() {
 							}
 							const { error } = await userService.purgeUserPii(user.id);
 							if (error) {
-								toast.error(error);
+								toast.error(dict.DELETE_ACCOUNT.TOAST_ERROR);
 								return;
 							}
 							toast.success(dict.DELETE_ACCOUNT.TOAST_SUCCESS);
