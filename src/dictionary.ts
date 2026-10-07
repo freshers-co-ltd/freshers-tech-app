@@ -825,6 +825,7 @@ export const DICT = {
 			PROPERTY_NOT_FOUND: 'Property not found.',
 			NOT_CONFIRMED:
 				'Confirm that this link is from a booking platform calendar before connecting it.',
+			SERVICE_UNAVAILABLE: 'Calendar sync is unavailable right now.',
 		},
 	},
 	PWA: {

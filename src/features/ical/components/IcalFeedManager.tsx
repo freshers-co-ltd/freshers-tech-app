@@ -55,6 +55,7 @@ export function IcalFeedManager({ propertyId }: IcalFeedManagerProps) {
 	const {
 		feeds,
 		isLoading,
+		loadError,
 		isSyncingId,
 		isDeletingId,
 		createFeed,
@@ -171,7 +172,9 @@ export function IcalFeedManager({ propertyId }: IcalFeedManagerProps) {
 				);
 			})}
 
-			{feeds.length === 0 && !isFormOpen && (
+			{loadError && feeds.length === 0 && <p className="text-sm text-destructive">{loadError}</p>}
+
+			{!loadError && feeds.length === 0 && !isFormOpen && (
 				<p className="text-sm text-muted-foreground">{DICT.ICAL.EMPTY}</p>
 			)}
 

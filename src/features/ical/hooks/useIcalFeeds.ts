@@ -19,6 +19,7 @@ export function useIcalFeeds(propertyId: string, onSyncComplete?: () => void) {
 	const { user } = useAuth();
 	const [feeds, setFeeds] = useState<IcalFeed[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
+	const [loadError, setLoadError] = useState<string | null>(null);
 	const [isSyncingId, setIsSyncingId] = useState<string | null>(null);
 	const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
 	const fetchAbortRef = useRef<AbortController | null>(null);
@@ -35,9 +36,10 @@ export function useIcalFeeds(propertyId: string, onSyncComplete?: () => void) {
 				return [];
 			}
 			if (error) {
-				toast.error(error);
+				setLoadError(error);
 				return [];
 			}
+			setLoadError(null);
 			if (data) {
 				const filtered = data.filter((feed) => feed.property_id === propertyId);
 				setFeeds(filtered);
@@ -167,6 +169,7 @@ export function useIcalFeeds(propertyId: string, onSyncComplete?: () => void) {
 	return {
 		feeds,
 		isLoading,
+		loadError,
 		isSyncingId,
 		isDeletingId,
 		createFeed,
