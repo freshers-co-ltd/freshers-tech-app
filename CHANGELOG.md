@@ -1,3 +1,8 @@
+## <small>0.20.1 (2026-10-07)</small>
+
+* fix(account): Stop soft-deleted records from blocking account deletion ([dfa642e](https://github.com/freshers-co-ltd/freshers-tech-app/commit/dfa642e))
+* fix(properties): Display image correctly on ios and clarify ical errors ([03dedbc](https://github.com/freshers-co-ltd/freshers-tech-app/commit/03dedbc))
+
 ## 0.20.0 (2026-10-07)
 
 * fix(stripe): Resolve redirect URLs from request origin ([5ade9e4](https://github.com/freshers-co-ltd/freshers-tech-app/commit/5ade9e4))
