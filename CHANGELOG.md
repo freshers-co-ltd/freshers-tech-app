@@ -1,3 +1,12 @@
+## 0.20.0 (2026-10-07)
+
+* fix(stripe): Resolve redirect URLs from request origin ([5ade9e4](https://github.com/freshers-co-ltd/freshers-tech-app/commit/5ade9e4))
+* fix(stripe): Stop account deletion when Stripe cancellation fails and fix test regressions ([e38e921](https://github.com/freshers-co-ltd/freshers-tech-app/commit/e38e921))
+* test(stripe): Add integration tests and fix test regressions ([d43fe4e](https://github.com/freshers-co-ltd/freshers-tech-app/commit/d43fe4e))
+* test(stripe): Add subscription E2E tests and fix regressions ([a30ddb5](https://github.com/freshers-co-ltd/freshers-tech-app/commit/a30ddb5))
+* feat(stripe): Add subscription system database schema and edge functions ([7a37a07](https://github.com/freshers-co-ltd/freshers-tech-app/commit/7a37a07))
+* feat(stripe): Add subscription types, gate, and flow pages ([28dbf03](https://github.com/freshers-co-ltd/freshers-tech-app/commit/28dbf03))
+
 ## 0.19.0 (2026-10-03)
 
 * feat(ical): Add imported cleanings verify workflow for admins ([abd82aa](https://github.com/freshers-co-ltd/freshers-tech-app/commit/abd82aa))
