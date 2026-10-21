@@ -621,6 +621,7 @@ export const DICT = {
 				TOAST_SUCCESS: 'User deleted',
 				TOAST_ERROR: 'Failed to delete user',
 			},
+			TOAST_LOAD_ERROR: 'Failed to load users',
 		},
 		CLEANINGS: {
 			TITLE: 'Cleaning Operations',
@@ -668,6 +669,7 @@ export const DICT = {
 						COMPLETED: 'Completed Cleanings',
 						AVG_COMPLETION: 'Average Completion Time',
 					},
+					TOAST_LOAD_ERROR: 'Failed to load cleaner details',
 				},
 				HOST_DETAIL: {
 					PROPERTIES_TITLE: 'Properties',
@@ -683,6 +685,7 @@ export const DICT = {
 						PENDING_CONFIRMED: 'Pending confirmed cleanings',
 						IN_PROGRESS: 'Cleanings in progress',
 					},
+					TOAST_LOAD_ERROR: 'Failed to load host details',
 				},
 			},
 		},

@@ -902,7 +902,9 @@ export type Database = {
 					deleted_at: string;
 					email: string;
 					full_name: string;
+					host_subscription_status: string;
 					id: string;
+					is_invited: boolean;
 					is_online: boolean;
 					is_verified: boolean;
 					last_seen_at: string;

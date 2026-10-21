@@ -19,13 +19,14 @@ function validateSingle<T>(
 	schema: z.ZodTypeAny,
 	data: unknown,
 	label: string,
+	userMessage: string,
 ): { valid: true; data: T } | { valid: false; error: string } {
 	const result = schema.safeParse(data);
 	if (!result.success) {
 		if (import.meta.env.DEV) {
 			console.error(`[${label}] RPC response validation failed:`, result.error.issues);
 		}
-		return { valid: false, error: `Invalid ${label} response` };
+		return { valid: false, error: userMessage };
 	}
 	return { valid: true, data: result.data as T };
 }
@@ -34,13 +35,14 @@ function validateArray<T>(
 	schema: z.ZodTypeAny,
 	data: unknown,
 	label: string,
+	userMessage: string,
 ): { valid: true; data: T[] } | { valid: false; error: string } {
 	const result = z.array(schema).safeParse(data);
 	if (!result.success) {
 		if (import.meta.env.DEV) {
 			console.error(`[${label}] RPC response validation failed:`, result.error.issues);
 		}
-		return { valid: false, error: `Invalid ${label} response` };
+		return { valid: false, error: userMessage };
 	}
 	return { valid: true, data: result.data as T[] };
 }
@@ -107,7 +109,12 @@ export const userService = {
 			return { data: null, error: mapDatabaseError(error) };
 		}
 
-		const users = validateArray<AdminUser>(AdminUserSchema, data ?? [], 'AdminUser');
+		const users = validateArray<AdminUser>(
+			AdminUserSchema,
+			data ?? [],
+			'AdminUser',
+			DICT.ADMIN.USERS.TOAST_LOAD_ERROR,
+		);
 		if (!users.valid) {
 			return { data: null, error: users.error };
 		}
@@ -156,6 +163,7 @@ export const userService = {
 			AdminHostDetailSchema,
 			data[0],
 			'AdminHostDetail',
+			DICT.ADMIN.CLEANINGS.DETAIL.HOST_DETAIL.TOAST_LOAD_ERROR,
 		);
 		if (!hostDetail.valid) {
 			return { data: null, error: hostDetail.error };
@@ -204,6 +212,7 @@ export const userService = {
 			AdminCleanerDetailSchema,
 			data[0],
 			'AdminCleanerDetail',
+			DICT.ADMIN.CLEANINGS.DETAIL.CLEANER_DETAIL.TOAST_LOAD_ERROR,
 		);
 		if (!cleanerDetail.valid) {
 			return { data: null, error: cleanerDetail.error };
