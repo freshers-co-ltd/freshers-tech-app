@@ -8,8 +8,34 @@ import { CleaningDetailView } from '@/features/cleanings/components/CleaningDeta
 import { CleaningForm } from '@/features/cleanings/components/CleaningForm';
 import { CleaningGrid } from '@/features/cleanings/components/CleaningGrid';
 import { useHostCleanings } from '@/features/cleanings/hooks/useHostCleanings';
+import type { CleaningStatus } from '@/features/cleanings/types';
 import { CLEANING_STATUS } from '@/features/cleanings/types';
 import { ManagementLayout } from '@/layouts/ManagementLayout';
+
+const getDeleteCopy = (status: CleaningStatus | undefined) => {
+	if (status === CLEANING_STATUS.UNVERIFIED) {
+		return {
+			title: DICT.CLEANINGS.REJECT.TITLE,
+			message: DICT.CLEANINGS.REJECT.MESSAGE,
+			confirmLabel: DICT.CLEANINGS.DELETE.BUTTON_SUBMIT,
+			pendingLabel: DICT.CLEANINGS.DELETE.BUTTON_SUBMITTING,
+		};
+	}
+	if (status === CLEANING_STATUS.REQUESTED) {
+		return {
+			title: DICT.CLEANINGS.CANCEL.TITLE,
+			message: DICT.CLEANINGS.CANCEL.MESSAGE,
+			confirmLabel: DICT.CLEANINGS.CANCEL.BUTTON_SUBMIT,
+			pendingLabel: DICT.CLEANINGS.CANCEL.BUTTON_SUBMITTING,
+		};
+	}
+	return {
+		title: DICT.CLEANINGS.DELETE.TITLE,
+		message: DICT.CLEANINGS.DELETE.HOST_MESSAGE,
+		confirmLabel: DICT.CLEANINGS.DELETE.BUTTON_SUBMIT,
+		pendingLabel: DICT.CLEANINGS.DELETE.BUTTON_SUBMITTING,
+	};
+};
 
 export function HostCleaningsPage() {
 	const {
@@ -28,7 +54,7 @@ export function HostCleaningsPage() {
 	} = useHostCleanings();
 
 	const deletingCleaning = cleanings.find((c) => c.id === modal.deletingId);
-	const isUnverifiedDelete = deletingCleaning?.status === CLEANING_STATUS.UNVERIFIED;
+	const deleteCopy = getDeleteCopy(deletingCleaning?.status);
 
 	return (
 		<>
@@ -89,10 +115,10 @@ export function HostCleaningsPage() {
 				onDeleteCancel={() => modal.setDeletingId(null)}
 				onDeleteConfirm={handleDelete}
 				isDeleting={isDeleting}
-				deleteTitle={isUnverifiedDelete ? DICT.CLEANINGS.REJECT.TITLE : DICT.CLEANINGS.DELETE.TITLE}
-				deleteMessage={
-					isUnverifiedDelete ? DICT.CLEANINGS.REJECT.MESSAGE : DICT.CLEANINGS.DELETE.MESSAGE
-				}
+				deleteTitle={deleteCopy.title}
+				deleteMessage={deleteCopy.message}
+				deleteConfirmLabel={deleteCopy.confirmLabel}
+				deletePendingLabel={deleteCopy.pendingLabel}
 			/>
 
 			{pendingFormValues && (

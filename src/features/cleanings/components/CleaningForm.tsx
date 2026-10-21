@@ -87,7 +87,7 @@ export function CleaningForm({
 	showCleanerPay = false,
 }: CleaningFormProps) {
 	const isRestricted = initialData
-		? STATUS_GROUPS.CAN_EDIT_RESTRICTED.includes(initialData.status)
+		? STATUS_GROUPS.HOST_ADMIN_CAN_EDIT_RESTRICTED.includes(initialData.status)
 		: false;
 	const [step, setStep] = useState<1 | 2 | 3>(isRestricted ? 3 : initialData ? 2 : 1);
 	const [entryMode, setEntryMode] = useState<'select' | 'create'>(

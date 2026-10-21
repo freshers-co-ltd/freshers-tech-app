@@ -50,8 +50,21 @@ describe('CleaningActionButtons', () => {
 		renderButtons({ userRole: 'admin', status: CLEANING_STATUS.REQUESTED });
 
 		expect(screen.getByRole('button', { name: DICT.COMMON.ACTIONS.EDIT })).toBeInTheDocument();
-		expect(screen.getByRole('button', { name: DICT.COMMON.ACTIONS.DELETE })).toBeInTheDocument();
+		expect(
+			screen.getByRole('button', { name: DICT.CLEANINGS.DELETE.BUTTON_SUBMIT }),
+		).toBeInTheDocument();
 		expect(screen.queryByRole('button', { name: DICT.ICAL.VERIFY })).not.toBeInTheDocument();
+	});
+
+	it('shows Cancel Cleaning instead of Delete for host requested cleanings', () => {
+		renderButtons({ userRole: 'host', status: CLEANING_STATUS.REQUESTED });
+
+		expect(
+			screen.getByRole('button', { name: DICT.CLEANINGS.CANCEL.BUTTON_SUBMIT }),
+		).toBeInTheDocument();
+		expect(
+			screen.queryByRole('button', { name: DICT.CLEANINGS.DELETE.BUTTON_SUBMIT }),
+		).not.toBeInTheDocument();
 	});
 
 	it('shows Clock In for cleaner confirmed cleanings', () => {

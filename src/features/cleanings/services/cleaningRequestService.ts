@@ -195,7 +195,10 @@ export const cleaningRequestService = {
 		return this.getCleaningRequestById(id);
 	},
 
-	async softDeleteCleaningRequest(id: string): Promise<{ error: string | null }> {
+	async softDeleteCleaningRequest(id: string): Promise<{
+		error: string | null;
+		outcome: 'cancelled' | 'deleted' | null;
+	}> {
 		const { data: cleaning, error: fetchError } = await supabase
 			.from('cleanings')
 			.select('status')
@@ -203,7 +206,7 @@ export const cleaningRequestService = {
 			.single();
 
 		if (fetchError) {
-			return { error: mapDatabaseError(fetchError) };
+			return { error: mapDatabaseError(fetchError), outcome: null };
 		}
 
 		if (cleaning?.status === CLEANING_STATUS.REQUESTED) {
@@ -211,9 +214,9 @@ export const cleaningRequestService = {
 				p_cleaning_id: id,
 			});
 			if (cancelError) {
-				return { error: mapDatabaseError(cancelError) };
+				return { error: mapDatabaseError(cancelError), outcome: null };
 			}
-			return { error: null };
+			return { error: null, outcome: 'cancelled' };
 		}
 
 		const { error } = await supabase.rpc('soft_delete_cleaning', {
@@ -221,19 +224,22 @@ export const cleaningRequestService = {
 		});
 
 		if (error) {
-			return { error: mapDatabaseError(error) };
+			return { error: mapDatabaseError(error), outcome: null };
 		}
 
-		return { error: null };
+		return { error: null, outcome: 'deleted' };
 	},
 
-	async hardDeleteCleaningRequest(id: string): Promise<{ error: string | null }> {
+	async hardDeleteCleaningRequest(id: string): Promise<{
+		error: string | null;
+		outcome: 'deleted' | null;
+	}> {
 		const { error } = await supabase.from('cleanings').delete().eq('id', id);
 
 		if (error) {
-			return { error: mapDatabaseError(error) };
+			return { error: mapDatabaseError(error), outcome: null };
 		}
 
-		return { error: null };
+		return { error: null, outcome: 'deleted' };
 	},
 };

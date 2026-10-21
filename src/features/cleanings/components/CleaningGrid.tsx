@@ -35,7 +35,7 @@ export function CleaningGrid({ onView, onEdit, onDelete, userRole }: CleaningGri
 	const filteredCleanings = useCleaningFilters(cleanings, { searchQuery, statusFilter, sortBy });
 
 	const isHost = userRole === 'host';
-	const statusGroups = isHost ? STATUS_GROUPS.ALL : STATUS_GROUPS.CLEANER_VIEW;
+	const statusGroups = isHost ? STATUS_GROUPS.HOST_ALL : STATUS_GROUPS.CLEANER_VIEW;
 
 	return (
 		<div className="space-y-6">

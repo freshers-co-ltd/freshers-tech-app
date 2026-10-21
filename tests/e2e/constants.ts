@@ -96,9 +96,15 @@ export const DICT = {
 			BUTTON_SUBMIT: 'Request Cleaning',
 			TOAST_SUCCESS: 'Cleaning request created successfully',
 		},
-		DELETE: {
+		CANCEL: {
 			TITLE: 'Cancel cleaning request?',
-			TOAST: 'Cleaning request cancelled successfully',
+			BUTTON_SUBMIT: 'Cancel Cleaning',
+			TOAST_SUCCESS: 'Cleaning request cancelled successfully',
+		},
+		DELETE: {
+			TITLE: 'Delete this cleaning request?',
+			BUTTON_SUBMIT: 'Delete Cleaning',
+			TOAST_SUCCESS: 'Cleaning request deleted successfully',
 		},
 		ASSIGN_CLEANER: {
 			TITLE: 'Assign Cleaner',
