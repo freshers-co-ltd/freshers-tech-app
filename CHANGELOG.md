@@ -1,3 +1,7 @@
+## 0.21.0 (2026-10-21)
+
+* feat(cleanings): Allow hosts to delete their own cleanings ([ae14158](https://github.com/freshers-co-ltd/freshers-tech-app/commit/ae14158))
+
 ## <small>0.20.2 (2026-10-21)</small>
 
 * fix(admin): Return invite and subscription fields for cleaner detail RPC ([45e9e38](https://github.com/freshers-co-ltd/freshers-tech-app/commit/45e9e38))
