@@ -1,3 +1,7 @@
+## <small>0.20.2 (2026-10-21)</small>
+
+* fix(admin): Return invite and subscription fields for cleaner detail RPC ([45e9e38](https://github.com/freshers-co-ltd/freshers-tech-app/commit/45e9e38))
+
 ## <small>0.20.1 (2026-10-07)</small>
 
 * fix(account): Stop soft-deleted records from blocking account deletion ([dfa642e](https://github.com/freshers-co-ltd/freshers-tech-app/commit/dfa642e))
