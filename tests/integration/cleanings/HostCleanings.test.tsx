@@ -158,7 +158,7 @@ describe('Host Cleanings Page', () => {
 		expect(await screen.findByRole('dialog')).toBeInTheDocument();
 	});
 
-	it('shows delete confirmation dialog when delete clicked', async () => {
+	it('shows cancel confirmation dialog when cancel clicked', async () => {
 		const user = userEvent.setup();
 		cleanupFrom = mockTableData('cleanings', [buildRawCleaning()]);
 
@@ -170,9 +170,9 @@ describe('Host Cleanings Page', () => {
 
 		expect(await screen.findByRole('dialog')).toBeInTheDocument();
 
-		const deleteButton = screen.getByRole('button', { name: /delete/i });
-		await user.click(deleteButton);
+		const cancelButton = screen.getByRole('button', { name: DICT.CLEANINGS.CANCEL.BUTTON_SUBMIT });
+		await user.click(cancelButton);
 
-		expect(await screen.findByText(DICT.CLEANINGS.DELETE.TITLE)).toBeInTheDocument();
+		expect(await screen.findByText(DICT.CLEANINGS.CANCEL.TITLE)).toBeInTheDocument();
 	});
 });

@@ -102,14 +102,12 @@ export function CleaningDialogs({
 				<AlertDialogContent>
 					<AlertDialogHeader>
 						<AlertDialogTitle>
-							{userRole === 'admin'
-								? DICT.CLEANINGS.DELETE.ADMIN_TITLE
-								: DICT.CLEANINGS.DELETE.TITLE}
+							{userRole === 'admin' ? DICT.CLEANINGS.DELETE.TITLE : DICT.CLEANINGS.CANCEL.TITLE}
 						</AlertDialogTitle>
 						<AlertDialogDescription>
 							{userRole === 'admin'
 								? DICT.CLEANINGS.DELETE.ADMIN_MESSAGE
-								: DICT.CLEANINGS.DELETE.MESSAGE}
+								: DICT.CLEANINGS.CANCEL.MESSAGE}
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
@@ -117,7 +115,9 @@ export function CleaningDialogs({
 						<AlertDialogAction
 							className="bg-destructive text-white hover:bg-destructive/90"
 							onClick={onDeleteConfirm}>
-							{userRole === 'admin' ? DICT.COMMON.ACTIONS.DELETE : DICT.COMMON.ACTIONS.CANCEL}
+							{userRole === 'admin'
+								? DICT.CLEANINGS.DELETE.BUTTON_SUBMIT
+								: DICT.CLEANINGS.CANCEL.BUTTON_SUBMIT}
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>

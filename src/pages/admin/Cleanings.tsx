@@ -86,7 +86,7 @@ export function AdminCleaningsPage() {
 			toast.error(result.error);
 			throw new Error(result.error);
 		}
-		toast.success(DICT.CLEANINGS.DELETE.ADMIN_TOAST_SUCCESS);
+		toast.success(DICT.CLEANINGS.DELETE.TOAST_SUCCESS);
 	}, []);
 
 	const refreshAll = useCallback(async () => {

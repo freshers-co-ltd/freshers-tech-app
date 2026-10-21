@@ -34,6 +34,8 @@ interface ManagementLayoutProps {
 	isDeleting?: boolean;
 	deleteTitle: string;
 	deleteMessage: string;
+	deleteConfirmLabel?: string;
+	deletePendingLabel?: string;
 }
 
 export function ManagementLayout({
@@ -56,6 +58,8 @@ export function ManagementLayout({
 	isDeleting = false,
 	deleteTitle,
 	deleteMessage,
+	deleteConfirmLabel = DICT.COMMON.ACTIONS.DELETE,
+	deletePendingLabel = DICT.COMMON.ACTIONS.DELETING,
 }: ManagementLayoutProps) {
 	return (
 		<main className="max-width-container p-2 md:p-8">
@@ -96,7 +100,7 @@ export function ManagementLayout({
 							className="bg-destructive text-white hover:bg-destructive/90"
 							disabled={isDeleting}
 							onClick={onDeleteConfirm}>
-							{isDeleting ? DICT.COMMON.ACTIONS.DELETING : DICT.COMMON.ACTIONS.DELETE}
+							{isDeleting ? deletePendingLabel : deleteConfirmLabel}
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>

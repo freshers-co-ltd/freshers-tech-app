@@ -84,7 +84,7 @@ export function useCleaningsOperations(setCleanings: Dispatch<SetStateAction<Cle
 
 	const deleteCleaning = useCallback(
 		async (id: string, hard: boolean = false, status?: CleaningStatus) => {
-			const { error } = hard
+			const { error, outcome } = hard
 				? await cleaningsService.hardDeleteCleaningRequest(id)
 				: await cleaningsService.softDeleteCleaningRequest(id);
 
@@ -93,11 +93,24 @@ export function useCleaningsOperations(setCleanings: Dispatch<SetStateAction<Cle
 				return { success: false };
 			}
 
-			setCleanings((prev) => prev.filter((c) => c.id !== id));
+			if (outcome === 'cancelled') {
+				setCleanings((prev) =>
+					prev.map((c) =>
+						c.id === id
+							? { ...c, status: CLEANING_STATUS.CANCELLED, updated_at: new Date().toISOString() }
+							: c,
+					),
+				);
+			} else {
+				setCleanings((prev) => prev.filter((c) => c.id !== id));
+			}
+
 			toast.success(
 				status === CLEANING_STATUS.UNVERIFIED
 					? DICT.CLEANINGS.REJECT.TOAST_SUCCESS
-					: DICT.CLEANINGS.DELETE.TOAST_SUCCESS,
+					: status === CLEANING_STATUS.REQUESTED
+						? DICT.CLEANINGS.CANCEL.TOAST_SUCCESS
+						: DICT.CLEANINGS.DELETE.TOAST_SUCCESS,
 			);
 			return { success: true };
 		},

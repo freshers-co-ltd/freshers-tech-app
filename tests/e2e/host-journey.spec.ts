@@ -120,7 +120,7 @@ test.describe('Host journey', () => {
 
 			await page.getByRole('button', { name: DICT.PROPERTIES.FORM.BUTTON_UPDATE }).click();
 
-			await expectToast(page, DICT.PROPERTIES.EDIT.TOAST);
+			await expectToast(page, DICT.PROPERTIES.EDIT.TOAST_SUCCESS);
 
 			await expect(page.getByText('123 Updated Street')).toBeVisible();
 		});
@@ -138,7 +138,7 @@ test.describe('Host journey', () => {
 				.getByRole('button', { name: DICT.COMMON.ACTIONS.DELETE })
 				.click();
 
-			await expectToast(page, DICT.PROPERTIES.DELETE.TOAST);
+			await expectToast(page, DICT.PROPERTIES.DELETE.TOAST_SUCCESS);
 
 			await expect(page.getByText('123 Test Street')).not.toBeVisible();
 		});
@@ -159,13 +159,13 @@ test.describe('Host journey', () => {
 
 			await expect(page.getByText('123 Test Street').first()).toBeVisible();
 
-			const cancelButton = page.getByRole('button', { name: DICT.COMMON.ACTIONS.DELETE });
+			const cancelButton = page.getByRole('button', { name: DICT.CLEANINGS.CANCEL.BUTTON_SUBMIT });
 			await cancelButton.click();
 
-			await expectDialogWithTitle(page, DICT.CLEANINGS.DELETE.TITLE);
-			await page.getByRole('button', { name: DICT.COMMON.ACTIONS.DELETE }).click();
+			await expectDialogWithTitle(page, DICT.CLEANINGS.CANCEL.TITLE);
+			await page.getByRole('button', { name: DICT.CLEANINGS.CANCEL.BUTTON_SUBMIT }).click();
 
-			await expectToast(page, DICT.CLEANINGS.DELETE.TOAST);
+			await expectToast(page, DICT.CLEANINGS.CANCEL.TOAST_SUCCESS);
 
 			await expect(page.getByRole('heading', { name: DICT.CLEANINGS.TITLE })).toBeVisible();
 		});

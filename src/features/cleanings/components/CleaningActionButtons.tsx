@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Pencil, Trash2, X } from 'lucide-react';
+import { Check, CircleX, Pencil, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DICT } from '@/dictionary';
 import type { UserRole } from '@/features/auth/types';
@@ -40,9 +40,10 @@ export function CleaningActionButtons({
 
 	const isConfirmed = status === CLEANING_STATUS.CONFIRMED;
 	const isInProgress = status === CLEANING_STATUS.IN_PROGRESS;
-	const isUnverified = status === CLEANING_STATUS.UNVERIFIED;
-	const canEdit = (isHost || isAdmin) && STATUS_GROUPS.CAN_EDIT.includes(status);
-	const canDelete = isAdmin || (isHost && STATUS_GROUPS.CAN_CANCEL.includes(status));
+	const canEdit = (isHost || isAdmin) && STATUS_GROUPS.HOST_ADMIN_CAN_EDIT.includes(status);
+	const canVerify = (isHost || isAdmin) && STATUS_GROUPS.HOST_ADMIN_CAN_VERIFY.includes(status);
+	const canDelete = isAdmin || (isHost && STATUS_GROUPS.HOST_CAN_REMOVE.includes(status));
+	const isCancelAction = isHost && status === CLEANING_STATUS.REQUESTED;
 
 	if (isCleaner && (isConfirmed || isInProgress)) {
 		return (
@@ -64,7 +65,7 @@ export function CleaningActionButtons({
 		);
 	}
 
-	if ((isHost || isAdmin) && isUnverified) {
+	if (canVerify) {
 		return (
 			<div className="p-3 border-t shrink-0">
 				<div className="flex flex-col sm:flex-row gap-3">
@@ -102,8 +103,14 @@ export function CleaningActionButtons({
 							variant="destructive"
 							className="flex-1"
 							onClick={() => cleaningId && onDelete?.(cleaningId)}>
-							<Trash2 className="mr-1 size-4" />
-							{DICT.COMMON.ACTIONS.DELETE}
+							{isCancelAction ? (
+								<CircleX className="mr-1 size-4" />
+							) : (
+								<Trash2 className="mr-1 size-4" />
+							)}
+							{isCancelAction
+								? DICT.CLEANINGS.CANCEL.BUTTON_SUBMIT
+								: DICT.CLEANINGS.DELETE.BUTTON_SUBMIT}
 						</Button>
 					)}
 				</div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { Banknote, Calendar, MapPin, Pencil, Trash2 } from 'lucide-react';
+import { Banknote, Calendar, CircleX, MapPin, Pencil, Trash2 } from 'lucide-react';
 import { memo, useMemo } from 'react';
 import { EntityBadge } from '@/components/EntityBadge';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
@@ -35,15 +35,17 @@ export const CleaningCard = memo(
 			if (!isHost) {
 				return false;
 			}
-			return STATUS_GROUPS.CAN_EDIT.includes(cleaning.status);
+			return STATUS_GROUPS.HOST_ADMIN_CAN_EDIT.includes(cleaning.status);
 		}, [cleaning.status, isHost]);
 
-		const canCancel = useMemo(() => {
+		const canDelete = useMemo(() => {
 			if (!isHost) {
 				return false;
 			}
-			return STATUS_GROUPS.CAN_CANCEL.includes(cleaning.status);
+			return STATUS_GROUPS.HOST_CAN_REMOVE.includes(cleaning.status);
 		}, [cleaning.status, isHost]);
+
+		const isCancelAction = isHost && cleaning.status === CLEANING_STATUS.REQUESTED;
 
 		const isActive = isCleaner && cleaning.status === CLEANING_STATUS.IN_PROGRESS;
 
@@ -94,15 +96,20 @@ export const CleaningCard = memo(
 									<Pencil className="size-4" />
 								</Button>
 							)}
-							{canCancel && (
+							{canDelete && (
 								<Button
 									variant="destructive"
 									size="icon-sm"
+									aria-label={
+										isCancelAction
+											? DICT.CLEANINGS.CANCEL.BUTTON_SUBMIT
+											: DICT.CLEANINGS.DELETE.BUTTON_SUBMIT
+									}
 									onClick={(e) => {
 										e.stopPropagation();
 										onDelete?.(cleaning.id);
 									}}>
-									<Trash2 className="size-4" />
+									{isCancelAction ? <CircleX className="size-4" /> : <Trash2 className="size-4" />}
 								</Button>
 							)}
 						</div>

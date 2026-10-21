@@ -9,7 +9,6 @@ export const DICT = {
 			BAN_USER: 'Ban User',
 			CANCEL: 'Cancel',
 			CLOSE: 'Close',
-			CANCEL_CLEANING: 'Cancel Cleaning',
 			CONFIRM: 'Confirm',
 			CREATE: 'Create',
 			CREATE_CLEANING: 'Create Cleaning Request',
@@ -454,18 +453,25 @@ export const DICT = {
 			CONFIRM: 'Create Anyway',
 			CANCEL: 'Go Back',
 		},
-		DELETE: {
-			MESSAGE: "This will permanently cancel the cleaning and you won't be charged.",
+		CANCEL: {
 			TITLE: 'Cancel cleaning request?',
+			MESSAGE: "This will cancel the cleaning request and you won't be charged.",
+			BUTTON_SUBMIT: 'Cancel Cleaning',
+			BUTTON_SUBMITTING: 'Cancelling cleaning...',
 			TOAST_SUCCESS: 'Cleaning request cancelled successfully',
+		},
+		DELETE: {
+			TITLE: 'Delete this cleaning request?',
+			BUTTON_SUBMIT: 'Delete Cleaning',
+			BUTTON_SUBMITTING: 'Deleting cleaning...',
+			TOAST_SUCCESS: 'Cleaning request deleted successfully',
 			ADMIN_MESSAGE:
-				'This will soft-delete this cleaning request. It will be hidden from all users and cannot be undone.',
-			ADMIN_TITLE: 'Delete this cleaning request?',
-			ADMIN_TOAST_SUCCESS: 'Cleaning request deleted successfully',
+				'This will delete the cleaning request. It will be hidden from all users and cannot be undone.',
+			HOST_MESSAGE: 'This will permanently delete the cleaning request.',
 		},
 		REJECT: {
 			TITLE: 'Reject this cleaning?',
-			MESSAGE: "This calendar event will be removed and won't create a cleaning.",
+			MESSAGE: 'This will delete the cleaning request.',
 			TOAST_SUCCESS: 'Cleaning rejected',
 		},
 		ASSIGN_CLEANER: {
